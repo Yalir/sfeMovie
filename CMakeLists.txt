@@ -1,0 +1,95 @@
+
+cmake_minimum_required (VERSION 2.8)
+
+
+# set a default build type if none was provided
+# this has to be done before the project() instruction!
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
+endif()
+
+project (sfeMovie)
+
+# detect the OS
+if(${CMAKE_HOST_WIN32})
+    set(WINDOWS 1)
+elseif(${CMAKE_HOST_APPLE})
+    set(MACOSX 1)
+elseif(${CMAKE_HOST_UNIX})
+    set(LINUX 1)
+else()
+    message(FATAL_ERROR "Unsupported operating system")
+    return()
+endif()
+
+
+# Set some env vars
+set (LIB_NAME sfe-movie)
+
+set (SOURCES "src")
+set (PUBLIC_HEADERS "include")
+set (PRIVATE_HEADERS "src")
+set (EXTERNAL_HEADERS "deps/headers")
+set (SFML_LIBRARIES sfml-system.2.0.0 sfml-window.2.0.0 sfml-graphics.2.0.0 sfml-audio.2.0.0)
+set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
+set (OTHER_LIBRARIES "")
+
+set (COMPILER_FLAGS "-O2")
+set (LINKER_FLAGS "")
+set (OTHER_FLAGS "")
+
+if (LINUX)
+	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+	
+elseif (MACOSX)
+	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/macosx-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+	set (OTHER_LIBRARIES z bz2)
+	
+#	set (COMPILER_FLAGS "${COMPILER_FLAGS} -g2")
+	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress")
+	set (OTHER_FLAGS "${OTHER_FLAGS} -arch i386 -arch x86_64 --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5")
+	
+elseif (WINDOWS)
+	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+	set (SFML_LIBRARIES sfml-system sfml-window sfml-graphics sfml-audio)
+	set (OTHER_LIBRARIES z ws2_32)
+	
+	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS")
+	set (LINKER_FLAGS "${LINKER_FLAGS} -static-libgcc")
+endif()
+
+
+# Set the search directories for compiling and link editing
+include_directories (${PUBLIC_HEADERS})
+include_directories (${PRIVATE_HEADERS})
+include_directories (${EXTERNAL_HEADERS})
+
+link_directories (${EXTERNAL_LIBRARIES})
+
+# Define the source files sfe should compile
+add_library (${LIB_NAME} SHARED
+	${SOURCES}/Movie.cpp
+	${SOURCES}/Movie_audio.cpp
+	${SOURCES}/Movie_video.cpp
+	${SOURCES}/utils.cpp)
+
+
+set_target_properties(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS} ${OTHER_FLAGS}")
+set_target_properties(${LIB_NAME} PROPERTIES LINK_FLAGS "${LINKER_FLAGS} ${OTHER_FLAGS}")
+
+# Set install name
+if (MACOSX)
+	set_target_properties(${LIB_NAME} PROPERTIES
+	   BUILD_WITH_INSTALL_RPATH 1
+	   INSTALL_NAME_DIR "@executable_path/../Frameworks")
+endif()
+
+
+# Define the libraries sfe should link against
+target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
+
+INSTALL(FILES lib${LIB_NAME}.dylib
+	DESTINATION /usr/local/lib)
+
+INSTALL(FILES ${PUBLIC_HEADERS}/Movie.h
+	DESTINATION /usr/local/include/sfe)
