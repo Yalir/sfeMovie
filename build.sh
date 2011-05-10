@@ -116,9 +116,9 @@ What is your choice? [1-4] (default is 1)"
 	   [ "$confirm_decoders" == "" ]
 	  then
 	    # build ffmpeg
-	    if test -d "ffmpeg-0.6.1"
+	    if test -d "ffmpeg-sources"
 	      then
-	        cd "ffmpeg-0.6.1"
+	        cd "ffmpeg-sources"
 	        
 	        configure_flags="";
 	        
@@ -155,7 +155,7 @@ What is your choice? [1-4] (default is 1)"
 	        cp -v `find . -name "*.a"` ../deps/ffmpeg-build
 	        cd ..
 	    else
-	    	echo "Missing directory ffmpeg-0.6.1. Aborting."
+	    	echo "Missing directory ffmpeg-sources. Aborting."
 	    	exit 1
 	    fi
 	else
