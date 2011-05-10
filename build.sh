@@ -14,7 +14,28 @@ function check_err()
 
 function build_ffmpeg()
 {
-	echo "Building sfeMovie..."
+	if test -d deps/ffmpeg-build/ &&
+		test -f deps/ffmpeg-build/libavcodec.a &&
+		test -f deps/ffmpeg-build/libavdevice.a &&
+		test -f deps/ffmpeg-build/libavformat.a &&
+		test -f deps/ffmpeg-build/libavutil.a &&
+		test -f deps/ffmpeg-build/libswscale.a
+	  then
+	    echo "FFmpeg seems to be already built and ready to use. Do you want to skip the FFmpeg
+compilation step? [Y/n]"
+		read skip_ffmpeg
+		
+		if [ "$skip_ffmpeg" == "Y" ] ||
+		   [ "$skip_ffmpeg" == "y" ] ||
+		   [ "$skip_ffmpeg" == "" ]
+		  then
+		  	return;
+		fi
+	fi
+	
+	echo ""
+	echo "==================== FFmpeg configuration and compilation ===================="
+	echo ""
 	
 	free_decoders="theora flac vorbis"
 	other_decoders=""
@@ -28,7 +49,8 @@ be able to use with sfeMovie. First of all you should know that when
 a patent covers an audio or video format, any decoder for this format
 is also concerned. Thus if you decide to enable a decoder for a format,
 you're responsible for the (possibly) bound patents and royalties
-that may apply.
+that may apply. See https://github.com/LaurentGomila/SFML/wiki/ProjectsfeMovie#license
+for a little non-official sum up of the licenses and fees for the most common decoders.
 
 FFmpeg provides decoders for the following formats:
 
@@ -107,20 +129,29 @@ What is your choice? [1-4] (default is 1)"
 	        
 	        if [ "$os" == "macosx" ]
 	          then
-	        	os_flags="--sysroot=/Developer/SDKs/MacOSX10.5.sdk --cc=\"gcc -arch i386\" --arch=i386 --target-os=darwin --enable-cross-compile --host-cflags=\"-arch i386\" --host-ldflags=\"-arch i386\""
+	        	os_flags='--sysroot=/Developer/SDKs/MacOSX10.5.sdk'
 	        fi
 			
 			if [ "$os" == "windows" ]
 			  then
 			    os_flags="--enable-memalign-hack"
 			fi
+			
+			cmd="configure --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-muxers --disable-demuxers --disable-parsers $configure_flags $os_flags"
 	        
-	        echo "./configure --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-muxers --disable-demuxers --disable-parsers $configure_flags $os_flags && make"
-	        ./configure --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-muxers --disable-demuxers --disable-parsers $configure_flags $os_flags && make
+	        echo "$cmd"
+	        sh $cmd
+	        
+	        check_err
+	        make
 	        
 	        check_err
 	        
-	        mkdir ../deps/ffmpeg-build
+	        if ! test -d ../deps/ffmpeg-build
+	          then
+		        mkdir ../deps/ffmpeg-build
+		    fi
+		    
 	        cp -v `find . -name "*.a"` ../deps/ffmpeg-build
 	        cd ..
 	    else
@@ -137,7 +168,7 @@ What is your choice? [1-4] (default is 1)"
 function build_sfemovie()
 {
 	# run cmake and make
-	echo "Building sfeMovie..."
+	echo "==================== sfeMovie compilation ===================="
 	echo "Running CMake..."
 	cmake -G "Unix Makefiles" CMakeLists.txt
 	check_err

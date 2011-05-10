@@ -59,9 +59,6 @@ namespace sfe {
 		/** Attemps to read a movie file.
 		 * @filename: the path to the movie file
 		 * @return: true on success, false otherwise
-		 *
-		 * Note: see the note at the beginning of this file for the supported
-		 * file formats.
 		 */
 		bool OpenFromFile(const std::string& filename);
 

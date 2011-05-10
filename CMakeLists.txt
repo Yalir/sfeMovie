@@ -47,7 +47,11 @@ elseif (MACOSX)
 	
 #	set (COMPILER_FLAGS "${COMPILER_FLAGS} -g2")
 	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress")
-	set (OTHER_FLAGS "${OTHER_FLAGS} -arch i386 -arch x86_64 --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5")
+	
+	# add " -arch i386 -arch x86_64" to $OTHER_FLAGS in order to build universal binary
+	# (disabled by default because I couldn't find any way to get FFmpeg to build as
+	# universal binary when being built from build.sh)
+	set (OTHER_FLAGS "${OTHER_FLAGS} --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5")
 	
 elseif (WINDOWS)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
