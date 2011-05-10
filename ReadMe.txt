@@ -1,0 +1,1 @@
+See https://github.com/LaurentGomila/SFML/wiki/ProjectsfeMovie for information on sfeMovie.
