@@ -215,6 +215,7 @@ public :
         bool      Alt;     ///< Is the Alt key pressed?
         bool      Control; ///< Is the Control key pressed?
         bool      Shift;   ///< Is the Shift key pressed?
+        bool      System;  ///< Is the System key pressed?
     };
 
     ////////////////////////////////////////////////////////////
@@ -265,9 +266,9 @@ public :
     ////////////////////////////////////////////////////////////
     struct JoyMoveEvent
     {
-        unsigned int JoystickId; ///< Index of the joystick (0 or 1)
+        unsigned int JoystickId; ///< Index of the joystick (in range [0 .. Joy::Count - 1])
         Joy::Axis    Axis;       ///< Axis on which the joystick moved
-        float        Position;   ///< New position on the axis (in range [-100, 100])
+        float        Position;   ///< New position on the axis (in range [-100 .. 100])
     };
 
     ////////////////////////////////////////////////////////////
@@ -277,8 +278,8 @@ public :
     ////////////////////////////////////////////////////////////
     struct JoyButtonEvent
     {
-        unsigned int JoystickId; ///< Index of the joystick (0 or 1)
-        unsigned int Button;     ///< Index of the button that has been pressed
+        unsigned int JoystickId; ///< Index of the joystick (in range [0 .. Joy::Count - 1])
+        unsigned int Button;     ///< Index of the button that has been pressed (in range [0 .. Joy::ButtonCount - 1])
     };
 
     ////////////////////////////////////////////////////////////
@@ -347,7 +348,7 @@ public :
 ///
 /// sf::Event holds all the informations about a system event
 /// that just happened. Events are retrieved using the
-/// sf::Window::GetEvent function.
+/// sf::Window::PollEvent and sf::Window::WaitEvent functions.
 ///
 /// A sf::Event instance contains the type of the event
 /// (mouse moved, key pressed, window closed, ...) as well
@@ -363,7 +364,7 @@ public :
 /// Usage example:
 /// \code
 /// sf::Event event;
-/// while (window.GetEvent(event))
+/// while (window.PollEvent(event))
 /// {
 ///     // Request for closing the window
 ///     if (event.Type == sf::Event::Closed)
