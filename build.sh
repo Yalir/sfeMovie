@@ -1,6 +1,8 @@
 #!/bin/sh
 
 os=""
+macosx_arch="i386" # ppc or i386 or x86_64
+use_cache=1
 codec_list="aac aasc ac3 adpcm_4xm adpcm_adx adpcm_ct adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1 adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g726 adpcm_ima_amv adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead adpcm_ima_iss adpcm_ima_qt adpcm_ima_smjpeg adpcm_ima_wav adpcm_ima_ws adpcm_ms adpcm_sbpro_2 adpcm_sbpro_3 adpcm_sbpro_4 adpcm_swf adpcm_thp adpcm_xa adpcm_yamaha alac als amrnb amv anm ape asv1 asv2 atrac1 atrac3 aura aura2 avs bethsoftvid bfi bink binkaudio_dct binkaudio_rdft bmp c93 cavs cdgraphics cinepak cljr cook cscd cyuv dca dnxhd dpx dsicinaudio dsicinvideo dvbsub dvdsub dvvideo dxa eac3 eacmv eamad eatgq eatgv eatqi eightbps eightsvx_exp eightsvx_fib escape124 ffv1 ffvhuff flac flashsv flic flv fourxm fraps frwu gif h261 h263 h263i h264 h264_vdpau huffyuv idcin iff_byterun1 iff_ilbm imc indeo2 indeo3 indeo5 interplay_dpcm interplay_video jpegls kgv1 kmvc libdirac libfaad libgsm libgsm_ms libopencore_amrnb libopencore_amrwb libopenjpeg libschroedinger libspeex libvpx loco mace3 mace6 mdec mimic mjpeg mjpegb mlp mmvideo motionpixels mp1 mp2 mp3 mp3adu mp3on4 mpc7 mpc8 mpeg1_vdpau mpeg1video mpeg2video mpeg4 mpeg4_vdpau mpeg_vdpau mpeg_xvmc mpegvideo msmpeg4v1 msmpeg4v2 msmpeg4v3 msrle msvideo1 mszh nellymoser nuv pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_mulaw pcm_s16be pcm_s16le pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s32be pcm_s32le pcm_s8 pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork pcx pgm pgmyuv pgssub png ppm ptx qcelp qdm2 qdraw qpeg qtrle r210 ra_144 ra_288 rawvideo rl2 roq roq_dpcm rpza rv10 rv20 rv30 rv40 sgi shorten sipr smackaud smacker smc snow sol_dpcm sonic sp5x sunrast svq1 svq3 targa theora thp tiertexseqvideo tiff tmv truehd truemotion1 truemotion2 truespeech tscc tta twinvq txd ulti v210 v210x vb vc1 vc1_vdpau vcr1 vmdaudio vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vqa wavpack wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_vdpau wnv1 ws_snd1 xan_dpcm xan_wc3 xl xsub yop zlib zmbv"
 
 function check_err()
@@ -14,22 +16,25 @@ function check_err()
 
 function build_ffmpeg()
 {
-	if test -d deps/ffmpeg-build/ &&
-		test -f deps/ffmpeg-build/libavcodec.a &&
-		test -f deps/ffmpeg-build/libavdevice.a &&
-		test -f deps/ffmpeg-build/libavformat.a &&
-		test -f deps/ffmpeg-build/libavutil.a &&
-		test -f deps/ffmpeg-build/libswscale.a
+	if [ "$use_cache" == "1" ]
 	  then
-	    echo "FFmpeg seems to be already built and ready to use. Do you want to skip the FFmpeg
-compilation step? [Y/n]"
-		read skip_ffmpeg
-		
-		if [ "$skip_ffmpeg" == "Y" ] ||
-		   [ "$skip_ffmpeg" == "y" ] ||
-		   [ "$skip_ffmpeg" == "" ]
+		if test -d deps/ffmpeg-build/ &&
+			test -f deps/ffmpeg-build/libavcodec.a &&
+			test -f deps/ffmpeg-build/libavdevice.a &&
+			test -f deps/ffmpeg-build/libavformat.a &&
+			test -f deps/ffmpeg-build/libavutil.a &&
+			test -f deps/ffmpeg-build/libswscale.a
 		  then
-		  	return;
+		    echo "FFmpeg seems to be already built and ready to use. Do you want to skip the FFmpeg
+compilation step? [Y/n]"
+			read skip_ffmpeg
+			
+			if [ "$skip_ffmpeg" == "Y" ] ||
+			   [ "$skip_ffmpeg" == "y" ] ||
+			   [ "$skip_ffmpeg" == "" ]
+			  then
+			  	return;
+			fi
 		fi
 	fi
 	
@@ -124,12 +129,12 @@ What is your choice? [1-4] (default is 1)"
 	        
 	        for codec in $full_decoders_list
 	          do
-	            configure_flags="$configure_flags --enable-decoder=$codec --enable-parser=$codec"
+	            configure_flags="$configure_flags --enable-decoder=$codec"
 	        done
 	        
 	        if [ "$os" == "macosx" ]
 	          then
-	        	os_flags='--sysroot=/Developer/SDKs/MacOSX10.5.sdk'
+	        	os_flags="--sysroot=/Developer/SDKs/MacOSX10.5.sdk --cc=\"gcc -arch $macosx_arch\" --arch=$macosx_arch --target-os=darwin --enable-cross-compile --host-cflags=\"-arch $macosx_arch\" --host-ldflags=\"-arch $macosx_arch\""
 	        fi
 			
 			if [ "$os" == "windows" ]
@@ -137,13 +142,14 @@ What is your choice? [1-4] (default is 1)"
 			    os_flags="--enable-memalign-hack"
 			fi
 			
-			cmd="configure --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-muxers --disable-demuxers --disable-parsers $configure_flags $os_flags"
+			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders $configure_flags $os_flags"
 	        
-	        echo "$cmd"
-	        sh $cmd
+	        echo "./configure $args"
+	        #sh $cmd
+	        { echo "$args" | xargs ./configure; } && make clean && make
 	        
-	        check_err
-	        make
+	        #check_err
+	        #make
 	        
 	        check_err
 	        
@@ -197,6 +203,11 @@ function main()
 			
 			# clean cached files
 			if [ "$2" == "nocache" ]
+			  then
+			  	use_cache=1
+			fi
+			
+			if [ "$use_cache" == "0" ]
 			  then
 				# remove CMake cache
 				if test -f "CMakeCache.txt"

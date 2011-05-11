@@ -30,7 +30,7 @@ set (SOURCES "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 set (EXTERNAL_HEADERS "deps/headers")
-set (SFML_LIBRARIES sfml-system.2.0.0 sfml-window.2.0.0 sfml-graphics.2.0.0 sfml-audio.2.0.0)
+set (SFML_LIBRARIES sfml-system.2.0 sfml-window.2.0 sfml-graphics.2.0 sfml-audio.2.0)
 set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
 
@@ -51,7 +51,7 @@ elseif (MACOSX)
 	# add " -arch i386 -arch x86_64" to $OTHER_FLAGS in order to build universal binary
 	# (disabled by default because I couldn't find any way to get FFmpeg to build as
 	# universal binary when being built from build.sh)
-	set (OTHER_FLAGS "${OTHER_FLAGS} --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5")
+	set (OTHER_FLAGS "${OTHER_FLAGS} --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386")
 	
 elseif (WINDOWS)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
