@@ -245,16 +245,12 @@ namespace sfe {
 	{
 		// Stop thread
 		// Note: we don't need to wait for it here
-		
-		std::cerr << "Movie_video::Stop() - Stopping video...";
 		if (m_runThread)
 		{
 			//m_threadWatcher.Terminate(); //Terminate because if stopping isn't caused by reaching the Eof, it will try to call Stop a second time
             m_runThread = false;
 			m_thread.Wait();
 		}
-		
-		std::cerr << "Movie_video::Stop() - Thread terminated...";
 		
 		m_displayedFrameCount = 0;
 		
@@ -416,7 +412,6 @@ namespace sfe {
 					std::cerr << "Movie_video::Update() - end of video stream reached. Stopping." << std::endl;
 				
 				m_runThread = false;
-				std::cerr << "Movie well stopped !" << std::endl;
 			}
 			else
 				DecodeFrontFrame();

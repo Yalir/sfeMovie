@@ -68,8 +68,6 @@ namespace sfe {
 
 	bool Movie::OpenFromFile(const std::string& filename)
 	{
-	    std::cerr << "Initializing video" << std::endl;
-
 		int err = 0;
 
 		// Load all the decoders
@@ -148,8 +146,6 @@ namespace sfe {
 			m_progressAtPause = 0;
 			SetEofReached(false);
 		}
-
-		std::cerr << "Movie::Stop() - Video stopped" << std::endl;
 	}
 
 	bool Movie::HasVideoTrack(void) const
