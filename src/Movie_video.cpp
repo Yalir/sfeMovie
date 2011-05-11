@@ -28,6 +28,7 @@
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <cassert>
 #include "utils.h"
 
 #define NTSC_FRAMERATE 29.97f
