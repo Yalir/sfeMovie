@@ -185,6 +185,30 @@ function build_sfemovie()
 	check_err
 	
 	echo "Built sfeMovie"
+	
+	if ! test -d product/lib
+	  then
+	    mkdir -p product/lib
+	fi
+	
+	if ! test -d product/include
+	  then
+	    mkdir -p product/include
+	fi
+	
+	if [ "$os" == "macosx" ]
+	  then
+	    cp -v -R deps/macosx-binaries/* product/lib
+	    cp -v libsfe-movie.dylib product/lib
+	elif [ "$os" == "windows" ]
+	  then
+	    cp -v -R deps/windows-binaries/* product/lib
+	    cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
+	fi
+	
+	cp -v include/* product/include
+	
+	echo "All of the required files have been copied to the \"product\" directory."
 }
 
 function main()
