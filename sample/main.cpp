@@ -1,35 +1,33 @@
 
-#include <sfe/Movie.h>
+#include "Movie.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
 int main()
 {
-	sf::VideoMode mode = sf::VideoMode(640, 480);
-    sf::RenderWindow window(mode, "SFE Movie Player", sf::Style::Close);
-
+	// Create window and movie
+    sf::RenderWindow window(sf::VideoMode(1280, 720), "SFE Movie Player", sf::Style::Close);
     sfe::Movie movie;
-	movie.UseDebugMessages();
-    if (!movie.OpenFromFile("/Hors Sauvegarde/sync-720p.mov"))
+	
+	// Print debug messages (show file information and alert when movie playback is late)
+	sfe::Movie::UseDebugMessages(true);
+    if (!movie.OpenFromFile("sintel-1024-stereo.ogv"))
         return 1;
 
-
-	movie.ResizeToFrame(0, 0, mode.Width, mode.Height);
-
+	// Scale movie to the window drawing area and enable VSync
+	movie.ResizeToFrame(0, 0, window.GetWidth(), window.GetHeight());
 	window.EnableVerticalSync(true);
-	//window.ShowMouseCursor(false);
-	//window.SetFramerateLimit(40);
-	//window.EnableKeyRepeat(false);
 
-
+	// Start movie playback
     movie.Play();
 
     while (window.IsOpened())
     {
         sf::Event ev;
-        while (window.GetEvent(ev))
+        while (window.PollEvent(ev))
         {
-            if (ev.Type == sf::Event::Closed)
+            if (ev.Type == sf::Event::Closed ||
+				(ev.Type == sf::Event::KeyPressed && ev.Key.Code == sf::Key::Escape))
 			{
 				movie.Stop();
                 window.Close();
@@ -37,12 +35,7 @@ int main()
 
             if (ev.Type == sf::Event::KeyPressed)
 			{
-                if (ev.Key.Code == sf::Key::Escape)
-				{
-					movie.Stop();
-					window.Close();
-				}
-
+				// Handle basic controls
 				if (ev.Key.Code == sf::Key::Space)
 				{
 					if (movie.GetStatus() == sfe::Movie::Paused || movie.GetStatus() == sfe::Movie::Stopped)
@@ -56,6 +49,7 @@ int main()
 			}
         }
 		
+		// Render movie
         window.Clear();
         window.Draw(movie);
         window.Display();
