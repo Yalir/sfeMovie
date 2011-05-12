@@ -203,6 +203,7 @@ function build_sfemovie()
 	elif [ "$os" == "windows" ]
 	  then
 	    cp -v -R deps/windows-binaries/* product/lib
+		rm -v product/lib/libz.a
 	    cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
 	fi
 	
