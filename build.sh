@@ -146,6 +146,7 @@ What is your choice? [1-4] (default is 1)"
 	        
 	        echo "./configure $args"
 	        #sh $cmd
+	        chmod u+x configure version.sh doc/texi2pod.pl
 	        { echo "$args" | xargs ./configure; } && make clean && make
 	        
 	        #check_err
