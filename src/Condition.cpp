@@ -2,7 +2,7 @@
 #include "Condition.h"
 #include <SFML/Config.hpp>
 
-#ifdef SFML_WINDOWS
+#ifdef SFML_SYSTEM_WINDOWS
 #include "Win32/ConditionImpl.h"
 #else
 #include "Unix/ConditionImpl.h"
@@ -31,6 +31,11 @@ void Condition::waitForValueAndRetain(int value, bool autorelease)
 void Condition::release(void)
 {
 	m_impl->release();
+}
+
+void Condition::operator<<(int value)
+{
+	m_impl->setValue(value);
 }
 
 void Condition::signal(void)

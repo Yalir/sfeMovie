@@ -24,6 +24,13 @@ public:
 	 */
 	void release(void);
 	
+	/* @var is assigned to @value and the condition is signaled.
+	 * As @var is a reference to the original variable,
+	 * this function behaves like a classic assignement plus
+	 * an automatic signal() call.
+	 */
+	void operator<<(int value);
+	
 	/* Signal that the condition state has changed and that
 	 * threads waiting on this condition should check
 	 * the new @var value.
