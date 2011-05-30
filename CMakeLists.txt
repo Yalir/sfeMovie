@@ -38,8 +38,11 @@ set (COMPILER_FLAGS "-O2")
 set (LINKER_FLAGS "")
 set (OTHER_FLAGS "")
 
+set (SOURCE_FILES "${SOURCES}/Movie.cpp ${SOURCES}/Movie_audio.cpp ${SOURCES}/Movie_video.cpp ${SOURCES}/utils.cpp ${SOURCES}/Condition.cpp")
+
 if (LINUX)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+	set (SOURCE_FILES "${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp")
 	
 elseif (MACOSX)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/macosx-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
@@ -52,6 +55,7 @@ elseif (MACOSX)
 	# (disabled by default because I couldn't find any way to get FFmpeg to build as
 	# universal binary when being built from build.sh)
 	set (OTHER_FLAGS "${OTHER_FLAGS} --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386")
+	set (SOURCE_FILES "${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp")
 	
 elseif (WINDOWS)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
@@ -60,6 +64,8 @@ elseif (WINDOWS)
 	
 	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS")
 	set (LINKER_FLAGS "${LINKER_FLAGS} -static-libgcc")
+	
+	set (SOURCE_FILES "${SOURCE_FILES} ${SOURCES}/Win32/ConditionImpl.cpp")
 endif()
 
 
@@ -71,11 +77,8 @@ include_directories (${EXTERNAL_HEADERS})
 link_directories (${EXTERNAL_LIBRARIES})
 
 # Define the source files sfe should compile
-add_library (${LIB_NAME} SHARED
-	${SOURCES}/Movie.cpp
-	${SOURCES}/Movie_audio.cpp
-	${SOURCES}/Movie_video.cpp
-	${SOURCES}/utils.cpp)
+message(${SOURCE_FILES})
+add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 
 
 set_target_properties(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS} ${OTHER_FLAGS}")
