@@ -11,14 +11,23 @@ public:
 	Condition(int& var);
 	~Condition(void);
 	
-	/* Make a protected change to the value observed by the
-	 * Condition
+	/* Wait until var == value and protect the condition.
+	 * You're responsible for releasing the condition with
+	 * release() after waitAndRetain() returned and you're
+	 * done working on protected data.
+	 * @value: the value that should unlock the condition
 	 */
-	//void setValue(T& value);
+	void waitForValueAndRetain(int value);
 	
-	// @value: the value that should unlock the condition
-	void waitAndRetain(int value);
+	/* Release a previously retained (protected) condition
+	 * Releasing a non-protected condition is undefined.
+	 */
 	void release(void);
+	
+	/* Signal that the condition state has changed and that
+	 * threads waiting on this condition should check
+	 * the new @var value.
+	 */
 	void signal(void);
 	
 private:

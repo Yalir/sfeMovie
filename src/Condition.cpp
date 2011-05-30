@@ -20,7 +20,7 @@ Condition::~Condition(void)
 	delete m_impl;
 }
 
-void Condition::waitAndRetain(int value)
+void Condition::waitForValueAndRetain(int value)
 {
 	m_impl->waitAndRetain(value);
 }
