@@ -20,9 +20,12 @@ Condition::~Condition(void)
 	delete m_impl;
 }
 
-void Condition::waitForValueAndRetain(int value)
+void Condition::waitForValueAndRetain(int value, bool autorelease)
 {
 	m_impl->waitAndRetain(value);
+	
+	if (autorelease)
+		m_impl->release();
 }
 
 void Condition::release(void)

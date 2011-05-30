@@ -17,7 +17,7 @@ public:
 	 * done working on protected data.
 	 * @value: the value that should unlock the condition
 	 */
-	void waitForValueAndRetain(int value);
+	void waitForValueAndRetain(int value, bool autorelease = false);
 	
 	/* Release a previously retained (protected) condition
 	 * Releasing a non-protected condition is undefined.
