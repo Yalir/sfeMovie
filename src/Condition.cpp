@@ -8,11 +8,14 @@
 #include "Unix/ConditionImpl.h"
 #endif
 
+const bool Condition::Autorelease = true;
+const bool Condition::Manualrelease = false;
 
-Condition::Condition(int& var) :
+
+Condition::Condition(int value) :
 m_impl(NULL)
 {
-	m_impl = new ConditionImpl(var);
+	m_impl = new ConditionImpl(value);
 }
 
 Condition::~Condition(void)
@@ -20,12 +23,14 @@ Condition::~Condition(void)
 	delete m_impl;
 }
 
-void Condition::waitForValueAndRetain(int value, bool autorelease)
+bool Condition::waitForValueAndRetain(int awaitedValue, bool autorelease)
 {
-	m_impl->waitAndRetain(value);
+	bool flag = m_impl->waitAndRetain(awaitedValue);
 	
 	if (autorelease)
 		m_impl->release();
+	
+	return flag;
 }
 
 void Condition::release(void)
@@ -33,12 +38,23 @@ void Condition::release(void)
 	m_impl->release();
 }
 
-void Condition::operator<<(int value)
+int Condition::operator=(int value)
 {
 	m_impl->setValue(value);
+	return value;
 }
 
 void Condition::signal(void)
 {
 	m_impl->signal();
+}
+
+void Condition::invalidate(void)
+{
+	m_impl->invalidate();
+}
+
+void Condition::restore(void)
+{
+	m_impl->restore();
 }
