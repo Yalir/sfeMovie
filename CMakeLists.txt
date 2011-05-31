@@ -43,6 +43,7 @@ set (SOURCE_FILES ${SOURCES}/Movie.cpp ${SOURCES}/Movie_audio.cpp ${SOURCES}/Mov
 if (LINUX)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp)
+	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS")
 	
 elseif (MACOSX)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/macosx-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
