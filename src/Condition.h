@@ -1,4 +1,27 @@
 
+/*
+ *  Condition.h
+ *  SFE (SFML Extension) project
+ *
+ *  Copyright (C) 2010-2011 Soltic Lucas
+ *  soltic.lucas@gmail.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ */
+
 #ifndef CONDITION_H
 #define CONDITION_H
 
@@ -22,15 +45,17 @@ public:
 	
 	/* Waits until the Condition's value == awaitedValue and protects the Condition.
 	 * You're responsible for releasing the Condition with release() after
-	 * waitAndRetain() returned and you're done working on protected data.
+	 * waitAndRetain() returned and after you're done working on protected data,
+	 * or enabling the autorelease mechanism.
 	 *
 	 * @awaitedValue: the value that should unlock the Condition
 	 *
 	 * @autorelease: Autorelease (true) to automatically release the Condition
 	 * protection after it has been validated, or Manualrelease (false) to
-	 * manually choose when the Condition should be released. When a Condition
-	 * is retained, other waitForValueAndRetain() are blocked, until the
-	 * Condition is released.
+	 * manually choose when the Condition should be released. While a Condition
+	 * is retained, both waitForValueAndRetain() and operator=() will block
+	 * until the Condition is released or invalidated. When a Condition is
+	 * automatically released, its value is not updated.
 	 *
 	 * @return: true if the @awaitedValue has been reached, false otherwise.
 	 * waitForValueAndRetain() may return even if @awaitedValue has not been
@@ -39,14 +64,20 @@ public:
 	 */
 	bool waitForValueAndRetain(int awaitedValue, bool autorelease = false);
 	
-	/* Releases a previously retained (protected) Condition.
+	/* Releases a previously retained (protected) Condition with @value as
+	 * internal value. When the condition is released (unlocked), it is assumed
+	 * to have the given value. The condition is thereafter signaled.
 	 * Releasing a non-protected Condition is undefined.
+	 *
+	 * @value: the value the Condition should have when it is released
 	 */
-	void release(void);
+	void release(int value);
 	
 	/* Performs an assignement followed by a signal() call.
 	 * The internal Condition value is updated to @value and the Condition is
-	 * signaled.
+	 * signaled. Note that the Condition must be unlocked (non-retained)
+	 * in order to be updated, otherwise it'll block until the Condition
+	 * is released.
 	 *
 	 * @value: the value to be assigned to the Condition
 	 *
