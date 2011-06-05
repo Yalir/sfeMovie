@@ -46,7 +46,11 @@ bool ConditionImpl::waitAndRetain(int value)
 	m_mutex.Lock();
 	
 	while (m_conditionnedVar != value && m_isValid)
+	{
+		m_mutex.Unlock();
 		WaitForSingleObject(m_cond, INFINITE);
+		m_mutex.Lock();
+	}
 	
 	if (m_isValid)
 		return true;
