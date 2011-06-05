@@ -42,14 +42,14 @@ namespace sfe {
 	m_buffer(NULL),
 	m_pendingDataLength(0),
 	m_channelsCount(0),
-	m_sampleRate(0)
+	m_sampleRate(0),
+	m_isStarving(false)
 	{
 		
 	}
 	
 	Movie_audio::~Movie_audio(void)
 	{
-		Close();
 	}
 	
 	bool Movie_audio::Initialize(void)
@@ -122,6 +122,7 @@ namespace sfe {
 			PopFrame();
 		}
 		
+		m_isStarving = false;
 	}
 	
 	void Movie_audio::Close(void)
@@ -141,6 +142,7 @@ namespace sfe {
 		
 		m_channelsCount = 0;
 		m_sampleRate = 0;
+		m_isStarving = false;
 	}
 	
 	void Movie_audio::SetPlayingOffset(float time)
@@ -168,6 +170,11 @@ namespace sfe {
 	int Movie_audio::GetStreamID()
 	{
 		return m_streamID;
+	}
+	
+	bool Movie_audio::IsStarving(void)
+	{
+		return m_isStarving;
 	}
 	
 	bool Movie_audio::ReadChunk(void)
@@ -296,7 +303,15 @@ namespace sfe {
 			DecodeFrontFrame(buffer);
 			
 			if (!buffer.NbSamples)
+			{
 				flag = false;
+			}
+		}
+		
+		if (!flag)
+		{
+			m_isStarving = true;
+			m_parent.Starvation();
 		}
 		
         return flag;

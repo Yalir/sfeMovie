@@ -60,6 +60,8 @@ namespace sfe {
 		void SetPlayingOffset(float time);
 		
 		int GetStreamID();
+		bool IsStarving(void);
+		
 		bool ReadChunk(void);
 		bool HasPendingDecodableData(void);
 		unsigned CurrentlyPendingDataLength(void);
@@ -71,6 +73,7 @@ namespace sfe {
 		bool OnGetData(Chunk& Data);
 		void OnSeek(float timeOffset);
 		
+	private:
 		// ------------------------- Audio attributes --------------------------
 		Movie& m_parent;
 		
@@ -86,6 +89,7 @@ namespace sfe {
 		
 		unsigned m_channelsCount;
 		unsigned m_sampleRate;
+		bool m_isStarving;
 	}; // class Movie_audio
 } // namespace sfe
 

@@ -34,70 +34,93 @@ extern "C"
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 #include <queue>
+#include "Condition.h"
 
 
 namespace sfe {
 	class Movie;
 	class Movie_video {
-		public:
-			Movie_video(Movie& parent);
-			~Movie_video(void);
-			
-			// -------------------------- Video methods ----------------------------
-			bool Initialize(void);
-			void Play(void);
-			void Pause(void);
-			void Stop(void);
-			void Close(void);
-			
-			void Render(sf::RenderTarget& Target) const;
-			
-			int GetStreamID(void) const;
-			const sf::Vector2i& GetSize(void) const;
-			float GetWantedFrameTime(void) const;
-			sf::Image GetImageCopy(void) const;
-			
-			void Run(void); // thread callback
-			void SetPlayingOffset(float time);
-			void SkipFrames(unsigned count);
-			void LoadNextImage(void);
-			bool ReadFrame(void);
-			bool HasPendingDecodableData(void);
-			void DecodeFrontFrame(void);
-			void PushFrame(AVPacket *pkt);
-			void PopFrame(void);
-			AVPacket *FrontFrame(void);
-			void WatchThread(void);
-			
-			// ------------------------- Video attributes --------------------------
-			Movie& m_parent;
-			
-			AVCodecContext *m_codecCtx;
-			AVCodec *m_codec;
-			AVFrame *m_rawFrame;
-			AVFrame *m_RGBAFrame;
-			std::queue <AVPacket *> m_packetList;
-			sf::Mutex m_packetListMutex;
-			struct SwsContext *m_swsCtx;
-			
-			sf::Thread m_thread;
-			sf::Thread m_threadWatcher;
-			//sf::Context m_context; // No more needed as of latest version of SFML 2.x
+	public:
+		Movie_video(Movie& parent);
+		~Movie_video(void);
+		
+		// -------------------------- Video methods ----------------------------
+		bool Initialize(void);
+		void Play(void);
+		void Pause(void);
+		void Stop(void);
+		void Close(void);
+		
+		void Render(sf::RenderTarget& Target) const;
+		
+		int GetStreamID(void) const;
+		const sf::Vector2i& GetSize(void) const;
+		float GetWantedFrameTime(void) const;
+		sf::Image GetImageCopy(void) const;
+		
+		void Update(void); // Swaping and synching thread
+		void Decode(void); // Decoding thread
+		
+		float UpdateLateState(void);
+		bool IsStarving(void);
+		void SetPlayingOffset(float time);
+		//void SkipFrames(unsigned count);
+		
+		void SwapImages(bool unconditionned = false);
+		sf::Image& FrontImage(void);
+		const sf::Image& FrontImage(void) const;
+		sf::Image& BackImage(void);
+		
+		bool PreLoad(void);
+		bool LoadNextImage(void);
+		bool ReadFrame(void);
+		bool HasPendingDecodableData(void);
+		bool DecodeFrontFrame(void);
+		void PushFrame(AVPacket *pkt);
+		void PopFrame(void);
+		AVPacket *FrontFrame(void);
+		void WatchThread(void);
+		
+	private:
+		// ------------------------- Video attributes --------------------------
+		Movie& m_parent;
+		
+		// Image and decoding stuff
+		AVCodecContext *m_codecCtx;
+		AVCodec *m_codec;
+		AVFrame *m_rawFrame;
+		AVFrame *m_RGBAFrame;
+		int m_streamID;
+		sf::Uint8 *m_pictureBuffer; // Buffer used to convert image from pixel matrix to simple array
+		struct SwsContext *m_swsCtx;
+		
+		// Packets' queueing stuff
+		std::queue <AVPacket *> m_packetList;
+		sf::Mutex m_packetListMutex;
+		
+		// Threads
+		sf::Thread m_updateThread;	// Does swaping and time sync
+		sf::Thread m_decodeThread;	// Does video decoding
+		Condition m_running;
+		
+		// Image swaping
+		mutable sf::Mutex m_imageSwapMutex;
+		Condition m_backImageReady;
+		unsigned m_imageIndex;
+		sf::Image m_image1;
+		sf::Image m_image2;
+		
+		// Miscellaneous parameters
+		bool m_isLate;
+		bool m_isStarving;
+		sf::Sprite m_sprite;
+		float m_wantedFrameTime;
+		unsigned m_displayedFrameCount;
+		float m_decodingTime;
+		sf::Clock m_timer;
+		bool m_runThread;
+		sf::Vector2i m_size;
+	};
+} // namespace sfe
 
-			int m_streamID;
-			sf::Uint8 *m_pictureBuffer; // Buffer used to convert image from pixel matrix to simple array
-			mutable sf::Mutex m_imageMutex;
-			sf::Image m_image;
-			bool m_isLate;
-			sf::Sprite m_sprite;
-			float m_wantedFrameTime;
-			unsigned m_displayedFrameCount;
-			float m_decodingTime;
-			sf::Clock m_timer;
-			bool m_runThread;
-			
-			sf::Vector2i m_size;
-		};
-	} // namespace sfe
-	
 #endif

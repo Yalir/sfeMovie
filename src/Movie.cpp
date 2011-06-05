@@ -69,7 +69,12 @@ namespace sfe {
 	bool Movie::OpenFromFile(const std::string& filename)
 	{
 		int err = 0;
+		bool preloaded = false;
 
+		// Make sure everything is cleaned before opening a new movie
+		Stop();
+		Close();
+		
 		// Load all the decoders
 		av_register_all();
 
@@ -99,18 +104,29 @@ namespace sfe {
 		// Perform the audio and video loading
 		m_hasVideo = m_video->Initialize();
 		m_hasAudio = m_audio->Initialize();
-
-		return m_hasAudio || m_hasVideo;
+		
+		if (m_hasVideo)
+		{
+			preloaded = m_video->PreLoad();
+			
+			if (!preloaded) // Loading first frames failed
+			{
+				if (sfe::Movie::UsesDebugMessages())
+					std::cerr << "Movie::OpenFromFile() - Movie_video::PreLoad() failed.\n";
+			}
+		}
+		
+		return m_hasAudio || (m_hasVideo && preloaded);
 	}
 
 	void Movie::Play(void)
 	{
 		if (m_status != Playing)
 		{
-			m_status = Playing;
 			m_overallTimer.Reset();
 			IFAUDIO(m_audio->Play());
 			IFVIDEO(m_video->Play());
+			m_status = Playing;
 		}
 	}
 
@@ -125,7 +141,7 @@ namespace sfe {
 			// Prevent audio from being late compared to video
 			// (audio usually gets a bit later each time you pause and resume
 			// the movie playback, thus fix the video timing according
-			// to the audio's)
+			// to the audio's one)
 			if (HasAudioTrack())
 				m_progressAtPause = m_audio->GetPlayingOffset();
 			else
@@ -145,6 +161,7 @@ namespace sfe {
 			IFVIDEO(m_video->Stop());
 			m_progressAtPause = 0;
 			SetEofReached(false);
+			IFVIDEO(m_video->PreLoad());
 		}
 	}
 
@@ -288,8 +305,6 @@ namespace sfe {
 	
 	void Movie::Render(sf::RenderTarget& Target, sf::Renderer& renderer) const
 	{
-		// No more needed as of latest version of SFML 2.x
-		//m_context.SetActive(true);
 		m_video->Render(Target);
 	}
 
@@ -317,7 +332,7 @@ namespace sfe {
 		m_hasAudio = false;
 		m_hasVideo = false;
 		m_eofReached = false;
-		m_status = Playing;
+		m_status = Stopped;
 		m_duration = 0.f;
 		m_progressAtPause = 0.f;
 	}
@@ -344,6 +359,7 @@ namespace sfe {
 	 
 	bool Movie::ReadFrameAndQueue(void)
 	{
+		// Avoid reading from different threads at the same time
 		sf::Lock l(m_readerMutex);
 		bool flag = true;
 		AVPacket *pkt = NULL;
@@ -369,7 +385,7 @@ namespace sfe {
 				if (!SaveFrame(pkt))
 				{
 					if (Movie::UsesDebugMessages())
-						std::cerr << "Movie_video::ReadFrame() - did read unknown packet type" << std::endl;
+						std::cerr << "Movie::ReadFrameAndQueue() - did read unknown packet type" << std::endl;
 					av_free_packet(pkt);
 					av_free(pkt);
 				}
@@ -408,6 +424,21 @@ namespace sfe {
 	bool Movie::UsesDebugMessages(void)
 	{
 		return g_usesDebugMessages;
+	}
+	
+	void Movie::Starvation(void)
+	{
+		bool audioStarvation = true;
+		bool videoStarvation = true;
+		
+		IFAUDIO(audioStarvation = m_audio->IsStarving());
+		IFVIDEO(videoStarvation = m_video->IsStarving());
+		
+		// No mode audio or video data to read
+		if (audioStarvation && videoStarvation)
+		{
+			Stop();
+		}
 	}
 
 } // namespace sfe
