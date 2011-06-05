@@ -197,6 +197,7 @@ namespace sfe {
 		bool ReadFrameAndQueue(void);
 		bool SaveFrame(AVPacketRef frame);
 		static bool UsesDebugMessages(void);
+		void Starvation(void);
 
 		AVFormatContextRef m_avFormatCtx;
 		bool m_hasVideo;

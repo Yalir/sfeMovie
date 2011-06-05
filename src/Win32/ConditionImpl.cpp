@@ -23,6 +23,7 @@
  */
 
 #include "ConditionImpl.h"
+#include <iostream>
 
 ConditionImpl::ConditionImpl(int var) :
 m_isValid(true),
