@@ -176,40 +176,97 @@ function build_sfemovie()
 {
 	# run cmake and make
 	echo "==================== sfeMovie compilation ===================="
+	echo ""
+	
+	tenv=""
+	if [ "$os" == "windows" ]
+	  then
+		echo "Choose your target environment (default is 1):"
+		echo "1. GCC"
+		echo "2. Visual Studio 2005"
+		echo "3. Visual Studio 2008"
+		echo "4. Visual Studio 2010"
+		echo "5. Other"
+		echo ""
+		
+		read tenv
+	fi
+	
+	cmake_env=""
+	if [ "$tenv" == "" ] || [ "$tenv" == "1" ]
+	  then
+	    cmake_env="Unix Makefiles"
+	elif [ "$tenv" == "2" ]
+	  then
+	    cmake_env="Visual Studio 8 2005"
+	elif [ "$tenv" == "3" ]
+	  then
+	    cmake_env="Visual Studio 9 2008"
+	elif [ "$tenv" == "4" ]
+	  then
+	    cmake_env="Visual Studio 10"
+	else
+	    echo "This script does not support any other environment."
+		echo "Use CMake with the righ generator."
+		exit 1
+	fi
+	
 	echo "Running CMake..."
-	cmake -G "Unix Makefiles" CMakeLists.txt
+	echo "cmake -G \"$cmake_env\" CMakeLists.txt"
+	cmake -G "$cmake_env" CMakeLists.txt
 	check_err
 	
-	echo "Running make..."
-	make
-	check_err
-	
-	echo "Built sfeMovie"
-	
-	if ! test -d product/lib
+	if [ "$cmake_env" != "Unix Makefiles" ]
 	  then
-	    mkdir -p product/lib
+	    echo ""
+	    echo "The files required to build sfeMovie for Visual Studio have been created."
+		echo "Now run Visual Studio, open sfeMovie.sln and follow these instructions:
+- go to the sfe-movie properties panel. There, go to Linker > Input and add the following lines:
+libavdevice.a
+libavformat.a
+libavcodec.a
+libavutil.a
+libswscale.a
+libz.a
+libgcc.a
+libmingwex.a
+libmoldname.a
+- build the solution"
+		echo ""
+		echo "This script is over."
+		exit 0
+	else
+		echo "Running make..."
+		make
+		check_err
+		
+		echo "Built sfeMovie"
+		
+		if ! test -d product/lib
+		  then
+			mkdir -p product/lib
+		fi
+		
+		if ! test -d product/include
+		  then
+			mkdir -p product/include
+		fi
+		
+		if [ "$os" == "macosx" ]
+		  then
+			cp -v -R deps/macosx-binaries/* product/lib
+			cp -v libsfe-movie.dylib product/lib
+		elif [ "$os" == "windows" ]
+		  then
+			cp -v -R deps/windows-binaries/* product/lib
+			rm -v product/lib/libz.a
+			cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
+		fi
+		
+		cp -v include/* product/include
+		
+		echo "All of the required files have been copied to the \"product\" directory."
 	fi
-	
-	if ! test -d product/include
-	  then
-	    mkdir -p product/include
-	fi
-	
-	if [ "$os" == "macosx" ]
-	  then
-	    cp -v -R deps/macosx-binaries/* product/lib
-	    cp -v libsfe-movie.dylib product/lib
-	elif [ "$os" == "windows" ]
-	  then
-	    cp -v -R deps/windows-binaries/* product/lib
-		rm -v product/lib/libz.a
-	    cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
-	fi
-	
-	cp -v include/* product/include
-	
-	echo "All of the required files have been copied to the \"product\" directory."
 }
 
 function main()

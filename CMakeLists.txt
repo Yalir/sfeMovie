@@ -34,7 +34,7 @@ set (SFML_LIBRARIES sfml-system.2.0 sfml-window.2.0 sfml-graphics.2.0 sfml-audio
 set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
 
-set (COMPILER_FLAGS "-O2")
+set (COMPILER_FLAGS "")
 set (LINKER_FLAGS "")
 set (OTHER_FLAGS "")
 
@@ -57,16 +57,25 @@ elseif (MACOSX)
 	# universal binary when being built from build.sh)
 	#set (OTHER_FLAGS "${OTHER_FLAGS} --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386")
 	set (CMAKE_OSX_ARCHITECTURES "i386")
+	set (CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.5.sdk")
+    set (CMAKE_OSX_DEPLOYMENT_TARGET "10.5")
 	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp)
 	
 elseif (WINDOWS)
-	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
-	set (SFML_LIBRARIES sfml-system sfml-window sfml-graphics sfml-audio)
-	set (OTHER_LIBRARIES z ws2_32)
+	set (EXTERNAL_LIBRARIES ${CMAKE_SOURCE_DIR}/deps/windows-binaries ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
+	
+	if (MSVC)
+		set (EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${CMAKE_SOURCE_DIR}/deps/windows-binaries/msvc)
+		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} ${CMAKE_SOURCE_DIR}/deps/headers/msvc)
+	else()
+		set (EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc)
+		set (LINKER_FLAGS "${LINKER_FLAGS} -static-libgcc -static-libstdc++")
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z)
+	endif()
 	
 	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS")
-	set (LINKER_FLAGS "${LINKER_FLAGS} -static-libgcc")
-	
+	set (SFML_LIBRARIES sfml-system sfml-window sfml-graphics sfml-audio)
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} ws2_32)
 	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Win32/ConditionImpl.cpp)
 endif()
 
@@ -94,7 +103,11 @@ endif()
 
 
 # Define the libraries sfe should link against
-target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
+if (MSVC)
+	target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${OTHER_LIBRARIES})
+else()
+	target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
+endif()
 
 INSTALL(FILES lib${LIB_NAME}.dylib
 	DESTINATION /usr/local/lib)
