@@ -50,9 +50,9 @@ namespace sfe {
 	m_eofReached(false),
 	m_stopMutex(),
 	m_status(Stopped),
-	m_duration(0.f),
+	m_duration(0),
 	m_overallTimer(),
-	m_progressAtPause(0.f),
+	m_progressAtPause(0),
 	m_video(new Movie_video(*this)),
 	m_audio(new Movie_audio(*this))
 	{
@@ -187,7 +187,7 @@ namespace sfe {
 		return volume;
 	}
 
-	float Movie::GetDuration(void) const
+	sf::Uint32 Movie::GetDuration(void) const
 	{
 		return m_duration;
 	}
@@ -264,6 +264,7 @@ namespace sfe {
 	}
 
 	/*void Movie::SetPlayingOffset(float position)
+	 #error change floag to int
 	{
 		PrintWithTime("offset before : " + s(GetPlayingOffset()));
 
@@ -275,9 +276,9 @@ namespace sfe {
 		PrintWithTime("offset after : " + s(GetPlayingOffset()));
 	}*/
 
-	float Movie::GetPlayingOffset() const
+	sf::Uint32 Movie::GetPlayingOffset() const
 	{
-		float offset = 0;
+		sf::Uint32 offset = 0;
 
 		if (m_status == Playing)
 			offset = m_progressAtPause + m_overallTimer.GetElapsedTime();
@@ -333,8 +334,8 @@ namespace sfe {
 		m_hasVideo = false;
 		m_eofReached = false;
 		m_status = Stopped;
-		m_duration = 0.f;
-		m_progressAtPause = 0.f;
+		m_duration = 0;
+		m_progressAtPause = 0;
 	}
 
 	AVFormatContext *Movie::GetAVFormatContext(void)
@@ -352,7 +353,7 @@ namespace sfe {
 		m_eofReached = flag;
 	}
 
-	void Movie::SetDuration(float duration)
+	void Movie::SetDuration(sf::Uint32 duration)
 	{
 		m_duration = duration;
 	}

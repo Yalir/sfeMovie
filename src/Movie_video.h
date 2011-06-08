@@ -61,9 +61,9 @@ namespace sfe {
 		void Update(void); // Swaping and synching thread
 		void Decode(void); // Decoding thread
 		
-		float UpdateLateState(void);
+		sf::Uint32 UpdateLateState(void);
 		bool IsStarving(void);
-		void SetPlayingOffset(float time);
+		void SetPlayingOffset(sf::Uint32 time);
 		//void SkipFrames(unsigned count);
 		
 		void SwapImages(bool unconditionned = false);
@@ -116,7 +116,7 @@ namespace sfe {
 		sf::Sprite m_sprite;
 		float m_wantedFrameTime;
 		unsigned m_displayedFrameCount;
-		float m_decodingTime;
+		sf::Uint32 m_decodingTime;
 		sf::Clock m_timer;
 		bool m_runThread;
 		sf::Vector2i m_size;

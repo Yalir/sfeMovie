@@ -145,11 +145,12 @@ namespace sfe {
 		m_isStarving = false;
 	}
 	
-	void Movie_audio::SetPlayingOffset(float time)
+	void Movie_audio::SetPlayingOffset(sf::Uint32 time)
 	{
 		sf::SoundStream::Stop();
 		
 		// TODO: does not work yet
+		// TODO: apply float -> Uin32 change
 		AVRational tb = m_parent.GetAVFormatContext()->streams[m_streamID]->time_base;
 		float ftb = (float)tb.num / tb.den;
 		int64_t avTime = time * ftb;
@@ -318,7 +319,7 @@ namespace sfe {
     }
 
 	
-	void Movie_audio::OnSeek(float timeOffset)
+	void Movie_audio::OnSeek(sf::Uint32 timeOffset)
 	{
 		
 	}

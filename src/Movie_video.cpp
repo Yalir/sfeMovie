@@ -226,7 +226,7 @@ namespace sfe {
             long secs, us;
             secs = m_parent.GetAVFormatContext()->duration / AV_TIME_BASE;
             us = m_parent.GetAVFormatContext()->duration % AV_TIME_BASE;
-			m_parent.SetDuration((float)secs + (float)us / AV_TIME_BASE);
+			m_parent.SetDuration((secs + (float)us / AV_TIME_BASE) * 1000);
 		}
 		else
 		{
@@ -333,7 +333,7 @@ namespace sfe {
 		m_isLate = false;
 		m_wantedFrameTime = 0.f;
 		m_displayedFrameCount = 0;
-		m_decodingTime = 0.f;
+		m_decodingTime = 0;
 		m_runThread = false;
 		m_size = sf::Vector2i(0, 0);
 	}
@@ -372,7 +372,7 @@ namespace sfe {
 	{
 		while (m_runThread && m_running.waitForValueAndRetain(1, Condition::Autorelease))
 		{
-			float waitTime = UpdateLateState();
+			sf::Uint32 waitTime = UpdateLateState();
 			
 			if (!m_isLate)
 				sf::Sleep(waitTime);
@@ -401,32 +401,33 @@ namespace sfe {
 		}
 	}
 	
-	float Movie_video::UpdateLateState(void)
+	sf::Uint32 Movie_video::UpdateLateState(void)
 	{
-		float waitTime = 0.f;
+		sf::Uint32 waitTime = 0;
 		// Get the 'real' time from the start of the video
 		// and the progress of the video
 		
 		// Here is the real time elapsed since we started to play the video
-		float realTime = m_parent.GetPlayingOffset();
+		sf::Uint32 realTime = m_parent.GetPlayingOffset();
 		
 		// Here is the time we're at in the video
-		float movieTime = m_displayedFrameCount * m_wantedFrameTime;
+		// Note: m_wantedFrameTime is kept as float (seconds) for accuracy
+		sf::Uint32 movieTime = m_displayedFrameCount * m_wantedFrameTime * 1000;
 		
-		if (movieTime > realTime + m_wantedFrameTime)
+		if (movieTime > realTime + m_wantedFrameTime * 1000)
 		{
 			m_isLate = false;
 			
 			// Added a check to prevent from waiting if we've stopped
 			// the movie playback (and thus waiting for abnormal periods of time)
 			if (m_parent.GetStatus() == Movie::Playing)
-				waitTime = (movieTime - realTime - m_wantedFrameTime);
+				waitTime = (movieTime - realTime - m_wantedFrameTime * 1000);
 		}
 		else
 		{
 			// don't skip a frame if we just have one frame late,
 			// it may be because of a occasional slowdown
-			if (movieTime < realTime - m_wantedFrameTime * 3 && m_decodingTime)
+			if (movieTime < realTime - m_wantedFrameTime * 3000 && m_decodingTime)
 			{
 				m_isLate = true;
 				
@@ -450,7 +451,7 @@ namespace sfe {
 	}
 	
 	
-	void Movie_video::SetPlayingOffset(float time)
+	void Movie_video::SetPlayingOffset(sf::Uint32 time)
 	{
 		Stop();
 		

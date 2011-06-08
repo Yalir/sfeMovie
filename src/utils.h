@@ -27,13 +27,13 @@
 
 #include <string>
 #include <sstream>
-#include <SFML/System/Clock.hpp>
+#include <SFML/System.hpp>
 
 #define ONCE(sequence)\
 { static bool __done = false; if (!__done) { { sequence; } __done = true; } }
 
 #define ONCE_PSEC(sequence)\
-{ static sf::Clock __timer; static bool __first = true; if (__first || __timer.GetElapsedTime() > 1.f) { { sequence; } __first = false; __timer.Reset(); }}
+{ static sf::Clock __timer; static bool __first = true; if (__first || __timer.GetElapsedTime() >= 1000) { { sequence; } __first = false; __timer.Reset(); }}
 
 void PrintWithTime(const std::string& msg);
 
@@ -48,12 +48,12 @@ std::string s(const T& v)
 
 #define EVALUATE_PORTION(portion)\
 {\
-static float __time = 0.f;\
+static sf::Uin32 __time = 0.f;\
 sf::Clock __eval_timer;\
 { portion; }\
 __time += __eval_timer.GetElapsedTime();\
 ONCE_PSEC(\
-		  std::cout << "time spent here : " << __time * 100 << "% in one second" << std::endl;\
+		  std::cout << "time spent here : " << __time * 100 * 1000 << "% in one second" << std::endl;\
 		  __time = 0.f;\
 		  );\
 }
@@ -69,7 +69,7 @@ std::cerr << "Warning: " << __FUNCTION__ << "() called but is not implemented ye
 {\
 static int __counter = 0;\
 static sf::Clock __timer;\
-if (__timer.GetElapsedTime() > 1)\
+if (__timer.GetElapsedTime() >= 1000)\
 {\
 	std::cout << "checkpoint passed " << __counter << " times this sec" << std::endl;\
 	__counter = 0;\
@@ -79,3 +79,11 @@ __counter++;\
 }
 
 #endif
+
+extern sf::Mutex __mtx;
+extern void output_thread(void);
+#define MT_COUT(sequence)\
+{\
+	sf::Lock __l(__mtx);\
+	sf::Sleep(0);\
+}

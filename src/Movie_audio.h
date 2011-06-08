@@ -57,7 +57,7 @@ namespace sfe {
 		//using sf::SoundStream::SetPlayingOffset;
 		using sf::SoundStream::GetPlayingOffset;
 		
-		void SetPlayingOffset(float time);
+		void SetPlayingOffset(sf::Uint32 time);
 		
 		int GetStreamID();
 		bool IsStarving(void);
@@ -71,7 +71,7 @@ namespace sfe {
 		AVPacket *FrontFrame(void);
 		
 		bool OnGetData(Chunk& Data);
-		void OnSeek(float timeOffset);
+		void OnSeek(sf::Uint32 timeOffset);
 		
 	private:
 		// ------------------------- Audio attributes --------------------------
