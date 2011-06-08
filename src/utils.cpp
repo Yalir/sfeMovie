@@ -23,7 +23,7 @@
  */
 
 #include "utils.h"
-#include <sys/time.h>
+#include <ctime>
 #include <iostream>
 
 sf::Mutex __mtx;
@@ -31,15 +31,15 @@ sf::Mutex __mtx;
 
 void PrintWithTime(const std::string& msg)
 {
-	struct timeval tp;
+	/*struct timeval tp;
 	gettimeofday(&tp, NULL);
 	
 	tp.tv_sec %= 60;
 	
-	std::cout << tp.tv_sec << "." << tp.tv_usec << ": " << msg << std::endl;
+	std::cout << tp.tv_sec << "." << tp.tv_usec << ": " << msg << std::endl;*/
 }
 
 void output_thread(void)
 {
-	std::cout << "Thread " << (unsigned)pthread_self() % 1000 << ": ";
+	//std::cout << "Thread " << (unsigned)pthread_self() % 1000 << ": ";
 }
