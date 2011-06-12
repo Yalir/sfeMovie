@@ -33,8 +33,8 @@
 
 namespace sfe {
 
-const bool Condition::Autorelease = true;
-const bool Condition::Manualrelease = false;
+const bool Condition::AutoUnlock = true;
+const bool Condition::ManualUnlock = false;
 
 
 Condition::Condition(int value) :
@@ -48,7 +48,7 @@ Condition::~Condition(void)
 	delete m_impl;
 }
 
-bool Condition::waitForValueAndRetain(int awaitedValue, bool autorelease)
+bool Condition::WaitAndLock(int awaitedValue, bool autorelease)
 {
 	bool flag = m_impl->waitAndRetain(awaitedValue);
 	
@@ -58,7 +58,7 @@ bool Condition::waitForValueAndRetain(int awaitedValue, bool autorelease)
 	return flag;
 }
 
-void Condition::release(int value)
+void Condition::Unlock(int value)
 {
 	m_impl->release(value);
 }
@@ -69,17 +69,17 @@ int Condition::operator=(int value)
 	return value;
 }
 
-void Condition::signal(void)
+void Condition::Signal(void)
 {
 	m_impl->signal();
 }
 
-void Condition::invalidate(void)
+void Condition::Invalidate(void)
 {
 	m_impl->invalidate();
 }
 
-void Condition::restore(void)
+void Condition::Restore(void)
 {
 	m_impl->restore();
 }

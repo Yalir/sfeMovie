@@ -30,13 +30,12 @@ namespace sfe {
 class ConditionImpl;
 class Condition {
 public:
-	// Constants for arg 2 of waitForValueAndRetain()
-	static const bool Autorelease;		// true
-	static const bool Manualrelease;	// false
+	// Constants for arg 2 of WaitAndLock()
+	static const bool AutoUnlock;	// true
+	static const bool ManualUnlock;	// false
 	
-	/* Initialize a Condition object and sets its internal value to @value.
-	 * The user will thereby be able to wait on the Condition until the
-	 * internal value reaches his/her awaited value
+	/* Initializes a Condition object and sets its internal value to @value.
+	 * Thus using WaitAndLock(@value, ...) will immediately return.
 	 */
 	Condition(int value = 0);
 	
@@ -46,40 +45,43 @@ public:
 	~Condition(void);
 	
 	/* Waits until the Condition's value == awaitedValue and protects the Condition.
-	 * You're responsible for releasing the Condition with release() after
-	 * waitAndRetain() returned and after you're done working on protected data,
-	 * or enabling the autorelease mechanism.
+	 * You're responsible for unlocking the Condition with Unlock() after
+	 * WaitAndLock() returned and after you're done working on protected data,
+	 * or enabling the auto unlocking mechanism.
+	 *
+	 * The Condition locking guarantees that the condition remains true until
+	 * you unlock it and that you are the only one that acquired the Condition.
 	 *
 	 * @awaitedValue: the value that should unlock the Condition
 	 *
-	 * @autorelease: Autorelease (true) to automatically release the Condition
-	 * protection after it has been validated, or Manualrelease (false) to
-	 * manually choose when the Condition should be released. While a Condition
-	 * is retained, both waitForValueAndRetain() and operator=() will block
-	 * until the Condition is released or invalidated. When a Condition is
-	 * automatically released, its value is not updated.
+	 * @autoUnlock: Condition::AutoUnlock (true) to automatically unlock the Condition
+	 * protection after it has been validated, or ManualUnlock (false) to
+	 * manually choose when the Condition should be unlocked. While a Condition
+	 * is locked, both WaitAndLock() and operator=() will block
+	 * until the Condition is unlocked or invalidated. When a Condition is
+	 * *automatically* unlocked, its value is not updated.
 	 *
 	 * @return: true if the @awaitedValue has been reached, false otherwise.
-	 * waitForValueAndRetain() may return even if @awaitedValue has not been
-	 * reached if the Condition has been disabled through invalidate(). An
-	 * invalidated Condition always returns in an unlocked (non-retained) state.
+	 * WaitAndLock() may return even if @awaitedValue has not been
+	 * reached if the Condition has been disabled through Invalidate(). An
+	 * invalidated Condition always returns in an unlocked state.
 	 */
-	bool waitForValueAndRetain(int awaitedValue, bool autorelease = false);
+	bool WaitAndLock(int awaitedValue, bool autoUnlock = false);
 	
-	/* Releases a previously retained (protected) Condition with @value as
-	 * internal value. When the condition is released (unlocked), it is assumed
+	/* Unlocks a previously locked Condition with @value as
+	 * internal value. When the condition is unlocked, it is assumed
 	 * to have the given value. The condition is thereafter signaled.
-	 * Releasing a non-protected Condition is undefined.
+	 * Unlocking a non-locked Condition is undefined.
 	 *
-	 * @value: the value the Condition should have when it is released
+	 * @value: the value the Condition should have when it is unlocked
 	 */
-	void release(int value);
+	void Unlock(int value);
 	
 	/* Performs an assignement followed by a signal() call.
 	 * The internal Condition value is updated to @value and the Condition is
-	 * signaled. Note that the Condition must be unlocked (non-retained)
-	 * in order to be updated, otherwise it'll block until the Condition
-	 * is released.
+	 * signaled. Note that the Condition must be unlocked in order
+	 * to be updated, otherwise it'll block until the Condition
+	 * is unlocked.
 	 *
 	 * @value: the value to be assigned to the Condition
 	 *
@@ -87,22 +89,22 @@ public:
 	 */
 	int operator=(int value);
 	
-	/* Signal that the Condition state has changed and that
+	/* Signals that the Condition state has changed and that
 	 * threads waiting on this Condition should check
-	 * the new @var value.
+	 * the new internal value.
 	 */
-	void signal(void);
+	void Signal(void);
 	
-	/* Signals the Condition and disable blocking calls,
-	 * thus waitForValueAndRetain() does no more wait whatever
+	/* Signals the Condition and disables blocking calls,
+	 * thus WaitAndLock() does no more wait whatever
 	 * the awaitedValue is and waiting calls are unlocked, returning false.
 	 */
-	void invalidate(void);
+	void Invalidate(void);
 	
 	/* Restores the blocking capabilities of the Condition,
-	 * possibly previously disabled with invalidate() 
+	 * possibly previously disabled with Invalidate() 
 	 */
-	void restore(void);
+	void Restore(void);
 	
 private:
 	ConditionImpl *m_impl;

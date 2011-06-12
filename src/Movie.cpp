@@ -131,9 +131,12 @@ namespace sfe {
 			IFAUDIO(m_audio->Play());
 			IFVIDEO(m_video->Play());
 			
-			*m_shouldStopCond = 0;
-			m_shouldStopCond->restore();
-			m_watchThread.Launch();
+			if (m_status != Paused)
+			{
+				*m_shouldStopCond = 0;
+				m_shouldStopCond->Restore();
+				m_watchThread.Launch();
+			}
 			m_status = Playing;
 		}
 	}
@@ -169,7 +172,7 @@ namespace sfe {
 			IFVIDEO(m_video->Stop());
 			m_progressAtPause = 0;
 			SetEofReached(false);
-			m_shouldStopCond->invalidate();
+			m_shouldStopCond->Invalidate();
 		}
 	}
 
@@ -452,7 +455,7 @@ namespace sfe {
 	
 	void Movie::Watch(void)
 	{
-		if (m_shouldStopCond->waitForValueAndRetain(1, Condition::Autorelease))
+		if (m_shouldStopCond->WaitAndLock(1, Condition::AutoUnlock))
 		{
 			Stop();
 		}

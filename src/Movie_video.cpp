@@ -257,8 +257,8 @@ namespace sfe {
 		// Start threads
 		m_runThread = true;
 		m_running = 1;
-		m_backImageReady.restore();
-		m_running.restore();
+		m_backImageReady.Restore();
+		m_running.Restore();
 		
 		if (m_parent.GetStatus() != Movie::Paused)
 		{
@@ -284,8 +284,8 @@ namespace sfe {
 		{
 			//m_updateThreadWatcher.Terminate(); //Terminate because if stopping isn't caused by reaching the Eof, it will try to call Stop a second time
             m_runThread = false;
-			m_backImageReady.invalidate();
-			m_running.invalidate();
+			m_backImageReady.Invalidate();
+			m_running.Invalidate();
 			m_updateThread.Wait();
 			m_decodeThread.Wait();
 		}
@@ -370,7 +370,7 @@ namespace sfe {
 	
 	void Movie_video::Update(void)
 	{
-		while (m_runThread && m_running.waitForValueAndRetain(1, Condition::Autorelease))
+		while (m_runThread && m_running.WaitAndLock(1, Condition::AutoUnlock))
 		{
 			sf::Uint32 waitTime = UpdateLateState();
 			
@@ -384,15 +384,15 @@ namespace sfe {
 	void Movie_video::Decode(void)
 	{
 		while (m_runThread &&
-			   m_running.waitForValueAndRetain(1, Condition::Autorelease) &&
-			   m_backImageReady.waitForValueAndRetain(0))
+			   m_running.WaitAndLock(1, Condition::AutoUnlock) &&
+			   m_backImageReady.WaitAndLock(0))
 		{
 			UpdateLateState();
 			
 			if (LoadNextImage())
-				m_backImageReady.release(1);
+				m_backImageReady.Unlock(1);
 			else
-				m_backImageReady.release(0);
+				m_backImageReady.Unlock(0);
 			
 			if (m_isStarving)
 			{
@@ -475,7 +475,7 @@ namespace sfe {
 	void Movie_video::SwapImages(bool unconditionned)
 	{
 		// Make sure the back image is ready for swaping
-		if (unconditionned || m_backImageReady.waitForValueAndRetain(1))
+		if (unconditionned || m_backImageReady.WaitAndLock(1))
 		{
 			// Make sure we don't swap while using front/backImage()
 			m_imageSwapMutex.Lock();
@@ -485,7 +485,7 @@ namespace sfe {
 			
 			// Update condition
 			if (!unconditionned)
-				m_backImageReady.release(0);
+				m_backImageReady.Unlock(0);
 		}
 	}
 	
