@@ -186,7 +186,7 @@ namespace sfe {
 		typedef AVFormatContext *AVFormatContextRef;
 		typedef AVPacket *AVPacketRef;
 #endif
-		
+		void InternalStop(bool calledFromWatchThread);
 		void Render(sf::RenderTarget& Target, sf::Renderer& renderer) const;
 		
 		static void OutputError(int err, const std::string& fallbackMessage = "");

@@ -131,12 +131,14 @@ namespace sfe {
 			IFAUDIO(m_audio->Play());
 			IFVIDEO(m_video->Play());
 			
+			// Don't restart watch thread if we're resuming
 			if (m_status != Paused)
 			{
 				*m_shouldStopCond = 0;
 				m_shouldStopCond->Restore();
 				m_watchThread.Launch();
 			}
+			
 			m_status = Playing;
 		}
 	}
@@ -153,6 +155,8 @@ namespace sfe {
 			// (audio usually gets a bit later each time you pause and resume
 			// the movie playback, thus fix the video timing according
 			// to the audio's one)
+			// NB: Calling Pause()/Play() is the only way to resynchronize
+			// audio and video when audio gets late for now.
 			if (HasAudioTrack())
 				m_progressAtPause = m_audio->GetPlayingOffset();
 			else
@@ -162,9 +166,14 @@ namespace sfe {
 
 	void Movie::Stop(void)
 	{
+		InternalStop(false);
+	}
+	
+	void Movie::InternalStop(bool calledFromWatchThread)
+	{
 		// prevent Stop() from being executed while already stopping from another thread
 		sf::Lock l(m_stopMutex);
-
+		
 		if (m_status != Stopped)
 		{
 			m_status = Stopped;
@@ -173,6 +182,8 @@ namespace sfe {
 			m_progressAtPause = 0;
 			SetEofReached(false);
 			m_shouldStopCond->Invalidate();
+			if (!calledFromWatchThread)
+				m_watchThread.Wait();
 		}
 	}
 
@@ -457,7 +468,7 @@ namespace sfe {
 	{
 		if (m_shouldStopCond->WaitAndLock(1, Condition::AutoUnlock))
 		{
-			Stop();
+			InternalStop(true);
 		}
 	}
 

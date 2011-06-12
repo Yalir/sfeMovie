@@ -432,12 +432,12 @@ namespace sfe {
 				m_isLate = true;
 				
 				if (Movie::UsesDebugMessages())
-					std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << (realTime - movieTime) << "s (movie playing offset is " << realTime << "s)" << std::endl;
+					std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms)" << std::endl;
 			}
 			else if (movieTime < realTime - m_wantedFrameTime && m_decodingTime)
 			{
 				if (Movie::UsesDebugMessages())
-					std::cerr << "Movie_video::Run() - warning: movie playback is late by " << (realTime - movieTime) << "s (movie playing offset is " << realTime << "s) but we're not skipping any frame since we're not 'too' late" << std::endl;
+					std::cerr << "Movie_video::Run() - warning: movie playback is late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms) but we're not skipping any frame since we're not 'too' late" << std::endl;
 			}
 		}
 		
