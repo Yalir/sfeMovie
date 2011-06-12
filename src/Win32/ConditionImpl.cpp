@@ -25,6 +25,8 @@
 #include "ConditionImpl.h"
 #include <iostream>
 
+namespace sfe {
+
 ConditionImpl::ConditionImpl(int var) :
 m_isValid(true),
 m_conditionnedVar(var),
@@ -99,3 +101,5 @@ void ConditionImpl::restore(void)
 		m_isValid = true;
 	}
 }
+
+} // namespace sfe

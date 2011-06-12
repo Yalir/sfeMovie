@@ -28,6 +28,8 @@
 
 #include <pthread.h>
 
+namespace sfe {
+
 class ConditionImpl {
 public:
 	ConditionImpl(int var);
@@ -45,5 +47,7 @@ private:
 	pthread_cond_t m_cond;
 	pthread_mutex_t m_mutex;
 };
+	
+} // namespace sfe
 
 #endif

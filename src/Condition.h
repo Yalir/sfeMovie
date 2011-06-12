@@ -25,6 +25,8 @@
 #ifndef CONDITION_H
 #define CONDITION_H
 
+namespace sfe {
+
 class ConditionImpl;
 class Condition {
 public:
@@ -105,6 +107,8 @@ public:
 private:
 	ConditionImpl *m_impl;
 };
+
+} // namespace sfe
 
 #endif
 

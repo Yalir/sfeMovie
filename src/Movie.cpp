@@ -30,6 +30,7 @@ extern "C"
 }
 
 #include "Movie.h"
+#include "Condition.h"
 #include "Movie_video.h"
 #include "Movie_audio.h"
 #include "utils.h"
@@ -54,7 +55,9 @@ namespace sfe {
 	m_overallTimer(),
 	m_progressAtPause(0),
 	m_video(new Movie_video(*this)),
-	m_audio(new Movie_audio(*this))
+	m_audio(new Movie_audio(*this)),
+	m_watchThread(&Movie::Watch, this),
+	m_shouldStopCond(new Condition())
 	{
 	}
 
@@ -64,6 +67,7 @@ namespace sfe {
 		Close();
 		delete m_video;
 		delete m_audio;
+		delete m_shouldStopCond;
 	}
 
 	bool Movie::OpenFromFile(const std::string& filename)
@@ -126,6 +130,10 @@ namespace sfe {
 			m_overallTimer.Reset();
 			IFAUDIO(m_audio->Play());
 			IFVIDEO(m_video->Play());
+			
+			*m_shouldStopCond = 0;
+			m_shouldStopCond->restore();
+			m_watchThread.Launch();
 			m_status = Playing;
 		}
 	}
@@ -161,7 +169,7 @@ namespace sfe {
 			IFVIDEO(m_video->Stop());
 			m_progressAtPause = 0;
 			SetEofReached(false);
-			IFVIDEO(m_video->PreLoad());
+			m_shouldStopCond->invalidate();
 		}
 	}
 
@@ -437,6 +445,14 @@ namespace sfe {
 		
 		// No mode audio or video data to read
 		if (audioStarvation && videoStarvation)
+		{
+			*m_shouldStopCond = 1;
+		}
+	}
+	
+	void Movie::Watch(void)
+	{
+		if (m_shouldStopCond->waitForValueAndRetain(1, Condition::Autorelease))
 		{
 			Stop();
 		}

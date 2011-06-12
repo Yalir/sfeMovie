@@ -31,6 +31,8 @@
 #include "Unix/ConditionImpl.h"
 #endif
 
+namespace sfe {
+
 const bool Condition::Autorelease = true;
 const bool Condition::Manualrelease = false;
 
@@ -81,3 +83,5 @@ void Condition::restore(void)
 {
 	m_impl->restore();
 }
+	
+} // namespace sfe

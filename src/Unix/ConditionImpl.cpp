@@ -28,6 +28,8 @@
 #include <iostream>
 using namespace std;
 
+namespace sfe {
+
 ConditionImpl::ConditionImpl(int var) :
 m_isValid(true),
 m_conditionnedVar(var),
@@ -123,3 +125,4 @@ void ConditionImpl::restore(void)
 	}
 }
 
+} // namespace sfe

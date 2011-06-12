@@ -29,6 +29,8 @@
 #include <windows.h>
 #include <SFML/System.hpp>	// Use SFML mutexes
 
+namespace sfe {
+
 class ConditionImpl {
 public:
 	ConditionImpl(int var);
@@ -46,5 +48,7 @@ private:
 	HANDLE m_cond;
 	sf::Mutex m_mutex;
 };
+	
+} // namespace sfe
 
 #endif

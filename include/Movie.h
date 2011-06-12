@@ -30,12 +30,14 @@
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Mutex.hpp>
+#include <SFML/System/Thread.hpp>
 #include <string>
 
 
 namespace sfe {
 	class Movie_audio;
 	class Movie_video;
+	class Condition;
 	
 	class Movie : public sf::Drawable {
 		friend class Movie_audio;
@@ -96,7 +98,7 @@ namespace sfe {
 		float GetVolume(void) const;
 		
 		/** Returns the duration of the movie
-		 * @return: the duration in seconds
+		 * @return: the duration in milliseconds
 		 */
 		sf::Uint32 GetDuration(void) const;
 		
@@ -198,6 +200,7 @@ namespace sfe {
 		bool SaveFrame(AVPacketRef frame);
 		static bool UsesDebugMessages(void);
 		void Starvation(void);
+		void Watch(void);
 		
 		AVFormatContextRef m_avFormatCtx;
 		bool m_hasVideo;
@@ -205,6 +208,8 @@ namespace sfe {
 		bool m_eofReached;
 		sf::Mutex m_stopMutex;
 		sf::Mutex m_readerMutex;
+		sf::Thread m_watchThread;
+		Condition *m_shouldStopCond;
 		
 		Status m_status;
 		sf::Uint32 m_duration;
