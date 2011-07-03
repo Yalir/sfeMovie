@@ -258,8 +258,8 @@ libmoldname.a
 			cp -v libsfe-movie.dylib product/lib
 		elif [ "$os" == "windows" ]
 		  then
-			cp -v -R deps/windows-binaries/* product/lib
-			rm -v product/lib/libz.a
+			wd="deps/windows-binaries"
+			cp -v ${wd}/libsndfile-1.dll ${wd}/openal32.dll ${wd}/gcc/libgcc_s_dw2-1.dll ${wd}/gcc/sfml-audio-2.dll ${wd}/gcc/sfml-graphics-2.dll ${wd}/gcc/sfml-system-2.dll ${wd}/gcc/sfml-window-2.dll product/lib
 			cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
 		fi
 		
