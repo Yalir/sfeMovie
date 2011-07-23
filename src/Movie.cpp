@@ -147,10 +147,6 @@ namespace sfe {
 	{
 		if (m_status == Playing)
 		{
-			m_status = Paused;
-			IFAUDIO(m_audio->Pause());
-			IFVIDEO(m_video->Pause());
-
 			// Prevent audio from being late compared to video
 			// (audio usually gets a bit later each time you pause and resume
 			// the movie playback, thus fix the video timing according
@@ -161,6 +157,10 @@ namespace sfe {
 				m_progressAtPause = m_audio->GetPlayingOffset();
 			else
 				m_progressAtPause += m_overallTimer.GetElapsedTime();
+			
+			m_status = Paused;
+			IFAUDIO(m_audio->Pause());
+			IFVIDEO(m_video->Pause());
 		}
 	}
 
@@ -394,6 +394,8 @@ namespace sfe {
 		{	
 			// read frame
 			pkt = (AVPacket *)av_malloc(sizeof(*pkt));
+			av_init_packet(pkt);
+			
 			int res = av_read_frame(GetAVFormatContext(), pkt);
 			
 			// check we didn't reach eof right now
@@ -401,6 +403,8 @@ namespace sfe {
 			{
 				SetEofReached(true);
 				flag = false;
+				av_free_packet(pkt);
+				av_free(pkt);
 			}
 			else
 			{
