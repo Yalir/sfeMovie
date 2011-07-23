@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////
 // Define portable import / export macros
 ////////////////////////////////////////////////////////////
-#if defined(SFML_SYSTEM_WINDOWS) /*&& !defined(SFML_STATIC)*/
+#if defined(SFML_SYSTEM_WINDOWS) && defined(_MSC_VER)
     #ifdef SFE_EXPORTS
         // From DLL side, we must export
         #define SFE_API __declspec(dllexport)
@@ -241,8 +241,6 @@ namespace sfe {
 		
 		Movie_video *m_video;
 		Movie_audio *m_audio;
-		
-		static bool g_usesDebugMessages;
 	};
 	
 } // namespace sfe

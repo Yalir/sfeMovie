@@ -520,6 +520,7 @@ namespace sfe {
 		SwapImages(true);
 		LoadNextImage();
 		m_backImageReady = 1;
+		return true;
 	}
 	
 	

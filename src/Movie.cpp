@@ -42,7 +42,7 @@ extern "C"
 
 namespace sfe {
 
-	bool Movie::g_usesDebugMessages = false;
+	static bool g_usesDebugMessages = false;
 
 	Movie::Movie(void) :
 	m_avFormatCtx(NULL),
