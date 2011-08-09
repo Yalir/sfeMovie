@@ -154,9 +154,15 @@ namespace sfe {
 			// NB: Calling Pause()/Play() is the only way to resynchronize
 			// audio and video when audio gets late for now.
 			if (HasAudioTrack())
+			{
 				m_progressAtPause = m_audio->GetPlayingOffset();
+				//std::cout << "synch according to audio track=" << m_progressAtPause << std::endl;
+			}
 			else
+			{
+				//std::cout << "synch according to progrAtPse=" << m_progressAtPause << " + elapsdTme=" << m_overallTimer.GetElapsedTime() << std::endl;
 				m_progressAtPause += m_overallTimer.GetElapsedTime();
+			}
 			
 			m_status = Paused;
 			IFAUDIO(m_audio->Pause());
@@ -335,7 +341,7 @@ namespace sfe {
 	{
 		char buffer[4096] = {0};
 
-		if (0 == av_strerror(err, buffer, sizeof(buffer)))
+		if (err != AVERROR_NOENT && 0 == av_strerror(err, buffer, sizeof(buffer)))
 			std::cerr << "FFmpeg error: " << buffer << std::endl;
 		else
 		{
