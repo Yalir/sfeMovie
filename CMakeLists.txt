@@ -34,7 +34,7 @@ set (SFML_LIBRARIES sfml-system.2.0 sfml-window.2.0 sfml-graphics.2.0 sfml-audio
 set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
 
-set (COMPILER_FLAGS "")
+set (COMPILER_FLAGS "-g2")
 set (LINKER_FLAGS "")
 set (OTHER_FLAGS "")
 
@@ -50,7 +50,7 @@ elseif (MACOSX)
 	set (OTHER_LIBRARIES z bz2)
 	
 #	set (COMPILER_FLAGS "${COMPILER_FLAGS} -g2")
-	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress")
+	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress -framework OpenGL")
 	
 	# add " -arch i386 -arch x86_64" to $OTHER_FLAGS in order to build universal binary
 	# (disabled by default because I couldn't find any way to get FFmpeg to build as
