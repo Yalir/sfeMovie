@@ -75,7 +75,7 @@ elseif (WINDOWS)
 	
 	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS -DSFE_EXPORTS")
 	set (SFML_LIBRARIES sfml-system sfml-window sfml-graphics sfml-audio)
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} ws2_32)
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} ws2_32 opengl32)
 	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Win32/ConditionImpl.cpp)
 endif()
 
