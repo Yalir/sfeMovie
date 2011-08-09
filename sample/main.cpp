@@ -28,7 +28,7 @@ int main()
 		while (window.PollEvent(ev))
 		{
 			if (ev.Type == sf::Event::Closed ||
-				(ev.Type == sf::Event::KeyPressed && ev.Key.Code == sf::Key::Escape))
+				(ev.Type == sf::Event::KeyPressed && ev.Key.Code == sf::Keyboard::Escape))
 			{
 				//movie.Stop();
 				window.Close();
@@ -37,7 +37,7 @@ int main()
 			if (ev.Type == sf::Event::KeyPressed)
 			{
 				// Handle basic controls
-				if (ev.Key.Code == sf::Key::Space)
+				if (ev.Key.Code == sf::Keyboard::Space)
 				{
 					if (movie.GetStatus() == sfe::Movie::Paused || movie.GetStatus() == sfe::Movie::Stopped)
 						movie.Play();
@@ -45,10 +45,10 @@ int main()
 						movie.Pause();
 				}
 
-				if (ev.Key.Code == sf::Key::S)
+				if (ev.Key.Code == sf::Keyboard::S)
 					movie.Stop();
 				
-				if (ev.Key.Code == sf::Key::F)
+				if (ev.Key.Code == sf::Keyboard::F)
 				{
 					fullscreen = !fullscreen;
 					
@@ -68,13 +68,13 @@ int main()
 					}
 				}
 				
-				if (ev.Key.Code ==sf::Key::Escape)
+				if (ev.Key.Code ==sf::Keyboard::Escape)
 				{
 					//movie.Stop();
 					window.Close();
 				}
 				
-				if (ev.Key.Code == sf::Key::R)
+				if (ev.Key.Code == sf::Keyboard::R)
 				{
 					movie.Stop();
 					movie.Play();
