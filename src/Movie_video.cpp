@@ -37,6 +37,7 @@
 bool save = false;
 
 #define NTSC_FRAMERATE 29.97f
+#define GL_HACK 0
 
 
 namespace sfe {
@@ -347,8 +348,13 @@ namespace sfe {
 	void Movie_video::Render(sf::RenderTarget& Target) const
 	{
 		sf::Lock l(m_imageSwapMutex); // 2% on Windows
+#if GL_HACK
+		glFlush();
+#endif
 		Target.Draw(m_sprite); // 38% on Windows
-		
+#if GL_HACK
+		glFlush();
+#endif
 		//std::cout << "displayed\n";
 		// Allow thread switching
 		sf::Sleep(0);
@@ -663,7 +669,9 @@ namespace sfe {
 					//std::cout << "loaded\n";
 					
 					// 7.7% (19% of total function) on macosx ; 6.13% (12% of total function) on windows
+#if GL_HACK
 					glFlush();
+#endif
 					m_imageSwapMutex.Unlock();
 					
 					
