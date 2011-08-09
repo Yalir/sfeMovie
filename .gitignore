@@ -1,0 +1,9 @@
+*.o
+*.d
+sfeMovie_test
+sfeMovie.xcodeproj
+sfeMovie.build
+obsolete
+CMakeScripts
+CMakeFiles
+product
