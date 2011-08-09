@@ -32,7 +32,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/System/String.hpp>
 #include <SFML/Graphics/Glyph.hpp>
-#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <map>
 #include <string>
@@ -41,6 +41,8 @@
 
 namespace sf
 {
+class InputStream;
+
 ////////////////////////////////////////////////////////////
 /// \brief Class for loading and manipulating character fonts
 ///
@@ -86,7 +88,7 @@ public :
     ///
     /// \return True if loading succeeded, false if it failed
     ///
-    /// \see LoadFromMemory
+    /// \see LoadFromMemory, LoadFromStream
     ///
     ////////////////////////////////////////////////////////////
     bool LoadFromFile(const std::string& filename);
@@ -96,9 +98,6 @@ public :
     ///
     /// The supported font formats are: TrueType, Type 1, CFF,
     /// OpenType, SFNT, X11 PCF, Windows FNT, BDF, PFR and Type 42.
-    /// Note that this function know nothing about the standard
-    /// fonts installed on the user's system, thus you can't
-    /// load them directly.
     /// Warning: SFML cannot preload all the font data in this
     /// function, so the buffer pointed by \a data has to remain
     /// valid as long as the font is used.
@@ -108,10 +107,28 @@ public :
     ///
     /// \return True if loading succeeded, false if it failed
     ///
-    /// \see LoadFromFile
+    /// \see LoadFromFile, LoadFromStream
     ///
     ////////////////////////////////////////////////////////////
     bool LoadFromMemory(const void* data, std::size_t sizeInBytes);
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Load the font from a custom stream
+    ///
+    /// The supported font formats are: TrueType, Type 1, CFF,
+    /// OpenType, SFNT, X11 PCF, Windows FNT, BDF, PFR and Type 42.
+    /// Warning: SFML cannot preload all the font data in this
+    /// function, so the contents of \a stream have to remain
+    /// valid as long as the font is used.
+    ///
+    /// \param stream Source stream to read from
+    ///
+    /// \return True if loading succeeded, false if it failed
+    ///
+    /// \see LoadFromFile, LoadFromMemory
+    ///
+    ////////////////////////////////////////////////////////////
+    bool LoadFromStream(InputStream& stream);
 
     ////////////////////////////////////////////////////////////
     /// \brief Retrieve a glyph of the font
@@ -157,18 +174,18 @@ public :
     int GetLineSpacing(unsigned int characterSize) const;
 
     ////////////////////////////////////////////////////////////
-    /// \brief Retrieve the image containing the loaded glyphs of a certain size
+    /// \brief Retrieve the texture containing the loaded glyphs of a certain size
     ///
-    /// The contents of the returned image changes as more glyphs
+    /// The contents of the returned texture changes as more glyphs
     /// are requested, thus it is not very relevant. It is mainly
     /// used internally by sf::Text.
     ///
     /// \param characterSize Reference character size
     ///
-    /// \return Image containing the glyphs of the requested size
+    /// \return Texture containing the glyphs of the requested size
     ///
     ////////////////////////////////////////////////////////////
-    const Image& GetImage(unsigned int characterSize) const;
+    const Texture& GetTexture(unsigned int characterSize) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Overload of assignment operator
@@ -223,8 +240,8 @@ private :
         Page();
 
         GlyphTable       Glyphs;  ///< Table mapping code points to their corresponding glyph
-        Image            Texture; ///< Image containing the pixels of the glyphs
-        unsigned int     NextRow; ///< Y position of the next new row in the image
+        sf::Texture      Texture; ///< Texture containing the pixels of the glyphs
+        unsigned int     NextRow; ///< Y position of the next new row in the texture
         std::vector<Row> Rows;    ///< List containing the position of all the existing rows
     };
 
@@ -271,13 +288,14 @@ private :
     ////////////////////////////////////////////////////////////
     // Types
     ////////////////////////////////////////////////////////////
-    typedef std::map<unsigned int, Page> PageTable; ///< Table mapping a character size to its page (image)
+    typedef std::map<unsigned int, Page> PageTable; ///< Table mapping a character size to its page (texture)
 
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
     void*                      myLibrary;     ///< Pointer to the internal library interface (it is typeless to avoid exposing implementation details)
     void*                      myFace;        ///< Pointer to the internal font face (it is typeless to avoid exposing implementation details)
+    void*                      myStreamRec;   ///< Pointer to the stream rec instance (it is typeless to avoid exposing implementation details)
     int*                       myRefCount;    ///< Reference counter used by implicit sharing
     mutable PageTable          myPages;       ///< Table containing the glyphs pages by character size
     mutable std::vector<Uint8> myPixelBuffer; ///< Pixel buffer holding a glyph's pixels before being written to the texture
@@ -293,9 +311,9 @@ private :
 /// \class sf::Font
 /// \ingroup graphics
 ///
-/// Fonts can be loaded from a file or from memory, from
-/// the most common types of fonts. See the LoadFromFile
-/// function for the complete list of supported formats.
+/// Fonts can be loaded from a file, from memory or from a custom
+/// stream, and supports the most common types of fonts. See
+/// the LoadFromFile function for the complete list of supported formats.
 ///
 /// Once it is loaded, a sf::Font instance provides three
 /// types of informations about the font:
