@@ -25,11 +25,16 @@
 
 #include "Movie_video.h"
 #include "Movie.h"
+
+#include "Movie_audio.h"
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/OpenGL.hpp>
 #include <iostream>
 #include <cassert>
 #include "utils.h"
+
+bool save = false;
 
 #define NTSC_FRAMERATE 29.97f
 
@@ -61,8 +66,8 @@ namespace sfe {
 	m_imageSwapMutex(),
 	m_backImageReady(),
 	m_imageIndex(0),
-	m_image1(),
-	m_image2(),
+	m_tex1(),
+	m_tex2(),
 	
 	// Miscellaneous parameters
 	m_isLate(false),
@@ -127,6 +132,7 @@ namespace sfe {
 			return false;
 		}
 		
+		
 		// Create the frame buffers
 		m_rawFrame = avcodec_alloc_frame();
 		m_RGBAFrame = avcodec_alloc_frame();
@@ -137,13 +143,14 @@ namespace sfe {
 			return false;
 		}
 		
+		// Get the video size
+		m_size = sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
+		
 		// Get the picture size and create the buffer
 		// NB: I don't understand why this is needed, but the video
 		// won't display without this, and I wasn't able to contact
 		// the author of these lines
-		int pictSize = avpicture_get_size(PIX_FMT_RGBA,
-										  m_codecCtx->width,
-										  m_codecCtx->height);
+		int pictSize = avpicture_get_size(PIX_FMT_RGBA, m_size.x, m_size.y);
 		sf::Uint8 *videoBuffer = (sf::Uint8 *)av_malloc(pictSize * sizeof(sf::Uint8));
 		if (!videoBuffer)
 		{
@@ -154,10 +161,10 @@ namespace sfe {
 		
 		// Fill the picture buffer with the frame data
 		avpicture_fill((AVPicture *)m_RGBAFrame, videoBuffer, PIX_FMT_RGBA,
-					   m_codecCtx->width, m_codecCtx->height);
+					   m_size.x, m_size.y);
 		av_free(videoBuffer);
 		
-		m_pictureBuffer = (sf::Uint8 *)av_malloc(sizeof(sf::Uint8) * m_codecCtx->width * m_codecCtx->height * 4);
+		m_pictureBuffer = (sf::Uint8 *)av_malloc(sizeof(sf::Uint8) * m_size.x * m_size.y * 4);
 		if (!m_pictureBuffer)
 		{
 			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
@@ -166,9 +173,9 @@ namespace sfe {
 		}
 		
 		// Setup the image scaler/converter
-		m_swsCtx = sws_getContext(m_codecCtx->width, m_codecCtx->height,
+		m_swsCtx = sws_getContext(m_size.x, m_size.y,
 								  m_codecCtx->pix_fmt,
-								  m_codecCtx->width, m_codecCtx->height,
+								  m_size.x, m_size.y,
 								  PIX_FMT_RGBA,
 								  SWS_BICUBIC, NULL, NULL, NULL);
 		if (!m_swsCtx)
@@ -178,8 +185,10 @@ namespace sfe {
 			return false;
 		}
 		
+		
+		
 		// Setup the SFML stuff
-		if (!m_image1.Create(m_codecCtx->width, m_codecCtx->height) || !m_image2.Create(m_codecCtx->width, m_codecCtx->height))
+		if (!m_tex1.Create(m_size.x, m_size.y) || !m_tex2.Create(m_size.x, m_size.y))
 		{
 			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
 			Close();
@@ -210,15 +219,12 @@ namespace sfe {
                 m_wantedFrameTime = 1.f/((float)r2.num / r2.den);
 				
 				if (Movie::UsesDebugMessages())
-					std::cerr << "Using video framerate : " << ((float)r.num / r.den) << std::endl;
+					std::cerr << "Using video framerate : " << ((float)r2.num / r2.den) << std::endl;
 			}
         }
 		
 		if (Movie::UsesDebugMessages())
 			std::cerr << "Wanted frame time is " << m_wantedFrameTime << std::endl;
-		
-		// Get the video size
-		m_size = sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
 		
 		// Get the video duration
 		if (m_parent.GetAVFormatContext()->duration != AV_NOPTS_VALUE)
@@ -245,13 +251,13 @@ namespace sfe {
 		if (fabs(sc.x - 1.f) < 0.00001 &&
 			fabs(sc.y - 1.f) < 0.00001)
 		{
-			m_image1.SetSmooth(false);
-			m_image2.SetSmooth(false);
+			m_tex1.SetSmooth(false);
+			m_tex2.SetSmooth(false);
 		}
 		else
 		{
-			m_image1.SetSmooth(true);
-			m_image2.SetSmooth(true);
+			m_tex1.SetSmooth(true);
+			m_tex2.SetSmooth(true);
 		}
 		
 		// Start threads
@@ -343,6 +349,7 @@ namespace sfe {
 		sf::Lock l(m_imageSwapMutex); // 2% on Windows
 		Target.Draw(m_sprite); // 38% on Windows
 		
+		//std::cout << "displayed\n";
 		// Allow thread switching
 		sf::Sleep(0);
 	}
@@ -365,7 +372,7 @@ namespace sfe {
 	sf::Image Movie_video::GetImageCopy(void) const
 	{
 		sf::Lock l(m_imageSwapMutex);
-		return FrontImage();
+		return FrontTexture().CopyToImage();
 	}
 	
 	void Movie_video::Update(void)
@@ -375,9 +382,23 @@ namespace sfe {
 			sf::Uint32 waitTime = UpdateLateState();
 			
 			if (!m_isLate)
+			{
+				if (waitTime > 1000)
+					std::cout << "waiting for weird time: " << waitTime << std::endl;
 				sf::Sleep(waitTime);
+			}
 			
 			SwapImages();
+			
+			static sf::Uint32 lastTime = 0;
+			sf::Uint32 newTime = m_parent.m_audio->GetPlayingOffset();
+			//std::cout << lastTime << " -> " << newTime << std::endl;
+			
+			if (lastTime > newTime)
+			{
+				std::cout << "going wrong!" << std::endl;
+			}
+			lastTime = newTime;
 		}
 	}
 	
@@ -480,8 +501,14 @@ namespace sfe {
 			// Make sure we don't swap while using front/backImage()
 			m_imageSwapMutex.Lock();
 			m_imageIndex = (m_imageIndex + 1) % 2;
-			m_sprite.SetImage((m_imageIndex == 0) ? m_image1 : m_image2);
+			m_sprite.SetTexture((m_imageIndex == 0) ? m_tex1 : m_tex2);
+			//FrontTexture().Bind();
+			//std::cout << "swaped\n";
 			m_imageSwapMutex.Unlock();
+			
+			
+			//std::cout << "front tex is " << m_imageIndex << std::endl;
+			//
 			
 			// Update condition
 			if (!unconditionned)
@@ -489,20 +516,20 @@ namespace sfe {
 		}
 	}
 	
-	sf::Image& Movie_video::FrontImage(void)
+	sf::Texture& Movie_video::FrontTexture(void)
 	{
 		sf::Lock l(m_imageSwapMutex);
-		return (m_imageIndex == 0) ? m_image1 : m_image2;
+		return (m_imageIndex == 0) ? m_tex1 : m_tex2;
 	}
 	
-	const sf::Image& Movie_video::FrontImage(void) const
+	const sf::Texture& Movie_video::FrontTexture(void) const
 	{
-		return (m_imageIndex == 0) ? m_image1 : m_image2;
+		return (m_imageIndex == 0) ? m_tex1 : m_tex2;
 	}
 	
-	sf::Image& Movie_video::BackImage(void)
+	sf::Texture& Movie_video::BackTexture(void)
 	{
-		return (m_imageIndex == 0) ? m_image2 : m_image1;
+		return (m_imageIndex == 0) ? m_tex2 : m_tex1;
 	}
 	
 	
@@ -606,15 +633,40 @@ namespace sfe {
 							  0, m_codecCtx->height,
 							  m_RGBAFrame->data, m_RGBAFrame->linesize); // 6.3% on windows (12% of total)
 					
+					//static sf::Image img;
+					//img.Create(m_size.x, m_size.y, (sf::Uint8*)m_RGBAFrame->data[0]);
 					
 					// Load the data in the sf::Image
 					m_imageSwapMutex.Lock();
 					
 					// 10.1% (25% of total function) on macosx ; 18.4% (37% of total) on windows
-					BackImage().LoadFromPixels(m_codecCtx->width, m_codecCtx->height, (sf::Uint8*)m_RGBAFrame->data[0]);
+					//BackImage().LoadFromPixels(m_codecCtx->width, m_codecCtx->height, (sf::Uint8*)m_RGBAFrame->data[0]);
+					BackTexture().Update((sf::Uint8*)m_RGBAFrame->data[0]);
+					
+					//BackTexture().LoadFromImage(img);
+					
+					
+					
+					
+					/*if (save)
+					{
+						static char counter = 0;
+						std::string names[] = {"0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png", "11.png", "12.png", "13.png", "14.png", "15.png", "16.png", "17.png", "18.png", "19.png", "20.png", "21.png", "22.png", "23.png", "24.png", "25.png", "26.png", "27.png", "28.png", "29.png"};
+						BackTexture().CopyToImage().SaveToFile(names[counter]);
+						counter++;
+						if (counter == 30) {
+							save = false;
+							counter = 0;
+						}
+					}*/
+					
+					//std::cout << "loaded\n";
 					
 					// 7.7% (19% of total function) on macosx ; 6.13% (12% of total function) on windows
+					glFlush();
 					m_imageSwapMutex.Unlock();
+					
+					
 					
 					// Image loaded, reset condition state
 					flag = true;

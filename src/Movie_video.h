@@ -67,9 +67,9 @@ namespace sfe {
 		//void SkipFrames(unsigned count);
 		
 		void SwapImages(bool unconditionned = false);
-		sf::Image& FrontImage(void);
-		const sf::Image& FrontImage(void) const;
-		sf::Image& BackImage(void);
+		sf::Texture& FrontTexture(void);
+		const sf::Texture& FrontTexture(void) const;
+		sf::Texture& BackTexture(void);
 		
 		bool PreLoad(void);
 		bool LoadNextImage(void);
@@ -83,20 +83,20 @@ namespace sfe {
 		
 	private:
 		// ------------------------- Video attributes --------------------------
-		Movie& m_parent;
+		Movie& m_parent;			// Link to the parent movie
 		
 		// Image and decoding stuff
-		AVCodecContext *m_codecCtx;
-		AVCodec *m_codec;
-		AVFrame *m_rawFrame;
-		AVFrame *m_RGBAFrame;
-		int m_streamID;
+		AVCodecContext *m_codecCtx; // Decoder information
+		AVCodec *m_codec;			// Video decoder
+		AVFrame *m_rawFrame;		// Original YUV422 frame
+		AVFrame *m_RGBAFrame;		// Converted RGBA frame
+		int m_streamID;				// The video stream identifier in the video file
 		sf::Uint8 *m_pictureBuffer; // Buffer used to convert image from pixel matrix to simple array
-		struct SwsContext *m_swsCtx;
+		struct SwsContext *m_swsCtx;// Used for converting image from YUV422 to RGBA
 		
 		// Packets' queueing stuff
-		std::queue <AVPacket *> m_packetList;
-		sf::Mutex m_packetListMutex;
+		std::queue <AVPacket *> m_packetList;// Awaiting video packets (that will be decoded later)
+		sf::Mutex m_packetListMutex;// Prevent packets' list from being/modified and accessed at the same time from several threads
 		
 		// Threads
 		sf::Thread m_updateThread;	// Does swaping and time sync
@@ -104,22 +104,22 @@ namespace sfe {
 		Condition m_running;
 		
 		// Image swaping
-		mutable sf::Mutex m_imageSwapMutex;
-		Condition m_backImageReady;
-		unsigned m_imageIndex;
-		sf::Image m_image1;
-		sf::Image m_image2;
+		mutable sf::Mutex m_imageSwapMutex;// Prevent the textures from being swaped while being updated
+		Condition m_backImageReady;	// condition to wait until the image is ready for swaping
+		unsigned m_imageIndex;		// To know which image is the front or back one
+		sf::Texture m_tex1;			// The first image
+		sf::Texture m_tex2;			// The second image
+		sf::Sprite m_sprite;		// Sprite bound to the front image
+		sf::Vector2i m_size;		// The images size
 		
 		// Miscellaneous parameters
-		bool m_isLate;
-		bool m_isStarving;
-		sf::Sprite m_sprite;
-		float m_wantedFrameTime;
-		unsigned m_displayedFrameCount;
-		sf::Uint32 m_decodingTime;
-		sf::Clock m_timer;
-		bool m_runThread;
-		sf::Vector2i m_size;
+		bool m_isLate;				// If true, we should skip some steps to catch up with the movie timeline
+		bool m_isStarving;			// If true, there is no more video packet to read and decode
+		float m_wantedFrameTime;	// For how long should one frame last
+		unsigned m_displayedFrameCount;// How many frames did we display? (and guess whether we're late)
+		sf::Uint32 m_decodingTime;	// How long does it take to decode one frame? (used to know more precisely when we should decode and swap)
+		sf::Clock m_timer;			// Used to compute the decoding time
+		bool m_runThread;			// Should the updating and decoding still run?
 	};
 } // namespace sfe
 
