@@ -58,6 +58,24 @@ ONCE_PSEC(\
 		  );\
 }
 
+#if 1
+
+	#define SHOW_LOCKTIME(action) action
+
+#else
+
+	#define SHOW_LOCKTIME(action)\
+	{\
+	static sf::Clock __lock_sampler;\
+	static unsigned __lock_time;\
+	__lock_sampler.Reset();\
+	{ action; }\
+	__lock_time = __lock_sampler.GetElapsedTime();\
+	if (__lock_time > 0) std::cout << "From " << __func__ << " line " << __LINE__ << ": locking took " << __lock_time << "ms\n";\
+	}
+
+#endif
+
 #define UNIMPLEMENTED(class_name) {\
 if (strlen(#class_name))\
 std::cerr << "Warning: " << #class_name << "::" << __FUNCTION__ << "() called but is not implemented yet and therefore has no effect." << std::endl;\
