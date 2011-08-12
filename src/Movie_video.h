@@ -36,7 +36,6 @@ extern "C"
 #include <queue>
 #include "Condition.h"
 
-
 namespace sfe {
 	class Movie;
 	class Movie_video {
@@ -44,42 +43,62 @@ namespace sfe {
 		Movie_video(Movie& parent);
 		~Movie_video(void);
 		
-		// -------------------------- Video methods ----------------------------
+		// Initial load and cleaning
 		bool Initialize(void);
+		void Close(void);
+		
+		// Movie playback controls
 		void Play(void);
 		void Pause(void);
 		void Stop(void);
-		void Close(void);
+		void SetPlayingOffset(sf::Uint32 time);
 		
+		// sf::Drawable rendering
 		void Render(sf::RenderTarget& Target) const;
+		void DisplayNextImage(bool unconditionned = false);
 		
+		// Get some information
 		int GetStreamID(void) const;
 		const sf::Vector2i& GetSize(void) const;
 		float GetWantedFrameTime(void) const;
 		sf::Image GetImageCopy(void) const;
 		
-		void Update(void); // Swaping and synching thread
-		void Decode(void); // Decoding thread
+		// Video threads
+		void UpdateThreadCallback(void); // Swaping and synching thread
+		void DecodeThreadCallback(void); // Decoding thread
 		
-		sf::Uint32 UpdateLateState(void);
+		// Get some states
+		bool IsLate(void);
+		bool IsLate(sf::Uint32& availableSleepTime);
+		unsigned LateFramesCount(void);
 		bool IsStarving(void);
-		void SetPlayingOffset(sf::Uint32 time);
+		
 		//void SkipFrames(unsigned count);
-		
-		void SwapImages(bool unconditionned = false);
-		sf::Texture& FrontTexture(void);
-		const sf::Texture& FrontTexture(void) const;
-		sf::Texture& BackTexture(void);
-		
+
+		// Image loading
 		bool PreLoad(void);
-		bool LoadNextImage(void);
-		bool ReadFrame(void);
-		bool HasPendingDecodableData(void);
-		bool DecodeFrontFrame(void);
+		bool LoadNextImage(bool skipUpload = false);
+		bool DecodeFrontFrame(bool skipUpload);
+		
+		// Raw frames (non-decoded) storing
 		void PushFrame(AVPacket *pkt);
+		bool ReadAndPushFrame(void);
 		void PopFrame(void);
 		AVPacket *FrontFrame(void);
-		void WatchThread(void);
+		bool HasPendingFrame(void);
+		
+		// Textures storing
+		void PushTexture(sf::Texture *tex);
+		void PopTexture(void);
+		void PopTexture_unlocked(void);
+		sf::Texture& FrontTexture(void);
+		sf::Texture& FrontTexture_unlocked(void);
+		const sf::Texture& FrontTexture(void) const;
+		unsigned ReadyTexturesQueueLength(void) const;
+		unsigned ReadyTexturesQueueLength_unlocked(void) const;
+		bool CanStoreMoreTextures(void) const;
+		
+		sf::Texture *TakeFreeTexture(void);
 		
 	private:
 		// ------------------------- Video attributes --------------------------
@@ -103,23 +122,27 @@ namespace sfe {
 		sf::Thread m_decodeThread;	// Does video decoding
 		Condition m_running;
 		
-		// Image swaping
-		mutable sf::Mutex m_imageSwapMutex;// Prevent the textures from being swaped while being updated
-		Condition m_backImageReady;	// condition to wait until the image is ready for swaping
-		unsigned m_imageIndex;		// To know which image is the front or back one
-		sf::Texture m_tex1;			// The first image
-		sf::Texture m_tex2;			// The second image
+		// Image display
+		mutable sf::Mutex m_texturesQueueMutex;// Prevent textures queue from being accessed and updated at the same time
+		mutable sf::Mutex m_freeTexturesQueueMutex;
+		mutable sf::Mutex m_imageMutex;
+		sf::Texture *m_displayedTexture; // The texture currently being displayed
+		std::queue<sf::Texture *> m_freeTexturesQueue; // Textures waiting to be updated (empty or with old images)
+		std::queue<sf::Texture *> m_readyTexturesQueue; // Textures ready to be displayed (but waiting)
+		Condition m_canDecodeOneMoreTexture;
+		Condition m_hasImageReadyForDisplay;
 		sf::Sprite m_sprite;		// Sprite bound to the front image
 		sf::Vector2i m_size;		// The images size
+		bool m_smooth;				// Should we smooth the textures
 		
 		// Miscellaneous parameters
 		bool m_isLate;				// If true, we should skip some steps to catch up with the movie timeline
 		bool m_isStarving;			// If true, there is no more video packet to read and decode
 		float m_wantedFrameTime;	// For how long should one frame last
 		unsigned m_displayedFrameCount;// How many frames did we display? (and guess whether we're late)
+		unsigned m_loadedFrameCount;
 		sf::Uint32 m_decodingTime;	// How long does it take to decode one frame? (used to know more precisely when we should decode and swap)
 		sf::Clock m_timer;			// Used to compute the decoding time
-		bool m_runThread;			// Should the updating and decoding still run?
 	};
 } // namespace sfe
 

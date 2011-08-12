@@ -34,11 +34,12 @@
 #include <cassert>
 #include "utils.h"
 
-bool save = false;
-
 #define NTSC_FRAMERATE 29.97f
-#define GL_HACK 0
+#define MAXIMUM_QUEUE_LENGTH 10
+#define CRITICAL_QUEUE_LENGTH 2
+#define ALLOWED_LATE_FRAMES_COUNT 3
 
+#define SKIP_TEXTURE_UPLOAD true
 
 namespace sfe {
 	
@@ -56,19 +57,20 @@ namespace sfe {
 	
 	// Packets' queueing stuff
 	m_packetList(),
-	m_packetListMutex(),
+	// TODO: m_packetList should be replaced with a C-like lock-free and thread-safe queue
+	m_packetListMutex(), 
 	
 	// Threads
-	m_updateThread(&Movie_video::Update, this),	// Does swaping and time sync
-	m_decodeThread(&Movie_video::Decode, this),	// Does video decoding
+	m_updateThread(&Movie_video::UpdateThreadCallback, this),	// Does swaping and time sync
+	m_decodeThread(&Movie_video::DecodeThreadCallback, this),	// Does video decoding
 	m_running(),
 	
 	// Image swaping
-	m_imageSwapMutex(),
-	m_backImageReady(),
-	m_imageIndex(0),
-	m_tex1(),
-	m_tex2(),
+	//m_imageSwapMutex(),
+	//m_backImageReady(),
+	//m_imageIndex(0),
+	//m_tex1(),
+	//m_tex2(),
 	
 	// Miscellaneous parameters
 	m_isLate(false),
@@ -78,16 +80,24 @@ namespace sfe {
 	m_displayedFrameCount(0),
 	m_decodingTime(0),
 	m_timer(),
-	m_runThread(false),
-	m_size(0, 0)
+	//m_runThread(false),
+	m_size(0, 0),
+	m_smooth(false)
 	{
 		
 	}
+	
 	
 	Movie_video::~Movie_video(void)
 	{
 	}
 	
+	
+#pragma mark -
+#pragma mark Initial load and cleaning
+	////////////////////////////////////////////////////////////////////////////
+	/// Initial load and cleaning
+	////////////////////////////////////////////////////////////////////////////
 	bool Movie_video::Initialize(void)
 	{
 		int err;
@@ -147,6 +157,19 @@ namespace sfe {
 		// Get the video size
 		m_size = sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
 		
+		// Disable smoothing when the video is not scaled
+		sf::Vector2f sc = m_parent.GetScale();
+		
+		if (fabs(sc.x - 1.f) < 0.00001 &&
+			fabs(sc.y - 1.f) < 0.00001)
+		{
+			m_smooth = false;
+		}
+		else
+		{
+			m_smooth = true;
+		}
+		
 		// Get the picture size and create the buffer
 		// NB: I don't understand why this is needed, but the video
 		// won't display without this, and I wasn't able to contact
@@ -178,7 +201,7 @@ namespace sfe {
 								  m_codecCtx->pix_fmt,
 								  m_size.x, m_size.y,
 								  PIX_FMT_RGBA,
-								  SWS_BICUBIC, NULL, NULL, NULL);
+								  SWS_BILINEAR, NULL, NULL, NULL);
 		if (!m_swsCtx)
 		{
 			std::cerr << "Movie_video::Initialize() - error with sws_getContext()" << std::endl;
@@ -189,11 +212,18 @@ namespace sfe {
 		
 		
 		// Setup the SFML stuff
-		if (!m_tex1.Create(m_size.x, m_size.y) || !m_tex2.Create(m_size.x, m_size.y))
+		for (unsigned i = 0; i < MAXIMUM_QUEUE_LENGTH; i++)
 		{
-			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			Close();
-			return false;
+			sf::Texture *item = new sf::Texture();
+			if (!item->Create(m_size.x, m_size.y))
+			{
+				std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
+				Close();
+				return false;
+			}
+			
+			item->SetSmooth(m_smooth);
+			m_freeTexturesQueue.push(item);
 		}
 		
 		// Get the frame time we need for this video
@@ -244,72 +274,6 @@ namespace sfe {
 		return true;
 	}
 	
-	void Movie_video::Play(void)
-	{
-		// Disable smoothing when the video is not scaled
-		sf::Vector2f sc = m_parent.GetScale();
-		
-		if (fabs(sc.x - 1.f) < 0.00001 &&
-			fabs(sc.y - 1.f) < 0.00001)
-		{
-			m_tex1.SetSmooth(false);
-			m_tex2.SetSmooth(false);
-		}
-		else
-		{
-			m_tex1.SetSmooth(true);
-			m_tex2.SetSmooth(true);
-		}
-		
-		// Start threads
-		m_runThread = true;
-		m_running = 1;
-		m_backImageReady.Restore();
-		m_running.Restore();
-		
-		if (m_parent.GetStatus() != Movie::Paused)
-		{
-			m_updateThread.Launch();
-			m_decodeThread.Launch();
-		}
-	}
-	
-	void Movie_video::Pause(void)
-	{
-		// Stop thread
-        /*m_runThread = false;
-		m_backImageReady.invalidate();
-		m_updateThread.Wait();
-		m_decodeThread.Wait();*/
-		m_running = 0;
-	}
-	
-	void Movie_video::Stop(void)
-	{
-		// Stop threads
-		if (m_runThread)
-		{
-			//m_updateThreadWatcher.Terminate(); //Terminate because if stopping isn't caused by reaching the Eof, it will try to call Stop a second time
-            m_runThread = false;
-			m_backImageReady.Invalidate();
-			m_running.Invalidate();
-			m_updateThread.Wait();
-			m_decodeThread.Wait();
-		}
-		
-		m_displayedFrameCount = 0;
-		m_isStarving = false;
-		
-		// Go back to the beginning of the movie
-		if (av_seek_frame(m_parent.GetAVFormatContext(), m_streamID, 0, AVSEEK_FLAG_BACKWARD) < 0)
-		{
-			std::cerr << "Movie_video::Stop() - av_seek_frame() error" << std::endl;
-		}
-		
-		while (m_packetList.size()) {
-			PopFrame();
-		}
-	}
 	
 	void Movie_video::Close(void)
 	{
@@ -341,140 +305,64 @@ namespace sfe {
 		m_wantedFrameTime = 0.f;
 		m_displayedFrameCount = 0;
 		m_decodingTime = 0;
-		m_runThread = false;
 		m_size = sf::Vector2i(0, 0);
 	}
 	
-	void Movie_video::Render(sf::RenderTarget& Target) const
-	{
-		sf::Lock l(m_imageSwapMutex); // 2% on Windows
-#if GL_HACK
-		glFlush();
-#endif
-		Target.Draw(m_sprite); // 38% on Windows
-#if GL_HACK
-		glFlush();
-#endif
-		//std::cout << "displayed\n";
-		// Allow thread switching
-		sf::Sleep(0);
-	}
 	
-	int Movie_video::GetStreamID(void) const
+#pragma mark -
+#pragma mark Movie playback controls
+	////////////////////////////////////////////////////////////////////////////
+	/// Movie playback controls
+	////////////////////////////////////////////////////////////////////////////
+	void Movie_video::Play(void)
 	{
-		return m_streamID;
-	}
-	
-	const sf::Vector2i& Movie_video::GetSize(void) const
-	{
-		return m_size;
-	}
-	
-	float Movie_video::GetWantedFrameTime(void) const
-	{
-		return m_wantedFrameTime;
-	}
-	
-	sf::Image Movie_video::GetImageCopy(void) const
-	{
-		sf::Lock l(m_imageSwapMutex);
-		return FrontTexture().CopyToImage();
-	}
-	
-	void Movie_video::Update(void)
-	{
-		while (m_runThread && m_running.WaitAndLock(1, Condition::AutoUnlock))
+		// Start threads
+		m_running = 1;
+		m_canDecodeOneMoreTexture.Restore();
+		m_hasImageReadyForDisplay.Restore();
+		m_running.Restore();
+		
+		if (m_parent.GetStatus() != Movie::Paused)
 		{
-			sf::Uint32 waitTime = UpdateLateState();
-			
-			if (!m_isLate)
-			{
-				if (waitTime > 1000)
-					std::cout << "waiting for weird time: " << waitTime << std::endl;
-				sf::Sleep(waitTime);
-			}
-			
-			SwapImages();
-			
-			static sf::Uint32 lastTime = 0;
-			sf::Uint32 newTime = m_parent.m_audio->GetPlayingOffset();
-			//std::cout << lastTime << " -> " << newTime << std::endl;
-			
-			if (lastTime > newTime)
-			{
-				std::cout << "going wrong!" << std::endl;
-			}
-			lastTime = newTime;
+			m_updateThread.Launch();
+			m_decodeThread.Launch();
 		}
 	}
 	
-	void Movie_video::Decode(void)
+	void Movie_video::Pause(void)
 	{
-		while (m_runThread &&
-			   m_running.WaitAndLock(1, Condition::AutoUnlock) &&
-			   m_backImageReady.WaitAndLock(0))
-		{
-			UpdateLateState();
-			
-			if (LoadNextImage())
-				m_backImageReady.Unlock(1);
-			else
-				m_backImageReady.Unlock(0);
-			
-			if (m_isStarving)
-			{
-				m_parent.Starvation();
-			}
-		}
+		// Stop thread
+        /*m_runThread = false;
+		m_backImageReady.invalidate();
+		m_updateThread.Wait();
+		m_decodeThread.Wait();*/
+		m_running = 0;
 	}
 	
-	sf::Uint32 Movie_video::UpdateLateState(void)
+	void Movie_video::Stop(void)
 	{
-		sf::Uint32 waitTime = 0;
-		// Get the 'real' time from the start of the video
-		// and the progress of the video
-		
-		// Here is the real time elapsed since we started to play the video
-		sf::Uint32 realTime = m_parent.GetPlayingOffset();
-		
-		// Here is the time we're at in the video
-		// Note: m_wantedFrameTime is kept as float (seconds) for accuracy
-		sf::Uint32 movieTime = m_displayedFrameCount * m_wantedFrameTime * 1000;
-		
-		if (movieTime > realTime + m_wantedFrameTime * 1000)
+		// Stop threads
+		//if (m_running.value() == 0)
 		{
-			m_isLate = false;
-			
-			// Added a check to prevent from waiting if we've stopped
-			// the movie playback (and thus waiting for abnormal periods of time)
-			if (m_parent.GetStatus() == Movie::Playing)
-				waitTime = (movieTime - realTime - m_wantedFrameTime * 1000);
-		}
-		else
-		{
-			// don't skip a frame if we just have one frame late,
-			// it may be because of a occasional slowdown
-			if (movieTime < realTime - m_wantedFrameTime * 3000 && m_decodingTime)
-			{
-				m_isLate = true;
-				
-				if (Movie::UsesDebugMessages())
-					std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms)" << std::endl;
-			}
-			else if (movieTime < realTime - m_wantedFrameTime && m_decodingTime)
-			{
-				if (Movie::UsesDebugMessages())
-					std::cerr << "Movie_video::Run() - warning: movie playback is late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms) but we're not skipping any frame since we're not 'too' late" << std::endl;
-			}
+			m_canDecodeOneMoreTexture.Invalidate();
+			m_hasImageReadyForDisplay.Invalidate();
+			m_running.Invalidate();
+			m_updateThread.Wait();
+			m_decodeThread.Wait();
 		}
 		
-		return waitTime;
-	}
-	
-	
-	bool Movie_video::IsStarving(void)
-	{
-		return m_isStarving;
+		m_displayedFrameCount = 0;
+		m_isStarving = false;
+		
+		// Go back to the beginning of the movie
+		if (av_seek_frame(m_parent.GetAVFormatContext(), m_streamID, 0, AVSEEK_FLAG_BACKWARD) < 0)
+		{
+			std::cerr << "Movie_video::Stop() - av_seek_frame() error" << std::endl;
+		}
+		
+		while (m_packetList.size()) {
+			PopFrame();
+		}
 	}
 	
 	
@@ -499,73 +387,274 @@ namespace sfe {
 		}
 	}
 	
-	void Movie_video::SwapImages(bool unconditionned)
+	
+#pragma mark -
+#pragma mark sf::Drawable rendering
+	////////////////////////////////////////////////////////////////////////////
+	/// sf::Drawable rendering
+	////////////////////////////////////////////////////////////////////////////
+	void Movie_video::Render(sf::RenderTarget& Target) const
+	{
+		// We're on the rendering thread! Do the texture upload stuff
+		
+		//while ();
+		
+		SHOW_LOCKTIME( m_texturesQueueMutex.Lock() ); // 2% on Windows
+		glFlush(); // make sure the texture has been updated from the context sharing space
+		Target.Draw(m_sprite); // 38% on Windows
+		m_texturesQueueMutex.Unlock();
+		
+		// Allow thread switching
+		sf::Sleep(0);
+	}
+	
+	
+	void Movie_video::DisplayNextImage(bool unconditionned)
 	{
 		// Make sure the back image is ready for swaping
-		if (unconditionned || m_backImageReady.WaitAndLock(1))
+		if (unconditionned || m_hasImageReadyForDisplay.WaitAndLock(1))
 		{
 			// Make sure we don't swap while using front/backImage()
-			m_imageSwapMutex.Lock();
-			m_imageIndex = (m_imageIndex + 1) % 2;
-			m_sprite.SetTexture((m_imageIndex == 0) ? m_tex1 : m_tex2);
-			//FrontTexture().Bind();
-			//std::cout << "swaped\n";
-			m_imageSwapMutex.Unlock();
+			SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+			PopTexture_unlocked(); // recycle texture
+			sf::Texture& tex = FrontTexture_unlocked();
 			
+			m_sprite.SetTexture(tex); // take the new front one
 			
-			//std::cout << "front tex is " << m_imageIndex << std::endl;
-			//
+			m_texturesQueueMutex.Unlock();
 			
-			// Update condition
+			// m_hasImageReadyForDisplay isn't locked when we come here in an unconditionned (loading forced) state
 			if (!unconditionned)
-				m_backImageReady.Unlock(0);
+				m_hasImageReadyForDisplay.Unlock(ReadyTexturesQueueLength() > 1 ? 1 : 0);
+			
+			m_canDecodeOneMoreTexture = 1; // We just popped one, so there is at least one free place!
 		}
 	}
 	
-	sf::Texture& Movie_video::FrontTexture(void)
-	{
-		sf::Lock l(m_imageSwapMutex);
-		return (m_imageIndex == 0) ? m_tex1 : m_tex2;
-	}
 	
-	const sf::Texture& Movie_video::FrontTexture(void) const
+#pragma mark -
+#pragma mark Get some information
+	////////////////////////////////////////////////////////////////////////////
+	/// Get some information
+	////////////////////////////////////////////////////////////////////////////
+	int Movie_video::GetStreamID(void) const
 	{
-		return (m_imageIndex == 0) ? m_tex1 : m_tex2;
-	}
-	
-	sf::Texture& Movie_video::BackTexture(void)
-	{
-		return (m_imageIndex == 0) ? m_tex2 : m_tex1;
+		return m_streamID;
 	}
 	
 	
+	const sf::Vector2i& Movie_video::GetSize(void) const
+	{
+		return m_size;
+	}
+	
+	
+	float Movie_video::GetWantedFrameTime(void) const
+	{
+		return m_wantedFrameTime;
+	}
+	
+	
+	sf::Image Movie_video::GetImageCopy(void) const
+	{
+		sf::Lock l(m_texturesQueueMutex);
+		return FrontTexture().CopyToImage();
+	}
+	
+	
+#pragma mark -
+#pragma mark Video threads
+	////////////////////////////////////////////////////////////////////////////
+	/// Video threads
+	////////////////////////////////////////////////////////////////////////////
+	void Movie_video::UpdateThreadCallback(void)
+	{
+		// Run while m_running is valid, and wait when we're pausing
+		while (m_running.WaitAndLock(1, Condition::AutoUnlock))
+		{
+			sf::Uint32 waitTime;
+			m_isLate = IsLate(waitTime);
+			
+			// Wait for the right time if needed
+			if (waitTime)
+			{
+				if (waitTime > 1000)
+					std::cout << "waiting for weird time: " << waitTime << std::endl;
+				sf::Sleep(waitTime);
+			}
+			
+			// Show next!
+			DisplayNextImage();
+		}
+	}
+	
+	void Movie_video::DecodeThreadCallback(void)
+	{	
+		while (m_running.WaitAndLock(1, Condition::AutoUnlock) &&
+			   m_canDecodeOneMoreTexture.WaitAndLock(1))
+		{
+			sf::Uint32 waitTime;
+			m_isLate = IsLate(waitTime);
+			
+			if (m_isLate)
+			{
+				unsigned lateFrames = LateFramesCount();
+				
+				if (Movie::UsesDebugMessages())
+					std::cerr << "Movie_video::DecodeThreadCallback() - we are late and skipping " << lateFrames << " frames\n";
+				
+				while (lateFrames--)
+					LoadNextImage(SKIP_TEXTURE_UPLOAD);
+				
+				m_isLate = false;
+			}
+			
+			// Allow loading some more textures depending on whether
+			// last loading succeeded and whether there is still some
+			// free space
+			if (LoadNextImage())
+			{
+				m_canDecodeOneMoreTexture.Unlock(CanStoreMoreTextures());
+				
+				m_texturesQueueMutex.Lock();
+				if (ReadyTexturesQueueLength_unlocked() > 1)
+					m_hasImageReadyForDisplay = 1;
+				m_texturesQueueMutex.Unlock();
+			}
+			else
+				m_canDecodeOneMoreTexture.Unlock(1);
+			
+			// If we're starving, tell it to the parent
+			if (m_isStarving)
+			{
+				m_parent.Starvation();
+			}
+		}
+	}
+	
+	
+#pragma mark -
+#pragma mark Get some states
+	////////////////////////////////////////////////////////////////////////////
+	/// Get some states
+	////////////////////////////////////////////////////////////////////////////
+	bool Movie_video::IsLate(void)
+	{
+		sf::Uint32 waitTime;
+		return IsLate(waitTime);
+	}
+	
+	
+	bool Movie_video::IsLate(sf::Uint32& availableSleepTime)
+	{
+		bool isLate = false;
+		availableSleepTime = 0;
+		// Get the 'real' time from the start of the video
+		// and the progress of the video
+		
+		// Here is the real time elapsed since we started to play the video
+		sf::Uint32 realTime = m_parent.GetPlayingOffset();
+		
+		// Here is the time we're at in the video
+		// Note: m_wantedFrameTime is kept as float (seconds) for accuracy
+		sf::Uint32 readyTextures = ReadyTexturesQueueLength();
+		sf::Uint32 movieTime = (m_displayedFrameCount - readyTextures) * m_wantedFrameTime * 1000;
+		//sf::Uint32 movieTime = m_loadedFrameCount * m_wantedFrameTime * 1000;
+		
+		if ((int)m_displayedFrameCount - (int)readyTextures > 0 && movieTime > realTime + m_wantedFrameTime * 1000)
+		{
+			isLate = false;
+			
+			// Added a check to prevent from waiting if we've stopped
+			// the movie playback (and thus waiting for abnormal periods of time)
+			if (m_parent.GetStatus() == Movie::Playing)
+				availableSleepTime = (movieTime - realTime - m_wantedFrameTime * 1000);
+		}
+		else
+		{
+			// don't skip a frame if we just have one frame late,
+			// it may be because of a occasional slowdown
+			if (movieTime < realTime - m_wantedFrameTime * ALLOWED_LATE_FRAMES_COUNT * 1000 && m_decodingTime)
+			{
+				isLate = true;
+				availableSleepTime = 0;
+				
+				//if (Movie::UsesDebugMessages())
+				//	std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms)" << std::endl;
+			}
+			else if (movieTime < realTime - m_wantedFrameTime && m_decodingTime)
+			{
+				isLate = false;
+				availableSleepTime = 0;
+				//if (Movie::UsesDebugMessages())
+				//	std::cerr << "Movie_video::Run() - warning: movie playback is late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms) but we're not skipping any frame since we're not 'too' late" << std::endl;
+			}
+		}
+		
+		if (availableSleepTime > 1000)
+		{
+			std::cout << "huhu ... " << std::endl;
+		}
+		
+		return isLate;
+	}
+	
+	
+	unsigned Movie_video::LateFramesCount(void)
+	{
+		unsigned lateFrames = 0;
+		sf::Uint32 realTime = m_parent.GetPlayingOffset();
+		sf::Uint32 movieTime = (m_displayedFrameCount - ReadyTexturesQueueLength()) * m_wantedFrameTime * 1000;
+		
+		sf::Uint32 lateTime = 0;
+		
+		if (movieTime < realTime - m_wantedFrameTime * ALLOWED_LATE_FRAMES_COUNT * 1000 && m_decodingTime)
+		{
+			lateTime = realTime - movieTime;
+			lateFrames = lateTime / (m_wantedFrameTime * 1000);
+		}
+		
+		return lateFrames;
+	}
+	
+	
+	bool Movie_video::IsStarving(void)
+	{
+		return m_isStarving;
+	}
+	
+#pragma mark -
+#pragma mark Image loading
+	////////////////////////////////////////////////////////////////////////////
+	/// Image loading
+	////////////////////////////////////////////////////////////////////////////
 	bool Movie_video::PreLoad(void)
 	{
-		int counter = 0;
-		bool res = false;
-		while (false == (res = LoadNextImage()) && counter < 10) // First frame always gives "frame not decoded"
-			counter++;
+		bool flag = false;
+		int tries = 0;
+		while (false == LoadNextImage() && tries++ < 10); // First frame always gives "frame not decoded"
 		
 		// Abort if we can't load frames
-		if (counter == 10)
-			return false;
+		if (tries != 10)
+		{
+			while (CanStoreMoreTextures() && LoadNextImage());
+			DisplayNextImage(true);
+			flag = true;
+		}
 		
-		SwapImages(true);
-		LoadNextImage();
-		m_backImageReady = 1;
-		return true;
+		return flag;
 	}
 	
 	
-	bool Movie_video::LoadNextImage(void)
+	bool Movie_video::LoadNextImage(bool skipUpload)
 	{
 		bool flag = false;
 		m_timer.Reset();
 		
 		// If our video packet list is empty, load one more video frame
-		if (!HasPendingDecodableData())
+		if (!HasPendingFrame())
 		{
-			if (!ReadFrame())
+			if (!ReadAndPushFrame())
 			{
 			    // Stop if there is no more data to read
 				if (Movie::UsesDebugMessages())
@@ -574,38 +663,29 @@ namespace sfe {
 				m_isStarving = true;
 			}
 			else
-				flag = DecodeFrontFrame();
+				flag = DecodeFrontFrame(skipUpload);
 		}
 		else
 		{
-			flag = DecodeFrontFrame();
+			flag = DecodeFrontFrame(skipUpload);
 		}
 		m_decodingTime = m_timer.GetElapsedTime();
+		
 		return flag;
 	}
 	
-	bool Movie_video::ReadFrame(void)
-	{
-		while (!HasPendingDecodableData() &&
-			   m_parent.ReadFrameAndQueue());
-		
-		return HasPendingDecodableData();
-	}
 	
-	bool Movie_video::HasPendingDecodableData(void)
-	{
-		return (m_packetList.size() > 0);
-	}
-	
-	bool Movie_video::DecodeFrontFrame(void)
+	bool Movie_video::DecodeFrontFrame(bool skipUpload)
 	{
 		// whole function takes about 50% CPU with 2048x872 definition on Mac OS X
 		// 50% (one full core) on Windows
 		int didDecodeFrame = 0;
 		bool flag = false;
 		
+		assert(CanStoreMoreTextures());
+		
 		// Stop here if there is no frame to decode
-		if (!HasPendingDecodableData())
+		if (!HasPendingFrame())
 		{
 			if (Movie::UsesDebugMessages())
 				std::cerr << "Movie_video::DecodeFrontFrame() - no frame currently available for decoding" << std::endl;
@@ -618,7 +698,7 @@ namespace sfe {
 		res = avcodec_decode_video2(m_codecCtx, m_rawFrame, &didDecodeFrame,
 									videoPacket); // 20% (40% of total function) on macosx; 18.3% (36% of total) on windows
 		
-		if (!m_isLate)
+		if (!skipUpload)
 		{
 			if (res < 0)
 			{
@@ -639,42 +719,13 @@ namespace sfe {
 							  0, m_codecCtx->height,
 							  m_RGBAFrame->data, m_RGBAFrame->linesize); // 6.3% on windows (12% of total)
 					
-					//static sf::Image img;
-					//img.Create(m_size.x, m_size.y, (sf::Uint8*)m_RGBAFrame->data[0]);
-					
-					// Load the data in the sf::Image
-					m_imageSwapMutex.Lock();
-					
-					// 10.1% (25% of total function) on macosx ; 18.4% (37% of total) on windows
-					//BackImage().LoadFromPixels(m_codecCtx->width, m_codecCtx->height, (sf::Uint8*)m_RGBAFrame->data[0]);
-					BackTexture().Update((sf::Uint8*)m_RGBAFrame->data[0]);
-					
-					//BackTexture().LoadFromImage(img);
-					
-					
-					
-					
-					/*if (save)
-					{
-						static char counter = 0;
-						std::string names[] = {"0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png", "11.png", "12.png", "13.png", "14.png", "15.png", "16.png", "17.png", "18.png", "19.png", "20.png", "21.png", "22.png", "23.png", "24.png", "25.png", "26.png", "27.png", "28.png", "29.png"};
-						BackTexture().CopyToImage().SaveToFile(names[counter]);
-						counter++;
-						if (counter == 30) {
-							save = false;
-							counter = 0;
-						}
-					}*/
-					
-					//std::cout << "loaded\n";
-					
-					// 7.7% (19% of total function) on macosx ; 6.13% (12% of total function) on windows
-#if GL_HACK
-					glFlush();
-#endif
-					m_imageSwapMutex.Unlock();
-					
-					
+					// Load the data in the texture
+					sf::Texture *freeTexture = TakeFreeTexture();
+					// 10.1% (25% of total function) on macosx ; 18.4% (37% of total) on windows (old numbers)
+					freeTexture->Update((sf::Uint8*)m_RGBAFrame->data[0]);
+					//freeTexture->Update((sf::Uint8*)m_rawFrame->data[0]);
+					glFlush(); // Send the texture to all of the other shared contexts
+					PushTexture(freeTexture); // put the texture in the readdy-to-be-displayed list
 					
 					// Image loaded, reset condition state
 					flag = true;
@@ -689,20 +740,34 @@ namespace sfe {
 		
 		PopFrame();
 		m_displayedFrameCount++;
-		//m_isLate = false;
 		
 		return flag;
 	}
 	
+	
+#pragma mark -
+#pragma mark Raw frames (non-decoded) storing
+	////////////////////////////////////////////////////////////////////////////
+	/// Raw frames (non-decoded) storing
+	////////////////////////////////////////////////////////////////////////////
 	void Movie_video::PushFrame(AVPacket *pkt)
 	{
-		sf::Lock l(m_packetListMutex);
+		SHOW_LOCKTIME(m_packetListMutex.Lock());
 		m_packetList.push(pkt);
+		m_packetListMutex.Unlock();
+	}
+	
+	bool Movie_video::ReadAndPushFrame(void)
+	{
+		while (!HasPendingFrame() &&
+			   m_parent.ReadFrameAndQueue());
+		
+		return HasPendingFrame();
 	}
 	
 	void Movie_video::PopFrame(void)
 	{
-		sf::Lock l(m_packetListMutex);
+		SHOW_LOCKTIME(m_packetListMutex.Lock());
 		
 		if (!m_packetList.empty())
 		{
@@ -711,25 +776,141 @@ namespace sfe {
 			av_free_packet(pkt);
 			av_free(pkt);
 		}
+		
+		m_packetListMutex.Unlock();
 	}
 	
 	AVPacket *Movie_video::FrontFrame(void)
 	{
+		AVPacket *pkt = NULL;
 		assert(!m_packetList.empty());
 		
-		sf::Lock l(m_packetListMutex);
-		return m_packetList.front();
+		SHOW_LOCKTIME(m_packetListMutex.Lock());
+		pkt = m_packetList.front();
+		m_packetListMutex.Unlock();
+		
+		return pkt;
 	}
 	
-	/*void Movie_video::WatchThread(void)
+	
+	bool Movie_video::HasPendingFrame(void)
 	{
-	    while(m_runThread)
-	    {
-	        sf::Sleep(0.1);
-	    }
+		return (m_packetList.size() > 0);
+	}
+	
+	
+#pragma mark -
+#pragma mark Textures storing
+	////////////////////////////////////////////////////////////////////////////
+	/// Textures storing
+	////////////////////////////////////////////////////////////////////////////
+	void Movie_video::PushTexture(sf::Texture *tex)
+	{
+		assert(CanStoreMoreTextures());
 		
-	    //m_parent.Stop();
-	}*/
+		SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+		m_readyTexturesQueue.push(tex);
+		m_texturesQueueMutex.Unlock();
+	}
+	
+	
+	void Movie_video::PopTexture(void)
+	{
+		SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+		SHOW_LOCKTIME(m_freeTexturesQueueMutex.Lock());
+		PopTexture_unlocked();
+		m_freeTexturesQueueMutex.Unlock();
+		m_texturesQueueMutex.Unlock();
+	}
+	
+	void Movie_video::PopTexture_unlocked(void)
+	{
+		assert(ReadyTexturesQueueLength() > 0);
+		
+		m_freeTexturesQueue.push(m_readyTexturesQueue.front());
+		m_readyTexturesQueue.pop();
+	}
+	
+	sf::Texture& Movie_video::FrontTexture(void)
+	{
+		sf::Texture *tex = NULL;
+		
+		SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+		tex = &FrontTexture_unlocked();
+		m_texturesQueueMutex.Unlock();
+		
+		return *tex;
+	}
+	
+	sf::Texture& Movie_video::FrontTexture_unlocked(void)
+	{
+		assert(ReadyTexturesQueueLength() > 0);
+		
+		return *m_readyTexturesQueue.front();
+	}
+	
+	
+	const sf::Texture& Movie_video::FrontTexture(void) const
+	{
+		sf::Texture *tex = NULL;
+		assert(ReadyTexturesQueueLength() > 0);
+		
+		SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+		tex = m_readyTexturesQueue.front();
+		m_texturesQueueMutex.Unlock();
+		
+		return *tex;
+	}
+	
+	
+	unsigned Movie_video::ReadyTexturesQueueLength(void) const
+	{
+		unsigned res = 0;
+		
+		SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+		res = m_readyTexturesQueue.size();
+		m_texturesQueueMutex.Unlock();
+		
+		return res;
+	}
+	
+	
+	unsigned Movie_video::ReadyTexturesQueueLength_unlocked(void) const
+	{
+		unsigned res = 0;
+		
+		res = m_readyTexturesQueue.size();
+		
+		return res;
+	}
+	
+	
+	bool Movie_video::CanStoreMoreTextures(void) const
+	{
+		bool res = false;
+		
+		SHOW_LOCKTIME(m_texturesQueueMutex.Lock());
+		res = (m_readyTexturesQueue.size() < MAXIMUM_QUEUE_LENGTH);
+		m_texturesQueueMutex.Unlock();
+		
+		return res;
+	}
+	
+	
+	sf::Texture *Movie_video::TakeFreeTexture(void)
+	{
+		sf::Texture *tex = NULL;
+		
+		SHOW_LOCKTIME(m_freeTexturesQueueMutex.Lock());
+		if (m_freeTexturesQueue.size() > 0)
+		{
+			tex = m_freeTexturesQueue.front();
+			m_freeTexturesQueue.pop();
+		}
+		m_freeTexturesQueueMutex.Unlock();
+		
+		return tex;
+	}
 	
 } // namespace sfe
 
