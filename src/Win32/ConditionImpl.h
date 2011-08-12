@@ -38,6 +38,7 @@ public:
 	bool waitAndRetain(int value);
 	void release(int value);
 	void setValue(int value);
+	int value(void) const;
 	void signal(void);
 	void invalidate(void);
 	void restore(void);

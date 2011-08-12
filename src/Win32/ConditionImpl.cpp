@@ -80,6 +80,11 @@ void ConditionImpl::setValue(int value)
 	
 	signal();
 }
+	
+int ConditionImpl::value(void) const
+{
+	return m_conditionnedVar;
+}
 
 void ConditionImpl::signal(void)
 {

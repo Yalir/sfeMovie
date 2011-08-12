@@ -89,6 +89,13 @@ public:
 	 */
 	int operator=(int value);
 	
+	/* Get the current internal Condition value.
+	 * This is a non-blocking call.
+	 *
+	 * @return: the current internal state
+	 */
+	int value(void) const;
+	
 	/* Signals that the Condition state has changed and that
 	 * threads waiting on this Condition should check
 	 * the new internal value.

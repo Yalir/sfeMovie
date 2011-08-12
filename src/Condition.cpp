@@ -24,6 +24,7 @@
 
 #include "Condition.h"
 #include <SFML/Config.hpp>
+#include <iostream>
 
 #ifdef SFML_SYSTEM_WINDOWS
 #include "Win32/ConditionImpl.h"
@@ -67,6 +68,11 @@ int Condition::operator=(int value)
 {
 	m_impl->setValue(value);
 	return value;
+}
+
+int Condition::value(void) const
+{
+	return m_impl->value();
 }
 
 void Condition::Signal(void)
