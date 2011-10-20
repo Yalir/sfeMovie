@@ -59,7 +59,7 @@ namespace sfe {
 		// Find the audio stream among the differents streams
 		for (int i = 0; -1 == m_streamID && i < m_parent.GetAVFormatContext()->nb_streams; i++) 
 		{ 
-			if (m_parent.GetAVFormatContext()->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO) 
+			if (m_parent.GetAVFormatContext()->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) 
 				m_streamID = i;
 		}
 		

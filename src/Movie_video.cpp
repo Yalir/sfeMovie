@@ -34,11 +34,7 @@
 #include <cassert>
 #include "utils.h"
 
-bool save = false;
-
 #define NTSC_FRAMERATE 29.97f
-#define GL_HACK 0
-
 
 namespace sfe {
 	
@@ -95,7 +91,7 @@ namespace sfe {
 		// Find the video stream among the differents streams
 		for (int i = 0; -1 == m_streamID && i < m_parent.GetAVFormatContext()->nb_streams; i++)
 		{
-			if (m_parent.GetAVFormatContext()->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO)
+			if (m_parent.GetAVFormatContext()->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 				m_streamID = i;
 		}
 		
@@ -276,11 +272,7 @@ namespace sfe {
 	
 	void Movie_video::Pause(void)
 	{
-		// Stop thread
-        /*m_runThread = false;
-		m_backImageReady.invalidate();
-		m_updateThread.Wait();
-		m_decodeThread.Wait();*/
+		// Pause threads
 		m_running = 0;
 	}
 	
@@ -289,7 +281,6 @@ namespace sfe {
 		// Stop threads
 		if (m_runThread)
 		{
-			//m_updateThreadWatcher.Terminate(); //Terminate because if stopping isn't caused by reaching the Eof, it will try to call Stop a second time
             m_runThread = false;
 			m_backImageReady.Invalidate();
 			m_running.Invalidate();
@@ -348,14 +339,10 @@ namespace sfe {
 	void Movie_video::Render(sf::RenderTarget& Target) const
 	{
 		sf::Lock l(m_imageSwapMutex); // 2% on Windows
-#if GL_HACK
-		glFlush();
-#endif
+
 		Target.Draw(m_sprite); // 38% on Windows
-#if GL_HACK
 		glFlush();
-#endif
-		//std::cout << "displayed\n";
+
 		// Allow thread switching
 		sf::Sleep(0);
 	}
@@ -389,22 +376,21 @@ namespace sfe {
 			
 			if (!m_isLate)
 			{
-				if (waitTime > 1000)
-					std::cout << "waiting for weird time: " << waitTime << std::endl;
+				/*if (waitTime > 1000)
+					std::cout << "waiting for weird time: " << waitTime << std::endl;*/
 				sf::Sleep(waitTime);
 			}
 			
 			SwapImages();
 			
-			static sf::Uint32 lastTime = 0;
+			/*static sf::Uint32 lastTime = 0;
 			sf::Uint32 newTime = m_parent.m_audio->GetPlayingOffset();
-			//std::cout << lastTime << " -> " << newTime << std::endl;
 			
 			if (lastTime > newTime)
 			{
 				std::cout << "going wrong!" << std::endl;
 			}
-			lastTime = newTime;
+			lastTime = newTime;*/
 		}
 	}
 	
@@ -508,13 +494,7 @@ namespace sfe {
 			m_imageSwapMutex.Lock();
 			m_imageIndex = (m_imageIndex + 1) % 2;
 			m_sprite.SetTexture((m_imageIndex == 0) ? m_tex1 : m_tex2);
-			//FrontTexture().Bind();
-			//std::cout << "swaped\n";
 			m_imageSwapMutex.Unlock();
-			
-			
-			//std::cout << "front tex is " << m_imageIndex << std::endl;
-			//
 			
 			// Update condition
 			if (!unconditionned)
@@ -639,42 +619,14 @@ namespace sfe {
 							  0, m_codecCtx->height,
 							  m_RGBAFrame->data, m_RGBAFrame->linesize); // 6.3% on windows (12% of total)
 					
-					//static sf::Image img;
-					//img.Create(m_size.x, m_size.y, (sf::Uint8*)m_RGBAFrame->data[0]);
-					
 					// Load the data in the sf::Image
 					m_imageSwapMutex.Lock();
-					
 					// 10.1% (25% of total function) on macosx ; 18.4% (37% of total) on windows
-					//BackImage().LoadFromPixels(m_codecCtx->width, m_codecCtx->height, (sf::Uint8*)m_RGBAFrame->data[0]);
 					BackTexture().Update((sf::Uint8*)m_RGBAFrame->data[0]);
-					
-					//BackTexture().LoadFromImage(img);
-					
-					
-					
-					
-					/*if (save)
-					{
-						static char counter = 0;
-						std::string names[] = {"0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png", "11.png", "12.png", "13.png", "14.png", "15.png", "16.png", "17.png", "18.png", "19.png", "20.png", "21.png", "22.png", "23.png", "24.png", "25.png", "26.png", "27.png", "28.png", "29.png"};
-						BackTexture().CopyToImage().SaveToFile(names[counter]);
-						counter++;
-						if (counter == 30) {
-							save = false;
-							counter = 0;
-						}
-					}*/
-					
-					//std::cout << "loaded\n";
-					
-					// 7.7% (19% of total function) on macosx ; 6.13% (12% of total function) on windows
-#if GL_HACK
+
+					// FIXME: should probably put this outside of the locked scope
 					glFlush();
-#endif
 					m_imageSwapMutex.Unlock();
-					
-					
 					
 					// Image loaded, reset condition state
 					flag = true;
@@ -689,7 +641,6 @@ namespace sfe {
 		
 		PopFrame();
 		m_displayedFrameCount++;
-		//m_isLate = false;
 		
 		return flag;
 	}
@@ -720,16 +671,6 @@ namespace sfe {
 		sf::Lock l(m_packetListMutex);
 		return m_packetList.front();
 	}
-	
-	/*void Movie_video::WatchThread(void)
-	{
-	    while(m_runThread)
-	    {
-	        sf::Sleep(0.1);
-	    }
-		
-	    //m_parent.Stop();
-	}*/
 	
 } // namespace sfe
 

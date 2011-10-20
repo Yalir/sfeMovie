@@ -341,7 +341,7 @@ namespace sfe {
 	{
 		char buffer[4096] = {0};
 
-		if (err != AVERROR_NOENT && 0 == av_strerror(err, buffer, sizeof(buffer)))
+		if (/*err != AVERROR_NOENT &&*/ 0 == av_strerror(err, buffer, sizeof(buffer)))
 			std::cerr << "FFmpeg error: " << buffer << std::endl;
 		else
 		{
