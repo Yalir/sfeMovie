@@ -103,11 +103,7 @@ endif()
 
 
 # Define the libraries sfe should link against
-if (MSVC)
-	target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${OTHER_LIBRARIES})
-else()
-	target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
-endif()
+target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
 
 INSTALL(FILES lib${LIB_NAME}.dylib
 	DESTINATION /usr/local/lib)
