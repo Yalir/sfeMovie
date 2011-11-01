@@ -142,7 +142,7 @@ What is your choice? [1-4] (default is 1)"
 			    os_flags="--enable-memalign-hack"
 			fi
 			
-			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders $configure_flags $os_flags"
+			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
 	        
 	        echo "./configure $args"
 	        #sh $cmd
