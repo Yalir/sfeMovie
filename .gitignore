@@ -1,5 +1,6 @@
 *.o
 *.d
+.DS_Store
 sfeMovie_test
 sfeMovie.xcodeproj
 sfeMovie.build
