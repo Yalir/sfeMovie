@@ -23,14 +23,13 @@
 
 #include <stdarg.h>
 #include "avutil.h"
-#include "attributes.h"
 
 /**
  * Describe the class of an AVClass context structure. That is an
  * arbitrary struct of which the first field is a pointer to an
  * AVClass struct (e.g. AVCodecContext, AVFormatContext etc.).
  */
-typedef struct AVClass {
+typedef struct {
     /**
      * The name of the class; usually it is the same name as the
      * context structure type to which the AVClass is associated.
@@ -73,19 +72,11 @@ typedef struct AVClass {
     int parent_log_context_offset;
 
     /**
-     * Return next AVOptions-enabled child or NULL
+     * A function for extended searching, e.g. in possible
+     * children objects.
      */
-    void* (*child_next)(void *obj, void *prev);
-
-    /**
-     * Return an AVClass corresponding to next potential
-     * AVOptions-enabled child.
-     *
-     * The difference between child_next and this is that
-     * child_next iterates over _already existing_ objects, while
-     * child_class_next iterates over _all possible_ children.
-     */
-    const struct AVClass* (*child_class_next)(const struct AVClass *prev);
+    const struct AVOption* (*opt_find)(void *obj, const char *name, const char *unit,
+                                       int opt_flags, int search_flags);
 } AVClass;
 
 /* av_log API */
@@ -138,7 +129,11 @@ typedef struct AVClass {
  * subsequent arguments are converted to output.
  * @see av_vlog
  */
-void av_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
+#ifdef __GNUC__
+void av_log(void *avcl, int level, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+#else
+void av_log(void *avcl, int level, const char *fmt, ...);
+#endif
 
 void av_vlog(void *avcl, int level, const char *fmt, va_list);
 int av_log_get_level(void);

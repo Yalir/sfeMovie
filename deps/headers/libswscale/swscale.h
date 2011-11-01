@@ -28,11 +28,9 @@
  */
 
 #include "libavutil/avutil.h"
-#include "libavutil/log.h"
-#include "libavutil/pixfmt.h"
 
 #define LIBSWSCALE_VERSION_MAJOR 2
-#define LIBSWSCALE_VERSION_MINOR 1
+#define LIBSWSCALE_VERSION_MINOR 0
 #define LIBSWSCALE_VERSION_MICRO 0
 
 #define LIBSWSCALE_VERSION_INT  AV_VERSION_INT(LIBSWSCALE_VERSION_MAJOR, \
@@ -218,7 +216,7 @@ struct SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat
  * top-bottom or bottom-top order. If slices are provided in
  * non-sequential order the behavior of the function is undefined.
  *
- * @param c         the scaling context previously created with
+ * @param context   the scaling context previously created with
  *                  sws_getContext()
  * @param srcSlice  the array containing the pointers to the planes of
  *                  the source slice
@@ -235,9 +233,17 @@ struct SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat
  *                  the destination image
  * @return          the height of the output slice
  */
-int sws_scale(struct SwsContext *c, const uint8_t* const srcSlice[],
-              const int srcStride[], int srcSliceY, int srcSliceH,
-              uint8_t* const dst[], const int dstStride[]);
+int sws_scale(struct SwsContext *context, const uint8_t* const srcSlice[], const int srcStride[],
+              int srcSliceY, int srcSliceH, uint8_t* const dst[], const int dstStride[]);
+
+#if LIBSWSCALE_VERSION_MAJOR < 1
+/**
+ * @deprecated Use sws_scale() instead.
+ */
+int sws_scale_ordered(struct SwsContext *context, const uint8_t* const src[],
+                      int srcStride[], int srcSliceY, int srcSliceH,
+                      uint8_t* dst[], int dstStride[]) attribute_deprecated;
+#endif
 
 /**
  * @param inv_table the yuv2rgb coefficients, normally ff_yuv2rgb_coeffs[x]
@@ -297,6 +303,13 @@ void sws_shiftVec(SwsVector *a, int shift);
  */
 SwsVector *sws_cloneVec(SwsVector *a);
 
+#if LIBSWSCALE_VERSION_MAJOR < 1
+/**
+ * @deprecated Use sws_printVec2() instead.
+ */
+attribute_deprecated void sws_printVec(SwsVector *a);
+#endif
+
 /**
  * Prints with av_log() a textual representation of the vector a
  * if log_level <= av_log_level.
@@ -354,12 +367,5 @@ void sws_convertPalette8ToPacked32(const uint8_t *src, uint8_t *dst, int num_pix
  */
 void sws_convertPalette8ToPacked24(const uint8_t *src, uint8_t *dst, int num_pixels, const uint8_t *palette);
 
-/**
- * Get the AVClass for swsContext. It can be used in combination with
- * AV_OPT_SEARCH_FAKE_OBJ for examining options.
- *
- * @see av_opt_find().
- */
-const AVClass *sws_get_class(void);
 
 #endif /* SWSCALE_SWSCALE_H */

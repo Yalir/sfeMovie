@@ -124,52 +124,16 @@ void avfilter_inout_free(AVFilterInOut **inout);
  *
  * @param graph   the filter graph where to link the parsed graph context
  * @param filters string to be parsed
- * @param inputs  pointer to a linked list to the inputs of the graph, may be NULL.
- *                If non-NULL, *inputs is updated to contain the list of open inputs
- *                after the parsing, should be freed with avfilter_inout_free().
- * @param outputs pointer to a linked list to the outputs of the graph, may be NULL.
- *                If non-NULL, *outputs is updated to contain the list of open outputs
- *                after the parsing, should be freed with avfilter_inout_free().
+ * @param inputs  linked list to the inputs of the graph, may be NULL.
+ *                It is updated to contain the list of open inputs after the parsing,
+ *                should be freed with avfilter_inout_free().
+ * @param outputs linked list to the outputs of the graph, may be NULL.
+ *                It is updated to contain the list of open outputs after the parsing,
+ *                should be freed with avfilter_inout_free().
  * @return zero on success, a negative AVERROR code on error
  */
 int avfilter_graph_parse(AVFilterGraph *graph, const char *filters,
                          AVFilterInOut **inputs, AVFilterInOut **outputs,
                          void *log_ctx);
-
-/**
- * Send a command to one or more filter instances.
- *
- * @param graph  the filter graph
- * @param target the filter(s) to which the command should be sent
- *               "all" sends to all filters
- *               otherwise it can be a filter or filter instance name
- *               which will send the command to all matching filters.
- * @param cmd    the command to sent, for handling simplicity all commands must be alphanumeric only
- * @param arg    the argument for the command
- * @param res    a buffer with size res_size where the filter(s) can return a response.
- *
- * @returns >=0 on success otherwise an error code.
- *              AVERROR(ENOSYS) on unsupported commands
- */
-int avfilter_graph_send_command(AVFilterGraph *graph, const char *target, const char *cmd, const char *arg, char *res, int res_len, int flags);
-
-/**
- * Queue a command for one or more filter instances.
- *
- * @param graph  the filter graph
- * @param target the filter(s) to which the command should be sent
- *               "all" sends to all filters
- *               otherwise it can be a filter or filter instance name
- *               which will send the command to all matching filters.
- * @param cmd    the command to sent, for handling simplicity all commands must be alphanummeric only
- * @param arg    the argument for the command
- * @param ts     time at which the command should be sent to the filter
- *
- * @note As this executes commands after this function returns, no return code
- *       from the filter is provided, also AVFILTER_CMD_FLAG_ONE is not supported.
- */
-int avfilter_graph_queue_command(AVFilterGraph *graph, const char *target, const char *cmd, const char *arg, int flags, double ts);
-
-
 
 #endif /* AVFILTER_AVFILTERGRAPH_H */

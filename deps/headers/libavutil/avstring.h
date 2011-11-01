@@ -22,7 +22,6 @@
 #define AVUTIL_AVSTRING_H
 
 #include <stddef.h>
-#include "attributes.h"
 
 /**
  * Return non-zero if pfx is a prefix of str. If it is, *ptr is set to
@@ -108,17 +107,7 @@ size_t av_strlcat(char *dst, const char *src, size_t size);
  * @return the length of the string that would have been generated
  *  if enough space had been available
  */
-size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...) av_printf_format(3, 4);
-
-/**
- * Print arguments following specified format into a large enough auto
- * allocated buffer. It is similar to GNU asprintf().
- * @param fmt printf-compatible format string, specifying how the
- *            following parameters are used.
- * @return the allocated string
- * @note You have to free the string yourself with av_free().
- */
-char *av_asprintf(const char *fmt, ...) av_printf_format(1, 2);
+size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...);
 
 /**
  * Convert a number to a av_malloced string.

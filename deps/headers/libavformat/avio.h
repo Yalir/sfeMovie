@@ -285,7 +285,11 @@ attribute_deprecated int64_t url_fsize(AVIOContext *s);
 #define URL_EOF (-1)
 attribute_deprecated int url_fgetc(AVIOContext *s);
 attribute_deprecated int url_setbufsize(AVIOContext *s, int buf_size);
-attribute_deprecated int url_fprintf(AVIOContext *s, const char *fmt, ...) av_printf_format(2, 3);
+#ifdef __GNUC__
+attribute_deprecated int url_fprintf(AVIOContext *s, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
+#else
+attribute_deprecated int url_fprintf(AVIOContext *s, const char *fmt, ...);
+#endif
 attribute_deprecated void put_flush_packet(AVIOContext *s);
 attribute_deprecated int url_open_dyn_buf(AVIOContext **s);
 attribute_deprecated int url_open_dyn_packet_buf(AVIOContext **s, int max_packet_size);
@@ -459,7 +463,11 @@ int64_t avio_size(AVIOContext *s);
 int url_feof(AVIOContext *s);
 
 /** @warning currently size is limited */
-int avio_printf(AVIOContext *s, const char *fmt, ...) av_printf_format(2, 3);
+#ifdef __GNUC__
+int avio_printf(AVIOContext *s, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 3)));
+#else
+int avio_printf(AVIOContext *s, const char *fmt, ...);
+#endif
 
 void avio_flush(AVIOContext *s);
 
