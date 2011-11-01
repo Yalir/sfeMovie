@@ -72,12 +72,13 @@ typedef struct IdcinContext {
     hnode huff_nodes[256][HUF_TOKENS*2];
     int num_huff_nodes[256];
 
+    uint32_t pal[256];
 } IdcinContext;
 
 /*
  * Find the lowest probability node in a Huffman table, and mark it as
  * being assigned to a higher probability.
- * Returns the node index of the lowest unused node, or -1 if all nodes
+ * @return the node index of the lowest unused node, or -1 if all nodes
  * are used.
  */
 static int huff_smallest_node(hnode *hnodes, int num_hnodes) {
@@ -165,6 +166,7 @@ static av_cold int idcin_decode_init(AVCodecContext *avctx)
         huff_build_tree(s, i);
     }
 
+    avcodec_get_frame_defaults(&s->frame);
     s->frame.data[0] = NULL;
 
     return 0;
@@ -213,7 +215,7 @@ static int idcin_decode_frame(AVCodecContext *avctx,
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
     IdcinContext *s = avctx->priv_data;
-    AVPaletteControl *palette_control = avctx->palctrl;
+    const uint8_t *pal = av_packet_get_side_data(avpkt, AV_PKT_DATA_PALETTE, NULL);
 
     s->buf = buf;
     s->size = buf_size;
@@ -228,13 +230,12 @@ static int idcin_decode_frame(AVCodecContext *avctx,
 
     idcin_decode_vlcs(s);
 
-    /* make the palette available on the way out */
-    memcpy(s->frame.data[1], palette_control->palette, PALETTE_COUNT * 4);
-    /* If palette changed inform application*/
-    if (palette_control->palette_changed) {
-        palette_control->palette_changed = 0;
+    if (pal) {
         s->frame.palette_has_changed = 1;
+        memcpy(s->pal, pal, AVPALETTE_SIZE);
     }
+    /* make the palette available on the way out */
+    memcpy(s->frame.data[1], s->pal, AVPALETTE_SIZE);
 
     *data_size = sizeof(AVFrame);
     *(AVFrame*)data = s->frame;
@@ -253,7 +254,7 @@ static av_cold int idcin_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec idcin_decoder = {
+AVCodec ff_idcin_decoder = {
     "idcinvideo",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_IDCIN,

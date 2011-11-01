@@ -71,7 +71,7 @@ static const int h263_mb_type_b_map[15]= {
 void ff_h263_show_pict_info(MpegEncContext *s){
     if(s->avctx->debug&FF_DEBUG_PICT_INFO){
     av_log(s->avctx, AV_LOG_DEBUG, "qp:%d %c size:%d rnd:%d%s%s%s%s%s%s%s%s%s %d/%d\n",
-         s->qscale, av_get_pict_type_char(s->pict_type),
+         s->qscale, av_get_picture_type_char(s->pict_type),
          s->gb.size_in_bits, 1-s->no_rounding,
          s->obmc ? " AP" : "",
          s->umvplus ? " UMV" : "",
@@ -152,7 +152,7 @@ int ff_h263_decode_mba(MpegEncContext *s)
  */
 static int h263_decode_gob_header(MpegEncContext *s)
 {
-    unsigned int val, gfid, gob_number;
+    unsigned int val, gob_number;
     int left;
 
     /* Check for GOB Start Code */
@@ -183,12 +183,12 @@ static int h263_decode_gob_header(MpegEncContext *s)
         s->qscale = get_bits(&s->gb, 5); /* SQUANT */
         if(get_bits1(&s->gb)==0)
             return -1;
-        gfid = get_bits(&s->gb, 2); /* GFID */
+        skip_bits(&s->gb, 2); /* GFID */
     }else{
         gob_number = get_bits(&s->gb, 5); /* GN */
         s->mb_x= 0;
         s->mb_y= s->gob_index* gob_number;
-        gfid = get_bits(&s->gb, 2); /* GFID */
+        skip_bits(&s->gb, 2); /* GFID */
         s->qscale = get_bits(&s->gb, 5); /* GQUANT */
     }
 
@@ -325,7 +325,7 @@ static int h263p_decode_umotion(MpegEncContext * s, int pred)
    code >>= 1;
 
    code = (sign) ? (pred - code) : (pred + code);
-   dprintf(s->avctx,"H.263+ UMV Motion = %d\n", code);
+   av_dlog(s->avctx,"H.263+ UMV Motion = %d\n", code);
    return code;
 
 }
@@ -347,7 +347,7 @@ static void preview_obmc(MpegEncContext *s){
         s->block_index[i]+= 1;
     s->mb_x++;
 
-    assert(s->pict_type == FF_P_TYPE);
+    assert(s->pict_type == AV_PICTURE_TYPE_P);
 
     do{
         if (get_bits1(&s->gb)) {
@@ -460,7 +460,7 @@ static int h263_decode_block(MpegEncContext * s, DCTELEM * block,
         /* DC coef */
         if(s->codec_id == CODEC_ID_RV10){
 #if CONFIG_RV10_DECODER
-          if (s->rv10_version == 3 && s->pict_type == FF_I_TYPE) {
+          if (s->rv10_version == 3 && s->pict_type == AV_PICTURE_TYPE_I) {
             int component, diff;
             component = (n <= 3 ? 0 : n - 4 + 1);
             level = s->last_dc[component];
@@ -608,7 +608,7 @@ int ff_h263_decode_mb(MpegEncContext *s,
 
     assert(!s->h263_pred);
 
-    if (s->pict_type == FF_P_TYPE) {
+    if (s->pict_type == AV_PICTURE_TYPE_P) {
         do{
             if (get_bits1(&s->gb)) {
                 /* skip mb */
@@ -700,7 +700,7 @@ int ff_h263_decode_mb(MpegEncContext *s,
                 mot_val[1] = my;
             }
         }
-    } else if(s->pict_type==FF_B_TYPE) {
+    } else if(s->pict_type==AV_PICTURE_TYPE_B) {
         int mb_type;
         const int stride= s->b8_stride;
         int16_t *mot_val0 = s->current_picture.motion_val[0][ 2*(s->mb_x + s->mb_y*stride) ];
@@ -843,7 +843,7 @@ intra:
     if(s->pb_frame && h263_skip_b_part(s, cbpb) < 0)
         return -1;
     if(s->obmc && !s->mb_intra){
-        if(s->pict_type == FF_P_TYPE && s->mb_x+1<s->mb_width && s->mb_num_left != 1)
+        if(s->pict_type == AV_PICTURE_TYPE_P && s->mb_x+1<s->mb_width && s->mb_num_left != 1)
             preview_obmc(s);
     }
 end:
@@ -921,7 +921,7 @@ int h263_decode_picture_header(MpegEncContext *s)
         if (!width)
             return -1;
 
-        s->pict_type = FF_I_TYPE + get_bits1(&s->gb);
+        s->pict_type = AV_PICTURE_TYPE_I + get_bits1(&s->gb);
 
         s->h263_long_vectors = get_bits1(&s->gb);
 
@@ -951,7 +951,7 @@ int h263_decode_picture_header(MpegEncContext *s)
         if (ufep == 1) {
             /* OPPTYPE */
             format = get_bits(&s->gb, 3);
-            dprintf(s->avctx, "ufep=1, format: %d\n", format);
+            av_dlog(s->avctx, "ufep=1, format: %d\n", format);
             s->custom_pcf= get_bits1(&s->gb);
             s->umvplus = get_bits1(&s->gb); /* Unrestricted Motion Vector */
             if (get_bits1(&s->gb) != 0) {
@@ -985,11 +985,11 @@ int h263_decode_picture_header(MpegEncContext *s)
         /* MPPTYPE */
         s->pict_type = get_bits(&s->gb, 3);
         switch(s->pict_type){
-        case 0: s->pict_type= FF_I_TYPE;break;
-        case 1: s->pict_type= FF_P_TYPE;break;
-        case 2: s->pict_type= FF_P_TYPE;s->pb_frame = 3;break;
-        case 3: s->pict_type= FF_B_TYPE;break;
-        case 7: s->pict_type= FF_I_TYPE;break; //ZYGO
+        case 0: s->pict_type= AV_PICTURE_TYPE_I;break;
+        case 1: s->pict_type= AV_PICTURE_TYPE_P;break;
+        case 2: s->pict_type= AV_PICTURE_TYPE_P;s->pb_frame = 3;break;
+        case 3: s->pict_type= AV_PICTURE_TYPE_B;break;
+        case 7: s->pict_type= AV_PICTURE_TYPE_I;break; //ZYGO
         default:
             return -1;
         }
@@ -1002,7 +1002,7 @@ int h263_decode_picture_header(MpegEncContext *s)
             if (format == 6) {
                 /* Custom Picture Format (CPFMT) */
                 s->aspect_ratio_info = get_bits(&s->gb, 4);
-                dprintf(s->avctx, "aspect: %d\n", s->aspect_ratio_info);
+                av_dlog(s->avctx, "aspect: %d\n", s->aspect_ratio_info);
                 /* aspect ratios:
                 0 - forbidden
                 1 - 1:1
@@ -1015,7 +1015,7 @@ int h263_decode_picture_header(MpegEncContext *s)
                 width = (get_bits(&s->gb, 9) + 1) * 4;
                 skip_bits1(&s->gb);
                 height = get_bits(&s->gb, 9) * 4;
-                dprintf(s->avctx, "\nH.263+ Custom picture: %dx%d\n",width,height);
+                av_dlog(s->avctx, "\nH.263+ Custom picture: %dx%d\n",width,height);
                 if (s->aspect_ratio_info == FF_ASPECT_EXTENDED) {
                     /* aspected dimensions */
                     s->avctx->sample_aspect_ratio.num= get_bits(&s->gb, 8);
@@ -1112,7 +1112,7 @@ int h263_decode_picture_header(MpegEncContext *s)
     }
 
         ff_h263_show_pict_info(s);
-    if (s->pict_type == FF_I_TYPE && s->codec_tag == AV_RL32("ZYGO")){
+    if (s->pict_type == AV_PICTURE_TYPE_I && s->codec_tag == AV_RL32("ZYGO")){
         int i,j;
         for(i=0; i<85; i++) av_log(s->avctx, AV_LOG_DEBUG, "%d", get_bits1(&s->gb));
         av_log(s->avctx, AV_LOG_DEBUG, "\n");

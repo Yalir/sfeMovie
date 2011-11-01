@@ -32,6 +32,7 @@
 #define ALT_BITSTREAM_READER_LE
 #include "get_bits.h"
 #include "libavutil/lzo.h"
+#include "libavutil/imgutils.h"
 
 #define EA_PREAMBLE_SIZE    8
 #define kVGT_TAG MKTAG('k', 'V', 'G', 'T')
@@ -54,6 +55,8 @@ static av_cold int tgv_decode_init(AVCodecContext *avctx){
     s->avctx = avctx;
     avctx->time_base = (AVRational){1, 15};
     avctx->pix_fmt = PIX_FMT_PAL8;
+    avcodec_get_frame_defaults(&s->frame);
+    avcodec_get_frame_defaults(&s->last_frame);
     return 0;
 }
 
@@ -275,7 +278,7 @@ static int tgv_decode_frame(AVCodecContext *avctx,
         }
     }
 
-    if (avcodec_check_dimensions(avctx, s->width, s->height))
+    if (av_image_check_size(s->width, s->height, 0, avctx))
         return -1;
 
     /* shuffle */
@@ -299,7 +302,7 @@ static int tgv_decode_frame(AVCodecContext *avctx,
 
     if(chunk_type==kVGT_TAG) {
         s->frame.key_frame = 1;
-        s->frame.pict_type = FF_I_TYPE;
+        s->frame.pict_type = AV_PICTURE_TYPE_I;
         if (unpack(buf, buf_end, s->frame.data[0], s->avctx->width, s->avctx->height)<0) {
             av_log(avctx, AV_LOG_WARNING, "truncated intra frame\n");
             return -1;
@@ -310,7 +313,7 @@ static int tgv_decode_frame(AVCodecContext *avctx,
             return buf_size;
         }
         s->frame.key_frame = 0;
-        s->frame.pict_type = FF_P_TYPE;
+        s->frame.pict_type = AV_PICTURE_TYPE_P;
         if (tgv_decode_inter(s, buf, buf_end)<0) {
             av_log(avctx, AV_LOG_WARNING, "truncated inter frame\n");
             return -1;
@@ -333,7 +336,7 @@ static av_cold int tgv_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec eatgv_decoder = {
+AVCodec ff_eatgv_decoder = {
     "eatgv",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_TGV,

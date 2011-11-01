@@ -23,6 +23,7 @@
 
 #include "libavutil/bswap.h"
 #include "libavutil/lzo.h"
+#include "libavutil/imgutils.h"
 #include "avcodec.h"
 #include "dsputil.h"
 #include "rtjpeg.h"
@@ -111,12 +112,11 @@ static int codec_reinit(AVCodecContext *avctx, int width, int height, int qualit
     if (quality >= 0)
         get_quant_quality(c, quality);
     if (width != c->width || height != c->height) {
-        if (avcodec_check_dimensions(avctx, height, width) < 0)
+        if (av_image_check_size(height, width, 0, avctx) < 0)
             return 0;
         avctx->width = c->width = width;
         avctx->height = c->height = height;
-        c->decomp_size = c->height * c->width * 3 / 2;
-        c->decomp_buf = av_realloc(c->decomp_buf, c->decomp_size + AV_LZO_OUTPUT_PADDING);
+        av_fast_malloc(&c->decomp_buf, &c->decomp_size, c->height * c->width * 3 / 2);
         if (!c->decomp_buf) {
             av_log(avctx, AV_LOG_ERROR, "Can't allocate decompression buffer.\n");
             return 0;
@@ -208,7 +208,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         return -1;
     }
 
-    c->pic.pict_type = keyframe ? FF_I_TYPE : FF_P_TYPE;
+    c->pic.pict_type = keyframe ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_P;
     c->pic.key_frame = keyframe;
     // decompress/copy/whatever data
     switch (comptype) {
@@ -272,7 +272,7 @@ static av_cold int decode_end(AVCodecContext *avctx) {
     return 0;
 }
 
-AVCodec nuv_decoder = {
+AVCodec ff_nuv_decoder = {
     "nuv",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_NUV,

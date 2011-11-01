@@ -67,6 +67,7 @@ typedef struct CinepakContext {
 
     int sega_film_skip_bytes;
 
+    uint32_t pal[256];
 } CinepakContext;
 
 static void cinepak_decode_codebook (cvid_codebook *codebook,
@@ -335,7 +336,8 @@ static int cinepak_decode (CinepakContext *s)
              * If the frame header is followed by the bytes FE 00 00 06 00 00 then
              * this is probably one of the two known files that have 6 extra bytes
              * after the frame header. Else, assume 2 extra bytes. */
-            if ((s->data[10] == 0xFE) &&
+            if (s->size >= 16 &&
+                (s->data[10] == 0xFE) &&
                 (s->data[11] == 0x00) &&
                 (s->data[12] == 0x00) &&
                 (s->data[13] == 0x06) &&
@@ -395,7 +397,7 @@ static av_cold int cinepak_decode_init(AVCodecContext *avctx)
     s->sega_film_skip_bytes = -1;  /* uninitialized state */
 
     // check for paletted data
-    if ((avctx->palctrl == NULL) || (avctx->bits_per_coded_sample == 40)) {
+    if (avctx->bits_per_coded_sample != 8) {
         s->palette_video = 0;
         avctx->pix_fmt = PIX_FMT_YUV420P;
     } else {
@@ -403,6 +405,7 @@ static av_cold int cinepak_decode_init(AVCodecContext *avctx)
         avctx->pix_fmt = PIX_FMT_PAL8;
     }
 
+    avcodec_get_frame_defaults(&s->frame);
     s->frame.data[0] = NULL;
 
     return 0;
@@ -427,16 +430,18 @@ static int cinepak_decode_frame(AVCodecContext *avctx,
         return -1;
     }
 
+    if (s->palette_video) {
+        const uint8_t *pal = av_packet_get_side_data(avpkt, AV_PKT_DATA_PALETTE, NULL);
+        if (pal) {
+            s->frame.palette_has_changed = 1;
+            memcpy(s->pal, pal, AVPALETTE_SIZE);
+        }
+    }
+
     cinepak_decode(s);
 
-    if (s->palette_video) {
-        memcpy (s->frame.data[1], avctx->palctrl->palette, AVPALETTE_SIZE);
-        if (avctx->palctrl->palette_changed) {
-            s->frame.palette_has_changed = 1;
-            avctx->palctrl->palette_changed = 0;
-        } else
-            s->frame.palette_has_changed = 0;
-    }
+    if (s->palette_video)
+        memcpy (s->frame.data[1], s->pal, AVPALETTE_SIZE);
 
     *data_size = sizeof(AVFrame);
     *(AVFrame*)data = s->frame;
@@ -455,7 +460,7 @@ static av_cold int cinepak_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec cinepak_decoder = {
+AVCodec ff_cinepak_decoder = {
     "cinepak",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_CINEPAK,

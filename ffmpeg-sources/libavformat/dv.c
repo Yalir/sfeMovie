@@ -316,7 +316,7 @@ int dv_get_packet(DVDemuxContext *c, AVPacket *pkt)
 }
 
 int dv_produce_packet(DVDemuxContext *c, AVPacket *pkt,
-                      uint8_t* buf, int buf_size)
+                      uint8_t* buf, int buf_size, int64_t pos)
 {
     int size, i;
     uint8_t *ppcm[4] = {0};
@@ -331,6 +331,7 @@ int dv_produce_packet(DVDemuxContext *c, AVPacket *pkt,
     /* FIXME: in case of no audio/bad audio we have to do something */
     size = dv_extract_audio_info(c, buf);
     for (i = 0; i < c->ach; i++) {
+       c->audio_pkt[i].pos  = pos;
        c->audio_pkt[i].size = size;
        c->audio_pkt[i].pts  = c->abytes * 30000*8 / c->ast[i]->codec->bit_rate;
        ppcm[i] = c->audio_buf[i];
@@ -354,6 +355,7 @@ int dv_produce_packet(DVDemuxContext *c, AVPacket *pkt,
     size = dv_extract_video_info(c, buf);
     av_init_packet(pkt);
     pkt->data         = buf;
+    pkt->pos          = pos;
     pkt->size         = size;
     pkt->flags       |= AV_PKT_FLAG_KEY;
     pkt->stream_index = c->vst->id;
@@ -370,7 +372,7 @@ static int64_t dv_frame_offset(AVFormatContext *s, DVDemuxContext *c,
     // FIXME: sys may be wrong if last dv_read_packet() failed (buffer is junk)
     const DVprofile* sys = ff_dv_codec_profile(c->vst->codec);
     int64_t offset;
-    int64_t size = url_fsize(s->pb);
+    int64_t size = avio_size(s->pb) - s->data_offset;
     int64_t max_offset = ((size-1) / sys->frame_size) * sys->frame_size;
 
     offset = sys->frame_size * timestamp;
@@ -378,7 +380,7 @@ static int64_t dv_frame_offset(AVFormatContext *s, DVDemuxContext *c,
     if (size >= 0 && offset > max_offset) offset = max_offset;
     else if (offset < 0) offset = 0;
 
-    return offset;
+    return offset + s->data_offset;
 }
 
 void dv_offset_reset(DVDemuxContext *c, int64_t frame_offset)
@@ -410,25 +412,25 @@ static int dv_read_header(AVFormatContext *s,
     if (!c->dv_demux)
         return -1;
 
-    state = get_be32(s->pb);
+    state = avio_rb32(s->pb);
     while ((state & 0xffffff7f) != 0x1f07003f) {
         if (url_feof(s->pb)) {
             av_log(s, AV_LOG_ERROR, "Cannot find DV header.\n");
             return -1;
         }
         if (state == 0x003f0700 || state == 0xff3f0700)
-            marker_pos = url_ftell(s->pb);
-        if (state == 0xff3f0701 && url_ftell(s->pb) - marker_pos == 80) {
-            url_fseek(s->pb, -163, SEEK_CUR);
-            state = get_be32(s->pb);
+            marker_pos = avio_tell(s->pb);
+        if (state == 0xff3f0701 && avio_tell(s->pb) - marker_pos == 80) {
+            avio_seek(s->pb, -163, SEEK_CUR);
+            state = avio_rb32(s->pb);
             break;
         }
-        state = (state << 8) | get_byte(s->pb);
+        state = (state << 8) | avio_r8(s->pb);
     }
     AV_WB32(c->buf, state);
 
-    if (get_buffer(s->pb, c->buf + 4, DV_PROFILE_BYTES - 4) <= 0 ||
-        url_fseek(s->pb, -DV_PROFILE_BYTES, SEEK_CUR) < 0)
+    if (avio_read(s->pb, c->buf + 4, DV_PROFILE_BYTES - 4) <= 0 ||
+        avio_seek(s->pb, -DV_PROFILE_BYTES, SEEK_CUR) < 0)
         return AVERROR(EIO);
 
     c->dv_demux->sys = ff_dv_frame_profile(c->dv_demux->sys, c->buf, DV_PROFILE_BYTES);
@@ -452,13 +454,14 @@ static int dv_read_packet(AVFormatContext *s, AVPacket *pkt)
     size = dv_get_packet(c->dv_demux, pkt);
 
     if (size < 0) {
+        int64_t pos = avio_tell(s->pb);
         if (!c->dv_demux->sys)
             return AVERROR(EIO);
         size = c->dv_demux->sys->frame_size;
-        if (get_buffer(s->pb, c->buf, size) <= 0)
+        if (avio_read(s->pb, c->buf, size) <= 0)
             return AVERROR(EIO);
 
-        size = dv_produce_packet(c->dv_demux, pkt, c->buf, size);
+        size = dv_produce_packet(c->dv_demux, pkt, c->buf, size, pos);
     }
 
     return size;
@@ -473,7 +476,7 @@ static int dv_read_seek(AVFormatContext *s, int stream_index,
 
     dv_offset_reset(c, offset / c->sys->frame_size);
 
-    offset = url_fseek(s->pb, offset, SEEK_SET);
+    offset = avio_seek(s->pb, offset, SEEK_SET);
     return (offset < 0) ? offset : 0;
 }
 
@@ -518,7 +521,7 @@ static int dv_probe(AVProbeData *p)
 }
 
 #if CONFIG_DV_DEMUXER
-AVInputFormat dv_demuxer = {
+AVInputFormat ff_dv_demuxer = {
     "dv",
     NULL_IF_CONFIG_SMALL("DV video format"),
     sizeof(RawDVContext),

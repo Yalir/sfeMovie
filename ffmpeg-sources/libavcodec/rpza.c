@@ -233,6 +233,7 @@ static av_cold int rpza_decode_init(AVCodecContext *avctx)
     s->avctx = avctx;
     avctx->pix_fmt = PIX_FMT_RGB555;
 
+    avcodec_get_frame_defaults(&s->frame);
     s->frame.data[0] = NULL;
 
     return 0;
@@ -275,7 +276,7 @@ static av_cold int rpza_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec rpza_decoder = {
+AVCodec ff_rpza_decoder = {
     "rpza",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_RPZA,

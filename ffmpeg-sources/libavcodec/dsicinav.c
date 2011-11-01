@@ -94,6 +94,7 @@ static av_cold int cinvideo_decode_init(AVCodecContext *avctx)
     cin->avctx = avctx;
     avctx->pix_fmt = PIX_FMT_PAL8;
 
+    avcodec_get_frame_defaults(&cin->frame);
     cin->frame.data[0] = NULL;
 
     cin->bitmap_size = avctx->width * avctx->height;
@@ -216,7 +217,11 @@ static int cinvideo_decode_frame(AVCodecContext *avctx,
     bitmap_frame_size = buf_size - 4;
 
     /* handle palette */
+    if (bitmap_frame_size < palette_colors_count * (3 + (palette_type != 0)))
+        return AVERROR_INVALIDDATA;
     if (palette_type == 0) {
+        if (palette_colors_count > 256)
+            return AVERROR_INVALIDDATA;
         for (i = 0; i < palette_colors_count; ++i) {
             cin->palette[i] = bytestream_get_le24(&buf);
             bitmap_frame_size -= 3;
@@ -307,7 +312,7 @@ static av_cold int cinaudio_decode_init(AVCodecContext *avctx)
     cin->avctx = avctx;
     cin->initial_decode_frame = 1;
     cin->delta = 0;
-    avctx->sample_fmt = SAMPLE_FMT_S16;
+    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
 
     return 0;
 }
@@ -343,7 +348,7 @@ static int cinaudio_decode_frame(AVCodecContext *avctx,
 }
 
 
-AVCodec dsicinvideo_decoder = {
+AVCodec ff_dsicinvideo_decoder = {
     "dsicinvideo",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_DSICINVIDEO,
@@ -356,7 +361,7 @@ AVCodec dsicinvideo_decoder = {
     .long_name = NULL_IF_CONFIG_SMALL("Delphine Software International CIN video"),
 };
 
-AVCodec dsicinaudio_decoder = {
+AVCodec ff_dsicinaudio_decoder = {
     "dsicinaudio",
     AVMEDIA_TYPE_AUDIO,
     CODEC_ID_DSICINAUDIO,

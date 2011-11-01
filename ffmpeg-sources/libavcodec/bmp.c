@@ -200,7 +200,7 @@ static int bmp_decode_frame(AVCodecContext *avctx,
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
-    p->pict_type = FF_I_TYPE;
+    p->pict_type = AV_PICTURE_TYPE_I;
     p->key_frame = 1;
 
     buf = buf0 + hsize;
@@ -245,7 +245,7 @@ static int bmp_decode_frame(AVCodecContext *avctx,
         buf = buf0 + 14 + ihsize; //palette location
         if((hsize-ihsize-14) < (colors << 2)){ // OS/2 bitmap, 3 bytes per palette entry
             for(i = 0; i < colors; i++)
-                ((uint32_t*)p->data[1])[i] = bytestream_get_le24(&buf);
+                ((uint32_t*)p->data[1])[i] = (0xff<<24) | bytestream_get_le24(&buf);
         }else{
             for(i = 0; i < colors; i++)
                 ((uint32_t*)p->data[1])[i] = bytestream_get_le32(&buf);
@@ -290,7 +290,7 @@ static int bmp_decode_frame(AVCodecContext *avctx,
                 uint16_t *dst = (uint16_t *) ptr;
 
                 for(j = 0; j < avctx->width; j++)
-                    *dst++ = le2me_16(*src++);
+                    *dst++ = av_le2ne16(*src++);
 
                 buf += n;
                 ptr += linesize;
@@ -335,7 +335,7 @@ static av_cold int bmp_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec bmp_decoder = {
+AVCodec ff_bmp_decoder = {
     "bmp",
     AVMEDIA_TYPE_VIDEO,
     CODEC_ID_BMP,
