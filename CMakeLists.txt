@@ -51,6 +51,8 @@ elseif (MACOSX)
 	
 #	set (COMPILER_FLAGS "${COMPILER_FLAGS} -g2")
 	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress -framework OpenGL")
+	set (SFML_LIBRARIES "")
+	set (LINKER_FLAGS "${LINKER_FLAGS} -framework sfml-system -framework sfml-window -framework sfml-graphics -framework sfml-audio")
 	
 	# add " -arch i386 -arch x86_64" to $OTHER_FLAGS in order to build universal binary
 	# (disabled by default because I couldn't find any way to get FFmpeg to build as
