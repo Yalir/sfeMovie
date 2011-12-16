@@ -25,15 +25,17 @@ endif()
 
 # Set some env vars
 set (LIB_NAME sfe-movie)
+set (VERSION_MAJOR 1)
+set (VERSION_MINOR 0)
+set (VERSION_PATCH 0)
 
 set (SOURCES "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 set (EXTERNAL_HEADERS "deps/headers")
-set (SFML_LIBRARIES sfml-system.2.0 sfml-window.2.0 sfml-graphics.2.0 sfml-audio.2.0)
 set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
-
+set (SFML_LIBRARIES "")
 set (COMPILER_FLAGS "-g2")
 set (LINKER_FLAGS "")
 set (OTHER_FLAGS "")
@@ -44,24 +46,48 @@ if (LINUX)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp)
 	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS")
+	set (SFML_LIBRARIES sfml-system.2.0 sfml-window.2.0 sfml-graphics.2.0 sfml-audio.2.0)
 	
 elseif (MACOSX)
 	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/macosx-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	set (OTHER_LIBRARIES z bz2)
-	
-#	set (COMPILER_FLAGS "${COMPILER_FLAGS} -g2")
 	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress -framework OpenGL")
-	set (SFML_LIBRARIES "")
 	set (LINKER_FLAGS "${LINKER_FLAGS} -framework sfml-system -framework sfml-window -framework sfml-graphics -framework sfml-audio")
-	
-	# add " -arch i386 -arch x86_64" to $OTHER_FLAGS in order to build universal binary
-	# (disabled by default because I couldn't find any way to get FFmpeg to build as
-	# universal binary when being built from build.sh)
-	#set (OTHER_FLAGS "${OTHER_FLAGS} --sysroot=/Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386")
-	set (CMAKE_OSX_ARCHITECTURES "i386")
-	set (CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.5.sdk")
-    set (CMAKE_OSX_DEPLOYMENT_TARGET "10.5")
 	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp)
+	
+	# arch support - by default : i386
+    #if(NOT CMAKE_OSX_ARCHITECTURES)
+    #    set(CMAKE_OSX_ARCHITECTURES "i386" CACHE STRING "Build architectures for Mac OS X" FORCE)
+    #endif()
+	set (CMAKE_OSX_ARCHITECTURES "i386")
+	
+	if(EXISTS /Developer/SDKs/MacOSX10.5.sdk)
+        # target 10.5 system
+        set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.5.sdk"
+            CACHE STRING "The product will be built against the headers and libraries located inside the indicated SDK. Set to empty string for default value."
+            FORCE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.5" 
+            CACHE STRING "Minimum OS X version to target for deployment (at runtime); newer APIs weak linked."
+            FORCE)
+    elseif(EXISTS /Developer/SDKs/MacOSX10.6.sdk)
+        # target 10.6 system
+        set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.6.sdk"
+            CACHE STRING "The product will be built against the headers and libraries located inside the indicated SDK. Set to empty string for default value."
+            FORCE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.6" 
+            CACHE STRING "Minimum OS X version to target for deployment (at runtime); newer APIs weak linked."
+            FORCE)
+    else()
+        # use default SDK.
+    endif()
+    
+    # add an option to let the user specify a custom directory for frameworks installation (SFML, sndfile, ...)
+    set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
+	
+	# find only "root" headers
+    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/*")
+    
+    set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 	
 elseif (WINDOWS)
 	set (EXTERNAL_LIBRARIES ${CMAKE_SOURCE_DIR}/deps/windows-binaries ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
@@ -96,19 +122,25 @@ add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 set_target_properties(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS} ${OTHER_FLAGS}")
 set_target_properties(${LIB_NAME} PROPERTIES LINK_FLAGS "${LINKER_FLAGS} ${OTHER_FLAGS}")
 
-# Set install name
 if (MACOSX)
-	set_target_properties(${LIB_NAME} PROPERTIES
-	   BUILD_WITH_INSTALL_RPATH 1
-	   INSTALL_NAME_DIR "@executable_path/../Frameworks")
+    # edit target properties
+    set_target_properties(${LIB_NAME} PROPERTIES 
+                          FRAMEWORK TRUE
+                          FRAMEWORK_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                          SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0
+                          VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                          MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${LIB_NAME}
+                          MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                          MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                          PUBLIC_HEADER "${SFE_HEADERS}" )
+
+    # adapt install directory to allow distributing dylibs/frameworks in user’s frameworks/application bundle
+    set_target_properties(${LIB_NAME} PROPERTIES 
+                          BUILD_WITH_INSTALL_RPATH 1 
+                          INSTALL_NAME_DIR "@executable_path/../Frameworks")
 endif()
 
 
 # Define the libraries sfe should link against
 target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
 
-INSTALL(FILES lib${LIB_NAME}.dylib
-	DESTINATION /usr/local/lib)
-
-INSTALL(FILES ${PUBLIC_HEADERS}/Movie.h
-	DESTINATION /usr/local/include/sfe)
