@@ -109,26 +109,24 @@ endif()
 
 
 # Set the search directories for compiling and link editing
-include_directories (${PUBLIC_HEADERS})
-include_directories (${PRIVATE_HEADERS})
-include_directories (${EXTERNAL_HEADERS})
-
+include_directories (${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${EXTERNAL_HEADERS})
 link_directories (${EXTERNAL_LIBRARIES})
 
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 
 
-set_target_properties(${LIB_NAME} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS} ${OTHER_FLAGS}")
-set_target_properties(${LIB_NAME} PROPERTIES LINK_FLAGS "${LINKER_FLAGS} ${OTHER_FLAGS}")
+set_target_properties(${LIB_NAME} PROPERTIES
+					  COMPILE_FLAGS "${COMPILER_FLAGS} ${OTHER_FLAGS}")
+					  LINK_FLAGS "${LINKER_FLAGS} ${OTHER_FLAGS}"
+					  SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0
+                      VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 if (MACOSX)
     # edit target properties
     set_target_properties(${LIB_NAME} PROPERTIES 
                           FRAMEWORK TRUE
                           FRAMEWORK_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                          SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0
-                          VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                           MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${LIB_NAME}
                           MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                           MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
