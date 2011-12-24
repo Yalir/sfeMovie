@@ -139,7 +139,7 @@ What is your choice? [1-4] (default is 1)"
 			
 			if [ "$os" == "windows" ]
 			  then
-			    os_flags="--enable-memalign-hack"
+			    os_flags="--enable-memalign-hack --enable-w32threads"
 			fi
 			
 			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
@@ -212,6 +212,11 @@ function build_sfemovie()
 	fi
 	
 	echo "Running CMake..."
+	if test -f CMakeCache.txt
+	  then
+	    rm CMakeCache.txt
+	fi
+	
 	echo "cmake -G \"$cmake_env\" CMakeLists.txt"
 	cmake -G "$cmake_env" CMakeLists.txt
 	check_err
