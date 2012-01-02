@@ -29,36 +29,37 @@ set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
 set (VERSION_PATCH 0)
 
-set (SOURCES "src")
+set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
-set (EXTERNAL_HEADERS "deps/headers")
+set (EXTERNAL_HEADERS "deps/headers" "deps/SFML/include")
 set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
-set (SFML_LIBRARIES "")
-set (COMPILER_FLAGS "-g2")
+set (SFML_LIBRARIES sfml-system sfml-audio sfml-window sfml-graphics)
+set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build ${CMAKE_SOURCE_DIR}/deps/SFML/lib)
+set (COMPILER_FLAGS "-O2")
 set (LINKER_FLAGS "")
-set (OTHER_FLAGS "")
 
-set (SOURCE_FILES ${SOURCES}/Movie.cpp ${SOURCES}/Movie_audio.cpp ${SOURCES}/Movie_video.cpp ${SOURCES}/utils.cpp ${SOURCES}/Condition.cpp)
+set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
 
-if (LINUX)
-	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
-	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp)
-	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS")
-	set (SFML_LIBRARIES sfml-system.2.0 sfml-window.2.0 sfml-graphics.2.0 sfml-audio.2.0)
+
+if (LINUX) # ========================================== LINUX ========================================== #
+
+
+	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
+	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-D__STDC_CONSTANT_MACROS")
+	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system.2.0" "sfml-window.2.0" "sfml-graphics.2.0" "sfml-audio.2.0")
 	
-elseif (MACOSX)
-	set (EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/deps/macosx-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
-	set (OTHER_LIBRARIES z bz2)
-	set (LINKER_FLAGS "${LINKER_FLAGS} -read_only_relocs suppress -framework OpenGL")
-	set (LINKER_FLAGS "${LINKER_FLAGS} -framework sfml-system -framework sfml-window -framework sfml-graphics -framework sfml-audio")
-	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Unix/ConditionImpl.cpp)
 	
-	# arch support - by default : i386
-    #if(NOT CMAKE_OSX_ARCHITECTURES)
-    #    set(CMAKE_OSX_ARCHITECTURES "i386" CACHE STRING "Build architectures for Mac OS X" FORCE)
-    #endif()
+elseif (MACOSX) # ========================================== MACOSX ========================================== #
+
+
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
+	list (APPEND LINKER_FLAGS "-read_only_relocs suppress;-framework OpenGL")
+	list (APPEND LINKER_FLAGS "-F${CMAKE_SOURCE_DIR}/deps/SFML/lib")
+	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
+	
 	set (CMAKE_OSX_ARCHITECTURES "i386")
 	
 	if(EXISTS /Developer/SDKs/MacOSX10.5.sdk)
@@ -89,38 +90,48 @@ elseif (MACOSX)
     
     set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 	
-elseif (WINDOWS)
-	set (EXTERNAL_LIBRARIES ${CMAKE_SOURCE_DIR}/deps/windows-binaries ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
+	
+elseif (WINDOWS) # ========================================== WINDOWS ========================================== #
+
+
+	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	
 	if (MSVC)
-		set (EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${CMAKE_SOURCE_DIR}/deps/windows-binaries/msvc)
-		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} ${CMAKE_SOURCE_DIR}/deps/headers/msvc)
+		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/msvc")
+		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 	else()
-		set (EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc)
-		set (LINKER_FLAGS "${LINKER_FLAGS} -static-libgcc -static-libstdc++")
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z)
+		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
+		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc" "-static-libstdc++")
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "z")
 	endif()
 	
-	set (COMPILER_FLAGS "${COMPILER_FLAGS} -D__STDC_CONSTANT_MACROS -DSFE_EXPORTS")
-	set (SFML_LIBRARIES sfml-system sfml-window sfml-graphics sfml-audio)
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} ws2_32 opengl32)
-	set (SOURCE_FILES ${SOURCE_FILES} ${SOURCES}/Win32/ConditionImpl.cpp)
+	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS")
+	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system" "sfml-window" "sfml-graphics" "sfml-audio")
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32" "opengl32")
+	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR_DIR}/Win32/ConditionImpl.cpp")
 endif()
+
+
+# Build up to date SFML binaries 
+set(BUILD_FRAMEWORKS 1) 
+add_subdirectory("deps/SFML")
 
 
 # Set the search directories for compiling and link editing
 include_directories (${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${EXTERNAL_HEADERS})
-link_directories (${EXTERNAL_LIBRARIES})
+link_directories (${EXTERNAL_LIBRARIES_DIR})
+
 
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 
 
 set_target_properties(${LIB_NAME} PROPERTIES
-					  COMPILE_FLAGS "${COMPILER_FLAGS} ${OTHER_FLAGS}"
-					  LINK_FLAGS "${LINKER_FLAGS} ${OTHER_FLAGS}"
+					  COMPILE_FLAGS ${COMPILER_FLAGS}
+					  LINK_FLAGS ${LINKER_FLAGS}
 					  SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0
                       VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+
 
 if (MACOSX)
     # edit target properties
@@ -130,7 +141,8 @@ if (MACOSX)
                           MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${LIB_NAME}
                           MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                           MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                          PUBLIC_HEADER "${SFE_HEADERS}" )
+                          PUBLIC_HEADER ${SFE_HEADERS} )
+
 
     # adapt install directory to allow distributing dylibs/frameworks in user’s frameworks/application bundle
     set_target_properties(${LIB_NAME} PROPERTIES 
