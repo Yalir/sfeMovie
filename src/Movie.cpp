@@ -263,8 +263,8 @@ namespace sfe {
 			new_size = wanted_size;
 		}
 
-		SetX(frame.Left + (wanted_size.x - new_size.x) / 2);
-		SetY(frame.Top + (wanted_size.y - new_size.y) / 2);
+		SetPosition(frame.Left + (wanted_size.x - new_size.x) / 2,
+					frame.Top + (wanted_size.y - new_size.y) / 2);
 	}
 
 	float Movie::GetFramerate(void) const
@@ -279,10 +279,10 @@ namespace sfe {
 		return rate;
 	}
 
-	unsigned int Movie::GetChannelsCount(void) const
+	unsigned int Movie::GetChannelCount(void) const
 	{
 		unsigned count = 0;
-		IFAUDIO(count = m_audio->GetChannelsCount());
+		IFAUDIO(count = m_audio->GetChannelCount());
 		return count;
 	}
 
@@ -332,7 +332,7 @@ namespace sfe {
 	}
 
 	
-	void Movie::Render(sf::RenderTarget& Target, sf::Renderer& renderer) const
+	void Movie::Render(sf::RenderTarget& Target, sf::RenderStates states) const
 	{
 		m_video->Render(Target);
 	}

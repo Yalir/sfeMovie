@@ -53,7 +53,7 @@ namespace sfe {
 		using sf::SoundStream::SetVolume;
 		using sf::SoundStream::GetVolume;
 		using sf::SoundStream::GetSampleRate;
-		using sf::SoundStream::GetChannelsCount;
+		using sf::SoundStream::GetChannelCount;
 		//using sf::SoundStream::SetPlayingOffset;
 		using sf::SoundStream::GetPlayingOffset;
 		

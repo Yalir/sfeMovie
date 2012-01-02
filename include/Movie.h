@@ -27,6 +27,7 @@
 #define MOVIE_H
 
 #include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Mutex.hpp>
@@ -62,7 +63,7 @@ namespace sfe {
 	class Movie_video;
 	class Condition;
 	
-	class SFE_API Movie : public sf::Drawable {
+	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
 		friend class Movie_audio;
 		friend class Movie_video;
 	public:
@@ -156,7 +157,7 @@ namespace sfe {
 		/** Returns the count of audio channels
 		 * @return: the channels' count
 		 */
-		unsigned int GetChannelsCount(void) const;
+		unsigned int GetChannelCount(void) const;
 		
 		/** Returns the current status of this movie
 		 * @return: See enum Status
@@ -210,7 +211,7 @@ namespace sfe {
 		typedef AVPacket *AVPacketRef;
 #endif
 		void InternalStop(bool calledFromWatchThread);
-		void Render(sf::RenderTarget& Target, sf::Renderer& renderer) const;
+		void Render(sf::RenderTarget& Target, sf::RenderStates states) const;
 		
 		static void OutputError(int err, const std::string& fallbackMessage = "");
 		void Close(void);
