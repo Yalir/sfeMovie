@@ -268,9 +268,8 @@ libmoldname.a
 			wd="deps/windows-binaries"
 			cp -v ${wd}/libsndfile-1.dll ${wd}/openal32.dll ${wd}/gcc/libgcc_s_dw2-1.dll ${wd}/gcc/sfml-audio-2.dll ${wd}/gcc/sfml-graphics-2.dll ${wd}/gcc/sfml-system-2.dll ${wd}/gcc/sfml-window-2.dll product/lib
 			cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
+			cp -v include/* product/include
 		fi
-		
-		cp -v include/* product/include
 		
 		echo "All of the required files have been copied to the \"product\" directory."
 	fi
