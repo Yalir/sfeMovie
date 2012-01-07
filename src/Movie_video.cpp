@@ -336,12 +336,14 @@ namespace sfe {
 		m_size = sf::Vector2i(0, 0);
 	}
 	
-	void Movie_video::Render(sf::RenderTarget& Target) const
+	void Movie_video::Draw(sf::RenderTarget& Target, sf::RenderStates& states) const
 	{
-		sf::Lock l(m_imageSwapMutex); // 2% on Windows
-
-		Target.Draw(m_sprite); // 38% on Windows
-		glFlush();
+		{
+			sf::Lock l(m_imageSwapMutex); // 2% on Windows
+			
+			Target.Draw(m_sprite, states); // 38% on Windows
+			glFlush();
+		}
 
 		// Allow thread switching
 		sf::Sleep(0);

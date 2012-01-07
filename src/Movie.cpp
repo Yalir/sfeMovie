@@ -332,9 +332,10 @@ namespace sfe {
 	}
 
 	
-	void Movie::Render(sf::RenderTarget& Target, sf::RenderStates states) const
+	void Movie::Draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
-		m_video->Render(Target);
+		states.Transform *= GetTransform();
+		m_video->Draw(target, states);
 	}
 
 	void Movie::OutputError(int err, const std::string& fallbackMessage)

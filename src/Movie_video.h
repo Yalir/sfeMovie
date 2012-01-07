@@ -51,7 +51,7 @@ namespace sfe {
 		void Stop(void);
 		void Close(void);
 		
-		void Render(sf::RenderTarget& Target) const;
+		void Draw(sf::RenderTarget& Target, sf::RenderStates& state) const;
 		
 		int GetStreamID(void) const;
 		const sf::Vector2i& GetSize(void) const;
