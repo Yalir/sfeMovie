@@ -261,6 +261,7 @@ libmoldname.a
 		
 		if [ "$os" == "macosx" ]
 		  then
+		  	cp -v -R deps/SFML/extlibs/libs-osx/Frameworks/* product/
 			cp -v -R deps/SFML/lib* product/
 			cp -v -R sfe-movie.framework product/
 		elif [ "$os" == "windows" ]
