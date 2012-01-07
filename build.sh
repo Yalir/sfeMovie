@@ -147,7 +147,7 @@ What is your choice? [1-4] (default is 1)"
 	        echo "./configure $args"
 	        #sh $cmd
 	        chmod u+x configure version.sh doc/texi2pod.pl
-	        { echo "$args" | xargs ./configure; } && make clean && make
+	        { echo "$args" | xargs ./configure; } && make clean && make --jobs=2
 	        
 	        #check_err
 	        #make
@@ -242,25 +242,27 @@ libmoldname.a
 		exit 0
 	else
 		echo "Running make..."
-		make
+		make --jobs=2
 		check_err
 		
 		echo "Built sfeMovie"
 		
-		if ! test -d product/lib
+		if [ "$os" != "macosx" ]
 		  then
-			mkdir -p product/lib
-		fi
-		
-		if ! test -d product/include
-		  then
-			mkdir -p product/include
+			if ! test -d product/lib
+			  then
+				mkdir -p product/lib
+			fi
+			if ! test -d product/include
+			  then
+				mkdir -p product/include
+			fi
 		fi
 		
 		if [ "$os" == "macosx" ]
 		  then
-			cp -v -R deps/macosx-binaries/* product/lib
-			cp -v libsfe-movie.dylib product/lib
+			cp -v -R deps/SFML/lib* product/
+			cp -v -R sfe-movie.framework product/
 		elif [ "$os" == "windows" ]
 		  then
 			wd="deps/windows-binaries"
