@@ -56,9 +56,8 @@ if (LINUX) # ========================================== LINUX ==================
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
 
 
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
-	list (APPEND LINKER_FLAGS "-read_only_relocs suppress;-framework OpenGL")
-	list (APPEND LINKER_FLAGS "-F${CMAKE_SOURCE_DIR}/deps/SFML/lib")
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL")
+	list (APPEND LINKER_FLAGS "-read_only_relocs\ suppress")
 	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
