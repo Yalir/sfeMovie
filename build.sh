@@ -261,9 +261,15 @@ libmoldname.a
 		
 		if [ "$os" == "macosx" ]
 		  then
-		  	cp -v -R deps/SFML/extlibs/libs-osx/Frameworks product/
-			cp -v -R deps/SFML/lib/* product/
-			cp -v -R sfe-movie.framework product/
+		  	ditto -v deps/SFML/extlibs/libs-osx/Frameworks/sndfile.framework product/sndfile.framework
+			ditto -v deps/SFML/lib/ product/
+			ditto -v sfe-movie.framework product/sfe-movie.framework
+			
+			if test -d deps/SFML/SFML.framework
+			  then
+			    ditto -v deps/SFML/SFML.framework product/SFML.framework
+			fi
+			
 		elif [ "$os" == "windows" ]
 		  then
 			wd="deps/windows-binaries"
