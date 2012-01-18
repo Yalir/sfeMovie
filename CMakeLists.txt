@@ -37,7 +37,7 @@ set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
 set (SFML_LIBRARIES sfml-system sfml-audio sfml-window sfml-graphics)
 set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build ${CMAKE_SOURCE_DIR}/deps/SFML/lib)
-set (COMPILER_FLAGS "-O2")
+set (COMPILER_FLAGS "")
 set (LINKER_FLAGS "")
 
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
@@ -49,6 +49,7 @@ if (LINUX) # ========================================== LINUX ==================
 	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	add_definitions(-D__STDC_CONSTANT_MACROS)
+	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system.2.0" "sfml-window.2.0" "sfml-graphics.2.0" "sfml-audio.2.0")
 	
 	
@@ -58,6 +59,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
 	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
 	list (APPEND LINKER_FLAGS "-read_only_relocs suppress;-framework OpenGL")
 	list (APPEND LINKER_FLAGS "-F${CMAKE_SOURCE_DIR}/deps/SFML/lib")
+	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
 	set (CMAKE_OSX_ARCHITECTURES "i386")
@@ -99,10 +101,12 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	if (MSVC)
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/msvc")
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
+		set (FFMPEG_LIBRARIES "avdevice-53" "avformat-53" "avcodec-53" "avutil-51" "swscale-2")
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
 		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
 		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "z")
+		set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	endif()
 	
 	add_definitions(-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS)
