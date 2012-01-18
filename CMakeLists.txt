@@ -48,7 +48,7 @@ if (LINUX) # ========================================== LINUX ==================
 
 	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/linux-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
-	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-D__STDC_CONSTANT_MACROS")
+	add_definitions(-D__STDC_CONSTANT_MACROS)
 	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system.2.0" "sfml-window.2.0" "sfml-graphics.2.0" "sfml-audio.2.0")
 	
 	
@@ -101,19 +101,21 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
-		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc" "-static-libstdc++")
+		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
 		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "z")
 	endif()
 	
-	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS")
+	add_definitions(-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS)
 	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system" "sfml-window" "sfml-graphics" "sfml-audio")
 	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32" "opengl32")
-	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR_DIR}/Win32/ConditionImpl.cpp")
+	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Win32/ConditionImpl.cpp")
 endif()
 
 
 # Build up to date SFML binaries 
-set(BUILD_FRAMEWORKS 1) 
+if (MACOSX)
+	set(BUILD_FRAMEWORKS 1) 
+endif()
 add_subdirectory("deps/SFML")
 
 
@@ -127,10 +129,10 @@ add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 
 
 set_target_properties(${LIB_NAME} PROPERTIES
-					  COMPILE_FLAGS ${COMPILER_FLAGS}
-					  LINK_FLAGS ${LINKER_FLAGS}
-					  SOVERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0
-                      VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+					  COMPILE_FLAGS "${COMPILER_FLAGS}"
+					  LINK_FLAGS "${LINKER_FLAGS}"
+					  SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
+                      VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 
 if (MACOSX)
