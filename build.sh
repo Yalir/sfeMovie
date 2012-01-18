@@ -139,16 +139,22 @@ What is your choice? [1-4] (default is 1)"
 			
 			if [ "$os" == "windows" ]
 			  then
-			    os_flags="--enable-memalign-hack --enable-w32threads"
+			    os_flags="--enable-memalign-hack --enable-w32threads --enable-shared"
 			fi
 			
 			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
 	        
+			#setup VC++ env variables to find lib.exe
+			old_path=`echo $PATH`
+			export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
+			export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
+			
 	        echo "./configure $args"
 	        #sh $cmd
 	        chmod u+x configure version.sh doc/texi2pod.pl
 	        { echo "$args" | xargs ./configure; } && make clean && make --jobs=2
 	        
+			export PATH="\"$old_path\""
 	        #check_err
 	        #make
 	        
@@ -160,6 +166,13 @@ What is your choice? [1-4] (default is 1)"
 		    fi
 		    
 	        cp -v `find . -name "*.a"` ../deps/ffmpeg-build
+			
+			if [ "$os" == "windows" ]
+			  then
+				cp -v `find . -name "*.lib"` ../deps/ffmpeg-build
+				cp -v `find . -name "*.dll"` ../deps/ffmpeg-build
+			fi
+			
 	        cd ..
 	    else
 	    	echo "Missing directory ffmpeg-sources. Aborting."
@@ -225,18 +238,7 @@ function build_sfemovie()
 	  then
 	    echo ""
 	    echo "The files required to build sfeMovie for Visual Studio have been created."
-		echo "Now run Visual Studio, open sfeMovie.sln and follow these instructions:
-- go to the sfe-movie properties panel. There, go to Linker > Input and add the following lines:
-libavdevice.a
-libavformat.a
-libavcodec.a
-libavutil.a
-libswscale.a
-libz.a
-libgcc.a
-libmingwex.a
-libmoldname.a
-- build the solution"
+		echo "Now open sfeMovie.sln and build sfeMovie within Visual Studio."
 		echo ""
 		echo "This script is over."
 		exit 0
