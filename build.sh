@@ -121,9 +121,9 @@ What is your choice? [1-4] (default is 1)"
 	   [ "$confirm_decoders" == "" ]
 	  then
 	    # build ffmpeg
-	    if test -d "ffmpeg-sources"
+	    if test -d "deps/ffmpeg"
 	      then
-	        cd "ffmpeg-sources"
+	        cd "deps/ffmpeg"
 	        
 	        configure_flags="";
 	        
@@ -134,7 +134,39 @@ What is your choice? [1-4] (default is 1)"
 	        
 	        if [ "$os" == "macosx" ]
 	          then
-	        	os_flags="--sysroot=/Developer/SDKs/MacOSX10.5.sdk --cc=\"gcc -arch $macosx_arch\" --arch=$macosx_arch --target-os=darwin --enable-cross-compile --host-cflags=\"-arch $macosx_arch\" --host-ldflags=\"-arch $macosx_arch\""
+	          	# pre Xcode 4.3 SDKs
+	          	if test -d "/Developer/SDKs/MacOSX10.5.sdk"
+	          	  then
+	          	    sdk="/Developer/SDKs/MacOSX10.5.sdk"
+	          	else
+	          		if test -d "/Developer/SDKs/MacOSX10.6.sdk"
+	          		  then
+	          		    sdk="/Developer/SDKs/MacOSX10.6.sdk"
+	          		else
+	          			if test -d "/Developer/SDKs/MacOSX10.7.sdk"
+	          			  then
+	          			    sdk="/Developer/SDKs/MacOSX10.7.sdk"
+	      				else
+	      					# Xcode 4.3 and later SDKs
+	      					if test -d "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk"
+	      					  then
+	      					    sdk="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk";
+	      					else
+	      						if test -d "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk"
+	      						  then
+	      						    sdk="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk";
+	      						fi
+	      					fi
+	          			fi
+	          		fi
+	          	fi
+	          	
+	          	if [ "$sdk" != "" ]
+	          	  then
+	          	    os_flags="$os_flags --sysroot=$sdk"
+	          	fi
+	          		
+	        	os_flags="$os_flags --cc=\"gcc -arch $macosx_arch -fno-omit-frame-pointer\" --arch=$macosx_arch --target-os=darwin --enable-cross-compile --host-cflags=\"-arch $macosx_arch\" --host-ldflags=\"-arch $macosx_arch\""
 	        fi
 			
 			if [ "$os" == "windows" ]
@@ -145,35 +177,43 @@ What is your choice? [1-4] (default is 1)"
 			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
 	        
 			#setup VC++ env variables to find lib.exe
-			old_path=`echo $PATH`
-			export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
-			export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
+			if [ "$os" == "windows" ]
+			  then
+				old_path=`echo $PATH`
+				export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
+				export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
+			fi
 			
 	        echo "./configure $args"
 	        #sh $cmd
 	        chmod u+x configure version.sh doc/texi2pod.pl
-	        { echo "$args" | xargs ./configure; } && make clean && make --jobs=2
+	        { echo "$args" | xargs ./configure; } && make clean && make --jobs=4
 	        
-			export PATH="\"$old_path\""
+	        if [ "$os" == "windows" ]
+	          then
+				export PATH="\"$old_path\""
+			fi
 	        #check_err
 	        #make
 	        
 	        check_err
 	        
-	        if ! test -d ../deps/ffmpeg-build
+	        if ! test -d ../ffmpeg-build
 	          then
-		        mkdir ../deps/ffmpeg-build
+		        mkdir ../ffmpeg-build
 		    fi
 		    
-	        cp -v `find . -name "*.a"` ../deps/ffmpeg-build
+		    echo "cp -v `find . -name \"*.a\"` ../ffmpeg-build"
+	        cp -v `find . -name "*.a"` ../ffmpeg-build
+	        check_err
 			
 			if [ "$os" == "windows" ]
 			  then
-				cp -v `find . -name "*.lib"` ../deps/ffmpeg-build
-				cp -v `find . -name "*.dll"` ../deps/ffmpeg-build
+				cp -v `find . -name "*.lib"` ../ffmpeg-build
+				cp -v `find . -name "*.dll"` ../ffmpeg-build
 			fi
 			
-	        cd ..
+	        cd ../..
 	    else
 	    	echo "Missing directory ffmpeg-sources. Aborting."
 	    	exit 1
