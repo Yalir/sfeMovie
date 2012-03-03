@@ -37,7 +37,7 @@ set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
 set (SFML_LIBRARIES sfml-system sfml-audio sfml-window sfml-graphics)
 set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build ${CMAKE_SOURCE_DIR}/deps/SFML/lib)
-set (COMPILER_FLAGS "")
+# set (COMPILER_FLAGS "-g2")
 set (LINKER_FLAGS "")
 
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
@@ -56,9 +56,9 @@ if (LINUX) # ========================================== LINUX ==================
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
 
 
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL")
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL" "-framework VideoDecodeAcceleration" "-framework CoreVideo")
 	list (APPEND LINKER_FLAGS "-read_only_relocs\ suppress")
-	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
+	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
 	set (CMAKE_OSX_ARCHITECTURES "i386")
