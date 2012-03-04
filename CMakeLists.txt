@@ -29,6 +29,12 @@ set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
 set (VERSION_PATCH 0)
 
+if (MACOSX AND ${CMAKE_HOST_SYSTEM_VERSION} VERSION_GREATER "11.0.0")
+	set (HAS_VIDEO_DECODE_ACCELERATION 1)
+else()
+	set (HAS_VIDEO_DECODE_ACCELERATION 0)
+endif()
+
 set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
@@ -56,9 +62,12 @@ if (LINUX) # ========================================== LINUX ==================
 	
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
 
-
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL" "-framework VideoDecodeAcceleration" "-framework CoreVideo")
-	list (APPEND LINKER_FLAGS "-read_only_relocs\ suppress")
+	if (HAS_VIDEO_DECODE_ACCELERATION)
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL" "-framework VideoDecodeAcceleration" "-framework CoreVideo")
+	else()
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL")
+	endif()
+	
 	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
