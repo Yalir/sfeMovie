@@ -1,7 +1,7 @@
 #!/bin/sh
 
 os=""
-macosx_arch="i386" # ppc or i386 or x86_64
+macosx_arch="x86_64" # ppc or i386 or x86_64
 use_cache=1
 codec_list="aac aac_latm aasc ac3 adpcm_4xm adpcm_adx adpcm_ct adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1 adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g722 adpcm_g726 adpcm_ima_amv adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead adpcm_ima_iss adpcm_ima_qt adpcm_ima_smjpeg adpcm_ima_wav adpcm_ima_ws adpcm_ms adpcm_sbpro_2 adpcm_sbpro_3 adpcm_sbpro_4 adpcm_swf adpcm_thp adpcm_xa adpcm_yamaha aea aiff alac als amr amrnb amrwb amv anm ansi apc ape applehttp asf ass asv1 asv2 atrac1 atrac3 au aura aura2 avi avisynth avs bethsoftvid bfi bink binkaudio_dct binkaudio_rdft bmp c93 caf cavs cavsvideo cdg cdgraphics cinepak cljr cook cscd cyuv daud dca dfa dirac dnxhd dpx dsicin dsicinaudio dsicinvideo dts dv dvbsub dvdsub dvvideo dxa ea ea_cdata eac3 eacmv eamad eatgq eatgv eatqi eightbps eightsvx_exp eightsvx_fib eightsvx_raw escape124 ffm ffmetadata ffv1 ffvhuff filmstrip flac flashsv flic flv fourxm fraps frwu g722 gif gsm gsm_ms gxf h261 h263 h263i h264 h264_crystalhd h264_vdpau huffyuv idcin iff iff_byterun1 iff_ilbm image2 image2pipe imc indeo2 indeo3 indeo5 ingenient interplay_dpcm interplay_video ipmovie iss iv8 ivf jpeg2000 jpegls jv kgv1 kmvc lagarith libcelt libdirac libgsm libgsm_ms libnut libopencore_amrnb libopencore_amrwb libopenjpeg libschroedinger libspeex libvpx lmlm4 loco lxf m4v mace3 mace6 matroska mdec microdvd mimic mjpeg mjpegb mlp mm mmf mmvideo motionpixels mov mp1 mp1float mp2 mp2float mp3 mp3adu mp3adufloat mp3float mp3on4 mp3on4float mpc mpc7 mpc8 mpeg1_vdpau mpeg1video mpeg2_crystalhd mpeg2video mpeg4 mpeg4_crystalhd mpeg4_vdpau mpeg_vdpau mpeg_xvmc mpegps mpegts mpegtsraw mpegvideo msmpeg4_crystalhd msmpeg4v1 msmpeg4v2 msmpeg4v3 msnwc_tcp msrle msvideo1 mszh mtv mvi mxf mxg mxpeg nc nellymoser nsv nut nuv ogg oma pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_lxf pcm_mulaw pcm_s16be pcm_s16le pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s32be pcm_s32le pcm_s8 pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork pcx pgm pgmyuv pgssub pictor pmp png ppm ptx pva qcelp qcp qdm2 qdraw qpeg qtrle r10k r210 r3d ra_144 ra_288 rawvideo rl2 rm roq roq_dpcm rpl rpza rso rtp rtsp rv10 rv20 rv30 rv40 s302m sap sdp segafilm sgi shorten siff sipr smackaud smacker smc snow sol sol_dpcm sonic sox sp5x spdif srt str sunrast svq1 svq3 swf targa theora thp tiertexseq tiertexseqvideo tiff tmv truehd truemotion1 truemotion2 truespeech tscc tta tty twinvq txd ulti v210 v210x vb vc1 vc1_crystalhd vc1_vdpau vc1t vcr1 vmd vmdaudio vmdvideo vmnc voc vorbis vp3 vp5 vp6 vp6a vp6f vp8 vqa vqf w64 wav wavpack wc3 wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wnv1 ws_snd1 wsaud wsvqa wtv wv xa xan_dpcm xan_wc3 xan_wc4 xl xsub xwma yop yuv4mpegpipe zlib zmbv "
 
@@ -187,7 +187,12 @@ What is your choice? [1-4] (default is 1)"
 	        echo "./configure $args"
 	        #sh $cmd
 	        chmod u+x configure version.sh doc/texi2pod.pl
-	        { echo "$args" | xargs ./configure; } && make clean && make --jobs=4
+	        { echo "$args" | xargs ./configure; }
+	        check_err
+	        make clean
+	        check_err
+	        make --jobs=4
+	        check_err
 	        
 	        if [ "$os" == "windows" ]
 	          then
