@@ -83,7 +83,7 @@ namespace sfe {
 		} 
 		
 		// Load the audio codec
-		err = avcodec_open(m_codecCtx, m_codec);
+		err = avcodec_open2(m_codecCtx, m_codec, NULL);
 		if (err < 0)
 		{
 			std::cerr << "Movie_audio::Initialize() - unable to load the audio decoder for this audio format" << std::endl;

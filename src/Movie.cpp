@@ -83,7 +83,7 @@ namespace sfe {
 		av_register_all();
 
 		// Open the movie file
-		err = av_open_input_file(&m_avFormatCtx, filename.c_str(), NULL, 0, NULL);
+		err = avformat_open_input(&m_avFormatCtx, filename.c_str(), NULL, NULL);
 
 		if (err != 0)
 		{
@@ -92,7 +92,7 @@ namespace sfe {
 		}
 
 		// Read the general movie informations
-		err = av_find_stream_info(m_avFormatCtx);
+		err = avformat_find_stream_info(m_avFormatCtx, NULL);
 
 		if (err < 0)
 		{
@@ -103,7 +103,7 @@ namespace sfe {
 
 		if (UsesDebugMessages())
 			// Output the movie informations
-			dump_format(m_avFormatCtx, 0, filename.c_str(), 0);
+			av_dump_format(m_avFormatCtx, 0, filename.c_str(), 0);
 
 		// Perform the audio and video loading
 		m_hasVideo = m_video->Initialize();
@@ -185,9 +185,11 @@ namespace sfe {
 			m_status = Stopped;
 			IFAUDIO(m_audio->Stop());
 			IFVIDEO(m_video->Stop());
+			
 			m_progressAtPause = 0;
 			SetEofReached(false);
 			m_shouldStopCond->Invalidate();
+			
 			if (!calledFromWatchThread)
 				m_watchThread.Wait();
 		}
@@ -358,7 +360,8 @@ namespace sfe {
 		IFVIDEO(m_video->Close());
 		IFAUDIO(m_audio->Close());
 
-		if (m_avFormatCtx) av_close_input_file(m_avFormatCtx);
+		if (m_avFormatCtx)
+			avformat_close_input(&m_avFormatCtx);
 		m_hasAudio = false;
 		m_hasVideo = false;
 		m_eofReached = false;

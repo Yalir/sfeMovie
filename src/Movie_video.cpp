@@ -45,7 +45,8 @@ namespace sfe {
 	m_codecCtx(NULL),
 	m_codec(NULL),
 	m_rawFrame(NULL),
-	m_RGBAFrame(NULL),
+	m_backRGBAFrame(NULL),
+	m_frontRGBAFrame(NULL),
 	m_streamID(-1),
 	m_pictureBuffer(NULL), // Buffer used to convert image from pixel matrix to simple array
 	m_swsCtx(NULL),
@@ -54,8 +55,7 @@ namespace sfe {
 	m_packetList(),
 	m_packetListMutex(),
 	
-	// Threads
-	m_updateThread(&Movie_video::Update, this),	// Does swaping and time sync
+	// Decoding thread
 	m_decodeThread(&Movie_video::Decode, this),	// Does video decoding
 	m_running(),
 	
@@ -63,11 +63,9 @@ namespace sfe {
 	m_imageSwapMutex(),
 	m_backImageReady(),
 	m_imageIndex(0),
-	m_tex1(),
-	m_tex2(),
+	m_tex(),
 	
 	// Miscellaneous parameters
-	m_isLate(false),
 	m_isStarving(false),
 	m_sprite(),
 	m_wantedFrameTime(0.f),
@@ -121,7 +119,7 @@ namespace sfe {
 		}
 		
 		// Load the video codec
-		err = avcodec_open(m_codecCtx, m_codec);
+		err = avcodec_open2(m_codecCtx, m_codec, NULL);
 		if (err < 0)
 		{
 			std::cerr << "Movie_video::Initialize() - unable to load the video decoder for this video format" << std::endl;
@@ -132,8 +130,9 @@ namespace sfe {
 		
 		// Create the frame buffers
 		m_rawFrame = avcodec_alloc_frame();
-		m_RGBAFrame = avcodec_alloc_frame();
-		if (!m_rawFrame || !m_RGBAFrame)
+		m_backRGBAFrame = avcodec_alloc_frame();
+		m_frontRGBAFrame = avcodec_alloc_frame();
+		if (!m_rawFrame || !m_frontRGBAFrame || !m_backRGBAFrame)
 		{
 			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
 			Close();
@@ -157,7 +156,9 @@ namespace sfe {
 		}
 		
 		// Fill the picture buffer with the frame data
-		avpicture_fill((AVPicture *)m_RGBAFrame, videoBuffer, PIX_FMT_RGBA,
+		avpicture_fill((AVPicture *)m_frontRGBAFrame, videoBuffer, PIX_FMT_RGBA,
+					   m_size.x, m_size.y);
+		avpicture_fill((AVPicture *)m_backRGBAFrame, videoBuffer, PIX_FMT_RGBA,
 					   m_size.x, m_size.y);
 		av_free(videoBuffer);
 		
@@ -185,12 +186,8 @@ namespace sfe {
 		
 		
 		// Setup the SFML stuff
-		if (!m_tex1.Create(m_size.x, m_size.y) || !m_tex2.Create(m_size.x, m_size.y))
-		{
-			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			Close();
-			return false;
-		}
+		m_tex.Create(m_size.x, m_size.y);
+		m_sprite.SetTexture(m_tex);
 		
 		// Get the frame time we need for this video
 		AVRational r = m_parent.GetAVFormatContext()->streams[m_streamID]->avg_frame_rate;
@@ -248,13 +245,11 @@ namespace sfe {
 		if (fabs(sc.x - 1.f) < 0.00001 &&
 			fabs(sc.y - 1.f) < 0.00001)
 		{
-			m_tex1.SetSmooth(false);
-			m_tex2.SetSmooth(false);
+			m_tex.SetSmooth(false);
 		}
 		else
 		{
-			m_tex1.SetSmooth(true);
-			m_tex2.SetSmooth(true);
+			m_tex.SetSmooth(true);
 		}
 		
 		// Start threads
@@ -265,7 +260,6 @@ namespace sfe {
 		
 		if (m_parent.GetStatus() != Movie::Paused)
 		{
-			m_updateThread.Launch();
 			m_decodeThread.Launch();
 		}
 	}
@@ -284,7 +278,6 @@ namespace sfe {
             m_runThread = false;
 			m_backImageReady.Invalidate();
 			m_running.Invalidate();
-			m_updateThread.Wait();
 			m_decodeThread.Wait();
 		}
 		
@@ -312,8 +305,10 @@ namespace sfe {
 		
 		if (m_rawFrame)
 			av_free(m_rawFrame), m_rawFrame = NULL;
-		if (m_RGBAFrame)
-			av_free(m_RGBAFrame), m_RGBAFrame = NULL;
+		if (m_frontRGBAFrame)
+			av_free(m_frontRGBAFrame), m_frontRGBAFrame = NULL;
+		if (m_backRGBAFrame)
+			av_free(m_backRGBAFrame), m_backRGBAFrame = NULL;
 		
 		// Free the remaining accumulated packets
 		while (m_packetList.size()) {
@@ -328,7 +323,6 @@ namespace sfe {
 		if (m_pictureBuffer)
 			av_free(m_pictureBuffer), m_pictureBuffer = NULL;
 		
-		m_isLate = false;
 		m_wantedFrameTime = 0.f;
 		m_displayedFrameCount = 0;
 		m_decodingTime = 0;
@@ -338,12 +332,39 @@ namespace sfe {
 	
 	void Movie_video::Draw(sf::RenderTarget& Target, sf::RenderStates& states) const
 	{
+		
+		if (m_backImageReady.value() == 1)
 		{
-			sf::Lock l(m_imageSwapMutex); // 2% on Windows
+			sf::Uint32 waitTime;
+			GetLateState(waitTime);
 			
-			Target.Draw(m_sprite, states); // 38% on Windows
-			glFlush();
+			if (waitTime < 10)
+			{
+				AVFrame *tmpFrame;
+				
+				// Swap back and front RGBA images buffers
+				m_imageSwapMutex.Lock();
+				tmpFrame = m_frontRGBAFrame;
+				m_frontRGBAFrame = m_backRGBAFrame;
+				m_backRGBAFrame = tmpFrame;
+				m_imageSwapMutex.Unlock();
+				
+				// We update the texture from the front frame while the back frame
+				// is being decoded
+				m_tex.Update((sf::Uint8*)m_frontRGBAFrame->data[0]);
+				m_backImageReady = 0;
+			}
 		}
+		
+		/*sf::RectangleShape rec(sf::Vector2f(m_tex.GetWidth() + 2, m_tex.GetHeight() + 2));
+		rec.SetPosition(sf::Vector2f(m_sprite.GetPosition().x - 1, m_sprite.GetPosition().y - 1));
+		rec.SetOutlineColor(sf::Color::Red);
+		rec.SetFillColor(sf::Color::Blue);
+		rec.SetOutlineThickness(1.f);
+		Target.Draw(rec, states);*/
+		
+		Target.Draw(m_sprite, states); // 38% on Windows
+		
 
 		// Allow thread switching
 		sf::Sleep(0);
@@ -366,34 +387,7 @@ namespace sfe {
 	
 	sf::Image Movie_video::GetImageCopy(void) const
 	{
-		sf::Lock l(m_imageSwapMutex);
-		return FrontTexture().CopyToImage();
-	}
-	
-	void Movie_video::Update(void)
-	{
-		while (m_runThread && m_running.WaitAndLock(1, Condition::AutoUnlock))
-		{
-			sf::Uint32 waitTime = UpdateLateState();
-			
-			if (!m_isLate)
-			{
-				/*if (waitTime > 1000)
-					std::cout << "waiting for weird time: " << waitTime << std::endl;*/
-				sf::Sleep(waitTime);
-			}
-			
-			SwapImages();
-			
-			/*static sf::Uint32 lastTime = 0;
-			sf::Uint32 newTime = m_parent.m_audio->GetPlayingOffset();
-			
-			if (lastTime > newTime)
-			{
-				std::cout << "going wrong!" << std::endl;
-			}
-			lastTime = newTime;*/
-		}
+		return m_tex.CopyToImage();
 	}
 	
 	void Movie_video::Decode(void)
@@ -402,12 +396,17 @@ namespace sfe {
 			   m_running.WaitAndLock(1, Condition::AutoUnlock) &&
 			   m_backImageReady.WaitAndLock(0))
 		{
-			UpdateLateState();
+			sf::Uint32 waitTime;
+			bool isLate = GetLateState(waitTime);
 			
-			if (LoadNextImage())
+			if (LoadNextImage(isLate))
+			{
 				m_backImageReady.Unlock(1);
+			}
 			else
+			{
 				m_backImageReady.Unlock(0);
+			}
 			
 			if (m_isStarving)
 			{
@@ -416,9 +415,10 @@ namespace sfe {
 		}
 	}
 	
-	sf::Uint32 Movie_video::UpdateLateState(void)
+	bool Movie_video::GetLateState(sf::Uint32& waitTime) const
 	{
-		sf::Uint32 waitTime = 0;
+		bool flag = false;
+		waitTime = 0;
 		// Get the 'real' time from the start of the video
 		// and the progress of the video
 		
@@ -431,7 +431,7 @@ namespace sfe {
 		
 		if (movieTime > realTime + m_wantedFrameTime * 1000)
 		{
-			m_isLate = false;
+			flag = false;
 			
 			// Added a check to prevent from waiting if we've stopped
 			// the movie playback (and thus waiting for abnormal periods of time)
@@ -444,7 +444,7 @@ namespace sfe {
 			// it may be because of a occasional slowdown
 			if (movieTime < realTime - m_wantedFrameTime * 3000 && m_decodingTime)
 			{
-				m_isLate = true;
+				flag = true;
 				
 				if (Movie::UsesDebugMessages())
 					std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms)" << std::endl;
@@ -456,7 +456,7 @@ namespace sfe {
 			}
 		}
 		
-		return waitTime;
+		return flag;
 	}
 	
 	
@@ -487,59 +487,29 @@ namespace sfe {
 		}
 	}
 	
-	void Movie_video::SwapImages(bool unconditionned)
-	{
-		// Make sure the back image is ready for swaping
-		if (unconditionned || m_backImageReady.WaitAndLock(1))
-		{
-			// Make sure we don't swap while using front/backImage()
-			m_imageSwapMutex.Lock();
-			m_imageIndex = (m_imageIndex + 1) % 2;
-			m_sprite.SetTexture((m_imageIndex == 0) ? m_tex1 : m_tex2);
-			m_imageSwapMutex.Unlock();
-			
-			// Update condition
-			if (!unconditionned)
-				m_backImageReady.Unlock(0);
-		}
-	}
-	
-	sf::Texture& Movie_video::FrontTexture(void)
-	{
-		sf::Lock l(m_imageSwapMutex);
-		return (m_imageIndex == 0) ? m_tex1 : m_tex2;
-	}
-	
-	const sf::Texture& Movie_video::FrontTexture(void) const
-	{
-		return (m_imageIndex == 0) ? m_tex1 : m_tex2;
-	}
-	
-	sf::Texture& Movie_video::BackTexture(void)
-	{
-		return (m_imageIndex == 0) ? m_tex2 : m_tex1;
-	}
 	
 	
 	bool Movie_video::PreLoad(void)
 	{
 		int counter = 0;
 		bool res = false;
-		while (false == (res = LoadNextImage()) && counter < 10) // First frame always gives "frame not decoded"
+		while (false == (res = LoadNextImage(false)) && counter < 10) // First frame always gives "frame not decoded"
 			counter++;
 		
 		// Abort if we can't load frames
 		if (counter == 10)
 			return false;
 		
-		SwapImages(true);
-		LoadNextImage();
+		// Load first image
+		LoadNextImage(false);
+		m_tex.Update((sf::Uint8*)m_backRGBAFrame->data[0]);
+		
 		m_backImageReady = 1;
 		return true;
 	}
 	
 	
-	bool Movie_video::LoadNextImage(void)
+	bool Movie_video::LoadNextImage(bool isLate)
 	{
 		bool flag = false;
 		m_timer.Reset();
@@ -556,13 +526,15 @@ namespace sfe {
 				m_isStarving = true;
 			}
 			else
-				flag = DecodeFrontFrame();
+				flag = DecodeFrontFrame(isLate);
 		}
 		else
 		{
-			flag = DecodeFrontFrame();
+			flag = DecodeFrontFrame(isLate);
 		}
+		
 		m_decodingTime = m_timer.GetElapsedTime();
+		
 		return flag;
 	}
 	
@@ -579,7 +551,7 @@ namespace sfe {
 		return (m_packetList.size() > 0);
 	}
 	
-	bool Movie_video::DecodeFrontFrame(void)
+	bool Movie_video::DecodeFrontFrame(bool isLate)
 	{
 		// whole function takes about 50% CPU with 2048x872 definition on Mac OS X
 		// 50% (one full core) on Windows
@@ -600,7 +572,7 @@ namespace sfe {
 		res = avcodec_decode_video2(m_codecCtx, m_rawFrame, &didDecodeFrame,
 									videoPacket); // 20% (40% of total function) on macosx; 18.3% (36% of total) on windows
 		
-		if (!m_isLate)
+		if (!isLate)
 		{
 			if (res < 0)
 			{
@@ -616,18 +588,12 @@ namespace sfe {
 					// called by sws_scale()) when GuardMalloc is enabled, but
 					// I don't know whether this is because of the 16 bytes boundaries
 					// alignement constraint
+					m_imageSwapMutex.Lock();
 					sws_scale(m_swsCtx,
 							  m_rawFrame->data, m_rawFrame->linesize,
 							  0, m_codecCtx->height,
-							  m_RGBAFrame->data, m_RGBAFrame->linesize); // 6.3% on windows (12% of total)
+							  m_backRGBAFrame->data, m_backRGBAFrame->linesize); // 6.3% on windows (12% of total)
 					
-					// Load the data in the sf::Image
-					m_imageSwapMutex.Lock();
-					// 10.1% (25% of total function) on macosx ; 18.4% (37% of total) on windows
-					BackTexture().Update((sf::Uint8*)m_RGBAFrame->data[0]);
-
-					// FIXME: should probably put this outside of the locked scope
-					glFlush();
 					m_imageSwapMutex.Unlock();
 					
 					// Image loaded, reset condition state

@@ -61,7 +61,7 @@ namespace sfe {
 		void Update(void); // Swaping and synching thread
 		void Decode(void); // Decoding thread
 		
-		sf::Uint32 UpdateLateState(void);
+		bool GetLateState(sf::Uint32& waitTime) const;
 		bool IsStarving(void);
 		void SetPlayingOffset(sf::Uint32 time);
 		//void SkipFrames(unsigned count);
@@ -72,10 +72,10 @@ namespace sfe {
 		sf::Texture& BackTexture(void);
 		
 		bool PreLoad(void);
-		bool LoadNextImage(void);
+		bool LoadNextImage(bool isLate);
 		bool ReadFrame(void);
 		bool HasPendingDecodableData(void);
-		bool DecodeFrontFrame(void);
+		bool DecodeFrontFrame(bool isLate);
 		void PushFrame(AVPacket *pkt);
 		void PopFrame(void);
 		AVPacket *FrontFrame(void);
@@ -89,7 +89,8 @@ namespace sfe {
 		AVCodecContext *m_codecCtx; // Decoder information
 		AVCodec *m_codec;			// Video decoder
 		AVFrame *m_rawFrame;		// Original YUV422 frame
-		AVFrame *m_RGBAFrame;		// Converted RGBA frame
+		mutable AVFrame *m_frontRGBAFrame;	// Front converted RGBA frame
+		mutable AVFrame *m_backRGBAFrame;	// Back converted RGBA frame
 		int m_streamID;				// The video stream identifier in the video file
 		sf::Uint8 *m_pictureBuffer; // Buffer used to convert image from pixel matrix to simple array
 		struct SwsContext *m_swsCtx;// Used for converting image from YUV422 to RGBA
@@ -99,21 +100,20 @@ namespace sfe {
 		sf::Mutex m_packetListMutex;// Prevent packets' list from being/modified and accessed at the same time from several threads
 		
 		// Threads
-		sf::Thread m_updateThread;	// Does swaping and time sync
+		//sf::Thread m_updateThread;	// Does swaping and time sync
 		sf::Thread m_decodeThread;	// Does video decoding
 		Condition m_running;
 		
 		// Image swaping
 		mutable sf::Mutex m_imageSwapMutex;// Prevent the textures from being swaped while being updated
-		Condition m_backImageReady;	// condition to wait until the image is ready for swaping
+		mutable Condition m_backImageReady;	// condition to wait until the image is ready for swaping
+		//mutable bool m_isBackFrameReady;
 		unsigned m_imageIndex;		// To know which image is the front or back one
-		sf::Texture m_tex1;			// The first image
-		sf::Texture m_tex2;			// The second image
+		mutable sf::Texture m_tex;			// The image in VRAM
 		sf::Sprite m_sprite;		// Sprite bound to the front image
 		sf::Vector2i m_size;		// The images size
 		
 		// Miscellaneous parameters
-		bool m_isLate;				// If true, we should skip some steps to catch up with the movie timeline
 		bool m_isStarving;			// If true, there is no more video packet to read and decode
 		float m_wantedFrameTime;	// For how long should one frame last
 		unsigned m_displayedFrameCount;// How many frames did we display? (and guess whether we're late)
