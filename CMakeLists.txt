@@ -37,9 +37,10 @@ set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
 set (OTHER_LIBRARIES "")
 set (SFML_LIBRARIES sfml-system sfml-audio sfml-window sfml-graphics)
 set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build ${CMAKE_SOURCE_DIR}/deps/SFML/lib)
-# set (COMPILER_FLAGS "-g2")
+set (COMPILER_FLAGS "-O2")
 set (LINKER_FLAGS "")
 
+set (ARCH "x86_64")
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
 
 
@@ -61,7 +62,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
 	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
-	set (CMAKE_OSX_ARCHITECTURES "i386")
+	set (CMAKE_OSX_ARCHITECTURES ${ARCH})
 	
 	if(EXISTS /Developer/SDKs/MacOSX10.5.sdk)
         # target 10.5 system
@@ -153,6 +154,10 @@ if (MACOSX)
     set_target_properties(${LIB_NAME} PROPERTIES 
                           BUILD_WITH_INSTALL_RPATH 1 
                           INSTALL_NAME_DIR "@executable_path/../Frameworks")
+    
+    install(TARGETS ${LIB_NAME}
+            FRAMEWORK DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX}
+            COMPONENT devel)
 endif()
 
 
