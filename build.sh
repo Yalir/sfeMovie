@@ -32,31 +32,34 @@ function build_ffmpeg()
 		echo ""
 		
 		read tenv
-	fi
-	
-	if [ "$tenv" == "" ] || [ "$tenv" == "1" ]
-	  then
-		cmake_env="MSYS Makefiles"
-		linking="static"
-	elif [ "$tenv" == "2" ]
-	  then
+		
+		if [ "$tenv" == "" ] || [ "$tenv" == "1" ]
+		  then
+			cmake_env="MSYS Makefiles"
+			linking="static"
+		elif [ "$tenv" == "2" ]
+		  then
+			cmake_env="Unix Makefiles"
+			linking="static"
+		elif [ "$tenv" == "3" ]
+		  then
+			cmake_env="Visual Studio 8 2005"
+			linking="dynamic"
+		elif [ "$tenv" == "4" ]
+		  then
+			cmake_env="Visual Studio 9 2008"
+			linking="dynamic"
+		elif [ "$tenv" == "5" ]
+		  then
+			cmake_env="Visual Studio 10"
+			linking="dynamic"
+		else
+			echo "This script does not support any other environment."
+			exit 1
+		fi
+	else
 		cmake_env="Unix Makefiles"
 		linking="static"
-	elif [ "$tenv" == "3" ]
-	  then
-		cmake_env="Visual Studio 8 2005"
-		linking="dynamic"
-	elif [ "$tenv" == "4" ]
-	  then
-		cmake_env="Visual Studio 9 2008"
-		linking="dynamic"
-	elif [ "$tenv" == "5" ]
-	  then
-		cmake_env="Visual Studio 10"
-		linking="dynamic"
-	else
-		echo "This script does not support any other environment."
-		exit 1
 	fi
 	
 	if [ "$linking" == "dynamic" ]
