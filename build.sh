@@ -24,11 +24,8 @@ function build_ffmpeg()
 	  then
 		echo "Choose your target environment (default is 1):"
 		echo "1. MinGW"
-		echo "2. GCC (Unix)"
-		echo "3. Visual Studio 2005"
-		echo "4. Visual Studio 2008"
-		echo "5. Visual Studio 2010"
-		echo "6. Other"
+		echo "2. Visual Studio"
+		echo "3. Other"
 		echo ""
 		
 		read tenv
@@ -36,23 +33,9 @@ function build_ffmpeg()
 		if [ "$tenv" == "" ] || [ "$tenv" == "1" ]
 		  then
 			cmake_env="MSYS Makefiles"
-			linking="static"
 		elif [ "$tenv" == "2" ]
 		  then
-			cmake_env="Unix Makefiles"
-			linking="static"
-		elif [ "$tenv" == "3" ]
-		  then
-			cmake_env="Visual Studio 8 2005"
-			linking="dynamic"
-		elif [ "$tenv" == "4" ]
-		  then
-			cmake_env="Visual Studio 9 2008"
-			linking="dynamic"
-		elif [ "$tenv" == "5" ]
-		  then
-			cmake_env="Visual Studio 10"
-			linking="dynamic"
+			cmake_env="Visual Studio"
 		else
 			echo "This script does not support any other environment."
 			exit 1
@@ -62,30 +45,47 @@ function build_ffmpeg()
 		linking="static"
 	fi
 	
-	if [ "$linking" == "dynamic" ]
+	if [ "$cmake_env" == "Visual Studio" ]
 	  then
 		args="$args --enable-shared --disable-static"
 	fi
 			
+	has_ffmpeg_binaries=0
 	if [ "$use_cache" == "1" ]
 	  then
-		if test -d deps/ffmpeg-build/ &&
+		if [ "$cmake_env" == "Visual Studio" ]
+		  then
+			if test -d deps/ffmpeg-build/ &&
+				test -f deps/ffmpeg-build/avcodec.dll &&
+				test -f deps/ffmpeg-build/avdevice.dll &&
+				test -f deps/ffmpeg-build/avformat.dll &&
+				test -f deps/ffmpeg-build/avutil.dll &&
+				test -f deps/ffmpeg-build/swscale.dll
+			  then
+				has_ffmpeg_binaries=1
+			fi
+		elif test -d deps/ffmpeg-build/ &&
 			test -f deps/ffmpeg-build/libavcodec.a &&
 			test -f deps/ffmpeg-build/libavdevice.a &&
 			test -f deps/ffmpeg-build/libavformat.a &&
 			test -f deps/ffmpeg-build/libavutil.a &&
 			test -f deps/ffmpeg-build/libswscale.a
 		  then
-		    echo "FFmpeg seems to be already built and ready to use. Do you want to skip the FFmpeg
+			has_ffmpeg_binaries=1
+		fi
+	fi
+	
+	if [ "$has_ffmpeg_binaries" == "1" ]
+	  then
+		echo "FFmpeg seems to be already built and ready to use. Do you want to skip the FFmpeg
 compilation step? [Y/n]"
-			read skip_ffmpeg
-			
-			if [ "$skip_ffmpeg" == "Y" ] ||
-			   [ "$skip_ffmpeg" == "y" ] ||
-			   [ "$skip_ffmpeg" == "" ]
-			  then
-			  	return;
-			fi
+		read skip_ffmpeg
+		
+		if [ "$skip_ffmpeg" == "Y" ] ||
+		   [ "$skip_ffmpeg" == "y" ] ||
+		   [ "$skip_ffmpeg" == "" ]
+		  then
+			return;
 		fi
 	fi
 	
@@ -232,10 +232,10 @@ What is your choice? [1-4] (default is 1)"
 			if [ "$os" == "windows" ]
 			  then
 				old_path=`echo $PATH`
-				export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
-				export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
-				export PATH="$PATH:C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
-				export PATH="$PATH:C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
+				export PATH="$PATH:/C/Program Files/Microsoft Visual Studio 9.0/Common7/IDE:/C/Program Files/Microsoft Visual Studio 9.0/VC/bin"
+				export PATH="$PATH:/C/Program Files/Microsoft Visual Studio 10.0/Common7/IDE:/C/Program Files/Microsoft Visual Studio 10.0/VC/bin"
+				export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 9.0/VC/bin"
+				export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin"
 			fi
 			
 	        echo "./configure $args"
@@ -252,28 +252,20 @@ What is your choice? [1-4] (default is 1)"
 	          then
 				export PATH="\"$old_path\""
 			fi
-	        #check_err
-	        #make
-	        
-	        check_err
 	        
 		    mkdir -p ../ffmpeg-build
 			rm ../ffmpeg-build/*
 		    
-			echo "Copying libraryes into ffmpeg-build"
-			if [ "$linking" == "dynamic" ]
-			  then
-				cp -v `find . -name "*.dll"` ../ffmpeg-build
-				cp -v `find . -name "*.dll.a"` ../ffmpeg-build
-			else
-				cp -v `find . -name "*.a"` ../ffmpeg-build
-			fi
-	        check_err
-			
-			if [ "$os" == "windows" ]
+			echo "Copying libraries into ffmpeg-build"
+			if [ "$cmake_env" == "Visual Studio" ]
 			  then
 				cp -v `find . -name "*.lib"` ../ffmpeg-build
+				check_err
 				cp -v `find . -name "*.dll"` ../ffmpeg-build
+				check_err
+			else
+				cp -v `find . -name "*.a"` ../ffmpeg-build
+				check_err
 			fi
 			
 	        cd ../..
@@ -293,18 +285,13 @@ function build_sfemovie()
 	# run cmake and make
 	echo "==================== sfeMovie compilation ===================="
 	echo ""
-		
-	echo "Running CMake..."
+	
 	if test -f CMakeCache.txt
 	  then
 	    rm CMakeCache.txt
 	fi
 	
-	echo "cmake -G \"$cmake_env\" CMakeLists.txt"
-	cmake -G "$cmake_env" CMakeLists.txt
-	check_err
-	
-	if [ "$cmake_env" != "Unix Makefiles" ] && [ "$cmake_env" != "MSYS Makefiles" ]
+	if [ "$cmake_env" == "Visual Studio" ]
 	  then
 	    echo ""
 	    echo "The files required to build sfeMovie for Visual Studio have been created."
@@ -313,6 +300,12 @@ function build_sfemovie()
 		echo "This script is over."
 		exit 0
 	else
+		echo "Running CMake..."
+		
+		echo "cmake -G \"$cmake_env\" CMakeLists.txt"
+		cmake -G "$cmake_env" CMakeLists.txt
+		check_err
+	
 		echo "Running make..."
 		make --jobs=$jobsCount
 		check_err
