@@ -1,8 +1,11 @@
 #!/bin/sh
 
 os=""
+cmake_env=""
+linking=""
 macosx_arch="x86_64" # ppc or i386 or x86_64
 use_cache=1
+jobsCount=4 # how many compilations at a time
 codec_list="aac aac_latm aasc ac3 adpcm_4xm adpcm_adx adpcm_ct adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1 adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g722 adpcm_g726 adpcm_ima_amv adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead adpcm_ima_iss adpcm_ima_qt adpcm_ima_smjpeg adpcm_ima_wav adpcm_ima_ws adpcm_ms adpcm_sbpro_2 adpcm_sbpro_3 adpcm_sbpro_4 adpcm_swf adpcm_thp adpcm_xa adpcm_yamaha aea aiff alac als amr amrnb amrwb amv anm ansi apc ape applehttp asf ass asv1 asv2 atrac1 atrac3 au aura aura2 avi avisynth avs bethsoftvid bfi bink binkaudio_dct binkaudio_rdft bmp c93 caf cavs cavsvideo cdg cdgraphics cinepak cljr cook cscd cyuv daud dca dfa dirac dnxhd dpx dsicin dsicinaudio dsicinvideo dts dv dvbsub dvdsub dvvideo dxa ea ea_cdata eac3 eacmv eamad eatgq eatgv eatqi eightbps eightsvx_exp eightsvx_fib eightsvx_raw escape124 ffm ffmetadata ffv1 ffvhuff filmstrip flac flashsv flic flv fourxm fraps frwu g722 gif gsm gsm_ms gxf h261 h263 h263i h264 h264_crystalhd h264_vdpau huffyuv idcin iff iff_byterun1 iff_ilbm image2 image2pipe imc indeo2 indeo3 indeo5 ingenient interplay_dpcm interplay_video ipmovie iss iv8 ivf jpeg2000 jpegls jv kgv1 kmvc lagarith libcelt libdirac libgsm libgsm_ms libnut libopencore_amrnb libopencore_amrwb libopenjpeg libschroedinger libspeex libvpx lmlm4 loco lxf m4v mace3 mace6 matroska mdec microdvd mimic mjpeg mjpegb mlp mm mmf mmvideo motionpixels mov mp1 mp1float mp2 mp2float mp3 mp3adu mp3adufloat mp3float mp3on4 mp3on4float mpc mpc7 mpc8 mpeg1_vdpau mpeg1video mpeg2_crystalhd mpeg2video mpeg4 mpeg4_crystalhd mpeg4_vdpau mpeg_vdpau mpeg_xvmc mpegps mpegts mpegtsraw mpegvideo msmpeg4_crystalhd msmpeg4v1 msmpeg4v2 msmpeg4v3 msnwc_tcp msrle msvideo1 mszh mtv mvi mxf mxg mxpeg nc nellymoser nsv nut nuv ogg oma pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_lxf pcm_mulaw pcm_s16be pcm_s16le pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s32be pcm_s32le pcm_s8 pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork pcx pgm pgmyuv pgssub pictor pmp png ppm ptx pva qcelp qcp qdm2 qdraw qpeg qtrle r10k r210 r3d ra_144 ra_288 rawvideo rl2 rm roq roq_dpcm rpl rpza rso rtp rtsp rv10 rv20 rv30 rv40 s302m sap sdp segafilm sgi shorten siff sipr smackaud smacker smc snow sol sol_dpcm sonic sox sp5x spdif srt str sunrast svq1 svq3 swf targa theora thp tiertexseq tiertexseqvideo tiff tmv truehd truemotion1 truemotion2 truespeech tscc tta tty twinvq txd ulti v210 v210x vb vc1 vc1_crystalhd vc1_vdpau vc1t vcr1 vmd vmdaudio vmdvideo vmnc voc vorbis vp3 vp5 vp6 vp6a vp6f vp8 vqa vqf w64 wav wavpack wc3 wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wnv1 ws_snd1 wsaud wsvqa wtv wv xa xan_dpcm xan_wc3 xan_wc4 xl xsub xwma yop yuv4mpegpipe zlib zmbv "
 
 function check_err()
@@ -16,6 +19,51 @@ function check_err()
 
 function build_ffmpeg()
 {
+	tenv=""
+	if [ "$os" == "windows" ]
+	  then
+		echo "Choose your target environment (default is 1):"
+		echo "1. MinGW"
+		echo "2. GCC (Unix)"
+		echo "3. Visual Studio 2005"
+		echo "4. Visual Studio 2008"
+		echo "5. Visual Studio 2010"
+		echo "6. Other"
+		echo ""
+		
+		read tenv
+	fi
+	
+	if [ "$tenv" == "" ] || [ "$tenv" == "1" ]
+	  then
+		cmake_env="MSYS Makefiles"
+		linking="static"
+	elif [ "$tenv" == "2" ]
+	  then
+		cmake_env="Unix Makefiles"
+		linking="static"
+	elif [ "$tenv" == "3" ]
+	  then
+		cmake_env="Visual Studio 8 2005"
+		linking="dynamic"
+	elif [ "$tenv" == "4" ]
+	  then
+		cmake_env="Visual Studio 9 2008"
+		linking="dynamic"
+	elif [ "$tenv" == "5" ]
+	  then
+		cmake_env="Visual Studio 10"
+		linking="dynamic"
+	else
+		echo "This script does not support any other environment."
+		exit 1
+	fi
+	
+	if [ "$linking" == "dynamic" ]
+	  then
+		args="$args --enable-shared --disable-static"
+	fi
+			
 	if [ "$use_cache" == "1" ]
 	  then
 		if test -d deps/ffmpeg-build/ &&
@@ -171,17 +219,20 @@ What is your choice? [1-4] (default is 1)"
 			
 			if [ "$os" == "windows" ]
 			  then
-			    os_flags="--enable-memalign-hack --enable-w32threads --enable-shared"
+			    os_flags="--enable-memalign-hack --enable-w32threads"
 			fi
 			
-			args="--disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
+			args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
 	        
+			
 			#setup VC++ env variables to find lib.exe
 			if [ "$os" == "windows" ]
 			  then
 				old_path=`echo $PATH`
 				export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
 				export PATH="$PATH:C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
+				export PATH="$PATH:C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin"
+				export PATH="$PATH:C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Common7\\IDE:C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\bin"
 			fi
 			
 	        echo "./configure $args"
@@ -191,7 +242,7 @@ What is your choice? [1-4] (default is 1)"
 	        check_err
 	        make clean
 	        check_err
-	        make --jobs=4
+	        make --jobs=$jobsCount
 	        check_err
 	        
 	        if [ "$os" == "windows" ]
@@ -203,13 +254,17 @@ What is your choice? [1-4] (default is 1)"
 	        
 	        check_err
 	        
-	        if ! test -d ../ffmpeg-build
-	          then
-		        mkdir ../ffmpeg-build
-		    fi
+		    mkdir -p ../ffmpeg-build
+			rm ../ffmpeg-build/*
 		    
-		    echo "cp -v `find . -name \"*.a\"` ../ffmpeg-build"
-	        cp -v `find . -name "*.a"` ../ffmpeg-build
+			echo "Copying libraryes into ffmpeg-build"
+			if [ "$linking" == "dynamic" ]
+			  then
+				cp -v `find . -name "*.dll"` ../ffmpeg-build
+				cp -v `find . -name "*.dll.a"` ../ffmpeg-build
+			else
+				cp -v `find . -name "*.a"` ../ffmpeg-build
+			fi
 	        check_err
 			
 			if [ "$os" == "windows" ]
@@ -235,40 +290,7 @@ function build_sfemovie()
 	# run cmake and make
 	echo "==================== sfeMovie compilation ===================="
 	echo ""
-	
-	tenv=""
-	if [ "$os" == "windows" ]
-	  then
-		echo "Choose your target environment (default is 1):"
-		echo "1. GCC"
-		echo "2. Visual Studio 2005"
-		echo "3. Visual Studio 2008"
-		echo "4. Visual Studio 2010"
-		echo "5. Other"
-		echo ""
 		
-		read tenv
-	fi
-	
-	cmake_env=""
-	if [ "$tenv" == "" ] || [ "$tenv" == "1" ]
-	  then
-	    cmake_env="Unix Makefiles"
-	elif [ "$tenv" == "2" ]
-	  then
-	    cmake_env="Visual Studio 8 2005"
-	elif [ "$tenv" == "3" ]
-	  then
-	    cmake_env="Visual Studio 9 2008"
-	elif [ "$tenv" == "4" ]
-	  then
-	    cmake_env="Visual Studio 10"
-	else
-	    echo "This script does not support any other environment."
-		echo "Use CMake with the righ generator."
-		exit 1
-	fi
-	
 	echo "Running CMake..."
 	if test -f CMakeCache.txt
 	  then
@@ -279,7 +301,7 @@ function build_sfemovie()
 	cmake -G "$cmake_env" CMakeLists.txt
 	check_err
 	
-	if [ "$cmake_env" != "Unix Makefiles" ]
+	if [ "$cmake_env" != "Unix Makefiles" ] && [ "$cmake_env" != "MSYS Makefiles" ]
 	  then
 	    echo ""
 	    echo "The files required to build sfeMovie for Visual Studio have been created."
@@ -289,7 +311,7 @@ function build_sfemovie()
 		exit 0
 	else
 		echo "Running make..."
-		make --jobs=2
+		make --jobs=$jobsCount
 		check_err
 		
 		echo "Built sfeMovie"
@@ -320,7 +342,7 @@ function build_sfemovie()
 		elif [ "$os" == "windows" ]
 		  then
 			wd="deps/windows-binaries"
-			cp -v ${wd}/libsndfile-1.dll ${wd}/openal32.dll ${wd}/gcc/libgcc_s_dw2-1.dll ${wd}/gcc/sfml-audio-2.dll ${wd}/gcc/sfml-graphics-2.dll ${wd}/gcc/sfml-system-2.dll ${wd}/gcc/sfml-window-2.dll product/lib
+			cp -v ${wd}/libsndfile-1.dll ${wd}/openal32.dll ${wd}/gcc/libgcc_s_dw2-1.dll ${wd}/gcc/libstdc++-6.dll deps/SFML/lib/* product/lib
 			cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
 			cp -v include/* product/include
 		fi
