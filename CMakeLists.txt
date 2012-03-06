@@ -112,7 +112,7 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	if (MSVC)
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/msvc")
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
-		set (FFMPEG_LIBRARIES "avdevice-53" "avformat-53" "avcodec-53" "avutil-51" "swscale-2")
+		set (FFMPEG_LIBRARIES "deps/ffmpeg-build/avdevice" "deps/ffmpeg-build/avformat" "deps/ffmpeg-build/avcodec" "deps/ffmpeg-build/avutil" "deps/ffmpeg-build/swscale")
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
 		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
