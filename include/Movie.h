@@ -3,7 +3,7 @@
  *  Movie.h
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2012 Soltic Lucas
+ *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
  *  
  *  This program is free software; you can redistribute it and/or
@@ -67,126 +67,151 @@ namespace sfe {
 		friend class Movie_audio;
 		friend class Movie_video;
 	public:
+		/** @brief Constants giving the movie playback status
+		 */
 		enum Status
 		{
-			Stopped, // Movie is not playing
-			Paused,  // Movie is paused
-			Playing  // Movie is playing
+			Stopped, //!< Movie is stopped (at the beginning)
+			Paused,  //!< Movie is paused
+			Playing  //!< Movie is playing
 		};
 		
-		/** Default constructor
+		/** @brief Default constructor
 		 */
 		Movie(void);
 		
-		/** Default destructor
+		/** @brief Default destructor
 		 */
 		~Movie(void);
 		
-		/** Attemps to read a movie file.
-		 * @filename: the path to the movie file
-		 * @return: true on success, false otherwise
+		/** @brief Attemps to open a media file (movie or audio)
+		 *
+		 * Opening can fails either because of a wrong filename,
+		 * or because you tried to open a movie file that has unsupported
+		 * video and audio format.
+		 *
+		 * @param filename the path to the movie file
+		 * @return true on success, false otherwise
 		 */
 		bool openFromFile(const std::string& filename);
 		
-		/** Starts the reading of the movie file
+		/** @brief Starts the movie playback
+		 *
 		 */
 		void play(void);
 		
-		/** Pauses the reading of the movie file. If the movie playback is already paused,
+		/** @brief Pauses the movie playback
+		 *
+		 * If the movie playback is already paused,
 		 * this does nothing, otherwise the playback is paused.
 		 */
 		void pause(void);
 		
-		/** Stops the reading of the movie file. The playing offset is then reset to 0.
+		/** @brief Stops the reading of the movie file. The playing offset is then reset to 0.
 		 */
 		void stop(void);
 		
-		/** Returns whether the opened movie contains a video track (images)
-		 * @return: true if the opened movie contains a video track, false otherwise
+		/** @brief Returns whether the opened movie contains a video track (images)
+		 *
+		 * @return true if the opened movie contains a video track, false otherwise
 		 */
 		bool hasVideoTrack(void) const;
 		
-		/** Returns whether the opened movie contains an audio track
-		 * @return: true if the opened movie contains an audio track, false otherwise
+		/** @brief Returns whether the opened movie contains an audio track
+		 *
+		 * @return true if the opened movie contains an audio track, false otherwise
 		 */
 		bool hasAudioTrack(void) const;
 		
-		/** Sets the sound volume (default is 100)
-		 * @volume: the volume in range [0, 100]
+		/** @brief Sets the sound's volume (default is 100)
+		 *
+		 * @param volume the volume in range [0, 100]
 		 */
 		void setVolume(float volume);
 		
-		/** Returns the current sound volume
-		 * @return: the sound's volume, in range [0, 100]
+		/** @brief Returns the current sound's volume
+		 *
+		 * @return the sound's volume, in range [0, 100]
 		 */
 		float getVolume(void) const;
 		
-		/** Returns the duration of the movie
-		 * @return: the duration in milliseconds
+		/** @brief Returns the duration of the movie
+		 *
+		 * @return the duration in milliseconds
 		 */
 		sf::Time getDuration(void) const;
 		
-		/** Returns the size (width/height) of the movie
-		 * @return: the size of the movie
+		/** @brief Returns the size (width/height) of the movie
+		 *
+		 * @return the size of the movie
 		 */
 		sf::Vector2i getSize(void) const;
 		
-		/** See ResizeToFrame(sf::IntRect, bool)
+		/** @see resizeToFrame(sf::IntRect, bool)
 		 */
 		void resizeToFrame(int x, int y, int width, int height, bool preserveRatio = true);
 		
-		/** Scales the movie to fit the requested frame.
+		/** @brief Scales the movie to fit the requested frame.
+		 *
 		 * If the ratio is preserved, the movie may be centered
-		 * in the given frame. Thus you're not guaranted that
-		 * the movie position won't be changed.
-		 * @frame: the target frame in which you want to display the movie
-		 * @preserveRatio: true to keep the original movie ratio, false otherwise
+		 * in the given frame. Thus the movie position may be different from
+		 * the one you specified.
+		 * @param frame the target frame in which you want to display the movie
+		 * @param preserveRatio true to keep the original movie ratio, false otherwise
 		 */
 		void resizeToFrame(sf::IntRect frame, bool preserveRatio = true);
 		
-		/** Returns the amount of video frames per second
-		 * @return: the video frame rate
+		/** @brief Returns the amount of video frames per second
+		 *
+		 * @return the video frame rate
 		 */
 		float getFramerate(void) const;
 		
-		/** Returns the amount of audio samples per second
-		 * @return: the audio sample rate
+		/** @brief Returns the amount of audio samples per second
+		 *
+		 * @return the audio sample rate
 		 */
 		unsigned int getSampleRate(void) const;
 		
-		/** Returns the count of audio channels
-		 * @return: the channels' count
+		/** @brief Returns the count of audio channels
+		 *
+		 * @return the channels' count
 		 */
 		unsigned int getChannelCount(void) const;
 		
-		/** Returns the current status of this movie
-		 * @return: See enum Status
+		/** @brief Returns the current status of this movie
+		 *
+		 * @return See enum Status
 		 */
 		Status getStatus(void) const;
 		
-		/** Sets the current playing position in the movie
-		 * @return: the playing position, in milliseconds
+		/** @brief Sets the current playing position in the movie
+		 *
+		 * @return the playing position, in milliseconds
 		 * NOTE: Not yet implemented! 
 		 */
 		//void SetPlayingOffset(sf::Uint32 position);
 		
-		/** Returns the current playing position in the movie
-		 * @return: the playing position
+		/** @brief Returns the current playing position in the movie
+		 *
+		 * @return the playing position
 		 */
-		sf::Time getPlayingOffset() const;
+		sf::Time getPlayingOffset(void) const;
 		
-		/** Returns a copy of the image currently being displayed.
+		/** @brief Returns a copy of the image currently being displayed.
+		 *
 		 * If the movie has no video track, this returns an empty image.
 		 * Note that, as the returned image is a copy, modifying it
 		 * has no effect of the movie being displayed.
-		 * @return: the current image of the movie
+		 * @return the current image of the movie
 		 */
 		sf::Image getImageCopy(void) const;
 		
 		//void SetLoop(bool Loop);
 		//bool GetLoop() const;
 		
-		/** Enables or disables the debug messages outputting
+		/** @brief Enables or disables the debug messages outputting
+		 *
 		 * When enabled, the following debug messages can be dispayed:
 		 * - the attributes of the opened movie 
 		 * - a notification message when a frame was not decoded
@@ -197,7 +222,7 @@ namespace sfe {
 		 * displaying the error messages.
 		 * The debug messages are always sent to the cerr output stream.
 		 *
-		 * @flag: true to enable the debug messages outputting, false otherwise
+		 * @param flag true to enable the debug messages outputting, false otherwise
 		 */
 		static void useDebugMessages(bool flag = true);
 		
