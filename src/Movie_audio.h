@@ -3,7 +3,7 @@
  *  Movie_audio.h
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *  
  *  This program is free software; you can redistribute it and/or
@@ -44,34 +44,34 @@ namespace sfe {
 		~Movie_audio(void);
 		
 		// -------------------------- Audio methods ----------------------------
-		bool Initialize(void);
-		void Stop(void);
-		void Close(void);
+		bool initialize(void);
+		void stop(void);
+		void close(void);
 		
-		using sf::SoundStream::Play;
-		using sf::SoundStream::Pause;
-		using sf::SoundStream::SetVolume;
-		using sf::SoundStream::GetVolume;
-		using sf::SoundStream::GetSampleRate;
-		using sf::SoundStream::GetChannelCount;
+		using sf::SoundStream::play;
+		using sf::SoundStream::pause;
+		using sf::SoundStream::setVolume;
+		using sf::SoundStream::getVolume;
+		using sf::SoundStream::getSampleRate;
+		using sf::SoundStream::getChannelCount;
 		//using sf::SoundStream::SetPlayingOffset;
-		using sf::SoundStream::GetPlayingOffset;
+		using sf::SoundStream::getPlayingOffset;
 		
-		void SetPlayingOffset(sf::Uint32 time);
+		void setPlayingOffset(sf::Time time);
 		
-		int GetStreamID();
-		bool IsStarving(void);
+		int getStreamID();
+		bool isStarving(void);
 		
-		bool ReadChunk(void);
-		bool HasPendingDecodableData(void);
-		unsigned CurrentlyPendingDataLength(void);
-		void DecodeFrontFrame(Chunk& sfBuffer);
-		void PushFrame(AVPacket *pkt);
-		void PopFrame(void);
-		AVPacket *FrontFrame(void);
+		bool readChunk(void);
+		bool hasPendingDecodableData(void);
+		unsigned currentlyPendingDataLength(void);
+		void decodeFrontFrame(Chunk& sfBuffer);
+		void pushFrame(AVPacket *pkt);
+		void popFrame(void);
+		AVPacket *frontFrame(void);
 		
-		bool OnGetData(Chunk& Data);
-		void OnSeek(sf::Uint32 timeOffset);
+		bool onGetData(Chunk& Data);
+		void onSeek(sf::Time timeOffset);
 		
 	private:
 		// ------------------------- Audio attributes --------------------------

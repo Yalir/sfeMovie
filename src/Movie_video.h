@@ -2,7 +2,7 @@
  *  Movie_video.h
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -45,41 +45,41 @@ namespace sfe {
 		~Movie_video(void);
 		
 		// -------------------------- Video methods ----------------------------
-		bool Initialize(void);
-		void Play(void);
-		void Pause(void);
-		void Stop(void);
-		void Close(void);
+		bool initialize(void);
+		void play(void);
+		void pause(void);
+		void stop(void);
+		void close(void);
 		
-		void Draw(sf::RenderTarget& Target, sf::RenderStates& state) const;
+		void draw(sf::RenderTarget& Target, sf::RenderStates& state) const;
 		
-		int GetStreamID(void) const;
-		const sf::Vector2i& GetSize(void) const;
-		float GetWantedFrameTime(void) const;
-		sf::Image GetImageCopy(void) const;
+		int getStreamID(void) const;
+		const sf::Vector2i& getSize(void) const;
+		sf::Time getWantedFrameTime(void) const;
+		sf::Image getImageCopy(void) const;
 		
-		void Update(void); // Swaping and synching thread
-		void Decode(void); // Decoding thread
+		void update(void); // Swaping and synching thread
+		void decode(void); // Decoding thread
 		
-		bool GetLateState(sf::Uint32& waitTime) const;
-		bool IsStarving(void);
-		void SetPlayingOffset(sf::Uint32 time);
+		bool getLateState(sf::Time& waitTime) const;
+		bool isStarving(void);
+		void setPlayingOffset(sf::Time time);
 		//void SkipFrames(unsigned count);
 		
-		void SwapImages(bool unconditionned = false);
-		sf::Texture& FrontTexture(void);
-		const sf::Texture& FrontTexture(void) const;
-		sf::Texture& BackTexture(void);
+		void swapImages(bool unconditionned = false);
+		sf::Texture& frontTexture(void);
+		const sf::Texture& frontTexture(void) const;
+		sf::Texture& backTexture(void);
 		
-		bool PreLoad(void);
-		bool LoadNextImage(bool isLate);
-		bool ReadFrame(void);
-		bool HasPendingDecodableData(void);
-		bool DecodeFrontFrame(bool isLate);
-		void PushFrame(AVPacket *pkt);
-		void PopFrame(void);
-		AVPacket *FrontFrame(void);
-		void WatchThread(void);
+		bool preLoad(void);
+		bool loadNextImage(bool isLate);
+		bool readFrame(void);
+		bool hasPendingDecodableData(void);
+		bool decodeFrontFrame(bool isLate);
+		void pushFrame(AVPacket *pkt);
+		void popFrame(void);
+		AVPacket *frontFrame(void);
+		void watchThread(void);
 		
 	private:
 		// ------------------------- Video attributes --------------------------
@@ -115,9 +115,9 @@ namespace sfe {
 		
 		// Miscellaneous parameters
 		bool m_isStarving;			// If true, there is no more video packet to read and decode
-		float m_wantedFrameTime;	// For how long should one frame last
+		sf::Time m_wantedFrameTime;	// For how long should one frame last
 		unsigned m_displayedFrameCount;// How many frames did we display? (and guess whether we're late)
-		sf::Uint32 m_decodingTime;	// How long does it take to decode one frame? (used to know more precisely when we should decode and swap)
+		sf::Time m_decodingTime;	// How long does it take to decode one frame? (used to know more precisely when we should decode and swap)
 		sf::Clock m_timer;			// Used to compute the decoding time
 		bool m_runThread;			// Should the updating and decoding still run?
 	};

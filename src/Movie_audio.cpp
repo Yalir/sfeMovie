@@ -3,7 +3,7 @@
  *  Movie_audio.cpp
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *  
  *  This program is free software; you can redistribute it and/or
@@ -52,14 +52,14 @@ namespace sfe {
 	{
 	}
 	
-	bool Movie_audio::Initialize(void)
+	bool Movie_audio::initialize(void)
 	{
 		int err;
 		
 		// Find the audio stream among the differents streams
-		for (int i = 0; -1 == m_streamID && i < m_parent.GetAVFormatContext()->nb_streams; i++) 
+		for (int i = 0; -1 == m_streamID && i < m_parent.getAVFormatContext()->nb_streams; i++) 
 		{ 
-			if (m_parent.GetAVFormatContext()->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) 
+			if (m_parent.getAVFormatContext()->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) 
 				m_streamID = i;
 		}
 		
@@ -67,7 +67,7 @@ namespace sfe {
 			return false;
 		
 		// Get the audio codec
-		m_codecCtx = m_parent.GetAVFormatContext()->streams[m_streamID]->codec;
+		m_codecCtx = m_parent.getAVFormatContext()->streams[m_streamID]->codec;
 		
 		// Get the audio decoder (skip if there is no audio chanel)
 		if (!m_codecCtx)
@@ -78,7 +78,7 @@ namespace sfe {
 		if (NULL == m_codec) 
 		{
 			std::cerr << "Movie_audio::Initialize() - could not find any audio decoder for this audio format" << std::endl;
-			Close();
+			close();
 			return false; 
 		} 
 		
@@ -87,7 +87,7 @@ namespace sfe {
 		if (err < 0)
 		{
 			std::cerr << "Movie_audio::Initialize() - unable to load the audio decoder for this audio format" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -95,7 +95,7 @@ namespace sfe {
 		if (!m_buffer)
 		{
 			std::cerr << "Movie_audio::Initialize() - memory allocation error" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -104,28 +104,28 @@ namespace sfe {
 		m_sampleRate = m_codecCtx->sample_rate;
 		
 		// Initialize the sf::SoundStream
-		sf::SoundStream::Initialize(m_channelsCount, m_sampleRate);
+		sf::SoundStream::initialize(m_channelsCount, m_sampleRate);
 		
 		return true;
 	}
 	
-	void Movie_audio::Stop(void)
+	void Movie_audio::stop(void)
 	{
-		sf::SoundStream::Stop();
+		sf::SoundStream::stop();
 		
-		if (av_seek_frame(m_parent.GetAVFormatContext(), m_streamID, 0, AVSEEK_FLAG_BACKWARD) < 0)
+		if (av_seek_frame(m_parent.getAVFormatContext(), m_streamID, 0, AVSEEK_FLAG_BACKWARD) < 0)
 		{
 			std::cerr << "Movie_audio::Stop() - av_seek_frame() error" << std::endl;
 		}
 		
 		while (m_packetList.size()) {
-			PopFrame();
+			popFrame();
 		}
 		
 		m_isStarving = false;
 	}
 	
-	void Movie_audio::Close(void)
+	void Movie_audio::close(void)
 	{
 		if (m_codecCtx)
 			avcodec_close(m_codecCtx), m_codecCtx = NULL;
@@ -133,7 +133,7 @@ namespace sfe {
 		m_codec = NULL;
 		
 		while (m_packetList.size())
-			PopFrame();
+			popFrame();
 		
 		m_streamID = -1;
 		
@@ -145,68 +145,68 @@ namespace sfe {
 		m_isStarving = false;
 	}
 	
-	void Movie_audio::SetPlayingOffset(sf::Uint32 time)
+	void Movie_audio::setPlayingOffset(sf::Time time)
 	{
-		sf::SoundStream::Stop();
+		sf::SoundStream::stop();
 		
 		// TODO: does not work yet
 		// TODO: apply float -> Uin32 change
-		AVRational tb = m_parent.GetAVFormatContext()->streams[m_streamID]->time_base;
+		AVRational tb = m_parent.getAVFormatContext()->streams[m_streamID]->time_base;
 		float ftb = (float)tb.num / tb.den;
-		int64_t avTime = time * ftb;
-		int res = av_seek_frame(m_parent.GetAVFormatContext(), m_streamID, avTime, AVSEEK_FLAG_BACKWARD);
+		int64_t avTime = time.asMilliseconds() * ftb;
+		int res = av_seek_frame(m_parent.getAVFormatContext(), m_streamID, avTime, AVSEEK_FLAG_BACKWARD);
 		
 		if (res < 0)
 			std::cerr << "Movie_audio::SetPlayingOffset() - av_seek_frame() failed" << std::endl;
 		else
 		{
 			while (m_packetList.size()) {
-				PopFrame();
+				popFrame();
 			}
 			
-			sf::SoundStream::Play();
+			sf::SoundStream::play();
 		}
 	}
 	
-	int Movie_audio::GetStreamID()
+	int Movie_audio::getStreamID()
 	{
 		return m_streamID;
 	}
 	
-	bool Movie_audio::IsStarving(void)
+	bool Movie_audio::isStarving(void)
 	{
 		return m_isStarving;
 	}
 	
-	bool Movie_audio::ReadChunk(void)
+	bool Movie_audio::readChunk(void)
 	{
-		if (m_parent.GetEofReached())
-			return !m_parent.GetEofReached();
+		if (m_parent.getEofReached())
+			return !m_parent.getEofReached();
 		
 		// Read the movie file until we get an audio frame
-		while (CurrentlyPendingDataLength() < AUDIO_BUFSIZ && !m_parent.GetEofReached())
-			m_parent.ReadFrameAndQueue();
+		while (currentlyPendingDataLength() < AUDIO_BUFSIZ && !m_parent.getEofReached())
+			m_parent.readFrameAndQueue();
 		
-		return (CurrentlyPendingDataLength() != 0);
+		return (currentlyPendingDataLength() != 0);
 	}
 		
-	bool Movie_audio::HasPendingDecodableData(void)
+	bool Movie_audio::hasPendingDecodableData(void)
 	{
 		sf::Lock l(m_packetListMutex);
 		return !m_packetList.empty();
 	}
 	
-	unsigned Movie_audio::CurrentlyPendingDataLength(void)
+	unsigned Movie_audio::currentlyPendingDataLength(void)
 	{
 		return m_pendingDataLength;
 	}
 	
-	void Movie_audio::DecodeFrontFrame(Chunk& sfBuffer)
+	void Movie_audio::decodeFrontFrame(Chunk& sfBuffer)
 	{
 		unsigned audioPacketOffset = 0;
 		int res = 1;
-		sfBuffer.Samples = NULL;
-		sfBuffer.NbSamples = 0;
+		sfBuffer.samples = NULL;
+		sfBuffer.sampleCount = 0;
 		
 		// This buffer is used by sf::SoundStream and should therefore
 		// not be destroyed before we're done with the previous chunk
@@ -219,11 +219,11 @@ namespace sfe {
 			AVPacket *audioPacket = NULL;
 			
 			// Stop here if there is no frame to decode
-			if (!HasPendingDecodableData())
+			if (!hasPendingDecodableData())
 			{
-				if (!ReadChunk())
+				if (!readChunk())
 				{
-					if (Movie::UsesDebugMessages())
+					if (Movie::usesDebugMessages())
 						std::cerr << "Movie_audio::DecodeFrontFrame() - no frame currently available for decoding. Aborting decoding sequence." << std::endl;
 					return;
 				}
@@ -231,7 +231,7 @@ namespace sfe {
 			
 			
 			// Get the front audio packet
-			audioPacket = FrontFrame();
+			audioPacket = frontFrame();
 			
 			// Decode it
 			res = avcodec_decode_audio3(m_codecCtx,
@@ -249,28 +249,28 @@ namespace sfe {
 				if (m_codecCtx->sample_fmt != SAMPLE_FMT_S16)
 				{
 					// Never happened to me for now, which is fine
-					if (Movie::UsesDebugMessages())
+					if (Movie::usesDebugMessages())
 					{
 						ONCE(std::cerr << "Movie_audio::DecodeFrontFrame() - audio format for the current movie is not signed 16 bits and sfe::Movie does not support audio resampling yet" << std::endl);
 					}
 				}
 				
-				sfBuffer.Samples = m_buffer;
-				sfBuffer.NbSamples = audioPacketOffset / sizeof(sf::Int16);
+				sfBuffer.samples = m_buffer;
+				sfBuffer.sampleCount = audioPacketOffset / sizeof(sf::Int16);
 			}
 			
-			PopFrame();
+			popFrame();
 		}
 	}
 		
-	void Movie_audio::PushFrame(AVPacket *pkt)
+	void Movie_audio::pushFrame(AVPacket *pkt)
 	{
 		sf::Lock l(m_packetListMutex);
 		m_packetList.push(pkt);
 		m_pendingDataLength += pkt->size;
 	}
 	
-	void Movie_audio::PopFrame(void)
+	void Movie_audio::popFrame(void)
 	{
 		sf::Lock l(m_packetListMutex);
 		
@@ -284,7 +284,7 @@ namespace sfe {
 		}
 	}
 	
-	AVPacket *Movie_audio::FrontFrame(void)
+	AVPacket *Movie_audio::frontFrame(void)
 	{
 		assert(!m_packetList.empty());
 		
@@ -292,18 +292,18 @@ namespace sfe {
 		return m_packetList.front();
 	}
 	
-	bool Movie_audio::OnGetData(Chunk& buffer)
+	bool Movie_audio::onGetData(Chunk& buffer)
     {
 		bool flag = true;
         
-		if (!HasPendingDecodableData())
-			flag = ReadChunk();
+		if (!hasPendingDecodableData())
+			flag = readChunk();
 		
 		if (flag)
 		{
-			DecodeFrontFrame(buffer);
+			decodeFrontFrame(buffer);
 			
-			if (!buffer.NbSamples)
+			if (!buffer.sampleCount)
 			{
 				flag = false;
 			}
@@ -312,14 +312,14 @@ namespace sfe {
 		if (!flag)
 		{
 			m_isStarving = true;
-			m_parent.Starvation();
+			m_parent.starvation();
 		}
 		
         return flag;
     }
 
 	
-	void Movie_audio::OnSeek(sf::Uint32 timeOffset)
+	void Movie_audio::onSeek(sf::Time timeOffset)
 	{
 		
 	}

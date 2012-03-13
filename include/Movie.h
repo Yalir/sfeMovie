@@ -3,7 +3,7 @@
  *  Movie.h
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *  
  *  This program is free software; you can redistribute it and/or
@@ -86,54 +86,54 @@ namespace sfe {
 		 * @filename: the path to the movie file
 		 * @return: true on success, false otherwise
 		 */
-		bool OpenFromFile(const std::string& filename);
+		bool openFromFile(const std::string& filename);
 		
 		/** Starts the reading of the movie file
 		 */
-		void Play(void);
+		void play(void);
 		
 		/** Pauses the reading of the movie file. If the movie playback is already paused,
 		 * this does nothing, otherwise the playback is paused.
 		 */
-		void Pause(void);
+		void pause(void);
 		
 		/** Stops the reading of the movie file. The playing offset is then reset to 0.
 		 */
-		void Stop(void);
+		void stop(void);
 		
 		/** Returns whether the opened movie contains a video track (images)
 		 * @return: true if the opened movie contains a video track, false otherwise
 		 */
-		bool HasVideoTrack(void) const;
+		bool hasVideoTrack(void) const;
 		
 		/** Returns whether the opened movie contains an audio track
 		 * @return: true if the opened movie contains an audio track, false otherwise
 		 */
-		bool HasAudioTrack(void) const;
+		bool hasAudioTrack(void) const;
 		
 		/** Sets the sound volume (default is 100)
 		 * @volume: the volume in range [0, 100]
 		 */
-		void SetVolume(float volume);
+		void setVolume(float volume);
 		
 		/** Returns the current sound volume
 		 * @return: the sound's volume, in range [0, 100]
 		 */
-		float GetVolume(void) const;
+		float getVolume(void) const;
 		
 		/** Returns the duration of the movie
 		 * @return: the duration in milliseconds
 		 */
-		sf::Uint32 GetDuration(void) const;
+		sf::Time getDuration(void) const;
 		
 		/** Returns the size (width/height) of the movie
 		 * @return: the size of the movie
 		 */
-		sf::Vector2i GetSize(void) const;
+		sf::Vector2i getSize(void) const;
 		
 		/** See ResizeToFrame(sf::IntRect, bool)
 		 */
-		void ResizeToFrame(int x, int y, int width, int height, bool preserveRatio = true);
+		void resizeToFrame(int x, int y, int width, int height, bool preserveRatio = true);
 		
 		/** Scales the movie to fit the requested frame.
 		 * If the ratio is preserved, the movie may be centered
@@ -142,27 +142,27 @@ namespace sfe {
 		 * @frame: the target frame in which you want to display the movie
 		 * @preserveRatio: true to keep the original movie ratio, false otherwise
 		 */
-		void ResizeToFrame(sf::IntRect frame, bool preserveRatio = true);
+		void resizeToFrame(sf::IntRect frame, bool preserveRatio = true);
 		
 		/** Returns the amount of video frames per second
 		 * @return: the video frame rate
 		 */
-		float GetFramerate(void) const;
+		float getFramerate(void) const;
 		
 		/** Returns the amount of audio samples per second
 		 * @return: the audio sample rate
 		 */
-		unsigned int GetSampleRate(void) const;
+		unsigned int getSampleRate(void) const;
 		
 		/** Returns the count of audio channels
 		 * @return: the channels' count
 		 */
-		unsigned int GetChannelCount(void) const;
+		unsigned int getChannelCount(void) const;
 		
 		/** Returns the current status of this movie
 		 * @return: See enum Status
 		 */
-		Status GetStatus(void) const;
+		Status getStatus(void) const;
 		
 		/** Sets the current playing position in the movie
 		 * @return: the playing position, in milliseconds
@@ -171,9 +171,9 @@ namespace sfe {
 		//void SetPlayingOffset(sf::Uint32 position);
 		
 		/** Returns the current playing position in the movie
-		 * @return: the playing position, in milliseconds
+		 * @return: the playing position
 		 */
-		sf::Uint32 GetPlayingOffset() const;
+		sf::Time getPlayingOffset() const;
 		
 		/** Returns a copy of the image currently being displayed.
 		 * If the movie has no video track, this returns an empty image.
@@ -181,7 +181,7 @@ namespace sfe {
 		 * has no effect of the movie being displayed.
 		 * @return: the current image of the movie
 		 */
-		sf::Image GetImageCopy(void) const;
+		sf::Image getImageCopy(void) const;
 		
 		//void SetLoop(bool Loop);
 		//bool GetLoop() const;
@@ -199,7 +199,7 @@ namespace sfe {
 		 *
 		 * @flag: true to enable the debug messages outputting, false otherwise
 		 */
-		static void UseDebugMessages(bool flag = true);
+		static void useDebugMessages(bool flag = true);
 		
 	private:
 		
@@ -210,21 +210,21 @@ namespace sfe {
 		typedef AVFormatContext *AVFormatContextRef;
 		typedef AVPacket *AVPacketRef;
 #endif
-		void InternalStop(bool calledFromWatchThread);
-		void Draw(sf::RenderTarget& Target, sf::RenderStates states) const;
+		void internalStop(bool calledFromWatchThread);
+		void draw(sf::RenderTarget& Target, sf::RenderStates states) const;
 		
-		static void OutputError(int err, const std::string& fallbackMessage = "");
-		void Close(void);
+		static void outputError(int err, const std::string& fallbackMessage = "");
+		void close(void);
 		
-		AVFormatContextRef GetAVFormatContext(void);
-		bool GetEofReached();
-		void SetEofReached(bool flag);
-		void SetDuration(sf::Uint32 duration);
-		bool ReadFrameAndQueue(void);
-		bool SaveFrame(AVPacketRef frame);
-		static bool UsesDebugMessages(void);
-		void Starvation(void);
-		void Watch(void);
+		AVFormatContextRef getAVFormatContext(void);
+		bool getEofReached();
+		void setEofReached(bool flag);
+		void setDuration(sf::Time duration);
+		bool readFrameAndQueue(void);
+		bool saveFrame(AVPacketRef frame);
+		static bool usesDebugMessages(void);
+		void starvation(void);
+		void watch(void);
 		
 		AVFormatContextRef m_avFormatCtx;
 		bool m_hasVideo;
@@ -236,9 +236,9 @@ namespace sfe {
 		Condition *m_shouldStopCond;
 		
 		Status m_status;
-		sf::Uint32 m_duration;
+		sf::Time m_duration;
 		sf::Clock m_overallTimer;
-		sf::Uint32 m_progressAtPause;
+		sf::Time m_progressAtPause;
 		
 		Movie_video *m_video;
 		Movie_audio *m_audio;

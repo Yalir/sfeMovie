@@ -3,7 +3,7 @@
  *  ConditionImpl.cpp (Unix)
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or

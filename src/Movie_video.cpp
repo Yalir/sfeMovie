@@ -2,7 +2,7 @@
  *  Movie_video.cpp
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -56,7 +56,7 @@ namespace sfe {
 	m_packetListMutex(),
 	
 	// Decoding thread
-	m_decodeThread(&Movie_video::Decode, this),	// Does video decoding
+	m_decodeThread(&Movie_video::decode, this),	// Does video decoding
 	m_running(),
 	
 	// Image swaping
@@ -68,9 +68,9 @@ namespace sfe {
 	// Miscellaneous parameters
 	m_isStarving(false),
 	m_sprite(),
-	m_wantedFrameTime(0.f),
+	m_wantedFrameTime(sf::Time::Zero),
 	m_displayedFrameCount(0),
-	m_decodingTime(0),
+	m_decodingTime(sf::Time::Zero),
 	m_timer(),
 	m_runThread(false),
 	m_size(0, 0)
@@ -82,30 +82,30 @@ namespace sfe {
 	{
 	}
 	
-	bool Movie_video::Initialize(void)
+	bool Movie_video::initialize(void)
 	{
 		int err;
 		
 		// Find the video stream among the differents streams
-		for (int i = 0; -1 == m_streamID && i < m_parent.GetAVFormatContext()->nb_streams; i++)
+		for (int i = 0; -1 == m_streamID && i < m_parent.getAVFormatContext()->nb_streams; i++)
 		{
-			if (m_parent.GetAVFormatContext()->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+			if (m_parent.getAVFormatContext()->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 				m_streamID = i;
 		}
 		
 		// If no video stream found...
 		if (-1 == m_streamID)
 		{
-			Close();
+			close();
 			return false;
 		}
 		
 		// Get the video codec
-		m_codecCtx = m_parent.GetAVFormatContext()->streams[m_streamID]->codec;
+		m_codecCtx = m_parent.getAVFormatContext()->streams[m_streamID]->codec;
 		if (!m_codecCtx)
 		{
 			std::cerr << "Movie_video::Initialize() - unable to get the video codec context" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -114,7 +114,7 @@ namespace sfe {
 		if (NULL == m_codec)
 		{
 			std::cerr << "Movie_video::Initialize() - could not find any video decoder for this video format" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -123,7 +123,7 @@ namespace sfe {
 		if (err < 0)
 		{
 			std::cerr << "Movie_video::Initialize() - unable to load the video decoder for this video format" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -135,7 +135,7 @@ namespace sfe {
 		if (!m_rawFrame || !m_frontRGBAFrame || !m_backRGBAFrame)
 		{
 			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -151,7 +151,7 @@ namespace sfe {
 		if (!videoBuffer)
 		{
 			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -166,7 +166,7 @@ namespace sfe {
 		if (!m_pictureBuffer)
 		{
 			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
@@ -179,123 +179,123 @@ namespace sfe {
 		if (!m_swsCtx)
 		{
 			std::cerr << "Movie_video::Initialize() - error with sws_getContext()" << std::endl;
-			Close();
+			close();
 			return false;
 		}
 		
 		
 		
 		// Setup the SFML stuff
-		m_tex.Create(m_size.x, m_size.y);
-		m_sprite.SetTexture(m_tex);
+		m_tex.create(m_size.x, m_size.y);
+		m_sprite.setTexture(m_tex);
 		
 		// Get the frame time we need for this video
-		AVRational r = m_parent.GetAVFormatContext()->streams[m_streamID]->avg_frame_rate;
-        AVRational r2 = m_parent.GetAVFormatContext()->streams[m_streamID]->r_frame_rate;
+		AVRational r = m_parent.getAVFormatContext()->streams[m_streamID]->avg_frame_rate;
+        AVRational r2 = m_parent.getAVFormatContext()->streams[m_streamID]->r_frame_rate;
 		if ((!r.num || !r.den) &&
             (!r2.num || !r2.den))
         {
-			if (Movie::UsesDebugMessages())
+			if (Movie::usesDebugMessages())
 				std::cerr << "Movie_video::Initialize() - unable to get the video frame rate. Using standard NTSC frame rate : 29.97 fps." << std::endl;
-            m_wantedFrameTime = 1.f / NTSC_FRAMERATE;
+            m_wantedFrameTime = sf::seconds(1.f / NTSC_FRAMERATE);
         }
         else
         {
             if (r.num && r.den)
 			{
-                m_wantedFrameTime = 1.f/((float)r.num / r.den);
+                m_wantedFrameTime = sf::seconds(1.f/((float)r.num / r.den));
 				
-				if (Movie::UsesDebugMessages())
+				if (Movie::usesDebugMessages())
 					std::cerr << "Using video framerate : " << ((float)r.num / r.den) << std::endl;
 			}
             else
 			{
-                m_wantedFrameTime = 1.f/((float)r2.num / r2.den);
+                m_wantedFrameTime = sf::seconds(1.f/((float)r2.num / r2.den));
 				
-				if (Movie::UsesDebugMessages())
+				if (Movie::usesDebugMessages())
 					std::cerr << "Using video framerate : " << ((float)r2.num / r2.den) << std::endl;
 			}
         }
 		
-		if (Movie::UsesDebugMessages())
-			std::cerr << "Wanted frame time is " << m_wantedFrameTime << std::endl;
+		if (Movie::usesDebugMessages())
+			std::cerr << "Wanted frame time is " << m_wantedFrameTime.asMilliseconds() << std::endl;
 		
 		// Get the video duration
-		if (m_parent.GetAVFormatContext()->duration != AV_NOPTS_VALUE)
+		if (m_parent.getAVFormatContext()->duration != AV_NOPTS_VALUE)
 		{
             long secs, us;
-            secs = m_parent.GetAVFormatContext()->duration / AV_TIME_BASE;
-            us = m_parent.GetAVFormatContext()->duration % AV_TIME_BASE;
-			m_parent.SetDuration((secs + (float)us / AV_TIME_BASE) * 1000);
+            secs = m_parent.getAVFormatContext()->duration / AV_TIME_BASE;
+            us = m_parent.getAVFormatContext()->duration % AV_TIME_BASE;
+			m_parent.setDuration(sf::seconds(secs + (float)us / AV_TIME_BASE));
 		}
 		else
 		{
-			if (Movie::UsesDebugMessages())
+			if (Movie::usesDebugMessages())
 				std::cerr << "Movie_video::Initialize() - warning: unable to retrieve the video duration" << std::endl;
 		}
 		
 		return true;
 	}
 	
-	void Movie_video::Play(void)
+	void Movie_video::play(void)
 	{
 		// Disable smoothing when the video is not scaled
-		sf::Vector2f sc = m_parent.GetScale();
+		sf::Vector2f sc = m_parent.getScale();
 		
 		if (fabs(sc.x - 1.f) < 0.00001 &&
 			fabs(sc.y - 1.f) < 0.00001)
 		{
-			m_tex.SetSmooth(false);
+			m_tex.setSmooth(false);
 		}
 		else
 		{
-			m_tex.SetSmooth(true);
+			m_tex.setSmooth(true);
 		}
 		
 		// Start threads
 		m_runThread = true;
 		m_running = 1;
-		m_backImageReady.Restore();
-		m_running.Restore();
+		m_backImageReady.restore();
+		m_running.restore();
 		
-		if (m_parent.GetStatus() != Movie::Paused)
+		if (m_parent.getStatus() != Movie::Paused)
 		{
-			m_decodeThread.Launch();
+			m_decodeThread.launch();
 		}
 	}
 	
-	void Movie_video::Pause(void)
+	void Movie_video::pause(void)
 	{
 		// Pause threads
 		m_running = 0;
 	}
 	
-	void Movie_video::Stop(void)
+	void Movie_video::stop(void)
 	{
 		// Stop threads
 		if (m_runThread)
 		{
             m_runThread = false;
-			m_backImageReady.Invalidate();
-			m_running.Invalidate();
-			m_decodeThread.Wait();
+			m_backImageReady.invalidate();
+			m_running.invalidate();
+			m_decodeThread.wait();
 		}
 		
 		m_displayedFrameCount = 0;
 		m_isStarving = false;
 		
 		// Go back to the beginning of the movie
-		if (av_seek_frame(m_parent.GetAVFormatContext(), m_streamID, 0, AVSEEK_FLAG_BACKWARD) < 0)
+		if (av_seek_frame(m_parent.getAVFormatContext(), m_streamID, 0, AVSEEK_FLAG_BACKWARD) < 0)
 		{
 			std::cerr << "Movie_video::Stop() - av_seek_frame() error" << std::endl;
 		}
 		
 		while (m_packetList.size()) {
-			PopFrame();
+			popFrame();
 		}
 	}
 	
-	void Movie_video::Close(void)
+	void Movie_video::close(void)
 	{
 		// Close the video stuff
 		if (m_codecCtx)
@@ -312,7 +312,7 @@ namespace sfe {
 		
 		// Free the remaining accumulated packets
 		while (m_packetList.size()) {
-			PopFrame();
+			popFrame();
 		}
 		
 		if (m_swsCtx)
@@ -323,35 +323,40 @@ namespace sfe {
 		if (m_pictureBuffer)
 			av_free(m_pictureBuffer), m_pictureBuffer = NULL;
 		
-		m_wantedFrameTime = 0.f;
+		m_wantedFrameTime = sf::Time::Zero;
 		m_displayedFrameCount = 0;
-		m_decodingTime = 0;
+		m_decodingTime = sf::Time::Zero;
 		m_runThread = false;
 		m_size = sf::Vector2i(0, 0);
 	}
 	
-	void Movie_video::Draw(sf::RenderTarget& Target, sf::RenderStates& states) const
+	void Movie_video::draw(sf::RenderTarget& target, sf::RenderStates& states) const
 	{
-		
 		if (m_backImageReady.value() == 1)
 		{
-			sf::Uint32 waitTime;
-			GetLateState(waitTime);
+			sf::Time waitTime;
+			getLateState(waitTime);
 			
-			if (waitTime < 10)
+			if (waitTime.asMilliseconds() < 10)
 			{
 				AVFrame *tmpFrame;
 				
 				// Swap back and front RGBA images buffers
-				m_imageSwapMutex.Lock();
+				m_imageSwapMutex.lock();
 				tmpFrame = m_frontRGBAFrame;
 				m_frontRGBAFrame = m_backRGBAFrame;
 				m_backRGBAFrame = tmpFrame;
-				m_imageSwapMutex.Unlock();
+				m_imageSwapMutex.unlock();
 				
 				// We update the texture from the front frame while the back frame
 				// is being decoded
-				m_tex.Update((sf::Uint8*)m_frontRGBAFrame->data[0]);
+				m_tex.update((sf::Uint8*)m_frontRGBAFrame->data[0]);
+				
+				// We unlock the decoding thread after the texture update
+				// because otherwise there are artefacts in the displayed
+				// image (bug I don't know why because the decoding thread never
+				// uses the front frame), even if we could theoretically
+				// do this before the Update() call
 				m_backImageReady = 0;
 			}
 		}
@@ -363,96 +368,95 @@ namespace sfe {
 		rec.SetOutlineThickness(1.f);
 		Target.Draw(rec, states);*/
 		
-		Target.Draw(m_sprite, states); // 38% on Windows
-		
+		target.draw(m_sprite, states); // 38% on Windows
 
 		// Allow thread switching
-		sf::Sleep(0);
+		sf::sleep(sf::Time::Zero);
 	}
 	
-	int Movie_video::GetStreamID(void) const
+	int Movie_video::getStreamID(void) const
 	{
 		return m_streamID;
 	}
 	
-	const sf::Vector2i& Movie_video::GetSize(void) const
+	const sf::Vector2i& Movie_video::getSize(void) const
 	{
 		return m_size;
 	}
 	
-	float Movie_video::GetWantedFrameTime(void) const
+	sf::Time Movie_video::getWantedFrameTime(void) const
 	{
 		return m_wantedFrameTime;
 	}
 	
-	sf::Image Movie_video::GetImageCopy(void) const
+	sf::Image Movie_video::getImageCopy(void) const
 	{
-		return m_tex.CopyToImage();
+		return m_tex.copyToImage();
 	}
 	
-	void Movie_video::Decode(void)
+	void Movie_video::decode(void)
 	{
 		while (m_runThread &&
-			   m_running.WaitAndLock(1, Condition::AutoUnlock) &&
-			   m_backImageReady.WaitAndLock(0))
+			   m_running.waitAndLock(1, Condition::AutoUnlock) &&
+			   m_backImageReady.waitAndLock(0))
 		{
-			sf::Uint32 waitTime;
-			bool isLate = GetLateState(waitTime);
+			sf::Time waitTime;
+			bool isLate = getLateState(waitTime);
 			
-			if (LoadNextImage(isLate))
+			if (loadNextImage(isLate))
 			{
-				m_backImageReady.Unlock(1);
+				m_backImageReady.unlock(1);
 			}
 			else
 			{
-				m_backImageReady.Unlock(0);
+				m_backImageReady.unlock(0);
 			}
 			
 			if (m_isStarving)
 			{
-				m_parent.Starvation();
+				m_parent.starvation();
 			}
 		}
 	}
 	
-	bool Movie_video::GetLateState(sf::Uint32& waitTime) const
+	bool Movie_video::getLateState(sf::Time& waitTime) const
 	{
 		bool flag = false;
-		waitTime = 0;
+		waitTime = sf::Time::Zero;
 		// Get the 'real' time from the start of the video
 		// and the progress of the video
 		
 		// Here is the real time elapsed since we started to play the video
-		sf::Uint32 realTime = m_parent.GetPlayingOffset();
+		sf::Time realTime = m_parent.getPlayingOffset();
 		
 		// Here is the time we're at in the video
 		// Note: m_wantedFrameTime is kept as float (seconds) for accuracy
-		sf::Uint32 movieTime = m_displayedFrameCount * m_wantedFrameTime * 1000;
+		sf::Time movieTime = (sf::Int64)m_displayedFrameCount * m_wantedFrameTime;
 		
-		if (movieTime > realTime + m_wantedFrameTime * 1000)
+		if (movieTime > realTime + m_wantedFrameTime)
 		{
 			flag = false;
 			
 			// Added a check to prevent from waiting if we've stopped
 			// the movie playback (and thus waiting for abnormal periods of time)
-			if (m_parent.GetStatus() == Movie::Playing)
-				waitTime = (movieTime - realTime - m_wantedFrameTime * 1000);
+			if (m_parent.getStatus() == Movie::Playing)
+				waitTime = movieTime - realTime - m_wantedFrameTime;
 		}
 		else
 		{
 			// don't skip a frame if we just have one frame late,
 			// it may be because of a occasional slowdown
-			if (movieTime < realTime - m_wantedFrameTime * 3000 && m_decodingTime)
+			if (movieTime < realTime - m_wantedFrameTime && m_decodingTime > sf::Time::Zero)
 			{
 				flag = true;
 				
-				if (Movie::UsesDebugMessages())
-					std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms)" << std::endl;
+				if (Movie::usesDebugMessages())
+					std::cerr << "Movie_video::Run() - warning: skipping frame because we are late by " << sf::Time(realTime - movieTime).asMilliseconds() << "ms (movie playing offset is " << realTime.asMilliseconds() << "ms)" << std::endl;
 			}
-			else if (movieTime < realTime - m_wantedFrameTime && m_decodingTime)
+			else if (movieTime < realTime - m_wantedFrameTime && m_decodingTime > sf::Time::Zero)
 			{
-				if (Movie::UsesDebugMessages())
-					std::cerr << "Movie_video::Run() - warning: movie playback is late by " << (realTime - movieTime) << "ms (movie playing offset is " << realTime << "ms) but we're not skipping any frame since we're not 'too' late" << std::endl;
+				if (Movie::usesDebugMessages())
+					std::cerr << "Movie_video::Run() - warning: movie playback is late by " << sf::Time(realTime - movieTime).asMilliseconds() << "ms (movie playing offset is " << realTime.asMilliseconds() << "ms) but we're not skipping any frame since we're not 'too' late" << std::endl;
 			}
 		}
 		
@@ -460,21 +464,21 @@ namespace sfe {
 	}
 	
 	
-	bool Movie_video::IsStarving(void)
+	bool Movie_video::isStarving(void)
 	{
 		return m_isStarving;
 	}
 	
 	
-	void Movie_video::SetPlayingOffset(sf::Uint32 time)
+	void Movie_video::setPlayingOffset(sf::Time time)
 	{
-		Stop();
+		stop();
 		
 		// TODO: does not work yet
-		AVRational tb = m_parent.GetAVFormatContext()->streams[m_streamID]->time_base;
+		AVRational tb = m_parent.getAVFormatContext()->streams[m_streamID]->time_base;
 		float ftb = (float)tb.num / tb.den;
-		int64_t avTime = time * ftb;
-		int res = av_seek_frame(m_parent.GetAVFormatContext(), m_streamID, avTime, AVSEEK_FLAG_BACKWARD);
+		int64_t avTime = time.asMilliseconds() * ftb;
+		int res = av_seek_frame(m_parent.getAVFormatContext(), m_streamID, avTime, AVSEEK_FLAG_BACKWARD);
 		
 		if (res < 0)
 		{
@@ -482,18 +486,18 @@ namespace sfe {
 		}
 		else
 		{
-			Play();
-			m_displayedFrameCount = time / m_wantedFrameTime;
+			play();
+			m_displayedFrameCount = time.asSeconds() / m_wantedFrameTime.asSeconds();
 		}
 	}
 	
 	
 	
-	bool Movie_video::PreLoad(void)
+	bool Movie_video::preLoad(void)
 	{
 		int counter = 0;
 		bool res = false;
-		while (false == (res = LoadNextImage(false)) && counter < 10) // First frame always gives "frame not decoded"
+		while (false == (res = loadNextImage(false)) && counter < 10) // First frame always gives "frame not decoded"
 			counter++;
 		
 		// Abort if we can't load frames
@@ -501,57 +505,57 @@ namespace sfe {
 			return false;
 		
 		// Load first image
-		LoadNextImage(false);
-		m_tex.Update((sf::Uint8*)m_backRGBAFrame->data[0]);
+		loadNextImage(false);
+		m_tex.update((sf::Uint8*)m_backRGBAFrame->data[0]);
 		
 		m_backImageReady = 1;
 		return true;
 	}
 	
 	
-	bool Movie_video::LoadNextImage(bool isLate)
+	bool Movie_video::loadNextImage(bool isLate)
 	{
 		bool flag = false;
-		m_timer.Reset();
+		m_timer.restart();
 		
 		// If our video packet list is empty, load one more video frame
-		if (!HasPendingDecodableData())
+		if (!hasPendingDecodableData())
 		{
-			if (!ReadFrame())
+			if (!readFrame())
 			{
 			    // Stop if there is no more data to read
-				if (Movie::UsesDebugMessages())
+				if (Movie::usesDebugMessages())
 					std::cerr << "Movie_video::Update() - end of video stream reached." << std::endl;
 				
 				m_isStarving = true;
 			}
 			else
-				flag = DecodeFrontFrame(isLate);
+				flag = decodeFrontFrame(isLate);
 		}
 		else
 		{
-			flag = DecodeFrontFrame(isLate);
+			flag = decodeFrontFrame(isLate);
 		}
 		
-		m_decodingTime = m_timer.GetElapsedTime();
+		m_decodingTime = m_timer.getElapsedTime();
 		
 		return flag;
 	}
 	
-	bool Movie_video::ReadFrame(void)
+	bool Movie_video::readFrame(void)
 	{
-		while (!HasPendingDecodableData() &&
-			   m_parent.ReadFrameAndQueue());
+		while (!hasPendingDecodableData() &&
+			   m_parent.readFrameAndQueue());
 		
-		return HasPendingDecodableData();
+		return hasPendingDecodableData();
 	}
 	
-	bool Movie_video::HasPendingDecodableData(void)
+	bool Movie_video::hasPendingDecodableData(void)
 	{
 		return (m_packetList.size() > 0);
 	}
 	
-	bool Movie_video::DecodeFrontFrame(bool isLate)
+	bool Movie_video::decodeFrontFrame(bool isLate)
 	{
 		// whole function takes about 50% CPU with 2048x872 definition on Mac OS X
 		// 50% (one full core) on Windows
@@ -559,15 +563,15 @@ namespace sfe {
 		bool flag = false;
 		
 		// Stop here if there is no frame to decode
-		if (!HasPendingDecodableData())
+		if (!hasPendingDecodableData())
 		{
-			if (Movie::UsesDebugMessages())
+			if (Movie::usesDebugMessages())
 				std::cerr << "Movie_video::DecodeFrontFrame() - no frame currently available for decoding" << std::endl;
 			return flag;
 		}
 		
 		// Get the front frame and decode it
-		AVPacket *videoPacket = FrontFrame();
+		AVPacket *videoPacket = frontFrame();
 		int res;
 		res = avcodec_decode_video2(m_codecCtx, m_rawFrame, &didDecodeFrame,
 									videoPacket); // 20% (40% of total function) on macosx; 18.3% (36% of total) on windows
@@ -588,38 +592,39 @@ namespace sfe {
 					// called by sws_scale()) when GuardMalloc is enabled, but
 					// I don't know whether this is because of the 16 bytes boundaries
 					// alignement constraint
-					m_imageSwapMutex.Lock();
+					m_imageSwapMutex.lock();
 					sws_scale(m_swsCtx,
 							  m_rawFrame->data, m_rawFrame->linesize,
 							  0, m_codecCtx->height,
-							  m_backRGBAFrame->data, m_backRGBAFrame->linesize); // 6.3% on windows (12% of total)
+							  m_backRGBAFrame->data, m_backRGBAFrame->linesize);
+					// 6.3% on windows (12% of total), 9.5% on Mac OS X
 					
-					m_imageSwapMutex.Unlock();
+					m_imageSwapMutex.unlock();
 					
 					// Image loaded, reset condition state
 					flag = true;
 				}
 				else
 				{
-					if (m_parent.Movie::UsesDebugMessages())
+					if (m_parent.Movie::usesDebugMessages())
 						std::cerr << "Movie_video::DecodeFrontFrame() - frame not decoded" << std::endl;
 				}
 			}
 		}
 		
-		PopFrame();
+		popFrame();
 		m_displayedFrameCount++;
 		
 		return flag;
 	}
 	
-	void Movie_video::PushFrame(AVPacket *pkt)
+	void Movie_video::pushFrame(AVPacket *pkt)
 	{
 		sf::Lock l(m_packetListMutex);
 		m_packetList.push(pkt);
 	}
 	
-	void Movie_video::PopFrame(void)
+	void Movie_video::popFrame(void)
 	{
 		sf::Lock l(m_packetListMutex);
 		
@@ -632,7 +637,7 @@ namespace sfe {
 		}
 	}
 	
-	AVPacket *Movie_video::FrontFrame(void)
+	AVPacket *Movie_video::frontFrame(void)
 	{
 		assert(!m_packetList.empty());
 		

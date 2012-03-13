@@ -3,7 +3,7 @@
  *  utils.h
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *  
  *  This program is free software; you can redistribute it and/or
@@ -48,13 +48,13 @@ std::string s(const T& v)
 
 #define EVALUATE_PORTION(portion)\
 {\
-static sf::Uin32 __time = 0.f;\
+static sf::Uint32 __time = 0;\
 sf::Clock __eval_timer;\
 { portion; }\
-__time += __eval_timer.GetElapsedTime();\
+__time += __eval_timer.getElapsedTime();\
 ONCE_PSEC(\
-		  std::cout << "time spent here : " << __time * 100 * 1000 << "% in one second" << std::endl;\
-		  __time = 0.f;\
+		  std::cout << "time spent here : " << (__time / 10.f) << "% in one second" << std::endl;\
+		  __time = 0;\
 		  );\
 }
 

@@ -3,7 +3,7 @@
  *  Condition.h
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -66,7 +66,7 @@ public:
 	 * reached if the Condition has been disabled through Invalidate(). An
 	 * invalidated Condition always returns in an unlocked state.
 	 */
-	bool WaitAndLock(int awaitedValue, bool autoUnlock = false);
+	bool waitAndLock(int awaitedValue, bool autoUnlock = false);
 	
 	/* Unlocks a previously locked Condition with @value as
 	 * internal value. When the condition is unlocked, it is assumed
@@ -75,7 +75,7 @@ public:
 	 *
 	 * @value: the value the Condition should have when it is unlocked
 	 */
-	void Unlock(int value);
+	void unlock(int value);
 	
 	/* Performs an assignement followed by a signal() call.
 	 * The internal Condition value is updated to @value and the Condition is
@@ -100,18 +100,18 @@ public:
 	 * threads waiting on this Condition should check
 	 * the new internal value.
 	 */
-	void Signal(void);
+	void signal(void);
 	
 	/* Signals the Condition and disables blocking calls,
 	 * thus WaitAndLock() does no more wait whatever
 	 * the awaitedValue is and waiting calls are unlocked, returning false.
 	 */
-	void Invalidate(void);
+	void invalidate(void);
 	
 	/* Restores the blocking capabilities of the Condition,
 	 * possibly previously disabled with Invalidate() 
 	 */
-	void Restore(void);
+	void restore(void);
 	
 private:
 	ConditionImpl *m_impl;

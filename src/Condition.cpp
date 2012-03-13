@@ -3,7 +3,7 @@
  *  Condition.cpp
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -49,7 +49,7 @@ Condition::~Condition(void)
 	delete m_impl;
 }
 
-bool Condition::WaitAndLock(int awaitedValue, bool autorelease)
+bool Condition::waitAndLock(int awaitedValue, bool autorelease)
 {
 	bool flag = m_impl->waitAndRetain(awaitedValue);
 	
@@ -59,7 +59,7 @@ bool Condition::WaitAndLock(int awaitedValue, bool autorelease)
 	return flag;
 }
 
-void Condition::Unlock(int value)
+void Condition::unlock(int value)
 {
 	m_impl->release(value);
 }
@@ -75,17 +75,17 @@ int Condition::value(void) const
 	return m_impl->value();
 }
 
-void Condition::Signal(void)
+void Condition::signal(void)
 {
 	m_impl->signal();
 }
 
-void Condition::Invalidate(void)
+void Condition::invalidate(void)
 {
 	m_impl->invalidate();
 }
 
-void Condition::Restore(void)
+void Condition::restore(void)
 {
 	m_impl->restore();
 }

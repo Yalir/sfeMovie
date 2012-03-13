@@ -3,7 +3,7 @@
  *  ConditionImpl.cpp (Win32)
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -45,20 +45,20 @@ ConditionImpl::~ConditionImpl(void)
 
 bool ConditionImpl::waitAndRetain(int value)
 {
-	m_mutex.Lock();
+	m_mutex.lock();
 	
 	while (m_conditionnedVar != value && m_isValid)
 	{
-		m_mutex.Unlock();
+		m_mutex.unlock();
 		WaitForSingleObject(m_cond, INFINITE);
-		m_mutex.Lock();
+		m_mutex.lock();
 	}
 	
 	if (m_isValid)
 		return true;
 	else
 	{
-		m_mutex.Unlock();
+		m_mutex.unlock();
 		return false;
 	}
 }
@@ -66,7 +66,7 @@ bool ConditionImpl::waitAndRetain(int value)
 void ConditionImpl::release(int value)
 {
 	m_conditionnedVar = value;
-	m_mutex.Unlock();
+	m_mutex.unlock();
 	
 	signal();
 }
@@ -74,9 +74,9 @@ void ConditionImpl::release(int value)
 void ConditionImpl::setValue(int value)
 {
 	// Make sure the Condition's value is not modified while retained
-	m_mutex.Lock();
+	m_mutex.lock();
 	m_conditionnedVar = value;
-	m_mutex.Unlock();
+	m_mutex.unlock();
 	
 	signal();
 }

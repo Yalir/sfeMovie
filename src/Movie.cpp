@@ -3,7 +3,7 @@
  *  Movie.cpp
  *  SFE (SFML Extension) project
  *
- *  Copyright (C) 2010-2011 Soltic Lucas
+ *  Copyright (C) 2010-2012 Soltic Lucas
  *  soltic.lucas@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -51,33 +51,33 @@ namespace sfe {
 	m_eofReached(false),
 	m_stopMutex(),
 	m_status(Stopped),
-	m_duration(0),
+	m_duration(sf::Time::Zero),
 	m_overallTimer(),
-	m_progressAtPause(0),
+	m_progressAtPause(sf::Time::Zero),
 	m_video(new Movie_video(*this)),
 	m_audio(new Movie_audio(*this)),
-	m_watchThread(&Movie::Watch, this),
+	m_watchThread(&Movie::watch, this),
 	m_shouldStopCond(new Condition())
 	{
 	}
 
 	Movie::~Movie(void)
 	{
-		Stop();
-		Close();
+		stop();
+		close();
 		delete m_video;
 		delete m_audio;
 		delete m_shouldStopCond;
 	}
 
-	bool Movie::OpenFromFile(const std::string& filename)
+	bool Movie::openFromFile(const std::string& filename)
 	{
 		int err = 0;
 		bool preloaded = false;
 
 		// Make sure everything is cleaned before opening a new movie
-		Stop();
-		Close();
+		stop();
+		close();
 		
 		// Load all the decoders
 		av_register_all();
@@ -87,7 +87,7 @@ namespace sfe {
 
 		if (err != 0)
 		{
-			OutputError(err, "unable to open file " + filename);
+			outputError(err, "unable to open file " + filename);
 			return false;
 		}
 
@@ -96,26 +96,26 @@ namespace sfe {
 
 		if (err < 0)
 		{
-			OutputError(err);
-			Close();
+			outputError(err);
+			close();
 			return false;
 		}
 
-		if (UsesDebugMessages())
+		if (usesDebugMessages())
 			// Output the movie informations
 			av_dump_format(m_avFormatCtx, 0, filename.c_str(), 0);
 
 		// Perform the audio and video loading
-		m_hasVideo = m_video->Initialize();
-		m_hasAudio = m_audio->Initialize();
+		m_hasVideo = m_video->initialize();
+		m_hasAudio = m_audio->initialize();
 		
 		if (m_hasVideo)
 		{
-			preloaded = m_video->PreLoad();
+			preloaded = m_video->preLoad();
 			
 			if (!preloaded) // Loading first frames failed
 			{
-				if (sfe::Movie::UsesDebugMessages())
+				if (sfe::Movie::usesDebugMessages())
 					std::cerr << "Movie::OpenFromFile() - Movie_video::PreLoad() failed.\n";
 			}
 		}
@@ -123,27 +123,27 @@ namespace sfe {
 		return m_hasAudio || (m_hasVideo && preloaded);
 	}
 
-	void Movie::Play(void)
+	void Movie::play(void)
 	{
 		if (m_status != Playing)
 		{
-			m_overallTimer.Reset();
-			IFAUDIO(m_audio->Play());
-			IFVIDEO(m_video->Play());
+			m_overallTimer.restart();
+			IFAUDIO(m_audio->play());
+			IFVIDEO(m_video->play());
 			
 			// Don't restart watch thread if we're resuming
 			if (m_status != Paused)
 			{
 				*m_shouldStopCond = 0;
-				m_shouldStopCond->Restore();
-				m_watchThread.Launch();
+				m_shouldStopCond->restore();
+				m_watchThread.launch();
 			}
 			
 			m_status = Playing;
 		}
 	}
 
-	void Movie::Pause(void)
+	void Movie::pause(void)
 	{
 		if (m_status == Playing)
 		{
@@ -153,29 +153,29 @@ namespace sfe {
 			// to the audio's one)
 			// NB: Calling Pause()/Play() is the only way to resynchronize
 			// audio and video when audio gets late for now.
-			if (HasAudioTrack())
+			if (hasAudioTrack())
 			{
-				m_progressAtPause = m_audio->GetPlayingOffset();
+				m_progressAtPause = m_audio->getPlayingOffset();
 				//std::cout << "synch according to audio track=" << m_progressAtPause << std::endl;
 			}
 			else
 			{
 				//std::cout << "synch according to progrAtPse=" << m_progressAtPause << " + elapsdTme=" << m_overallTimer.GetElapsedTime() << std::endl;
-				m_progressAtPause += m_overallTimer.GetElapsedTime();
+				m_progressAtPause += m_overallTimer.getElapsedTime();
 			}
 			
 			m_status = Paused;
-			IFAUDIO(m_audio->Pause());
-			IFVIDEO(m_video->Pause());
+			IFAUDIO(m_audio->pause());
+			IFVIDEO(m_video->pause());
 		}
 	}
 
-	void Movie::Stop(void)
+	void Movie::stop(void)
 	{
-		InternalStop(false);
+		internalStop(false);
 	}
 	
-	void Movie::InternalStop(bool calledFromWatchThread)
+	void Movie::internalStop(bool calledFromWatchThread)
 	{
 		// prevent Stop() from being executed while already stopping from another thread
 		sf::Lock l(m_stopMutex);
@@ -183,59 +183,59 @@ namespace sfe {
 		if (m_status != Stopped)
 		{
 			m_status = Stopped;
-			IFAUDIO(m_audio->Stop());
-			IFVIDEO(m_video->Stop());
+			IFAUDIO(m_audio->stop());
+			IFVIDEO(m_video->stop());
 			
-			m_progressAtPause = 0;
-			SetEofReached(false);
-			m_shouldStopCond->Invalidate();
+			m_progressAtPause = sf::Time::Zero;
+			setEofReached(false);
+			m_shouldStopCond->invalidate();
 			
 			if (!calledFromWatchThread)
-				m_watchThread.Wait();
+				m_watchThread.wait();
 		}
 	}
 
-	bool Movie::HasVideoTrack(void) const
+	bool Movie::hasVideoTrack(void) const
 	{
 		return m_hasVideo;
 	}
 
-	bool Movie::HasAudioTrack(void) const
+	bool Movie::hasAudioTrack(void) const
 	{
 		return m_hasAudio;
 	}
 
-	void Movie::SetVolume(float volume)
+	void Movie::setVolume(float volume)
 	{
-		IFAUDIO(m_audio->SetVolume(volume));
+		IFAUDIO(m_audio->setVolume(volume));
 	}
 
-	float Movie::GetVolume(void) const
+	float Movie::getVolume(void) const
 	{
 		float volume = 0;
-		IFAUDIO(volume = m_audio->GetVolume());
+		IFAUDIO(volume = m_audio->getVolume());
 		return volume;
 	}
 
-	sf::Uint32 Movie::GetDuration(void) const
+	sf::Time Movie::getDuration(void) const
 	{
 		return m_duration;
 	}
 
-	sf::Vector2i Movie::GetSize(void) const
+	sf::Vector2i Movie::getSize(void) const
 	{
-		return m_video->GetSize();
+		return m_video->getSize();
 	}
 
-	void Movie::ResizeToFrame(int x, int y, int width, int height, bool preserveRatio)
+	void Movie::resizeToFrame(int x, int y, int width, int height, bool preserveRatio)
 	{
-		ResizeToFrame(sf::IntRect(x, y, x + width, y + height), preserveRatio);
+		resizeToFrame(sf::IntRect(x, y, x + width, y + height), preserveRatio);
 	}
 
-	void Movie::ResizeToFrame(sf::IntRect frame, bool preserveRatio)
+	void Movie::resizeToFrame(sf::IntRect frame, bool preserveRatio)
 	{
-		sf::Vector2i movie_size = GetSize();
-		sf::Vector2i wanted_size = sf::Vector2i(frame.Width, frame.Height);
+		sf::Vector2i movie_size = getSize();
+		sf::Vector2i wanted_size = sf::Vector2i(frame.width, frame.height);
 		sf::Vector2i new_size;
 
 		if (preserveRatio)
@@ -256,39 +256,39 @@ namespace sfe {
 				target_size.y = movie_size.y * ((float)wanted_size.y / movie_size.y);
 			}
 
-			SetScale((float)target_size.x / movie_size.x, (float)target_size.y / movie_size.y);
+			setScale((float)target_size.x / movie_size.x, (float)target_size.y / movie_size.y);
 			new_size = target_size;
 		}
 		else
 		{
-			SetScale((float)wanted_size.x / movie_size.x, (float)wanted_size.y / movie_size.y);
+			setScale((float)wanted_size.x / movie_size.x, (float)wanted_size.y / movie_size.y);
 			new_size = wanted_size;
 		}
 
-		SetPosition(frame.Left + (wanted_size.x - new_size.x) / 2,
-					frame.Top + (wanted_size.y - new_size.y) / 2);
+		setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
+					frame.top + (wanted_size.y - new_size.y) / 2);
 	}
 
-	float Movie::GetFramerate(void) const
+	float Movie::getFramerate(void) const
 	{
-		return 1 / m_video->GetWantedFrameTime();
+		return 1. / m_video->getWantedFrameTime().asSeconds();
 	}
 
-	unsigned int Movie::GetSampleRate(void) const
+	unsigned int Movie::getSampleRate(void) const
 	{
 		unsigned rate = 0;
-		IFAUDIO(rate = m_audio->GetSampleRate());
+		IFAUDIO(rate = m_audio->getSampleRate());
 		return rate;
 	}
 
-	unsigned int Movie::GetChannelCount(void) const
+	unsigned int Movie::getChannelCount(void) const
 	{
 		unsigned count = 0;
-		IFAUDIO(count = m_audio->GetChannelCount());
+		IFAUDIO(count = m_audio->getChannelCount());
 		return count;
 	}
 
-	Movie::Status Movie::GetStatus() const
+	Movie::Status Movie::getStatus() const
 	{
 		return m_status;
 	}
@@ -298,32 +298,32 @@ namespace sfe {
 	{
 		PrintWithTime("offset before : " + s(GetPlayingOffset()));
 
-		IFAUDIO(m_audio->SetPlayingOffset(position));
-		IFVIDEO(m_video->SetPlayingOffset(position));
+		IFAUDIO(m_audio->setPlayingOffset(position));
+		IFVIDEO(m_video->setPlayingOffset(position));
 		m_progressAtPause = position;
 		m_overallTimer.Reset();
 
 		PrintWithTime("offset after : " + s(GetPlayingOffset()));
 	}*/
 
-	sf::Uint32 Movie::GetPlayingOffset() const
+	sf::Time Movie::getPlayingOffset() const
 	{
-		sf::Uint32 offset = 0;
+		sf::Time offset = sf::Time::Zero;
 
 		if (m_status == Playing)
-			offset = m_progressAtPause + m_overallTimer.GetElapsedTime();
+			offset = m_progressAtPause + m_overallTimer.getElapsedTime();
 		else
 			offset = m_progressAtPause;
 
 		return offset;
 	}
 
-	sf::Image Movie::GetImageCopy(void) const
+	sf::Image Movie::getImageCopy(void) const
 	{
-		return m_video->GetImageCopy();
+		return m_video->getImageCopy();
 	}
 
-	void Movie::UseDebugMessages(bool flag)
+	void Movie::useDebugMessages(bool flag)
 	{
 		g_usesDebugMessages = flag;
 
@@ -334,13 +334,13 @@ namespace sfe {
 	}
 
 	
-	void Movie::Draw(sf::RenderTarget& target, sf::RenderStates states) const
+	void Movie::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
-		states.Transform *= GetTransform();
-		m_video->Draw(target, states);
+		states.transform *= getTransform();
+		m_video->draw(target, states);
 	}
 
-	void Movie::OutputError(int err, const std::string& fallbackMessage)
+	void Movie::outputError(int err, const std::string& fallbackMessage)
 	{
 		char buffer[4096] = {0};
 
@@ -355,10 +355,10 @@ namespace sfe {
 		}
 	}
 
-	void Movie::Close(void)
+	void Movie::close(void)
 	{
-		IFVIDEO(m_video->Close());
-		IFAUDIO(m_audio->Close());
+		IFVIDEO(m_video->close());
+		IFAUDIO(m_audio->close());
 
 		if (m_avFormatCtx)
 			avformat_close_input(&m_avFormatCtx);
@@ -366,31 +366,31 @@ namespace sfe {
 		m_hasVideo = false;
 		m_eofReached = false;
 		m_status = Stopped;
-		m_duration = 0;
-		m_progressAtPause = 0;
+		m_duration = sf::Time::Zero;
+		m_progressAtPause = sf::Time::Zero;
 	}
 
-	AVFormatContext *Movie::GetAVFormatContext(void)
+	AVFormatContext *Movie::getAVFormatContext(void)
 	{
 		return m_avFormatCtx;
 	}
 
-	bool Movie::GetEofReached()
+	bool Movie::getEofReached()
 	{
 		return m_eofReached;
 	}
 
-	void Movie::SetEofReached(bool flag)
+	void Movie::setEofReached(bool flag)
 	{
 		m_eofReached = flag;
 	}
 
-	void Movie::SetDuration(sf::Uint32 duration)
+	void Movie::setDuration(sf::Time duration)
 	{
 		m_duration = duration;
 	}
 	 
-	bool Movie::ReadFrameAndQueue(void)
+	bool Movie::readFrameAndQueue(void)
 	{
 		// Avoid reading from different threads at the same time
 		sf::Lock l(m_readerMutex);
@@ -398,7 +398,7 @@ namespace sfe {
 		AVPacket *pkt = NULL;
 		
 		// check we're not at eof
-		if (GetEofReached())
+		if (getEofReached())
 			flag = false;
 		else
 		{	
@@ -406,12 +406,12 @@ namespace sfe {
 			pkt = (AVPacket *)av_malloc(sizeof(*pkt));
 			av_init_packet(pkt);
 			
-			int res = av_read_frame(GetAVFormatContext(), pkt);
+			int res = av_read_frame(getAVFormatContext(), pkt);
 			
 			// check we didn't reach eof right now
 			if (res < 0)
 			{
-				SetEofReached(true);
+				setEofReached(true);
 				flag = false;
 				av_free_packet(pkt);
 				av_free(pkt);
@@ -419,9 +419,9 @@ namespace sfe {
 			else
 			{
 				// When a frame has been read, save it
-				if (!SaveFrame(pkt))
+				if (!saveFrame(pkt))
 				{
-					if (Movie::UsesDebugMessages())
+					if (Movie::usesDebugMessages())
 						std::cerr << "Movie::ReadFrameAndQueue() - did read unknown packet type" << std::endl;
 					av_free_packet(pkt);
 					av_free(pkt);
@@ -432,25 +432,25 @@ namespace sfe {
 		return flag;
 	}
 	
-	bool Movie::SaveFrame(AVPacket *frame)
+	bool Movie::saveFrame(AVPacket *frame)
 	{
 		bool saved = false;
 
-		if (m_hasAudio && frame->stream_index == m_audio->GetStreamID())
+		if (m_hasAudio && frame->stream_index == m_audio->getStreamID())
 		{
 			// If it was an audio frame...
-			m_audio->PushFrame(frame);
+			m_audio->pushFrame(frame);
 			saved = true;
 		}
-		else if (m_hasVideo && frame->stream_index == m_video->GetStreamID())
+		else if (m_hasVideo && frame->stream_index == m_video->getStreamID())
 		{
 			// If it was a video frame...
-			m_video->PushFrame(frame);
+			m_video->pushFrame(frame);
 			saved = true;
 		}
 		else
 		{
-			if (UsesDebugMessages())
+			if (usesDebugMessages())
 				std::cerr << "Movie::SaveFrame() - unknown packet stream id ("
 				<< frame->stream_index << ")\n";
 		}
@@ -458,18 +458,18 @@ namespace sfe {
 		return saved;
 	}
 
-	bool Movie::UsesDebugMessages(void)
+	bool Movie::usesDebugMessages(void)
 	{
 		return g_usesDebugMessages;
 	}
 	
-	void Movie::Starvation(void)
+	void Movie::starvation(void)
 	{
 		bool audioStarvation = true;
 		bool videoStarvation = true;
 		
-		IFAUDIO(audioStarvation = m_audio->IsStarving());
-		IFVIDEO(videoStarvation = m_video->IsStarving());
+		IFAUDIO(audioStarvation = m_audio->isStarving());
+		IFVIDEO(videoStarvation = m_video->isStarving());
 		
 		// No mode audio or video data to read
 		if (audioStarvation && videoStarvation)
@@ -478,11 +478,11 @@ namespace sfe {
 		}
 	}
 	
-	void Movie::Watch(void)
+	void Movie::watch(void)
 	{
-		if (m_shouldStopCond->WaitAndLock(1, Condition::AutoUnlock))
+		if (m_shouldStopCond->waitAndLock(1, Condition::AutoUnlock))
 		{
-			InternalStop(true);
+			internalStop(true);
 		}
 	}
 
