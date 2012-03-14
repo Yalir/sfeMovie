@@ -29,10 +29,8 @@
 #include "Movie_audio.h"
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
-#include <SFML/OpenGL.hpp>
 #include <iostream>
 #include <cassert>
-#include "utils.h"
 
 #define NTSC_FRAMERATE 29.97f
 
