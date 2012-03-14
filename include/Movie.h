@@ -71,7 +71,7 @@ namespace sfe {
 		 */
 		enum Status
 		{
-			Stopped, //!< Movie is stopped (at the beginning)
+			Stopped, //!< Movie is stopped (ie. not playing and at the beginning)
 			Paused,  //!< Movie is paused
 			Playing  //!< Movie is playing
 		};
@@ -96,7 +96,6 @@ namespace sfe {
 		bool openFromFile(const std::string& filename);
 		
 		/** @brief Starts the movie playback
-		 *
 		 */
 		void play(void);
 		
