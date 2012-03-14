@@ -1,6 +1,8 @@
 
 #include "../include/Movie.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <iostream>
 
 #ifndef MOVIE_FILE
 #define MOVIE_FILE "some_movie.avi"
@@ -31,80 +33,80 @@ int main()
 	
 	// Create and open movie
 	sfe::Movie movie;
-	if (!movie.OpenFromFile(MOVIE_FILE))
+	if (!movie.openFromFile(MOVIE_FILE))
 		return 1;
 
 	// Scale movie to the window drawing area and enable VSync
-	movie.ResizeToFrame(0, 0, window.GetWidth(), window.GetHeight());
-	window.EnableVerticalSync(true);
+	movie.resizeToFrame(0, 0, window.getSize().x, window.getSize().y);
+	window.setVerticalSyncEnabled(true);
 
 	// Start movie playback
-	movie.Play();
+	movie.play();
 
-	while (window.IsOpened())
+	while (window.isOpen())
 	{
 		sf::Event ev;
-		while (window.PollEvent(ev))
+		while (window.pollEvent(ev))
 		{
 			// Window closure
-			if (ev.Type == sf::Event::Closed ||
-				(ev.Type == sf::Event::KeyPressed &&
-				 ev.Key.Code == sf::Keyboard::Escape))
+			if (ev.type == sf::Event::Closed ||
+				(ev.type == sf::Event::KeyPressed &&
+				 ev.key.code == sf::Keyboard::Escape))
 			{
-				window.Close();
+				window.close();
 			}
 			
 			// Handle basic controls
-			else if (ev.Type == sf::Event::KeyPressed)
+			else if (ev.type == sf::Event::KeyPressed)
 			{
 				// Play/Pause
-				if (ev.Key.Code == sf::Keyboard::Space)
+				if (ev.key.code == sf::Keyboard::Space)
 				{
-					if (movie.GetStatus() != sfe::Movie::Playing)
-						movie.Play();
+					if (movie.getStatus() != sfe::Movie::Playing)
+						movie.play();
 					else
-						movie.Pause();
+						movie.pause();
 				}
 				
 				// Stop
-				if (ev.Key.Code == sf::Keyboard::S)
-					movie.Stop();
+				if (ev.key.code == sf::Keyboard::S)
+					movie.stop();
 				
 				// Restart playback
-				if (ev.Key.Code == sf::Keyboard::R)
+				if (ev.key.code == sf::Keyboard::R)
 				{
-					movie.Stop();
-					movie.Play();
+					movie.stop();
+					movie.play();
 				}
 				
 				// Toggle fullscreen mode
-				if (ev.Key.Code == sf::Keyboard::F)
+				if (ev.key.code == sf::Keyboard::F)
 				{
 					fullscreen = !fullscreen;
 					
 					// We want to switch to the full screen mode
 					if (fullscreen)
 					{
-						window.Create(sf::VideoMode::GetDesktopMode(), windowTitle, sf::Style::Fullscreen);
-						window.EnableVerticalSync(true);
-						movie.ResizeToFrame(0, 0, window.GetWidth(), window.GetHeight());
+						window.create(sf::VideoMode::getDesktopMode(), windowTitle, sf::Style::Fullscreen);
+						window.setVerticalSyncEnabled(true);
+						movie.resizeToFrame(0, 0, window.getSize().x, window.getSize().y);
 					}
 					
 					// We want to switch back to the windowed mode
 					else
 					{
-						window.Create(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
-						window.EnableVerticalSync(true);
-						movie.ResizeToFrame(0, 0, window.GetWidth(), window.GetHeight());
+						window.create(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
+						window.setVerticalSyncEnabled(true);
+						movie.resizeToFrame(0, 0, window.getSize().x, window.getSize().y);
 					}
 				}
 			}
 		}
 		
 		// Render movie
-		window.Clear();
-		window.Draw(movie);
-		window.Display();
+		window.clear();
+		window.draw(movie);
+		window.display();
 	}
 
 	return 0;
