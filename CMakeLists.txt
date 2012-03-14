@@ -29,13 +29,6 @@ set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
 set (VERSION_PATCH 0)
 
-# Mac OS X 10.7+ (Darwin 11.0.0+)
-if (MACOSX AND ${CMAKE_HOST_SYSTEM_VERSION} VERSION_GREATER "11.0.0")
-	set (HAS_VIDEO_DECODE_ACCELERATION 1)
-else()
-	set (HAS_VIDEO_DECODE_ACCELERATION 0)
-endif()
-
 set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
@@ -64,36 +57,16 @@ if (LINUX) # ========================================== LINUX ==================
 	
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
 
-	if (HAS_VIDEO_DECODE_ACCELERATION)
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL" "-framework VideoDecodeAcceleration" "-framework CoreVideo")
+	if (HAS_VDA)
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
 	else()
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework OpenGL")
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
 	endif()
 	
 	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
 	set (CMAKE_OSX_ARCHITECTURES ${ARCH})
-	
-	if(EXISTS /Developer/SDKs/MacOSX10.5.sdk)
-        # target 10.5 system
-        set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.5.sdk"
-            CACHE STRING "The product will be built against the headers and libraries located inside the indicated SDK. Set to empty string for default value."
-            FORCE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.5" 
-            CACHE STRING "Minimum OS X version to target for deployment (at runtime); newer APIs weak linked."
-            FORCE)
-    elseif(EXISTS /Developer/SDKs/MacOSX10.6.sdk)
-        # target 10.6 system
-        set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.6.sdk"
-            CACHE STRING "The product will be built against the headers and libraries located inside the indicated SDK. Set to empty string for default value."
-            FORCE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.6" 
-            CACHE STRING "Minimum OS X version to target for deployment (at runtime); newer APIs weak linked."
-            FORCE)
-    else()
-        # use default SDK.
-    endif()
     
     # add an option to let the user specify a custom directory for frameworks installation (SFML, sndfile, ...)
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
@@ -122,7 +95,7 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	
 	add_definitions(-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS)
 	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system" "sfml-window" "sfml-graphics" "sfml-audio")
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32" "opengl32")
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Win32/ConditionImpl.cpp")
 endif()
 
