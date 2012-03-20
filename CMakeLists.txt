@@ -52,7 +52,7 @@ if (LINUX) # ========================================== LINUX ==================
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	add_definitions(-D__STDC_CONSTANT_MACROS)
 	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
-	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system.2.0" "sfml-window.2.0" "sfml-graphics.2.0" "sfml-audio.2.0")
+	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system" "sfml-window" "sfml-graphics" "sfml-audio")
 	
 	
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
