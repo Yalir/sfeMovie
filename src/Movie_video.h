@@ -56,7 +56,8 @@ namespace sfe {
 		int getStreamID(void) const;
 		const sf::Vector2i& getSize(void) const;
 		sf::Time getWantedFrameTime(void) const;
-		sf::Image getImageCopy(void) const;
+		const sf::Texture& getCurrentFrame(void) const;
+		void ensureTextureUpdate(void) const;
 		
 		void update(void); // Swaping and synching thread
 		void decode(void); // Decoding thread

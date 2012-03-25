@@ -318,9 +318,14 @@ namespace sfe {
 		return offset;
 	}
 
-	sf::Image Movie::getImageCopy(void) const
+	const sf::Texture& Movie::getCurrentFrame(void) const
 	{
-		return m_video->getImageCopy();
+		static sf::Texture emptyTexture;
+		
+		if (m_hasVideo)
+			return m_video->getCurrentFrame();
+		else
+			return emptyTexture;
 	}
 
 	void Movie::useDebugMessages(bool flag)

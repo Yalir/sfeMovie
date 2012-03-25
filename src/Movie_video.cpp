@@ -330,6 +330,16 @@ namespace sfe {
 	
 	void Movie_video::draw(sf::RenderTarget& target, sf::RenderStates& states) const
 	{
+		ensureTextureUpdate();
+		
+		target.draw(m_sprite, states); // 38% on Windows
+
+		// Allow thread switching
+		sf::sleep(sf::Time::Zero);
+	}
+	
+	void Movie_video::ensureTextureUpdate(void) const
+	{
 		if (m_backImageReady.value() == 1)
 		{
 			sf::Time waitTime;
@@ -358,18 +368,6 @@ namespace sfe {
 				m_backImageReady = 0;
 			}
 		}
-		
-		/*sf::RectangleShape rec(sf::Vector2f(m_tex.GetWidth() + 2, m_tex.GetHeight() + 2));
-		rec.SetPosition(sf::Vector2f(m_sprite.GetPosition().x - 1, m_sprite.GetPosition().y - 1));
-		rec.SetOutlineColor(sf::Color::Red);
-		rec.SetFillColor(sf::Color::Blue);
-		rec.SetOutlineThickness(1.f);
-		Target.Draw(rec, states);*/
-		
-		target.draw(m_sprite, states); // 38% on Windows
-
-		// Allow thread switching
-		sf::sleep(sf::Time::Zero);
 	}
 	
 	int Movie_video::getStreamID(void) const
@@ -387,9 +385,10 @@ namespace sfe {
 		return m_wantedFrameTime;
 	}
 	
-	sf::Image Movie_video::getImageCopy(void) const
+	const sf::Texture& Movie_video::getCurrentFrame(void) const
 	{
-		return m_tex.copyToImage();
+		ensureTextureUpdate();
+		return m_tex;
 	}
 	
 	void Movie_video::decode(void)

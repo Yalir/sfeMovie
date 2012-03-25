@@ -197,14 +197,13 @@ namespace sfe {
 		 */
 		sf::Time getPlayingOffset(void) const;
 		
-		/** @brief Returns a copy of the image currently being displayed.
+		/** @brief Returns a const reference to the movie texture currently being displayed.
+		 * The returned image is a texture in VRAM.
 		 *
 		 * If the movie has no video track, this returns an empty image.
-		 * Note that, as the returned image is a copy, modifying it
-		 * has no effect of the movie being displayed.
 		 * @return the current image of the movie
 		 */
-		sf::Image getImageCopy(void) const;
+		const sf::Texture& getCurrentFrame(void) const;
 		
 		//void SetLoop(bool Loop);
 		//bool GetLoop() const;
