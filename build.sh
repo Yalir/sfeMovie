@@ -410,8 +410,9 @@ function build_sfemovie()
 			
 		elif [ "$os" == "windows" ]
 		  then
-			wd="deps/windows-binaries"
-			cp -v ${wd}/libsndfile-1.dll ${wd}/openal32.dll ${wd}/gcc/libgcc_s_dw2-1.dll ${wd}/gcc/libstdc++-6.dll deps/SFML/lib/* product/lib
+			gccdir="deps/windows-binaries/gcc"
+			sfdeps="deps/SFML/extlibs/bin/x86"
+			cp -v ${sfdeps}/libsndfile-1.dll ${sfdeps}/openal32.dll ${gccdir}/libgcc_s_dw2-1.dll ${gccdir}/libstdc++-6.dll deps/SFML/lib/* product/lib
 			cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
 			cp -v include/* product/include
 		fi
