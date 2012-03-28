@@ -401,7 +401,7 @@ function build_sfemovie()
 		  then
 		  	ditto -v deps/SFML/extlibs/libs-osx/Frameworks/sndfile.framework product/sndfile.framework
 			ditto -v deps/SFML/lib/ product/
-			ditto -v sfe-movie.framework product/sfe-movie.framework
+			ditto -v sfeMovie.framework product/sfeMovie.framework
 			
 			if test -d deps/SFML/SFML.framework
 			  then
@@ -413,7 +413,7 @@ function build_sfemovie()
 			gccdir="deps/windows-binaries/gcc"
 			sfdeps="deps/SFML/extlibs/bin/x86"
 			cp -v ${sfdeps}/libsndfile-1.dll ${sfdeps}/openal32.dll ${gccdir}/libgcc_s_dw2-1.dll ${gccdir}/libstdc++-6.dll deps/SFML/lib/* product/lib
-			cp -v libsfe-movie.dll libsfe-movie.dll.a product/lib
+			cp -v libsfeMovie.dll libsfeMovie.dll.a product/lib
 			cp -v include/* product/include
 		fi
 		

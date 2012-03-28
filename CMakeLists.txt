@@ -24,7 +24,7 @@ endif()
 
 
 # Set some env vars
-set (LIB_NAME sfe-movie)
+set (LIB_NAME sfeMovie)
 set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
 set (VERSION_PATCH 0)
@@ -56,11 +56,19 @@ if (LINUX) # ========================================== LINUX ==================
 	
 	
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
-
+	
 	if (HAS_VDA)
 		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
 	else()
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
+		# In case VDA isn't defined (ie. build.sh is using the current OS SDK), check the current OS version
+		if (DEFINED HAS_VDA)
+			set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
+		else()
+			# VDA is used for OS X 10.7 and later
+			if (${CMAKE_HOST_SYSTEM_VERSION} VERSION_EQUAL "11.0.0" OR ${CMAKE_HOST_SYSTEM_VERSION} VERSION_GREATER "11.0.0")
+				set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
+			endif()
+		endif()
 	endif()
 	
 	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
@@ -72,7 +80,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
 	
 	# find only "root" headers
-    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/*")
+    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/*")
     
     set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 	
@@ -83,7 +91,6 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	
 	if (MSVC)
-		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 		set (FFMPEG_LIBRARIES "deps/ffmpeg-build/avdevice" "deps/ffmpeg-build/avformat" "deps/ffmpeg-build/avcodec" "deps/ffmpeg-build/avutil" "deps/ffmpeg-build/swscale")
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
