@@ -106,7 +106,7 @@ namespace sfe {
 		 */
 		void pause(void);
 		
-		/** @brief Stops the reading of the movie file. The playing offset is then reset to 0.
+		/** @brief Stops the movie playback. The playing offset is reset to the beginning.
 		 */
 		void stop(void);
 		
@@ -140,13 +140,14 @@ namespace sfe {
 		 */
 		sf::Time getDuration(void) const;
 		
-		/** @brief Returns the size (width/height) of the movie
+		/** @brief Returns the size (width, height) of the movie
 		 *
 		 * @return the size of the movie
 		 */
 		sf::Vector2i getSize(void) const;
 		
-		/** @see resizeToFrame(sf::IntRect, bool)
+		/** @brief See resizeToFrame(sf::IntRect, bool)
+		 * @see resizeToFrame(sf::IntRect, bool)
 		 */
 		void resizeToFrame(int x, int y, int width, int height, bool preserveRatio = true);
 		
@@ -178,13 +179,13 @@ namespace sfe {
 		 */
 		unsigned int getChannelCount(void) const;
 		
-		/** @brief Returns the current status of this movie
+		/** @brief Returns the current status of the movie
 		 *
 		 * @return See enum Status
 		 */
 		Status getStatus(void) const;
 		
-		/** @brief Sets the current playing position in the movie
+		/* @brief Sets the current playing position in the movie
 		 *
 		 * @return the playing position, in milliseconds
 		 * NOTE: Not yet implemented! 
@@ -198,7 +199,11 @@ namespace sfe {
 		sf::Time getPlayingOffset(void) const;
 		
 		/** @brief Returns a const reference to the movie texture currently being displayed.
+		 *
 		 * The returned image is a texture in VRAM.
+		 * Note: although the returned texture reference remains the same,
+		 * getCurrentFrame() must be called for each new frame until you also use
+		 * draw() ; otherwise the texture won't be updated.
 		 *
 		 * If the movie has no video track, this returns an empty image.
 		 * @return the current image of the movie
@@ -208,7 +213,7 @@ namespace sfe {
 		//void SetLoop(bool Loop);
 		//bool GetLoop() const;
 		
-		/** @brief Enables or disables the debug messages outputting
+		/** @brief Choose whether to print debug messages
 		 *
 		 * When enabled, the following debug messages can be dispayed:
 		 * - the attributes of the opened movie 
