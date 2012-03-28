@@ -1,8 +1,6 @@
 
-#include "../include/Movie.h"
 #include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <iostream>
+#include <sfeMovie/Movie.hpp>
 
 #ifndef MOVIE_FILE
 #define MOVIE_FILE "some_movie.avi"
