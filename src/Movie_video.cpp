@@ -1,6 +1,6 @@
 /*
  *  Movie_video.cpp
- *  SFE (SFML Extension) project
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -23,10 +23,10 @@
 
 
 
-#include "Movie_video.h"
-#include "Movie.h"
+#include "Movie_video.hpp"
+#include <sfeMovie/Movie.hpp>
 
-#include "Movie_audio.h"
+#include "Movie_audio.hpp"
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>

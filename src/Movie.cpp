@@ -1,7 +1,7 @@
 
 /*
  *  Movie.cpp
- *  SFE (SFML Extension) project
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -29,11 +29,11 @@ extern "C"
 #include <libswscale/swscale.h>
 }
 
-#include "Movie.h"
-#include "Condition.h"
-#include "Movie_video.h"
-#include "Movie_audio.h"
-#include "utils.h"
+#include <sfeMovie/Movie.hpp>
+#include "Condition.hpp"
+#include "Movie_video.hpp"
+#include "Movie_audio.hpp"
+#include "utils.hpp"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 

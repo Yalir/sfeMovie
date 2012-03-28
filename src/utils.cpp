@@ -1,7 +1,7 @@
 
 /*
  *  utils.cpp
- *  SFE (SFML Extension) project
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -22,7 +22,7 @@
  *
  */
 
-#include "utils.h"
+#include "utils.hpp"
 #include <ctime>
 #include <iostream>
 

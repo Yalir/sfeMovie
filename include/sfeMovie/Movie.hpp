@@ -1,7 +1,7 @@
 
 /*
- *  Movie.h
- *  SFE (SFML Extension) project
+ *  Movie.hpp
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -23,12 +23,12 @@
  */
 
 
-#ifndef MOVIE_H
-#define MOVIE_H
+#ifndef MOVIE_HPP
+#define MOVIE_HPP
 
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/Transformable.hpp>
-#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Mutex.hpp>
 #include <SFML/System/Thread.hpp>

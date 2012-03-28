@@ -1,7 +1,7 @@
 
 /*
  *  Movie_audio.cpp
- *  SFE (SFML Extension) project
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -22,11 +22,11 @@
  *
  */
 
-#include "Movie_audio.h"
-#include "Movie.h"
+#include "Movie_audio.hpp"
+#include <sfeMovie/Movie.hpp>
 #include <iostream>
 #include <cassert>
-#include "utils.h"
+#include "utils.hpp"
 
 #define AUDIO_BUFSIZ AVCODEC_MAX_AUDIO_FRAME_SIZE // 192000 bytes, 1 second of 48kHz 32bit audio
 

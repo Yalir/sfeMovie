@@ -1,7 +1,7 @@
 
 /*
  *  Condition.cpp
- *  SFE (SFML Extension) project
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -22,14 +22,14 @@
  *
  */
 
-#include "Condition.h"
+#include "Condition.hpp"
 #include <SFML/Config.hpp>
 #include <iostream>
 
 #ifdef SFML_SYSTEM_WINDOWS
-#include "Win32/ConditionImpl.h"
+#include "Win32/ConditionImpl.hpp"
 #else
-#include "Unix/ConditionImpl.h"
+#include "Unix/ConditionImpl.hpp"
 #endif
 
 namespace sfe {

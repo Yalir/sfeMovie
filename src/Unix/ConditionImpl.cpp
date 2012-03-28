@@ -1,7 +1,7 @@
 
 /*
  *  ConditionImpl.cpp (Unix)
- *  SFE (SFML Extension) project
+ *  sfeMovie project
  *
  *  Copyright (C) 2010-2012 Lucas Soltic
  *  soltic.lucas@gmail.com
@@ -23,8 +23,8 @@
  */
 
 
-#include "ConditionImpl.h"
-//#include "utils.h"
+#include "ConditionImpl.hpp"
+//#include "utils.hpp"
 #include <iostream>
 using namespace std;
 
