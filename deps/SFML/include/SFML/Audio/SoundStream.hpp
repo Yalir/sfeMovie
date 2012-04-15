@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -201,17 +201,6 @@ protected :
     ////////////////////////////////////////////////////////////
     void initialize(unsigned int channelCount, unsigned int sampleRate);
 
-private :
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Function called as the entry point of the thread
-    ///
-    /// This function starts the streaming loop, and returns
-    /// only when the sound is stopped.
-    ///
-    ////////////////////////////////////////////////////////////
-    void stream();
-
     ////////////////////////////////////////////////////////////
     /// \brief Request a new chunk of audio samples from the stream source
     ///
@@ -238,6 +227,17 @@ private :
     ///
     ////////////////////////////////////////////////////////////
     virtual void onSeek(Time timeOffset) = 0;
+
+private :
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Function called as the entry point of the thread
+    ///
+    /// This function starts the streaming loop, and returns
+    /// only when the sound is stopped.
+    ///
+    ////////////////////////////////////////////////////////////
+    void streamData();
 
     ////////////////////////////////////////////////////////////
     /// \brief Fill a new buffer with audio samples, and append

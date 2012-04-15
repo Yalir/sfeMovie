@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -64,7 +64,7 @@ void Sprite::setTexture(const Texture& texture, bool resetRect)
 {
     // Recompute the texture area if requested, or if there was no valid texture before
     if (resetRect || !m_texture)
-        setTextureRect(IntRect(0, 0, texture.getWidth(), texture.getHeight()));
+        setTextureRect(IntRect(0, 0, texture.getSize().x, texture.getSize().y));
 
     // Assign the new texture
     m_texture = &texture;

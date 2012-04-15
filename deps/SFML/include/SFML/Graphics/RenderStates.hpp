@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -63,46 +63,46 @@ public :
     ////////////////////////////////////////////////////////////
     /// \brief Construct a default set of render states with a custom blend mode
     ///
-    /// \param blendMode Blend mode to use
+    /// \param theBlendMode Blend mode to use
     ///
     ////////////////////////////////////////////////////////////
-    RenderStates(BlendMode blendMode);
+    RenderStates(BlendMode theBlendMode);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct a default set of render states with a custom transform
     ///
-    /// \param transform Transform to use
+    /// \param theTransform Transform to use
     ///
     ////////////////////////////////////////////////////////////
-    RenderStates(const Transform& transform);
+    RenderStates(const Transform& theTransform);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct a default set of render states with a custom texture
     ///
-    /// \param texture Texture to use
+    /// \param theTexture Texture to use
     ///
     ////////////////////////////////////////////////////////////
-    RenderStates(const Texture* texture);
+    RenderStates(const Texture* theTexture);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct a default set of render states with a custom shader
     ///
-    /// \param shader Shader to use
+    /// \param theShader Shader to use
     ///
     ////////////////////////////////////////////////////////////
-    RenderStates(const Shader* shader);
+    RenderStates(const Shader* theShader);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct a set of render states with all its attributes
     ///
-    /// \param blendMode Blend mode to use
-    /// \param transform Transform to use
-    /// \param texture   Texture to use
-    /// \param shader    Shader to use
+    /// \param theBlendMode Blend mode to use
+    /// \param theTransform Transform to use
+    /// \param theTexture   Texture to use
+    /// \param theShader    Shader to use
     ///
     ////////////////////////////////////////////////////////////
-    RenderStates(BlendMode blendMode, const Transform& transform,
-                 const Texture* texture, const Shader* shader);
+    RenderStates(BlendMode theBlendMode, const Transform& theTransform,
+                 const Texture* theTexture, const Shader* theShader);
 
     ////////////////////////////////////////////////////////////
     // Static member data

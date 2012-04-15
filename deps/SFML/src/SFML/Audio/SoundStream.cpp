@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -40,7 +40,7 @@ namespace sf
 {
 ////////////////////////////////////////////////////////////
 SoundStream::SoundStream() :
-m_thread          (&SoundStream::stream, this),
+m_thread          (&SoundStream::streamData, this),
 m_isStreaming     (false),
 m_channelCount    (0),
 m_sampleRate      (0),
@@ -190,7 +190,7 @@ bool SoundStream::getLoop() const
 
 
 ////////////////////////////////////////////////////////////
-void SoundStream::stream()
+void SoundStream::streamData()
 {
     // Create the buffers
     alCheck(alGenBuffers(BufferCount, m_buffers));

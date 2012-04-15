@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -159,7 +159,7 @@ public :
     bool loadFromMemory(const void* data, std::size_t size, const IntRect& area = IntRect());
 
     ////////////////////////////////////////////////////////////
-    /// \brief Load the texture from a file in memory
+    /// \brief Load the texture from a custom stream
     ///
     /// This function is a shortcut for the following code:
     /// \code
@@ -214,24 +214,12 @@ public :
     bool loadFromImage(const Image& image, const IntRect& area = IntRect());
 
     ////////////////////////////////////////////////////////////
-    /// \brief Return the width of the texture
+    /// \brief Return the size of the texture
     ///
-    /// \return Width in pixels
-    ///
-    /// \see getHeight
+    /// \return Size in pixels
     ///
     ////////////////////////////////////////////////////////////
-    unsigned int getWidth() const;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Return the height of the texture
-    ///
-    /// \return Height in pixels
-    ///
-    /// \see getWidth
-    ///
-    ////////////////////////////////////////////////////////////
-    unsigned int getHeight() const;
+    Vector2u getSize() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Copy the texture pixels to an image
@@ -489,10 +477,8 @@ private :
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    unsigned int m_width;         ///< Image width
-    unsigned int m_height;        ///< Image Height
-    unsigned int m_textureWidth;  ///< Actual texture width (can be greater than image width because of padding)
-    unsigned int m_textureHeight; ///< Actual texture height (can be greater than image height because of padding)
+    Vector2u     m_size;          ///< Public texture size
+    Vector2u     m_actualSize;    ///< Actual texture size (can be greater than public size because of padding)
     unsigned int m_texture;       ///< Internal texture identifier
     bool         m_isSmooth;      ///< Status of the smooth filter
     bool         m_isRepeated;    ///< Is the texture in repeat mode?

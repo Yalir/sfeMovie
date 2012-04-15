@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -44,10 +44,10 @@ bitsPerPixel(0)
 
 
 ////////////////////////////////////////////////////////////
-VideoMode::VideoMode(unsigned int width, unsigned int height, unsigned int bitsPerPixel) :
-width       (width),
-height      (height),
-bitsPerPixel(bitsPerPixel)
+VideoMode::VideoMode(unsigned int modeWidth, unsigned int modeHeight, unsigned int modeBitsPerPixel) :
+width       (modeWidth),
+height      (modeHeight),
+bitsPerPixel(modeBitsPerPixel)
 {
 
 }

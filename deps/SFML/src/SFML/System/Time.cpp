@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -51,7 +51,7 @@ float Time::asSeconds() const
 ////////////////////////////////////////////////////////////
 Int32 Time::asMilliseconds() const
 {
-    return static_cast<Uint32>(m_microseconds / 1000);
+    return static_cast<Int32>(m_microseconds / 1000);
 }
 
 
@@ -72,14 +72,14 @@ m_microseconds(microseconds)
 ////////////////////////////////////////////////////////////
 Time seconds(float amount)
 {
-    return Time(static_cast<Uint64>(amount * 1000000));
+    return Time(static_cast<Int64>(amount * 1000000));
 }
 
 
 ////////////////////////////////////////////////////////////
 Time milliseconds(Int32 amount)
 {
-    return Time(static_cast<Uint64>(amount) * 1000);
+    return Time(static_cast<Int64>(amount) * 1000);
 }
 
 

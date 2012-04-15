@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2011 Marco Antognini (antognini.marco@gmail.com), 
+// Copyright (C) 2007-2012 Marco Antognini (antognini.marco@gmail.com), 
 //                         Laurent Gomila (laurent.gom@gmail.com), 
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -62,7 +62,7 @@ namespace priv
 ////////////////////////////////////////////////////////////
 class WindowImplCocoa : public WindowImpl
 {
-public:
+public :
     ////////////////////////////////////////////////////////////
     /// \brief Construct the window implementation from an existing control
     ///
@@ -232,13 +232,7 @@ public:
     ////////////////////////////////////////////////////////////
     static void setUpProcess(void);
     
-private:
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Process incoming events from the operating system
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void processEvents();
+public :
     
     ////////////////////////////////////////////////////////////
     /// \brief Get the OS-specific handle of the window
@@ -321,6 +315,14 @@ private:
     ///
     ////////////////////////////////////////////////////////////
     virtual void setKeyRepeatEnabled(bool enabled);
+
+protected :
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Process incoming events from the operating system
+    ///
+    ////////////////////////////////////////////////////////////
+    virtual void processEvents();
 
 private :
 

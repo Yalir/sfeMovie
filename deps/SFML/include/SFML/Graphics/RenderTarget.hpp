@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -144,13 +144,12 @@ public :
     /// This version uses the current view of the render target.
     /// See the other overload to specify a custom view.
     ///
-    /// \param x X coordinate of the point to convert, relative to the render target
-    /// \param y Y coordinate of the point to convert, relative to the render target
+    /// \param point Point to convert, relative to the render target
     ///
     /// \return The converted point, in "world" units
     ///
     ////////////////////////////////////////////////////////////
-    Vector2f convertCoords(unsigned int x, unsigned int y) const;
+    Vector2f convertCoords(const Vector2i& point) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert a point from target coordinates to view coordinates
@@ -169,14 +168,13 @@ public :
     /// overload of the function to use the current view of the render
     /// target.
     ///
-    /// \param x    X coordinate of the point to convert, relative to the render target
-    /// \param y    Y coordinate of the point to convert, relative to the render target
-    /// \param view The view to use for converting the point
+    /// \param point Point to convert, relative to the render target
+    /// \param view  The view to use for converting the point
     ///
     /// \return The converted point, in "world" units
     ///
     ////////////////////////////////////////////////////////////
-    Vector2f convertCoords(unsigned int x, unsigned int y, const View& view) const;
+    Vector2f convertCoords(const Vector2i& point, const View& view) const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Draw a drawable object to the render-target
@@ -354,6 +352,7 @@ private :
     {
         enum {VertexCacheSize = 4};
 
+        bool      glStatesSet;    ///< Are our internal GL states set yet?
         bool      viewChanged;    ///< Has the current view changed since last draw?
         BlendMode lastBlendMode;  ///< Cached blending mode
         Uint64    lastTextureId;  ///< Cached texture

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -489,11 +489,11 @@ Glyph Font::loadGlyph(Uint32 codePoint, unsigned int characterSize, bool bold) c
         }
 
         // Write the pixels to the texture
-        unsigned int x      = glyph.textureRect.left + padding;
-        unsigned int y      = glyph.textureRect.top + padding;
-        unsigned int width  = glyph.textureRect.width - 2 * padding;
-        unsigned int height = glyph.textureRect.height - 2 * padding;
-        page.texture.update(&m_pixelBuffer[0], width, height, x, y);
+        unsigned int x = glyph.textureRect.left + padding;
+        unsigned int y = glyph.textureRect.top + padding;
+        unsigned int w = glyph.textureRect.width - 2 * padding;
+        unsigned int h = glyph.textureRect.height - 2 * padding;
+        page.texture.update(&m_pixelBuffer[0], w, h, x, y);
     }
 
     // Delete the FT glyph
@@ -519,7 +519,7 @@ IntRect Font::findGlyphRect(Page& page, unsigned int width, unsigned int height)
             continue;
 
         // Check if there's enough horizontal space left in the row
-        if (width > page.texture.getWidth() - it->width)
+        if (width > page.texture.getSize().x - it->width)
             continue;
 
         // Make sure that this new row is the best found so far
@@ -535,11 +535,11 @@ IntRect Font::findGlyphRect(Page& page, unsigned int width, unsigned int height)
     if (!row)
     {
         int rowHeight = height + height / 10;
-        if (page.nextRow + rowHeight >= page.texture.getHeight())
+        if (page.nextRow + rowHeight >= page.texture.getSize().y)
         {
             // Not enough space: resize the texture if possible
-            unsigned int textureWidth  = page.texture.getWidth();
-            unsigned int textureHeight = page.texture.getHeight();
+            unsigned int textureWidth  = page.texture.getSize().x;
+            unsigned int textureHeight = page.texture.getSize().y;
             if ((textureWidth * 2 <= Texture::getMaximumSize()) && (textureHeight * 2 <= Texture::getMaximumSize()))
             {
                 // Make the texture 2 times bigger

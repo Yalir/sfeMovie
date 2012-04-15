@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -99,7 +99,7 @@ public :
     /// \see getDataSize
     ///
     ////////////////////////////////////////////////////////////
-    const char* getData() const;
+    const void* getData() const;
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the size of the data contained in the packet
@@ -208,29 +208,10 @@ public:
     Packet& operator <<(const std::wstring& data);
     Packet& operator <<(const String&       data);
 
-private :
+protected:
 
     friend class TcpSocket;
     friend class UdpSocket;
-
-    ////////////////////////////////////////////////////////////
-    /// Disallow comparisons between packets
-    ///
-    ////////////////////////////////////////////////////////////
-    bool operator ==(const Packet& right) const;
-    bool operator !=(const Packet& right) const;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Check if the packet can extract a given number of bytes
-    ///
-    /// This function updates accordingly the state of the packet.
-    ///
-    /// \param size Size to check
-    ///
-    /// \return True if \a size bytes can be read from the packet
-    ///
-    ////////////////////////////////////////////////////////////
-    bool checkSize(std::size_t size);
 
     ////////////////////////////////////////////////////////////
     /// \brief Called before the packet is sent over the network
@@ -250,7 +231,7 @@ private :
     /// \see onReceive
     ///
     ////////////////////////////////////////////////////////////
-    virtual const char* onSend(std::size_t& size);
+    virtual const void* onSend(std::size_t& size);
 
     ////////////////////////////////////////////////////////////
     /// \brief Called after the packet is received over the network
@@ -269,7 +250,28 @@ private :
     /// \see onSend
     ///
     ////////////////////////////////////////////////////////////
-    virtual void onReceive(const char* data, std::size_t size);
+    virtual void onReceive(const void* data, std::size_t size);
+
+private :
+
+    ////////////////////////////////////////////////////////////
+    /// Disallow comparisons between packets
+    ///
+    ////////////////////////////////////////////////////////////
+    bool operator ==(const Packet& right) const;
+    bool operator !=(const Packet& right) const;
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Check if the packet can extract a given number of bytes
+    ///
+    /// This function updates accordingly the state of the packet.
+    ///
+    /// \param size Size to check
+    ///
+    /// \return True if \a size bytes can be read from the packet
+    ///
+    ////////////////////////////////////////////////////////////
+    bool checkSize(std::size_t size);
 
     ////////////////////////////////////////////////////////////
     // Member data
@@ -377,18 +379,18 @@ private :
 /// \code
 /// class ZipPacket : public sf::Packet
 /// {
-///     virtual const char* onSend(std::size_t& size)
+///     virtual const void* onSend(std::size_t& size)
 ///     {
-///         const char* srcData = getData();
+///         const void* srcData = getData();
 ///         std::size_t srcSize = getDataSize();
 ///
 ///         return MySuperZipFunction(srcData, srcSize, &size);
 ///     }
 ///
-///     virtual void onReceive(const char* data, std::size_t size)
+///     virtual void onReceive(const void* data, std::size_t size)
 ///     {
 ///         std::size_t dstSize;
-///         const char* dstData = MySuperUnzipFunction(data, size, &dstSize);
+///         const void* dstData = MySuperUnzipFunction(data, size, &dstSize);
 ///
 ///         append(dstData, dstSize);
 ///     }

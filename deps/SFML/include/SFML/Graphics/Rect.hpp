@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -58,13 +58,13 @@ public :
     /// Be careful, the last two parameters are the width
     /// and height, not the right and bottom coordinates!
     ///
-    /// \param left   Left coordinate of the rectangle
-    /// \param top    Top coordinate of the rectangle
-    /// \param width  Width of the rectangle
-    /// \param height Height of the rectangle
+    /// \param rectLeft   Left coordinate of the rectangle
+    /// \param rectTop    Top coordinate of the rectangle
+    /// \param rectWidth  Width of the rectangle
+    /// \param rectHeight Height of the rectangle
     ///
     ////////////////////////////////////////////////////////////
-    Rect(T left, T top, T width, T height);
+    Rect(T rectLeft, T rectTop, T rectWidth, T rectHeight);
 
     ////////////////////////////////////////////////////////////
     /// \brief Construct the rectangle from position and size

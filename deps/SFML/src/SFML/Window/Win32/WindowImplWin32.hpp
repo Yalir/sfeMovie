@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -70,8 +70,6 @@ public :
     ////////////////////////////////////////////////////////////
     ~WindowImplWin32();
 
-private :
-
     ////////////////////////////////////////////////////////////
     /// \brief Get the OS-specific handle of the window
     ///
@@ -79,12 +77,6 @@ private :
     ///
     ////////////////////////////////////////////////////////////
     virtual WindowHandle getSystemHandle() const;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Process incoming events from the operating system
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void processEvents();
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the position of the window
@@ -159,6 +151,14 @@ private :
     ///
     ////////////////////////////////////////////////////////////
     virtual void setKeyRepeatEnabled(bool enabled);
+
+protected:
+
+    ////////////////////////////////////////////////////////////
+    /// \brief Process incoming events from the operating system
+    ///
+    ////////////////////////////////////////////////////////////
+    virtual void processEvents();
 
 private :
 

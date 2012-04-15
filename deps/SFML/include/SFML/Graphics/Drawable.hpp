@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -51,7 +51,7 @@ public :
     ////////////////////////////////////////////////////////////
     virtual ~Drawable() {}
 
-private :
+protected :
 
     friend class RenderTarget;
 
@@ -83,11 +83,11 @@ private :
 /// of derived classes to be drawn to a sf::RenderTarget.
 ///
 /// All you have to do in your derived class is to override the
-/// Draw virtual function.
+/// draw virtual function.
 ///
 /// Note that inheriting from sf::Drawable is not mandatory,
-/// but it allows this nice syntax "window.Draw(object)" rather
-/// than "object.Draw(window)", which is more consistent with other
+/// but it allows this nice syntax "window.draw(object)" rather
+/// than "object.draw(window)", which is more consistent with other
 /// SFML classes.
 ///
 /// Example:
@@ -106,7 +106,7 @@ private :
 ///         target.draw(m_sprite, states);
 ///
 ///         // ... or use the low-level API
-///         states.Texture = &m_texture;
+///         states.texture = &m_texture;
 ///         target.draw(m_vertices, states);
 ///
 ///         // ... or draw with OpenGL directly

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -91,6 +91,10 @@ public :
     /// Here is a complete list of all the supported audio formats:
     /// ogg, wav, flac, aiff, au, raw, paf, svx, nist, voc, ircam,
     /// w64, mat4, mat5 pvf, htk, sds, avr, sd2, caf, wve, mpc2k, rf64.
+    /// Since the music is not loaded completely but rather streamed
+    /// continuously, the \a data must remain available as long as the
+    /// music is playing (ie. you can't deallocate it right after calling
+    /// this function).
     ///
     /// \param data        Pointer to the file data in memory
     /// \param sizeInBytes Size of the data to load, in bytes
@@ -110,6 +114,10 @@ public :
     /// Here is a complete list of all the supported audio formats:
     /// ogg, wav, flac, aiff, au, raw, paf, svx, nist, voc, ircam,
     /// w64, mat4, mat5 pvf, htk, sds, avr, sd2, caf, wve, mpc2k, rf64.
+    /// Since the music is not loaded completely but rather streamed
+    /// continuously, the \a stream must remain alive as long as the
+    /// music is playing (ie. you can't destroy it right after calling
+    /// this function).
     ///
     /// \param stream Source stream to read from
     ///

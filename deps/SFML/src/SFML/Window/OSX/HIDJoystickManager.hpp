@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2011 Marco Antognini (antognini.marco@gmail.com), 
+// Copyright (C) 2007-2012 Marco Antognini (antognini.marco@gmail.com), 
 //                         Laurent Gomila (laurent.gom@gmail.com), 
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -45,7 +45,7 @@ namespace priv
 ////////////////////////////////////////////////////////////
 class HIDJoystickManager : NonCopyable
 {
-public:
+public :
     
     ////////////////////////////////////////////////////////////
     /// \brief Get the unique instance of the class
@@ -57,7 +57,7 @@ public:
     ////////////////////////////////////////////////////////////
     static HIDJoystickManager& getInstance();
     
-public:
+public :
     
     ////////////////////////////////////////////////////////////
     /// \brief Get the number of currently connected joystick
@@ -73,7 +73,7 @@ public:
     ////////////////////////////////////////////////////////////
     CFSetRef copyJoysticks();
     
-private:
+private :
     
     ////////////////////////////////////////////////////////////
     /// \brief Default constructor
@@ -93,7 +93,7 @@ private:
     ////////////////////////////////////////////////////////////
     void update();
     
-private:
+private :
     
     ////////////////////////////////////////////////////////////
     /// \brief Private "plug-in" callback
@@ -111,7 +111,7 @@ private:
     ////////////////////////////////////////////////////////////
     static void pluggedOut(void * context, IOReturn, void *, IOHIDDeviceRef);
     
-private:
+private :
     
     ////////////////////////////////////////////////////////////
     // Member data

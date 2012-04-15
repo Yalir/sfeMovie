@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -40,8 +40,8 @@ texCoords(0, 0)
 
 
 ////////////////////////////////////////////////////////////
-Vertex::Vertex(const Vector2f& position) :
-position (position),
+Vertex::Vertex(const Vector2f& thePosition) :
+position (thePosition),
 color    (255, 255, 255),
 texCoords(0, 0)
 {
@@ -49,28 +49,28 @@ texCoords(0, 0)
 
 
 ////////////////////////////////////////////////////////////
-Vertex::Vertex(const Vector2f& position, const Color& color) :
-position (position),
-color    (color),
+Vertex::Vertex(const Vector2f& thePosition, const Color& theColor) :
+position (thePosition),
+color    (theColor),
 texCoords(0, 0)
 {
 }
 
 
 ////////////////////////////////////////////////////////////
-Vertex::Vertex(const Vector2f& position, const Vector2f& texCoords) :
-position (position),
+Vertex::Vertex(const Vector2f& thePosition, const Vector2f& theTexCoords) :
+position (thePosition),
 color    (255, 255, 255),
-texCoords(texCoords)
+texCoords(theTexCoords)
 {
 }
 
 
 ////////////////////////////////////////////////////////////
-Vertex::Vertex(const Vector2f& position, const Color& color, const Vector2f& texCoords) :
-position (position),
-color    (color),
-texCoords(texCoords)
+Vertex::Vertex(const Vector2f& thePosition, const Color& theColor, const Vector2f& theTexCoords) :
+position (thePosition),
+color    (theColor),
+texCoords(theTexCoords)
 {
 }
 

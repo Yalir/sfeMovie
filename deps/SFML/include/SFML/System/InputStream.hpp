@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -56,7 +56,7 @@ public :
     /// \return The number of bytes actually read
     ///
     ////////////////////////////////////////////////////////////
-    virtual Int64 read(char* data, Int64 size) = 0;
+    virtual Int64 read(void* data, Int64 size) = 0;
 
     ////////////////////////////////////////////////////////////
     /// \brief Change the current reading position
@@ -117,7 +117,7 @@ public :
 ///
 ///     bool open(std::string filename);
 ///
-///     Int64 read(char* data, Int64 size);
+///     Int64 read(void* data, Int64 size);
 /// 
 ///     Int64 seek(Int64 position);
 ///     

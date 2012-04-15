@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -42,6 +42,7 @@ bool InputImpl::isKeyPressed(Keyboard::Key key)
     int vkey = 0;
     switch (key)
     {
+        default:                   vkey = 0;             break;
         case Keyboard::A:          vkey = 'A';           break;
         case Keyboard::B:          vkey = 'B';           break;
         case Keyboard::C:          vkey = 'C';           break;
@@ -155,6 +156,7 @@ bool InputImpl::isMouseButtonPressed(Mouse::Button button)
     int vkey = 0;
     switch (button)
     {
+        default:              vkey = 0;           break;
         case Mouse::Left:     vkey = VK_LBUTTON;  break;
         case Mouse::Right:    vkey = VK_RBUTTON;  break;
         case Mouse::Middle:   vkey = VK_MBUTTON;  break;

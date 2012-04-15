@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -61,7 +61,7 @@ public :
     /// \param vertexCount Initial number of vertices in the array
     ///
     ////////////////////////////////////////////////////////////
-    VertexArray(PrimitiveType type, unsigned int vertexCount = 0);
+    explicit VertexArray(PrimitiveType type, unsigned int vertexCount = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Return the vertex count

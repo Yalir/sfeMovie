@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
+// Copyright (C) 2007-2012 Laurent Gomila (laurent.gom@gmail.com)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -46,9 +46,9 @@ shader   (NULL)
 
 
 ////////////////////////////////////////////////////////////
-RenderStates::RenderStates(const Transform& transform) :
+RenderStates::RenderStates(const Transform& theTransform) :
 blendMode(BlendAlpha),
-transform(transform),
+transform(theTransform),
 texture  (NULL),
 shader   (NULL)
 {
@@ -56,8 +56,8 @@ shader   (NULL)
 
 
 ////////////////////////////////////////////////////////////
-RenderStates::RenderStates(BlendMode blendMode) :
-blendMode(blendMode),
+RenderStates::RenderStates(BlendMode theBlendMode) :
+blendMode(theBlendMode),
 transform(),
 texture  (NULL),
 shader   (NULL)
@@ -66,32 +66,32 @@ shader   (NULL)
 
 
 ////////////////////////////////////////////////////////////
-RenderStates::RenderStates(const Texture* texture) :
+RenderStates::RenderStates(const Texture* theTexture) :
 blendMode(BlendAlpha),
 transform(),
-texture  (texture),
+texture  (theTexture),
 shader   (NULL)
 {
 }
 
 
 ////////////////////////////////////////////////////////////
-RenderStates::RenderStates(const Shader* shader) :
+RenderStates::RenderStates(const Shader* theShader) :
 blendMode(BlendAlpha),
 transform(),
 texture  (NULL),
-shader   (shader)
+shader   (theShader)
 {
 }
 
 
 ////////////////////////////////////////////////////////////
-RenderStates::RenderStates(BlendMode blendMode, const Transform& transform,
-                           const Texture* texture, const Shader* shader) :
-blendMode(blendMode),
-transform(transform),
-texture  (texture),
-shader   (shader)
+RenderStates::RenderStates(BlendMode theBlendMode, const Transform& theTransform,
+                           const Texture* theTexture, const Shader* theShader) :
+blendMode(theBlendMode),
+transform(theTransform),
+texture  (theTexture),
+shader   (theShader)
 {
 }
 
