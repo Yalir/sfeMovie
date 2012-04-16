@@ -1,9 +1,10 @@
 
 #include <SFML/Graphics.hpp>
 #include <sfeMovie/Movie.hpp>
+#include <iostream>
 
 #ifndef MOVIE_FILE
-#define MOVIE_FILE "some_movie.avi"
+#define MOVIE_FILE "some_movie.ogv"
 #endif
 
 /*
@@ -25,6 +26,8 @@ int main()
 	const int windowWidth = 800;
 	const int windowHeight = 600;
 	bool fullscreen = false;
+	
+	std::cout << "Going to open movie file \"" << MOVIE_FILE << "\"" << std::endl;
 	
 	// Create window
 	sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
