@@ -149,7 +149,15 @@ set_target_properties(${LIB_NAME} PROPERTIES
                       VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 
-if (MACOSX)
+if (LINUX)
+	install(TARGETS ${LIB_NAME}
+			DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+			COMPONENT devel)
+	
+	install(DIRECTORY include
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            COMPONENT devel)
+elseif (MACOSX)
     # edit target properties
     set_target_properties(${LIB_NAME} PROPERTIES 
                           FRAMEWORK TRUE
