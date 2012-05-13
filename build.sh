@@ -5,7 +5,7 @@ cmake_env=""
 linking=""
 macosx_arch="x86_64" # ppc or i386 or x86_64
 macosx_sdk=""
-has_vda="0"
+has_vda=0
 vcpp=0
 use_cache=1
 jobsCount=4 # how many compilations at a time
@@ -86,6 +86,12 @@ function setup()
 			  then
 				macosx_sdk=$macosx_107_sdk
 				has_vda=1
+			else
+				# default SDK and running OS X 10.7
+			    if [ "$has_107" == "1" ]
+			      then
+			        has_vda=1
+			    fi
 			fi
 			
 			if [ "$macosx_sdk" != "" ]
@@ -203,7 +209,7 @@ FFmpeg provides decoders for the following formats:
 $codec_list
 
 Please now choose whether you want to enable
-1 Free only (flac, vorbis, theora)
+1 Free only (flac, vorbis, theora and vp8 on every OS; plus wmv and wma on Windows; plus h264 on OS X 10.7+)
 2 None but let me choose which to enable
 3 All but let me choose which to disable
 4 All
@@ -214,7 +220,17 @@ What is your choice? [1-4] (default is 1)"
 	
 	if [ "$enable_choice" == "" ] || [ "$enable_choice" == "1" ]
 	  then
-		full_decoders_list="flac vorbis theora"
+	    if [ "$os" == "windows" ]
+	      then
+			full_decoders_list="flac vorbis theora vp8 wmv wma"
+		else
+			if [ "$os" == "macosx" ] && [ "$has_vda" == "1" ]
+		  	  then
+				full_decoders_list="flac vorbis theora vp8 h264"
+			else
+				full_decoders_list="flac vorbis theora vp8"
+			fi
+		fi
 	elif [ "$enable_choice" == "2" ]
 	  then
 	    echo "Option 2: choose the decoders you want to enable (separate names with a space):"
@@ -293,7 +309,7 @@ What is your choice? [1-4] (default is 1)"
 			    os_flags="--enable-memalign-hack --enable-w32threads"
 			fi
 			
-			args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --disable-decoders --disable-yasm $configure_flags $os_flags"
+			args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --disable-decoders --disable-muxers --disable-yasm $configure_flags $os_flags"
 	        
 			
 			#setup VC++ env variables to find lib.exe
