@@ -39,8 +39,10 @@ set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 
-add_definitions("-O2")
-
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+	add_definitions("-O2")
+endif()
+	
 if (BUILD_WITH_PROVIDED_LIBS)
     set (EXTERNAL_HEADERS "deps/headers" "deps/SFML/include")
     set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
@@ -107,7 +109,8 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 	
 	if (MSVC)
-		set (FFMPEG_LIBRARIES "deps/ffmpeg-build/avdevice" "deps/ffmpeg-build/avformat" "deps/ffmpeg-build/avcodec" "deps/ffmpeg-build/avutil" "deps/ffmpeg-build/swscale")
+		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
+		set (FFMPEG_LIBRARIES "avdevice" "avformat" "avcodec" "avutil" "swscale")
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
 		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
