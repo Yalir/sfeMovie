@@ -1,0 +1,5 @@
+
+Please read https://github.com/LaurentGomila/SFML/wiki/ProjectsfeMovie#wiki-build
+
+Note that running CMake is *NOT* enough to correctly build sfeMovie.
+
