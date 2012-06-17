@@ -154,7 +154,7 @@ set_target_properties(${LIB_NAME} PROPERTIES
 
 if (LINUX)
 	install(DIRECTORY product/include/sfeMovie
-            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/include
             COMPONENT devel)
             
     install(DIRECTORY product/lib
