@@ -25,7 +25,7 @@ else()
 endif()
 
 set (BUILD_WITH_PROVIDED_LIBS TRUE CACHE BOOL "TRUE to build sfeMovie with the provided libraries, FALSE to build with the system libraries")
-set (BUILD_SFEMOVIE_SAMPLE TRUE CACHE BOOL "TRUE to build the sfeMovie sample")
+set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
 
 # Set some env vars
 set (LIB_NAME sfeMovie)
@@ -51,7 +51,6 @@ if (BUILD_WITH_PROVIDED_LIBS)
     set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build ${CMAKE_SOURCE_DIR}/deps/SFML/lib)
 endif()
 
-set (ARCH "x86_64")
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
 
 
@@ -66,10 +65,8 @@ if (LINUX) # ========================================== LINUX ==================
         find_package (SFML COMPONENTS graphics window system audio REQUIRED)
         find_package (FFMPEG REQUIRED)
         set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_LIBRARY} ${SFML_SYSTEM_LIBRARY})
-
 	endif()
 	
-	set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
     add_definitions(-D__STDC_CONSTANT_MACROS)
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 
@@ -92,7 +89,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
 	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	
-	set (CMAKE_OSX_ARCHITECTURES ${ARCH})
+	set (CMAKE_OSX_ARCHITECTURES "x86_64")
     
     # add an option to let the user specify a custom directory for frameworks installation (SFML, sndfile, ...)
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
@@ -125,14 +122,17 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 endif()
 
 
-# Build up to date SFML binaries 
-if (MACOSX)
-	set(BUILD_FRAMEWORKS 1) 
+if (${BUILD_WITH_PROVIDED_LIBS})
+	# Build up to date SFML binaries
+	if (MACOSX)
+		set (BUILD_FRAMEWORKS 1) 
+	endif()
+	
+	add_subdirectory("deps/SFML")
 endif()
-add_subdirectory("deps/SFML")
 
 
-if (NOT BUILD_WITH_PROVIDED_LIBS)
+if (NOT ${BUILD_WITH_PROVIDED_LIBS})
     include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
     link_directories (${FFMPEG_LIBRARY_DIR})
 else ()
@@ -153,11 +153,11 @@ set_target_properties(${LIB_NAME} PROPERTIES
 
 
 if (LINUX)
-	install(TARGETS ${LIB_NAME}
-			DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-			COMPONENT devel)
-	
-	install(DIRECTORY include
+	install(DIRECTORY product/include/sfeMovie
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            COMPONENT devel)
+            
+    install(DIRECTORY product/lib
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT devel)
 elseif (MACOSX)

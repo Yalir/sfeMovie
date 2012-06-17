@@ -141,7 +141,9 @@ function build_ffmpeg()
 		linking="static"
 	fi
 	
-	if [ "$vcpp" == "1" ]
+	# Using dynamically linked libraries for MSVC and Linux,
+	# and static libs for Codeblocks (Windows) and Mac OS X
+	if [ "$vcpp" == "1" ] || [ "$os" == "linux" ]
 	  then
 		args="$args --enable-shared --disable-static"
 	fi
@@ -158,6 +160,17 @@ function build_ffmpeg()
 				test -f deps/ffmpeg-build/avutil.dll &&
 				test -f deps/ffmpeg-build/swscale.dll
 			  then
+				has_ffmpeg_binaries=1
+			fi
+		elif [ "$os" == "linux" ]
+		  then
+		    if test -d deps/ffmpeg-build/ &&
+			test -f deps/ffmpeg-build/libavcodec.so &&
+			test -f deps/ffmpeg-build/libavdevice.so &&
+			test -f deps/ffmpeg-build/libavformat.so &&
+			test -f deps/ffmpeg-build/libavutil.so &&
+			test -f deps/ffmpeg-build/libswscale.so
+		      then
 				has_ffmpeg_binaries=1
 			fi
 		elif test -d deps/ffmpeg-build/ &&
@@ -306,12 +319,12 @@ What is your choice? [1-4] (default is 1)"
 			
 			if [ "$os" == "windows" ]
 			  then
-			    os_flags="--enable-memalign-hack --enable-w32threads"
+				os_flags="--enable-memalign-hack --enable-w32threads"
 			fi
-			
+		
 			args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --disable-decoders --disable-muxers --disable-yasm $configure_flags $os_flags"
-	        
-			
+		    
+		
 			#setup VC++ env variables to find lib.exe
 			if [ "$vcpp" == "1" ]
 			  then
@@ -348,7 +361,12 @@ What is your choice? [1-4] (default is 1)"
 				cp -v `find . -name "*.dll"` ../ffmpeg-build
 				check_err
 			else
-				cp -v `find . -name "*.a"` ../ffmpeg-build
+				if [ "$os" == "linux" ]
+				  then
+				    cp -vfl `find . -name "*.so*"` ../ffmpeg-build
+				else
+					cp -v `find . -name "*.a"` ../ffmpeg-build
+				fi
 				check_err
 			fi
 			
@@ -419,6 +437,7 @@ function build_sfemovie()
 		  	cp -vfl deps/SFML/lib/* product/lib/
 		    cp -vR include/* product/include
 		    cp -vfl libsfeMovie.so* product/lib
+		    cp -vfl deps/ffmpeg-build/*.so* product/lib
 		    
 		elif [ "$os" == "macosx" ]
 		  then
