@@ -127,46 +127,17 @@ namespace sfe {
 		
 		
 		// Create the frame buffers
-		m_rawFrame = avcodec_alloc_frame();
-		m_backRGBAFrame = avcodec_alloc_frame();
-		m_frontRGBAFrame = avcodec_alloc_frame();
+		m_rawFrame = alloc_picture(m_codecCtx->pix_fmt, m_codecCtx->width, m_codecCtx->height);
+		m_backRGBAFrame =  alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height);
+		m_frontRGBAFrame = alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height);
 		if (!m_rawFrame || !m_frontRGBAFrame || !m_backRGBAFrame)
 		{
-			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
 			close();
 			return false;
 		}
 		
 		// Get the video size
 		m_size = sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
-		
-		// Get the picture size and create the buffer
-		// NB: I don't understand why this is needed, but the video
-		// won't display without this, and I wasn't able to contact
-		// the author of these lines
-		int pictSize = avpicture_get_size(PIX_FMT_RGBA, m_size.x, m_size.y);
-		sf::Uint8 *videoBuffer = (sf::Uint8 *)av_malloc(pictSize * sizeof(sf::Uint8));
-		if (!videoBuffer)
-		{
-			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			close();
-			return false;
-		}
-		
-		// Fill the picture buffer with the frame data
-		avpicture_fill((AVPicture *)m_frontRGBAFrame, videoBuffer, PIX_FMT_RGBA,
-					   m_size.x, m_size.y);
-		avpicture_fill((AVPicture *)m_backRGBAFrame, videoBuffer, PIX_FMT_RGBA,
-					   m_size.x, m_size.y);
-		av_free(videoBuffer);
-		
-		m_pictureBuffer = (sf::Uint8 *)av_malloc(sizeof(sf::Uint8) * m_size.x * m_size.y * 4);
-		if (!m_pictureBuffer)
-		{
-			std::cerr << "Movie_video::Initialize() - allocation error" << std::endl;
-			close();
-			return false;
-		}
 		
 		// Setup the image scaler/converter
 		m_swsCtx = sws_getContext(m_size.x, m_size.y,
@@ -180,8 +151,6 @@ namespace sfe {
 			close();
 			return false;
 		}
-		
-		
 		
 		// Setup the SFML stuff
 		m_tex.create(m_size.x, m_size.y);
@@ -585,10 +554,6 @@ namespace sfe {
 				if (didDecodeFrame)
 				{
 					// Convert the frame to RGBA
-					// FIXME: crash here (in the function sws_getDefaultFilter()
-					// called by sws_scale()) when GuardMalloc is enabled, but
-					// I don't know whether this is because of the 16 bytes boundaries
-					// alignement constraint
 					m_imageSwapMutex.lock();
 					sws_scale(m_swsCtx,
 							  m_rawFrame->data, m_rawFrame->linesize,
@@ -640,6 +605,26 @@ namespace sfe {
 		
 		sf::Lock l(m_packetListMutex);
 		return m_packetList.front();
+	}
+	
+	AVFrame *Movie_video::alloc_picture(enum PixelFormat pix_fmt, int width, int height)
+	{
+		AVFrame *picture;
+		uint8_t *picture_buf;
+		int size;
+	
+		picture = avcodec_alloc_frame();
+		if (!picture)
+		    return NULL;
+		size        = avpicture_get_size(pix_fmt, width, height);
+		picture_buf = (uint8_t *)av_malloc(size);
+		if (!picture_buf) {
+		    av_free(picture);
+		    return NULL;
+		}
+		avpicture_fill((AVPicture *)picture, picture_buf,
+		               pix_fmt, width, height);
+		return picture;
 	}
 	
 } // namespace sfe

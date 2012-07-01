@@ -81,6 +81,7 @@ namespace sfe {
 		void popFrame(void);
 		AVPacket *frontFrame(void);
 		void watchThread(void);
+		AVFrame *alloc_picture(enum PixelFormat pix_fmt, int width, int height);
 		
 	private:
 		// ------------------------- Video attributes --------------------------
