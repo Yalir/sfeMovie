@@ -43,6 +43,16 @@ ConditionImpl::~ConditionImpl(void)
 	CloseHandle(m_cond);
 }
 
+void ConditionImpl::lock(void)
+{
+	m_mutex.lock();
+}
+
+void ConditionImpl::unlock(void)
+{
+	m_mutex.unlock();
+}
+	
 bool ConditionImpl::waitAndRetain(int value)
 {
 	m_mutex.lock();

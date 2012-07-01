@@ -31,6 +31,7 @@ extern "C"
 
 #include <sfeMovie/Movie.hpp>
 #include "Condition.hpp"
+#include "Barrier.hpp"
 #include "Movie_video.hpp"
 #include "Movie_audio.hpp"
 #include "utils.hpp"
@@ -57,7 +58,9 @@ namespace sfe {
 	m_video(new Movie_video(*this)),
 	m_audio(new Movie_audio(*this)),
 	m_watchThread(&Movie::watch, this),
-	m_shouldStopCond(new Condition())
+	m_shouldStopCond(new Condition()),
+	m_barrier(NULL),
+	m_barrierMutex()
 	{
 	}
 
@@ -120,6 +123,11 @@ namespace sfe {
 			}
 		}
 		
+		if (m_hasAudio && m_hasAudio)
+		{
+			m_barrier = new Barrier(2);
+		}
+		
 		return m_hasAudio || (m_hasVideo && preloaded);
 	}
 
@@ -127,9 +135,11 @@ namespace sfe {
 	{
 		if (m_status != Playing)
 		{
-			m_overallTimer.restart();
 			IFAUDIO(m_audio->play());
 			IFVIDEO(m_video->play());
+			
+			readyToPlay();
+			m_overallTimer.restart();
 			
 			// Don't restart watch thread if we're resuming
 			if (m_status != Paused)
@@ -373,6 +383,7 @@ namespace sfe {
 		m_status = Stopped;
 		m_duration = sf::Time::Zero;
 		m_progressAtPause = sf::Time::Zero;
+		delete m_barrier;
 	}
 
 	AVFormatContext *Movie::getAVFormatContext(void)
@@ -480,6 +491,19 @@ namespace sfe {
 		if (audioStarvation && videoStarvation)
 		{
 			*m_shouldStopCond = 1;
+		}
+	}
+	
+	void Movie::readyToPlay(void)
+	{
+		if (m_barrier)
+		{
+			m_barrier->wait();
+			
+			m_barrierMutex.lock();
+			delete m_barrier;
+			m_barrier = NULL;
+			m_barrierMutex.unlock();
 		}
 	}
 	

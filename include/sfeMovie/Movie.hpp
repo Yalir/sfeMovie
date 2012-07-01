@@ -62,6 +62,7 @@ namespace sfe {
 	class Movie_audio;
 	class Movie_video;
 	class Condition;
+	class Barrier;
 	
 	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
 		friend class Movie_audio;
@@ -252,6 +253,7 @@ namespace sfe {
 		bool saveFrame(AVPacketRef frame);
 		static bool usesDebugMessages(void);
 		void starvation(void);
+		void readyToPlay(void);
 		void watch(void);
 		
 		AVFormatContextRef m_avFormatCtx;
@@ -262,6 +264,8 @@ namespace sfe {
 		sf::Mutex m_readerMutex;
 		sf::Thread m_watchThread;
 		Condition *m_shouldStopCond;
+		Barrier *m_barrier;
+		sf::Mutex m_barrierMutex;
 		
 		Status m_status;
 		sf::Time m_duration;

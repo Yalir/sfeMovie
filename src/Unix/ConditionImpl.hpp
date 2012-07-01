@@ -34,6 +34,9 @@ class ConditionImpl {
 public:
 	ConditionImpl(int var);
 	~ConditionImpl(void);
+	
+	void lock(void);
+	void unlock(void);
 	bool waitAndRetain(int value);
 	void release(int value);
 	void setValue(int value);

@@ -257,6 +257,7 @@ namespace sfe {
 		{
 			std::cerr << "Movie_video::Stop() - av_seek_frame() error" << std::endl;
 		}
+		avcodec_flush_buffers(m_codecCtx);
 		
 		while (m_packetList.size()) {
 			popFrame();

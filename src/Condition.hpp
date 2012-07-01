@@ -44,6 +44,9 @@ public:
 	 */
 	~Condition(void);
 	
+	
+	void lock(void);
+	
 	/* Waits until the Condition's value == awaitedValue and protects the Condition.
 	 * You're responsible for unlocking the Condition with Unlock() after
 	 * WaitAndLock() returned and after you're done working on protected data,
@@ -76,6 +79,8 @@ public:
 	 * @value: the value the Condition should have when it is unlocked
 	 */
 	void unlock(int value);
+	
+	void unlock(void);
 	
 	/* Performs an assignement followed by a signal() call.
 	 * The internal Condition value is updated to @value and the Condition is

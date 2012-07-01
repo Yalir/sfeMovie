@@ -52,6 +52,16 @@ ConditionImpl::~ConditionImpl(void)
 	if (0 != pthread_cond_destroy(&m_cond))
 		cerr << "pthread_cond_destroy() error\n";
 }
+	
+void ConditionImpl::lock(void)
+{
+	pthread_mutex_lock(&m_mutex);
+}
+
+void ConditionImpl::unlock(void)
+{
+	pthread_mutex_unlock(&m_mutex);
+}
 
 bool ConditionImpl::waitAndRetain(int value)
 {

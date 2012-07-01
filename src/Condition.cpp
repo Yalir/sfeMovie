@@ -49,6 +49,11 @@ Condition::~Condition(void)
 	delete m_impl;
 }
 
+void Condition::lock(void)
+{
+	m_impl->lock();
+}
+	
 bool Condition::waitAndLock(int awaitedValue, bool autorelease)
 {
 	bool flag = m_impl->waitAndRetain(awaitedValue);
@@ -62,6 +67,11 @@ bool Condition::waitAndLock(int awaitedValue, bool autorelease)
 void Condition::unlock(int value)
 {
 	m_impl->release(value);
+}
+	
+void Condition::unlock(void)
+{
+	m_impl->unlock();
 }
 
 int Condition::operator=(int value)

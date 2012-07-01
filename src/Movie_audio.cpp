@@ -117,6 +117,7 @@ namespace sfe {
 		{
 			std::cerr << "Movie_audio::Stop() - av_seek_frame() error" << std::endl;
 		}
+		avcodec_flush_buffers(m_codecCtx);
 		
 		while (m_packetList.size()) {
 			popFrame();
@@ -306,6 +307,9 @@ namespace sfe {
 			if (!buffer.sampleCount)
 			{
 				flag = false;
+			}
+			else {
+				m_parent.readyToPlay();
 			}
 		}
 		
