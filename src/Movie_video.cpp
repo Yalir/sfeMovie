@@ -102,7 +102,7 @@ namespace sfe {
 		m_codecCtx = m_parent.getAVFormatContext()->streams[m_streamID]->codec;
 		if (!m_codecCtx)
 		{
-			std::cerr << "Movie_video::Initialize() - unable to get the video codec context" << std::endl;
+			std::cerr << "Movie_video::initialize() - unable to get the video codec context" << std::endl;
 			close();
 			return false;
 		}
@@ -111,7 +111,7 @@ namespace sfe {
 		m_codec = avcodec_find_decoder(m_codecCtx->codec_id);
 		if (NULL == m_codec)
 		{
-			std::cerr << "Movie_video::Initialize() - could not find any video decoder for this video format" << std::endl;
+			std::cerr << "Movie_video::initialize() - could not find any video decoder for this video format" << std::endl;
 			close();
 			return false;
 		}
@@ -120,7 +120,7 @@ namespace sfe {
 		err = avcodec_open2(m_codecCtx, m_codec, NULL);
 		if (err < 0)
 		{
-			std::cerr << "Movie_video::Initialize() - unable to load the video decoder for this video format" << std::endl;
+			std::cerr << "Movie_video::initialize() - unable to load the video decoder for this video format" << std::endl;
 			close();
 			return false;
 		}
@@ -132,6 +132,7 @@ namespace sfe {
 		m_frontRGBAFrame = alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height);
 		if (!m_rawFrame || !m_frontRGBAFrame || !m_backRGBAFrame)
 		{
+			std::cerr << "Movie_video::initialize() - allocation error" << std::endl;
 			close();
 			return false;
 		}
@@ -147,7 +148,7 @@ namespace sfe {
 								  SWS_BICUBIC, NULL, NULL, NULL);
 		if (!m_swsCtx)
 		{
-			std::cerr << "Movie_video::Initialize() - error with sws_getContext()" << std::endl;
+			std::cerr << "Movie_video::initialize() - error with sws_getContext()" << std::endl;
 			close();
 			return false;
 		}
@@ -163,7 +164,7 @@ namespace sfe {
             (!r2.num || !r2.den))
         {
 			if (Movie::usesDebugMessages())
-				std::cerr << "Movie_video::Initialize() - unable to get the video frame rate. Using standard NTSC frame rate : 29.97 fps." << std::endl;
+				std::cerr << "Movie_video::initialize() - unable to get the video frame rate. Using standard NTSC frame rate : 29.97 fps." << std::endl;
             m_wantedFrameTime = sf::seconds(1.f / NTSC_FRAMERATE);
         }
         else
@@ -198,7 +199,7 @@ namespace sfe {
 		else
 		{
 			if (Movie::usesDebugMessages())
-				std::cerr << "Movie_video::Initialize() - warning: unable to retrieve the video duration" << std::endl;
+				std::cerr << "Movie_video::initialize() - warning: unable to retrieve the video duration" << std::endl;
 		}
 		
 		return true;
