@@ -153,12 +153,16 @@ set_target_properties(${LIB_NAME} PROPERTIES
 
 
 if (LINUX)
-	install(DIRECTORY product/include/sfeMovie
+	install(DIRECTORY include/sfeMovie
             DESTINATION ${CMAKE_INSTALL_PREFIX}/include
             COMPONENT devel)
-            
-    install(DIRECTORY product/lib
-            DESTINATION ${CMAKE_INSTALL_PREFIX}
+    		
+    install(TARGETS ${LIB_NAME}
+            LIBRARY DESTINATION lib)
+   	
+   	file(GLOB FFMPEG_BUILD_LIBS RELATIVE ${PROJECT_SOURCE_DIR} "deps/ffmpeg-build/*")
+    install(FILES ${FFMPEG_BUILD_LIBS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             COMPONENT devel)
 elseif (MACOSX)
     # edit target properties
