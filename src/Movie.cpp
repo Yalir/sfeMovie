@@ -141,6 +141,9 @@ namespace sfe {
 			readyToPlay();
 			m_overallTimer.restart();
 			
+			if (usesDebugMessages())
+				printWithTime("did start movie timer");
+			
 			// Don't restart watch thread if we're resuming
 			if (m_status != Paused)
 			{

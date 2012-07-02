@@ -28,9 +28,13 @@
 
 sf::Mutex __mtx;
 
+static sf::Mutex printWithTimeMutex;
+static sf::Clock globalTimer;
 
-void PrintWithTime(const std::string& msg)
+void printWithTime(const std::string& msg)
 {
+	sf::Lock l(printWithTimeMutex);
+	printf("[%.3fs] %s\n", globalTimer.getElapsedTime().asSeconds(), msg.c_str());
 	/*struct timeval tp;
 	gettimeofday(&tp, NULL);
 	

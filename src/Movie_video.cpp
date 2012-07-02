@@ -27,6 +27,7 @@
 #include <sfeMovie/Movie.hpp>
 
 #include "Movie_audio.hpp"
+#include "utils.hpp"
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -567,11 +568,14 @@ namespace sfe {
 					
 					// Image loaded, reset condition state
 					flag = true;
+					
+					if (Movie::usesDebugMessages())
+						printWithTime("did decode a full image");
 				}
 				else
 				{
-					if (m_parent.Movie::usesDebugMessages())
-						std::cerr << "Movie_video::DecodeFrontFrame() - frame not decoded" << std::endl;
+					if (Movie::usesDebugMessages())
+						printWithTime("Movie_video::DecodeFrontFrame() - frame not decoded (or incomplete)");
 				}
 			}
 		}

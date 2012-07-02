@@ -35,7 +35,7 @@
 #define ONCE_PSEC(sequence)\
 { static sf::Clock __timer; static bool __first = true; if (__first || __timer.GetElapsedTime() >= 1000) { { sequence; } __first = false; __timer.Reset(); }}
 
-void PrintWithTime(const std::string& msg);
+void printWithTime(const std::string& msg);
 
 template <typename T>
 std::string s(const T& v)

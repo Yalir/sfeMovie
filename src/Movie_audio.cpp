@@ -309,6 +309,9 @@ namespace sfe {
 				flag = false;
 			}
 			else {
+				if (Movie::usesDebugMessages())
+					printWithTime("did load an audio chunk");
+				
 				m_parent.readyToPlay();
 			}
 		}
