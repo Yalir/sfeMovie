@@ -24,7 +24,7 @@
 
 
 #include "ConditionImpl.hpp"
-//#include "utils.hpp"
+#include <sfeMovie/Movie.hpp>
 #include <iostream>
 using namespace std;
 
@@ -46,10 +46,12 @@ m_mutex()
 
 ConditionImpl::~ConditionImpl(void)
 {
-	if (0 != pthread_mutex_destroy(&m_mutex))
-		cerr << "pthread_cond_destroy() error\n";
+	if (0 != pthread_mutex_destroy(&m_mutex) &&
+		Movie::usesDebugMessages())
+		cerr << "pthread_mutex_destroy() error\n";
 	
-	if (0 != pthread_cond_destroy(&m_cond))
+	if (0 != pthread_cond_destroy(&m_cond) &&
+		Movie::usesDebugMessages())
 		cerr << "pthread_cond_destroy() error\n";
 }
 	

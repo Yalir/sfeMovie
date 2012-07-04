@@ -62,7 +62,6 @@ namespace sfe {
 	class Movie_audio;
 	class Movie_video;
 	class Condition;
-	class Barrier;
 	
 	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
 		friend class Movie_audio;
@@ -230,6 +229,13 @@ namespace sfe {
 		 */
 		static void useDebugMessages(bool flag = true);
 		
+		/** @brief Return whether debug messages printing is enabled
+		 *
+		 * @return true if debug messages printing is enabled, false otherwise
+		 * @see useDebugMessages
+		 */
+		static bool usesDebugMessages(void);
+		
 	private:
 		
 #ifndef LIBAVCODEC_VERSION
@@ -251,7 +257,6 @@ namespace sfe {
 		void setDuration(sf::Time duration);
 		bool readFrameAndQueue(void);
 		bool saveFrame(AVPacketRef frame);
-		static bool usesDebugMessages(void);
 		void starvation(void);
 		void readyToPlay(void);
 		void watch(void);

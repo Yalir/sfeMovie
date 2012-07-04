@@ -71,7 +71,12 @@ namespace sfe {
 		close();
 		delete m_video;
 		delete m_audio;
+		
+		m_shouldStopCond->invalidate();
+		m_condAudioReady->invalidate();
+		
 		delete m_shouldStopCond;
+		delete m_condAudioReady;
 	}
 
 	bool Movie::openFromFile(const std::string& filename)
