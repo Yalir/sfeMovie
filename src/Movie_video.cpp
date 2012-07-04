@@ -317,7 +317,7 @@ namespace sfe {
 			sf::Time waitTime;
 			getLateState(waitTime);
 			
-			if (waitTime.asMilliseconds() < 10)
+			if (waitTime < m_wantedFrameTime / 2.f)
 			{
 				AVFrame *tmpFrame;
 				
@@ -567,7 +567,9 @@ namespace sfe {
 					m_imageSwapMutex.unlock();
 					
 					// Image loaded, reset condition state
+					m_displayedFrameCount++;
 					flag = true;
+					
 					
 					if (Movie::usesDebugMessages())
 						printWithTime("did decode a full image");
@@ -579,9 +581,11 @@ namespace sfe {
 				}
 			}
 		}
+		else {
+			m_displayedFrameCount++;
+		}
 		
 		popFrame();
-		m_displayedFrameCount++;
 		
 		return flag;
 	}

@@ -31,7 +31,6 @@ extern "C"
 
 #include <sfeMovie/Movie.hpp>
 #include "Condition.hpp"
-#include "Barrier.hpp"
 #include "Movie_video.hpp"
 #include "Movie_audio.hpp"
 #include "utils.hpp"
@@ -51,16 +50,18 @@ namespace sfe {
 	m_hasAudio(false),
 	m_eofReached(false),
 	m_stopMutex(),
+	m_readerMutex(),
+	m_watchThread(&Movie::watch, this),
+	m_shouldStopCond(new Condition()),
+	m_condAudioReady(new Condition()),
+	
 	m_status(Stopped),
 	m_duration(sf::Time::Zero),
 	m_overallTimer(),
 	m_progressAtPause(sf::Time::Zero),
+	
 	m_video(new Movie_video(*this)),
-	m_audio(new Movie_audio(*this)),
-	m_watchThread(&Movie::watch, this),
-	m_shouldStopCond(new Condition()),
-	m_barrier(NULL),
-	m_barrierMutex()
+	m_audio(new Movie_audio(*this))
 	{
 	}
 
@@ -123,11 +124,6 @@ namespace sfe {
 			}
 		}
 		
-		if (m_hasAudio && m_hasAudio)
-		{
-			m_barrier = new Barrier(2);
-		}
-		
 		return m_hasAudio || (m_hasVideo && preloaded);
 	}
 
@@ -135,10 +131,11 @@ namespace sfe {
 	{
 		if (m_status != Playing)
 		{
-			IFAUDIO(m_audio->play());
-			IFVIDEO(m_video->play());
+			m_condAudioReady->restore();
 			
-			readyToPlay();
+			IFAUDIO(m_audio->play());
+			IFAUDIO(m_condAudioReady->waitAndLock(1, Condition::AutoUnlock));
+			IFVIDEO(m_video->play());
 			m_overallTimer.restart();
 			
 			if (usesDebugMessages())
@@ -202,6 +199,7 @@ namespace sfe {
 			m_progressAtPause = sf::Time::Zero;
 			setEofReached(false);
 			m_shouldStopCond->invalidate();
+			m_condAudioReady->invalidate();
 			
 			if (!calledFromWatchThread)
 				m_watchThread.wait();
@@ -355,6 +353,10 @@ namespace sfe {
 	void Movie::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		states.transform *= getTransform();
+		
+		if (usesDebugMessages())
+			printWithTime("audio playing : " + ftostr(m_audio->getPlayingOffset().asSeconds()) + "s");
+		
 		m_video->draw(target, states);
 	}
 
@@ -386,7 +388,6 @@ namespace sfe {
 		m_status = Stopped;
 		m_duration = sf::Time::Zero;
 		m_progressAtPause = sf::Time::Zero;
-		delete m_barrier;
 	}
 
 	AVFormatContext *Movie::getAVFormatContext(void)
@@ -499,15 +500,7 @@ namespace sfe {
 	
 	void Movie::readyToPlay(void)
 	{
-		if (m_barrier)
-		{
-			m_barrier->wait();
-			
-			m_barrierMutex.lock();
-			delete m_barrier;
-			m_barrier = NULL;
-			m_barrierMutex.unlock();
-		}
+		*m_condAudioReady = 1;
 	}
 	
 	void Movie::watch(void)

@@ -264,8 +264,7 @@ namespace sfe {
 		sf::Mutex m_readerMutex;
 		sf::Thread m_watchThread;
 		Condition *m_shouldStopCond;
-		Barrier *m_barrier;
-		sf::Mutex m_barrierMutex;
+		Condition *m_condAudioReady;
 		
 		Status m_status;
 		sf::Time m_duration;

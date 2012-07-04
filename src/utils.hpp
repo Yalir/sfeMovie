@@ -98,6 +98,14 @@ __counter++;\
 
 #endif
 
+template <typename T>
+std::string ftostr(const T& obj)
+{
+	std::ostringstream ss;
+	ss << obj;
+	return ss.str();
+}
+
 extern sf::Mutex __mtx;
 extern void output_thread(void);
 #define MT_COUT(sequence)\

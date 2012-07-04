@@ -25,6 +25,7 @@
 #include "utils.hpp"
 #include <ctime>
 #include <iostream>
+#include <cstdio>
 
 sf::Mutex __mtx;
 
