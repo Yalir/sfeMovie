@@ -59,7 +59,6 @@ namespace sfe {
 		const sf::Texture& getCurrentFrame(void) const;
 		void ensureTextureUpdate(void) const;
 		
-		void update(void); // Swaping and synching thread
 		void decode(void); // Decoding thread
 		
 		bool getLateState(sf::Time& waitTime) const;

@@ -53,7 +53,6 @@ namespace sfe {
 	m_readerMutex(),
 	m_watchThread(&Movie::watch, this),
 	m_shouldStopCond(new Condition()),
-	m_condAudioReady(new Condition()),
 	
 	m_status(Stopped),
 	m_duration(sf::Time::Zero),
@@ -73,10 +72,8 @@ namespace sfe {
 		delete m_audio;
 		
 		m_shouldStopCond->invalidate();
-		m_condAudioReady->invalidate();
 		
 		delete m_shouldStopCond;
-		delete m_condAudioReady;
 	}
 
 	bool Movie::openFromFile(const std::string& filename)
@@ -136,12 +133,19 @@ namespace sfe {
 	{
 		if (m_status != Playing)
 		{
-			m_condAudioReady->restore();
+			if (m_hasAudio)
+			{
+				sf::Time startOffset = m_audio->getPlayingOffset();
+				m_audio->play();
+				
+				while (startOffset == m_audio->getPlayingOffset())
+					sf::sleep(sf::milliseconds(1));
+				
+				m_progressAtPause = m_audio->getPlayingOffset();
+			}
 			
-			IFAUDIO(m_audio->play());
-			IFAUDIO(m_condAudioReady->waitAndLock(1, Condition::AutoUnlock));
-			IFVIDEO(m_video->play());
 			m_overallTimer.restart();
+			IFVIDEO(m_video->play());
 			
 			if (usesDebugMessages())
 				printWithTime("did start movie timer");
@@ -204,7 +208,6 @@ namespace sfe {
 			m_progressAtPause = sf::Time::Zero;
 			setEofReached(false);
 			m_shouldStopCond->invalidate();
-			m_condAudioReady->invalidate();
 			
 			if (!calledFromWatchThread)
 				m_watchThread.wait();
@@ -357,11 +360,13 @@ namespace sfe {
 	
 	void Movie::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
-		states.transform *= getTransform();
-		
 		if (usesDebugMessages())
+		{
 			printWithTime("audio playing : " + ftostr(m_audio->getPlayingOffset().asSeconds()) + "s");
+			printWithTime("reference playing : " + ftostr(getPlayingOffset().asSeconds()) + "s");
+		}
 		
+		states.transform *= getTransform();
 		m_video->draw(target, states);
 	}
 
@@ -501,11 +506,6 @@ namespace sfe {
 		{
 			*m_shouldStopCond = 1;
 		}
-	}
-	
-	void Movie::readyToPlay(void)
-	{
-		*m_condAudioReady = 1;
 	}
 	
 	void Movie::watch(void)

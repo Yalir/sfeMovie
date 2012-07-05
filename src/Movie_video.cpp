@@ -208,19 +208,6 @@ namespace sfe {
 	
 	void Movie_video::play(void)
 	{
-		// Disable smoothing when the video is not scaled
-		sf::Vector2f sc = m_parent.getScale();
-		
-		if (fabs(sc.x - 1.f) < 0.00001 &&
-			fabs(sc.y - 1.f) < 0.00001)
-		{
-			m_tex.setSmooth(false);
-		}
-		else
-		{
-			m_tex.setSmooth(true);
-		}
-		
 		// Start threads
 		m_runThread = true;
 		m_running = 1;
@@ -304,10 +291,20 @@ namespace sfe {
 	{
 		ensureTextureUpdate();
 		
+		// Disable smoothing when the video is not scaled
+		sf::Vector2f sc = m_parent.getScale();
+		
+		if (fabs(sc.x - 1.f) < 0.00001 &&
+			fabs(sc.y - 1.f) < 0.00001)
+		{
+			m_tex.setSmooth(false);
+		}
+		else
+		{
+			m_tex.setSmooth(true);
+		}
+		
 		target.draw(m_sprite, states); // 38% on Windows
-
-		// Allow thread switching
-		sf::sleep(sf::Time::Zero);
 	}
 	
 	void Movie_video::ensureTextureUpdate(void) const
