@@ -235,7 +235,7 @@ What is your choice? [1-4] (default is 1)"
 	  then
 	    if [ "$os" == "windows" ]
 	      then
-			full_decoders_list="flac vorbis theora vp8 wmv wma"
+			full_decoders_list="flac vorbis theora vp8 wmv wmalossless wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wmv3image"
 		else
 			if [ "$os" == "macosx" ] && [ "$has_vda" == "1" ]
 		  	  then
