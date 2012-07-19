@@ -142,11 +142,15 @@ namespace sfe {
 		m_size = sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
 		
 		// Setup the image scaler/converter
-		m_swsCtx = sws_getContext(m_size.x, m_size.y,
-								  m_codecCtx->pix_fmt,
-								  m_size.x, m_size.y,
-								  PIX_FMT_RGBA,
-								  SWS_BICUBIC, NULL, NULL, NULL);
+		// SWS_ACCURATE_RND can take 4-10ms per conversion
+		// And we don't do any scaling, only YUV->RGBA conversion, thus
+		// use the fastest scaling algorithm
+		m_swsCtx = sws_getCachedContext(NULL, m_size.x, m_size.y,
+										m_codecCtx->pix_fmt,
+										m_size.x, m_size.y,
+										PIX_FMT_RGBA,
+										SWS_FAST_BILINEAR /*| SWS_ACCURATE_RND*/, NULL, NULL, NULL);
+		
 		if (!m_swsCtx)
 		{
 			std::cerr << "Movie_video::initialize() - error with sws_getContext()" << std::endl;
