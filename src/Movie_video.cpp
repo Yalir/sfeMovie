@@ -259,7 +259,7 @@ namespace sfe {
 	void Movie_video::close(void)
 	{
 		// Close the video stuff
-		if (m_codecCtx)
+		if (m_codecCtx && m_codec)
 			avcodec_close(m_codecCtx), m_codecCtx = NULL;
 		
 		m_codec = NULL;
