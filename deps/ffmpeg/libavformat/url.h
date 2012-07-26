@@ -31,7 +31,6 @@
 #include "libavutil/dict.h"
 #include "libavutil/log.h"
 
-#if !FF_API_OLD_AVIO
 #define URL_PROTOCOL_FLAG_NESTED_SCHEME 1 /*< The protocol name can be the first part of a nested protocol scheme */
 #define URL_PROTOCOL_FLAG_NETWORK       2 /*< The protocol uses network */
 
@@ -60,6 +59,19 @@ typedef struct URLProtocol {
      * for those nested protocols.
      */
     int     (*url_open2)(URLContext *h, const char *url, int flags, AVDictionary **options);
+
+    /**
+     * Read data from the protocol.
+     * If data is immediately available (even less than size), EOF is
+     * reached or an error occurs (including EINTR), return immediately.
+     * Otherwise:
+     * In non-blocking mode, return AVERROR(EAGAIN) immediately.
+     * In blocking mode, wait for data/EOF/error with a short timeout (0.1s),
+     * and return AVERROR(EAGAIN) on timeout.
+     * Checking interrupt_callback, looping on EINTR and EAGAIN and until
+     * enough data has been read is left to the calling function; see
+     * retry_transfer_wrapper in avio.c.
+     */
     int     (*url_read)( URLContext *h, unsigned char *buf, int size);
     int     (*url_write)(URLContext *h, const unsigned char *buf, int size);
     int64_t (*url_seek)( URLContext *h, int64_t pos, int whence);
@@ -69,12 +81,12 @@ typedef struct URLProtocol {
     int64_t (*url_read_seek)(URLContext *h, int stream_index,
                              int64_t timestamp, int flags);
     int (*url_get_file_handle)(URLContext *h);
+    int (*url_shutdown)(URLContext *h, int flags);
     int priv_data_size;
     const AVClass *priv_data_class;
     int flags;
     int (*url_check)(URLContext *h, int mask);
 } URLProtocol;
-#endif
 
 /**
  * Create a URLContext for accessing to the resource indicated by
@@ -188,6 +200,18 @@ int64_t ffurl_size(URLContext *h);
  * @return the file descriptor associated with this URL, or <0 on error.
  */
 int ffurl_get_file_handle(URLContext *h);
+
+/**
+ * Signal the URLContext that we are done reading or writing the stream.
+ *
+ * @param h pointer to the resource
+ * @param flags flags which control how the resource indicated by url
+ * is to be shutdown
+ *
+ * @return a negative value if an error condition occurred, 0
+ * otherwise
+ */
+int ffurl_shutdown(URLContext *h, int flags);
 
 /**
  * Register the URLProtocol protocol.

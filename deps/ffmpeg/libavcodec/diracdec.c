@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/diracdec.c
+ * @file
  * Dirac Decoder
  * @author Marco Gerards <marco@gnu.org>, David Conrad, Jordi Ortiz <nenjordi@gmail.com>
  */
@@ -399,7 +399,7 @@ static av_cold int dirac_decode_init(AVCodecContext *avctx)
         return AVERROR_PATCHWELCOME;
     }
 
-    dsputil_init(&s->dsp, avctx);
+    ff_dsputil_init(&s->dsp, avctx);
     ff_diracdsp_init(&s->diracdsp);
 
     return 0;
@@ -491,10 +491,16 @@ static inline void codeblock(DiracContext *s, SubBand *b,
     }
 
     if (s->codeblock_mode && !(s->old_delta_quant && blockcnt_one)) {
+        int quant = b->quant;
         if (is_arith)
-            b->quant += dirac_get_arith_int(c, CTX_DELTA_Q_F, CTX_DELTA_Q_DATA);
+            quant += dirac_get_arith_int(c, CTX_DELTA_Q_F, CTX_DELTA_Q_DATA);
         else
-            b->quant += dirac_get_se_golomb(gb);
+            quant += dirac_get_se_golomb(gb);
+        if (quant < 0) {
+            av_log(s->avctx, AV_LOG_ERROR, "Invalid quant\n");
+            return;
+        }
+        b->quant = quant;
     }
 
     b->quant = FFMIN(b->quant, MAX_QUANT);
@@ -619,7 +625,7 @@ static void decode_component(DiracContext *s, int comp)
                 b->quant = svq3_get_ue_golomb(&s->gb);
                 align_get_bits(&s->gb);
                 b->coeff_data = s->gb.buffer + get_bits_count(&s->gb)/8;
-                b->length = FFMIN(b->length, get_bits_left(&s->gb)/8);
+                b->length = FFMIN(b->length, FFMAX(get_bits_left(&s->gb)/8, 0));
                 skip_bits_long(&s->gb, b->length*8);
             }
         }
@@ -850,7 +856,7 @@ static int dirac_unpack_prediction_parameters(DiracContext *s)
     /*[DIRAC_STD] 11.2.4 motion_data_dimensions()
       Calculated in function dirac_unpack_block_motion_data */
 
-    if (s->plane[0].xbsep < s->plane[0].xblen/2 || s->plane[0].ybsep < s->plane[0].yblen/2) {
+    if (!s->plane[0].xbsep || !s->plane[0].ybsep || s->plane[0].xbsep < s->plane[0].xblen/2 || s->plane[0].ybsep < s->plane[0].yblen/2) {
         av_log(s->avctx, AV_LOG_ERROR, "Block separation too small\n");
         return -1;
     }
@@ -973,6 +979,11 @@ static int dirac_unpack_idwt_params(DiracContext *s)
         s->lowdelay.num_y     = svq3_get_ue_golomb(gb);
         s->lowdelay.bytes.num = svq3_get_ue_golomb(gb);
         s->lowdelay.bytes.den = svq3_get_ue_golomb(gb);
+
+        if (s->lowdelay.bytes.den <= 0) {
+            av_log(s->avctx,AV_LOG_ERROR,"Invalid lowdelay.bytes.den\n");
+            return AVERROR_INVALIDDATA;
+        }
 
         /* [DIRAC_STD] 11.3.5 Quantisation matrices (low-delay syntax). quant_matrix() */
         if (get_bits1(gb)) {
@@ -1172,7 +1183,7 @@ static void propagate_block_data(DiracBlock *block, int stride, int size)
  * Dirac Specification ->
  * 12. Block motion data syntax
  */
-static void dirac_unpack_block_motion_data(DiracContext *s)
+static int dirac_unpack_block_motion_data(DiracContext *s)
 {
     GetBitContext *gb = &s->gb;
     uint8_t *sbsplit = s->sbsplit;
@@ -1192,7 +1203,9 @@ static void dirac_unpack_block_motion_data(DiracContext *s)
     ff_dirac_init_arith_decoder(arith, gb, svq3_get_ue_golomb(gb));     /* svq3_get_ue_golomb(gb) is the length */
     for (y = 0; y < s->sbheight; y++) {
         for (x = 0; x < s->sbwidth; x++) {
-            int split  = dirac_get_arith_uint(arith, CTX_SB_F1, CTX_SB_DATA);
+            unsigned int split  = dirac_get_arith_uint(arith, CTX_SB_F1, CTX_SB_DATA);
+            if (split > 2)
+                return -1;
             sbsplit[x] = (split + pred_sbsplit(sbsplit+x, s->sbwidth, x, y)) % 3;
         }
         sbsplit += s->sbwidth;
@@ -1221,6 +1234,8 @@ static void dirac_unpack_block_motion_data(DiracContext *s)
                     propagate_block_data(block, s->blwidth, step);
                 }
         }
+
+    return 0;
 }
 
 static int weight(int i, int blen, int offset)
@@ -1675,7 +1690,8 @@ static int dirac_decode_picture_header(DiracContext *s)
     if (s->num_refs) {
         if (dirac_unpack_prediction_parameters(s))  /* [DIRAC_STD] 11.2 Picture Prediction Data. picture_prediction() */
             return -1;
-        dirac_unpack_block_motion_data(s);          /* [DIRAC_STD] 12. Block motion data syntax                       */
+        if (dirac_unpack_block_motion_data(s))      /* [DIRAC_STD] 12. Block motion data syntax                       */
+            return -1;
     }
     if (dirac_unpack_idwt_params(s))                /* [DIRAC_STD] 11.3 Wavelet transform data                        */
         return -1;
@@ -1859,7 +1875,7 @@ static int dirac_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     }
 
     if (!s->current_picture)
-        return 0;
+        return buf_size;
 
     if (s->current_picture->avframe.display_picture_number > s->frame_number) {
         DiracFrame *delayed_frame = remove_frame(s->delay_frames, s->frame_number);

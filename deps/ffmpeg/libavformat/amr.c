@@ -76,8 +76,7 @@ static int amr_probe(AVProbeData *p)
 }
 
 /* amr input */
-static int amr_read_header(AVFormatContext *s,
-                           AVFormatParameters *ap)
+static int amr_read_header(AVFormatContext *s)
 {
     AVIOContext *pb = s->pb;
     AVStream *st;
@@ -101,14 +100,12 @@ static int amr_read_header(AVFormatContext *s,
         st->codec->codec_tag = MKTAG('s', 'a', 'w', 'b');
         st->codec->codec_id = CODEC_ID_AMR_WB;
         st->codec->sample_rate = 16000;
-        st->codec->frame_size = 320;
     }
     else
     {
         st->codec->codec_tag = MKTAG('s', 'a', 'm', 'r');
         st->codec->codec_id = CODEC_ID_AMR_NB;
         st->codec->sample_rate = 8000;
-        st->codec->frame_size = 160;
     }
     st->codec->channels = 1;
     st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
@@ -180,7 +177,7 @@ AVInputFormat ff_amr_demuxer = {
     .read_probe     = amr_probe,
     .read_header    = amr_read_header,
     .read_packet    = amr_read_packet,
-    .flags = AVFMT_GENERIC_INDEX,
+    .flags          = AVFMT_GENERIC_INDEX,
 };
 #endif
 

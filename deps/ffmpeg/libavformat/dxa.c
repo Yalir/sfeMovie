@@ -51,7 +51,7 @@ static int dxa_probe(AVProbeData *p)
         return 0;
 }
 
-static int dxa_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int dxa_read_header(AVFormatContext *s)
 {
     AVIOContext *pb = s->pb;
     DXAContext *c = s->priv_data;
@@ -107,6 +107,8 @@ static int dxa_read_header(AVFormatContext *s, AVFormatParameters *ap)
         ret = ff_get_wav_header(pb, ast->codec, fsize);
         if (ret < 0)
             return ret;
+        if (ast->codec->sample_rate > 0)
+            avpriv_set_pts_info(ast, 64, 1, ast->codec->sample_rate);
         // find 'data' chunk
         while(avio_tell(pb) < c->vidpos && !url_feof(pb)){
             tag = avio_rl32(pb);

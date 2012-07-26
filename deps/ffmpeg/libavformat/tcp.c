@@ -37,7 +37,7 @@ typedef struct TCPContext {
 /* return non zero if error */
 static int tcp_open(URLContext *h, const char *uri, int flags)
 {
-    struct addrinfo hints, *ai, *cur_ai;
+    struct addrinfo hints = { 0 }, *ai, *cur_ai;
     int port, fd = -1;
     TCPContext *s = h->priv_data;
     int listen_socket = 0;
@@ -62,7 +62,6 @@ static int tcp_open(URLContext *h, const char *uri, int flags)
             timeout = strtol(buf, NULL, 10);
         }
     }
-    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     snprintf(portstr, sizeof(portstr), "%d", port);
@@ -183,6 +182,22 @@ static int tcp_write(URLContext *h, const uint8_t *buf, int size)
     return ret < 0 ? ff_neterrno() : ret;
 }
 
+static int tcp_shutdown(URLContext *h, int flags)
+{
+    TCPContext *s = h->priv_data;
+    int how;
+
+    if (flags & AVIO_FLAG_WRITE && flags & AVIO_FLAG_READ) {
+        how = SHUT_RDWR;
+    } else if (flags & AVIO_FLAG_WRITE) {
+        how = SHUT_WR;
+    } else {
+        how = SHUT_RD;
+    }
+
+    return shutdown(s->fd, how);
+}
+
 static int tcp_close(URLContext *h)
 {
     TCPContext *s = h->priv_data;
@@ -203,6 +218,7 @@ URLProtocol ff_tcp_protocol = {
     .url_write           = tcp_write,
     .url_close           = tcp_close,
     .url_get_file_handle = tcp_get_file_handle,
+    .url_shutdown        = tcp_shutdown,
     .priv_data_size      = sizeof(TCPContext),
     .flags               = URL_PROTOCOL_FLAG_NETWORK,
 };

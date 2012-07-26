@@ -428,7 +428,7 @@ static float wv_get_value_float(WavpackFrameContext *s, uint32_t *crc, int S)
         uint32_t u;
     } value;
 
-    int sign;
+    unsigned int sign;
     int exp = s->float_max_exp;
 
     if (s->got_extra_bits) {
@@ -498,6 +498,21 @@ static void wv_reset_saved_context(WavpackFrameContext *s)
 {
     s->pos = 0;
     s->sc.crc = s->extra_sc.crc = 0xFFFFFFFF;
+}
+
+static inline int wv_check_crc(WavpackFrameContext *s, uint32_t crc,
+                               uint32_t crc_extra_bits)
+{
+    if (crc != s->CRC) {
+        av_log(s->avctx, AV_LOG_ERROR, "CRC error\n");
+        return AVERROR_INVALIDDATA;
+    }
+    if (s->got_extra_bits && crc_extra_bits != s->crc_extra_bits) {
+        av_log(s->avctx, AV_LOG_ERROR, "Extra bits CRC error\n");
+        return AVERROR_INVALIDDATA;
+    }
+
+    return 0;
 }
 
 static inline int wv_unpack_stereo(WavpackFrameContext *s, GetBitContext *gb,
@@ -610,14 +625,9 @@ static inline int wv_unpack_stereo(WavpackFrameContext *s, GetBitContext *gb,
     } while (!last && count < s->samples);
 
     wv_reset_saved_context(s);
-    if (crc != s->CRC) {
-        av_log(s->avctx, AV_LOG_ERROR, "CRC error\n");
-        return -1;
-    }
-    if (s->got_extra_bits && crc_extra_bits != s->crc_extra_bits) {
-        av_log(s->avctx, AV_LOG_ERROR, "Extra bits CRC error\n");
-        return -1;
-    }
+    if ((s->avctx->err_recognition & AV_EF_CRCCHECK) &&
+        wv_check_crc(s, crc, crc_extra_bits))
+        return AVERROR_INVALIDDATA;
 
     return count * 2;
 }
@@ -680,14 +690,9 @@ static inline int wv_unpack_mono(WavpackFrameContext *s, GetBitContext *gb,
     } while (!last && count < s->samples);
 
     wv_reset_saved_context(s);
-    if (crc != s->CRC) {
-        av_log(s->avctx, AV_LOG_ERROR, "CRC error\n");
-        return -1;
-    }
-    if (s->got_extra_bits && crc_extra_bits != s->crc_extra_bits) {
-        av_log(s->avctx, AV_LOG_ERROR, "Extra bits CRC error\n");
-        return -1;
-    }
+    if ((s->avctx->err_recognition & AV_EF_CRCCHECK) &&
+        wv_check_crc(s, crc, crc_extra_bits))
+        return AVERROR_INVALIDDATA;
 
     return count;
 }
@@ -808,8 +813,8 @@ static int wavpack_decode_block(AVCodecContext *avctx, int block_no,
     s->hybrid         =   s->frame_flags & WV_HYBRID_MODE;
     s->hybrid_bitrate =   s->frame_flags & WV_HYBRID_BITRATE;
     s->post_shift     = bpp * 8 - orig_bpp + ((s->frame_flags >> 13) & 0x1f);
-    s->hybrid_maxclip = (( 1LL << (orig_bpp - 1)) - 1) >> s->post_shift;
-    s->hybrid_minclip = ((-1LL << (orig_bpp - 1)))     >> s->post_shift;
+    s->hybrid_maxclip = (( 1LL << (orig_bpp - 1)) - 1);
+    s->hybrid_minclip = ((-1LL << (orig_bpp - 1)));
     s->CRC            = AV_RL32(buf); buf += 4;
     if (wc->mkv_mode)
         buf += 4; //skip block size;
@@ -906,8 +911,9 @@ static int wavpack_decode_block(AVCodecContext *avctx, int block_no,
                 } else {
                     for (j = 0; j < s->decorr[i].value; j++) {
                         s->decorr[i].samplesA[j] = wp_exp2(AV_RL16(buf)); buf += 2;
-                        if (s->stereo_in)
+                        if (s->stereo_in) {
                             s->decorr[i].samplesB[j] = wp_exp2(AV_RL16(buf)); buf += 2;
+                        }
                     }
                     t += s->decorr[i].value * 2 * (s->stereo_in + 1);
                 }

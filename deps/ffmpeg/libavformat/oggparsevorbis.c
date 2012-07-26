@@ -28,6 +28,7 @@
 #include "libavutil/dict.h"
 #include "libavcodec/get_bits.h"
 #include "libavcodec/bytestream.h"
+#include "libavcodec/vorbis_parser.h"
 #include "avformat.h"
 #include "internal.h"
 #include "oggdec.h"
@@ -162,6 +163,9 @@ ff_vorbis_comment(AVFormatContext * as, AVDictionary **m, const uint8_t *buf, in
 struct oggvorbis_private {
     unsigned int len[3];
     unsigned char *packet[3];
+    VorbisParseContext vp;
+    int64_t final_pts;
+    int final_duration;
 };
 
 
@@ -199,12 +203,12 @@ vorbis_header (AVFormatContext * s, int idx)
     int pkt_type = os->buf[os->pstart];
 
     if (!(pkt_type & 1))
-        return 0;
+        return os->private ? 0 : -1;
 
     if (!os->private) {
         os->private = av_mallocz(sizeof(struct oggvorbis_private));
         if (!os->private)
-            return 0;
+            return -1;
     }
 
     if (os->psize < 1 || pkt_type > 5)
@@ -219,6 +223,8 @@ vorbis_header (AVFormatContext * s, int idx)
 
     priv->len[pkt_type >> 1] = os->psize;
     priv->packet[pkt_type >> 1] = av_mallocz(os->psize);
+    if (!priv->packet[pkt_type >> 1])
+        return AVERROR(ENOMEM);
     memcpy(priv->packet[pkt_type >> 1], os->buf + os->pstart, os->psize);
     if (os->buf[os->pstart] == 1) {
         const uint8_t *p = os->buf + os->pstart + 7; /* skip "\001vorbis" tag */
@@ -268,15 +274,97 @@ vorbis_header (AVFormatContext * s, int idx)
             }
         }
     } else {
+        int ret;
         st->codec->extradata_size =
             fixup_vorbis_headers(s, priv, &st->codec->extradata);
+        if ((ret = avpriv_vorbis_parse_extradata(st->codec, &priv->vp))) {
+            av_freep(&st->codec->extradata);
+            st->codec->extradata_size = 0;
+            return ret;
+        }
     }
 
     return 1;
 }
 
+static int vorbis_packet(AVFormatContext *s, int idx)
+{
+    struct ogg *ogg = s->priv_data;
+    struct ogg_stream *os = ogg->streams + idx;
+    struct oggvorbis_private *priv = os->private;
+    int duration;
+
+    /* first packet handling
+       here we parse the duration of each packet in the first page and compare
+       the total duration to the page granule to find the encoder delay and
+       set the first timestamp */
+    if ((!os->lastpts || os->lastpts == AV_NOPTS_VALUE) && !(os->flags & OGG_FLAG_EOS)) {
+        int seg, d;
+        uint8_t *last_pkt = os->buf + os->pstart;
+        uint8_t *next_pkt = last_pkt;
+
+        avpriv_vorbis_parse_reset(&priv->vp);
+        duration = 0;
+        seg = os->segp;
+        d = avpriv_vorbis_parse_frame(&priv->vp, last_pkt, 1);
+        if (d < 0) {
+            os->pflags |= AV_PKT_FLAG_CORRUPT;
+            return 0;
+        }
+        duration += d;
+        last_pkt = next_pkt =  next_pkt + os->psize;
+        for (; seg < os->nsegs; seg++) {
+            if (os->segments[seg] < 255) {
+                int d = avpriv_vorbis_parse_frame(&priv->vp, last_pkt, 1);
+                if (d < 0) {
+                    duration = os->granule;
+                    break;
+                }
+                duration += d;
+                last_pkt = next_pkt + os->segments[seg];
+            }
+            next_pkt += os->segments[seg];
+        }
+        os->lastpts = os->lastdts   = os->granule - duration;
+        if(s->streams[idx]->start_time == AV_NOPTS_VALUE) {
+            s->streams[idx]->start_time = FFMAX(os->lastpts, 0);
+            if (s->streams[idx]->duration)
+                s->streams[idx]->duration -= s->streams[idx]->start_time;
+        }
+        priv->final_pts             = AV_NOPTS_VALUE;
+        avpriv_vorbis_parse_reset(&priv->vp);
+    }
+
+    /* parse packet duration */
+    if (os->psize > 0) {
+        duration = avpriv_vorbis_parse_frame(&priv->vp, os->buf + os->pstart, 1);
+        if (duration < 0) {
+            os->pflags |= AV_PKT_FLAG_CORRUPT;
+            return 0;
+        }
+        os->pduration = duration;
+    }
+
+    /* final packet handling
+       here we save the pts of the first packet in the final page, sum up all
+       packet durations in the final page except for the last one, and compare
+       to the page granule to find the duration of the final packet */
+    if (os->flags & OGG_FLAG_EOS) {
+        if (os->lastpts != AV_NOPTS_VALUE) {
+            priv->final_pts = os->lastpts;
+            priv->final_duration = 0;
+        }
+        if (os->segp == os->nsegs)
+            os->pduration = os->granule - priv->final_pts - priv->final_duration;
+        priv->final_duration += os->pduration;
+    }
+
+    return 0;
+}
+
 const struct ogg_codec ff_vorbis_codec = {
     .magic = "\001vorbis",
     .magicsize = 7,
-    .header = vorbis_header
+    .header = vorbis_header,
+    .packet = vorbis_packet,
 };

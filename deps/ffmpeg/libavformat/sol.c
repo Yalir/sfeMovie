@@ -82,8 +82,7 @@ static int sol_channels(int magic, int type)
     return 2;
 }
 
-static int sol_read_header(AVFormatContext *s,
-                          AVFormatParameters *ap)
+static int sol_read_header(AVFormatContext *s)
 {
     unsigned int magic,tag;
     AVIOContext *pb = s->pb;
@@ -134,11 +133,8 @@ static int sol_read_packet(AVFormatContext *s,
     ret= av_get_packet(s->pb, pkt, MAX_SIZE);
     if (ret < 0)
         return ret;
+    pkt->flags &= ~AV_PKT_FLAG_CORRUPT;
     pkt->stream_index = 0;
-
-    /* note: we need to modify the packet size here to handle the last
-       packet */
-    pkt->size = ret;
     return 0;
 }
 
@@ -148,5 +144,5 @@ AVInputFormat ff_sol_demuxer = {
     .read_probe     = sol_probe,
     .read_header    = sol_read_header,
     .read_packet    = sol_read_packet,
-    .read_seek      = pcm_read_seek,
+    .read_seek      = ff_pcm_read_seek,
 };

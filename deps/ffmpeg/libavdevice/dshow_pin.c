@@ -19,7 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dshow.h"
+#define NO_DSHOW_STRSAFE
+#include "dshow_capture.h"
 
 #include <stddef.h>
 #define imemoffset offsetof(libAVPin, imemvtbl)

@@ -60,8 +60,7 @@ static int sap_read_close(AVFormatContext *s)
     return 0;
 }
 
-static int sap_read_header(AVFormatContext *s,
-                           AVFormatParameters *ap)
+static int sap_read_header(AVFormatContext *s)
 {
     struct SAPState *sap = s->priv_data;
     char host[1024], path[1024], url[1024];
@@ -235,6 +234,5 @@ AVInputFormat ff_sap_demuxer = {
     .read_header    = sap_read_header,
     .read_packet    = sap_fetch_packet,
     .read_close     = sap_read_close,
-    .flags = AVFMT_NOFILE,
+    .flags          = AVFMT_NOFILE,
 };
-

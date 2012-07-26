@@ -41,6 +41,8 @@ streams of this type.
 @item p:@var{program_id}[:@var{stream_index}]
 If @var{stream_index} is given, then matches stream number @var{stream_index} in
 program with id @var{program_id}. Otherwise matches all streams in this program.
+@item #@var{stream_id}
+Matches the stream by format-specific ID.
 @end table
 @section Generic options
 
@@ -134,6 +136,15 @@ It also implies @code{-loglevel verbose}.
 Note: setting the environment variable @code{FFREPORT} to any value has the
 same effect.
 
+@item -cpuflags flags (@emph{global})
+Allows setting and clearing cpu flags. This option is intended
+for testing. Do not use it unless you know what you're doing.
+@example
+ffmpeg -cpuflags -sse+mmx ...
+ffmpeg -cpuflags mmx ...
+ffmpeg -cpuflags 0 ...
+@end example
+
 @end table
 
 @section AVOptions
@@ -166,3 +177,6 @@ use @option{-option 0}/@option{-option 1}.
 
 Note2 old undocumented way of specifying per-stream AVOptions by prepending
 v/a/s to the options name is now obsolete and will be removed soon.
+
+@include avoptions_codec.texi
+@include avoptions_format.texi

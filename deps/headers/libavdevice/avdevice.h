@@ -44,8 +44,8 @@
 #include "libavutil/avutil.h"
 #include "libavformat/avformat.h"
 
-#define LIBAVDEVICE_VERSION_MAJOR 53
-#define LIBAVDEVICE_VERSION_MINOR  4
+#define LIBAVDEVICE_VERSION_MAJOR 54
+#define LIBAVDEVICE_VERSION_MINOR  0
 #define LIBAVDEVICE_VERSION_MICRO 100
 
 #define LIBAVDEVICE_VERSION_INT AV_VERSION_INT(LIBAVDEVICE_VERSION_MAJOR, \
@@ -78,4 +78,3 @@ const char *avdevice_license(void);
 void avdevice_register_all(void);
 
 #endif /* AVDEVICE_AVDEVICE_H */
-

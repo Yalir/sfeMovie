@@ -39,11 +39,10 @@
 
 typedef struct {
     const AVClass *class;
-    int h, w;
+    int w, h;
     unsigned int nb_frame;
     AVRational time_base;
     int64_t pts, max_pts;
-    char *size;                 ///< video frame size
     char *rate;                 ///< video frame rate
     char *duration;             ///< total duration of the generated video
     AVRational sar;             ///< sample aspect ratio
@@ -58,8 +57,8 @@ typedef struct {
 #define OFFSET(x) offsetof(TestSourceContext, x)
 
 static const AVOption testsrc_options[]= {
-    { "size",     "set video size",     OFFSET(size),     AV_OPT_TYPE_STRING, {.str = "320x240"}, 0, 0 },
-    { "s",        "set video size",     OFFSET(size),     AV_OPT_TYPE_STRING, {.str = "320x240"}, 0, 0 },
+    { "size",     "set video size",     OFFSET(w),        AV_OPT_TYPE_IMAGE_SIZE, {.str = "320x240"}, 0, 0 },
+    { "s",        "set video size",     OFFSET(w),        AV_OPT_TYPE_IMAGE_SIZE, {.str = "320x240"}, 0, 0 },
     { "rate",     "set video rate",     OFFSET(rate),     AV_OPT_TYPE_STRING, {.str = "25"},      0, 0 },
     { "r",        "set video rate",     OFFSET(rate),     AV_OPT_TYPE_STRING, {.str = "25"},      0, 0 },
     { "duration", "set video duration", OFFSET(duration), AV_OPT_TYPE_STRING, {.str = NULL},      0, 0 },
@@ -84,21 +83,18 @@ static av_cold int init(AVFilterContext *ctx, const char *args, void *opaque)
         return ret;
     }
 
-    if ((ret = av_parse_video_size(&test->w, &test->h, test->size)) < 0) {
-        av_log(ctx, AV_LOG_ERROR, "Invalid frame size: '%s'\n", test->size);
-        return ret;
-    }
-
     if ((ret = av_parse_video_rate(&frame_rate_q, test->rate)) < 0 ||
         frame_rate_q.den <= 0 || frame_rate_q.num <= 0) {
         av_log(ctx, AV_LOG_ERROR, "Invalid frame rate: '%s'\n", test->rate);
         return ret;
     }
+    av_freep(&test->rate);
 
     if ((test->duration) && (ret = av_parse_time(&duration, test->duration, 1)) < 0) {
         av_log(ctx, AV_LOG_ERROR, "Invalid duration: '%s'\n", test->duration);
         return ret;
     }
+    av_freep(&test->duration);
 
     if (test->nb_decimals && strcmp(ctx->filter->name, "testsrc")) {
         av_log(ctx, AV_LOG_WARNING,

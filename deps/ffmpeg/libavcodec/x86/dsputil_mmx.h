@@ -184,8 +184,8 @@ static inline void transpose4x4(uint8_t *dst, uint8_t *src, x86_reg dst_stride, 
     "pcmpeqd %%" #regd ", %%" #regd " \n\t" \
     "psrlw $15, %%" #regd ::)
 
-void dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx);
-void dsputil_init_pix_mmx(DSPContext* c, AVCodecContext *avctx);
+void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx);
+void ff_dsputil_init_pix_mmx(DSPContext* c, AVCodecContext *avctx);
 
 void ff_add_pixels_clamped_mmx(const DCTELEM *block, uint8_t *pixels, int line_size);
 void ff_put_pixels_clamped_mmx(const DCTELEM *block, uint8_t *pixels, int line_size);
@@ -198,6 +198,11 @@ void ff_avg_cavs_qpel16_mc00_mmx2(uint8_t *dst, uint8_t *src, int stride);
 
 void ff_put_vc1_mspel_mc00_mmx(uint8_t *dst, const uint8_t *src, int stride, int rnd);
 void ff_avg_vc1_mspel_mc00_mmx2(uint8_t *dst, const uint8_t *src, int stride, int rnd);
+
+void ff_put_rv40_qpel8_mc33_mmx(uint8_t *block, uint8_t *pixels, int line_size);
+void ff_put_rv40_qpel16_mc33_mmx(uint8_t *block, uint8_t *pixels, int line_size);
+void ff_avg_rv40_qpel8_mc33_mmx(uint8_t *block, uint8_t *pixels, int line_size);
+void ff_avg_rv40_qpel16_mc33_mmx(uint8_t *block, uint8_t *pixels, int line_size);
 
 void ff_mmx_idct(DCTELEM *block);
 void ff_mmxext_idct(DCTELEM *block);

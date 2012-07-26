@@ -26,7 +26,7 @@
 #define CDG_COMMAND        0x09
 #define CDG_MASK           0x3F
 
-static int read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int read_header(AVFormatContext *s)
 {
     AVStream *vst;
     int ret;
@@ -60,7 +60,8 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
     pkt->stream_index = 0;
-    pkt->dts=pkt->pts= s->streams[0]->cur_dts;
+    pkt->dts=
+    pkt->pts= pkt->pos / CDG_PACKET_SIZE;
 
     if(ret>5 && (pkt->data[0]&0x3F) == 9 && (pkt->data[1]&0x3F)==1 && !(pkt->data[2+2+1] & 0x0F)){
         pkt->flags = AV_PKT_FLAG_KEY;
@@ -73,6 +74,6 @@ AVInputFormat ff_cdg_demuxer = {
     .long_name      = NULL_IF_CONFIG_SMALL("CD Graphics Format"),
     .read_header    = read_header,
     .read_packet    = read_packet,
-    .flags= AVFMT_GENERIC_INDEX,
-    .extensions = "cdg"
+    .flags          = AVFMT_GENERIC_INDEX,
+    .extensions     = "cdg",
 };

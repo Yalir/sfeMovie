@@ -52,12 +52,16 @@ static int mjpegb_decode_frame(AVCodecContext *avctx,
 
     buf_ptr = buf;
     buf_end = buf + buf_size;
+    s->got_picture = 0;
 
 read_header:
     /* reset on every SOI */
     s->restart_interval = 0;
     s->restart_count = 0;
     s->mjpb_skiptosod = 0;
+
+    if (buf_end - buf_ptr >= 1 << 28)
+        return AVERROR_INVALIDDATA;
 
     init_get_bits(&hgb, buf_ptr, /*buf_size*/(buf_end - buf_ptr)*8);
 
@@ -66,7 +70,7 @@ read_header:
     if (get_bits_long(&hgb, 32) != MKBETAG('m','j','p','g'))
     {
         av_log(avctx, AV_LOG_WARNING, "not mjpeg-b (bad fourcc)\n");
-        return 0;
+        return AVERROR_INVALIDDATA;
     }
 
     field_size = get_bits_long(&hgb, 32); /* field size */
@@ -111,7 +115,8 @@ read_header:
     av_log(avctx, AV_LOG_DEBUG, "sod offs: 0x%x\n", sod_offs);
     if (sos_offs)
     {
-        init_get_bits(&s->gb, buf_ptr+sos_offs, FFMIN(field_size, buf_end - (buf_ptr+sos_offs))*8);
+        init_get_bits(&s->gb, buf_ptr + sos_offs,
+                      8 * FFMIN(field_size, buf_end - buf_ptr - sos_offs));
         s->mjpb_skiptosod = (sod_offs - sos_offs - show_bits(&s->gb, 16));
         s->start_code = SOS;
         if (ff_mjpeg_decode_sos(s, NULL, NULL) < 0 &&
@@ -125,7 +130,6 @@ read_header:
         if (s->bottom_field != s->interlace_polarity && second_field_offs)
         {
             buf_ptr = buf + second_field_offs;
-            second_field_offs = 0;
             goto read_header;
             }
     }
@@ -145,7 +149,7 @@ read_header:
         picture->quality*= FF_QP2LAMBDA;
     }
 
-    return buf_ptr - buf;
+    return buf_size;
 }
 
 AVCodec ff_mjpegb_decoder = {
@@ -157,6 +161,6 @@ AVCodec ff_mjpegb_decoder = {
     .close          = ff_mjpeg_decode_end,
     .decode         = mjpegb_decode_frame,
     .capabilities   = CODEC_CAP_DR1,
-    .max_lowres = 3,
-    .long_name = NULL_IF_CONFIG_SMALL("Apple MJPEG-B"),
+    .max_lowres     = 3,
+    .long_name      = NULL_IF_CONFIG_SMALL("Apple MJPEG-B"),
 };

@@ -135,11 +135,11 @@ cglobal put_signed_rect_clamped_%1, 5,7,3, dst, dst_stride, src, src_stride, w, 
     add     wd, (mmsize-1)
     and     wd, ~(mmsize-1)
 
-%ifdef ARCH_X86_64
-    mov   r10d, r5m
-    mov   r11d, wd
-    %define wspill r11d
-    %define hd r10d
+%if ARCH_X86_64
+    mov   r7d, r5m
+    mov   r8d, wd
+    %define wspill r8d
+    %define hd r7d
 %else
     mov    r4m, wd
     %define wspill r4m
@@ -176,7 +176,7 @@ cglobal add_rect_clamped_%1, 7,7,3, dst, src, stride, idwt, idwt_stride, w, h
     add     wd, (mmsize-1)
     and     wd, ~(mmsize-1)
 
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
     mov   r11d, wd
     %define wspill r11d
 %else
@@ -241,7 +241,7 @@ cglobal add_dirac_obmc%1_%2, 6,6,5, dst, src, stride, obmc, yblen
 %endm
 
 INIT_MMX
-%ifndef ARCH_X86_64
+%if ARCH_X86_64 == 0
 PUT_RECT mmx
 ADD_RECT mmx
 

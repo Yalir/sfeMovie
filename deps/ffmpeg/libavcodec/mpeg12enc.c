@@ -33,10 +33,10 @@
 #include "mpeg12.h"
 #include "mpeg12data.h"
 #include "bytestream.h"
-#include "timecode.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/avassert.h"
+#include "libavutil/timecode.h"
 
 static const uint8_t inv_non_linear_qscale[13] = {
     0, 2, 4, 6, 8,
@@ -132,15 +132,8 @@ static av_cold int encode_init(AVCodecContext *avctx)
 {
     MpegEncContext *s = avctx->priv_data;
 
-    if(MPV_encode_init(avctx) < 0)
+    if(ff_MPV_encode_init(avctx) < 0)
         return -1;
-
-#if FF_API_MPEGVIDEO_GLOBAL_OPTS
-    if (avctx->flags2 & CODEC_FLAG2_DROP_FRAME_TIMECODE)
-        s->drop_frame_timecode = 1;
-    if (avctx->flags & CODEC_FLAG_SVCD_SCAN_OFFSET)
-        s->scan_offset = 1;
-#endif
 
     if(find_frame_rate_index(s) < 0){
         if(s->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL){
@@ -174,17 +167,20 @@ static av_cold int encode_init(AVCodecContext *avctx)
         }
     }
 
-    s->drop_frame_timecode = s->tc.drop = s->drop_frame_timecode || !!(avctx->flags2 & CODEC_FLAG2_DROP_FRAME_TIMECODE);
+    s->drop_frame_timecode = s->drop_frame_timecode || !!(avctx->flags2 & CODEC_FLAG2_DROP_FRAME_TIMECODE);
+    if (s->drop_frame_timecode)
+        s->tc.flags |= AV_TIMECODE_FLAG_DROPFRAME;
     if (s->drop_frame_timecode && s->frame_rate_index != 4) {
         av_log(avctx, AV_LOG_ERROR, "Drop frame time code only allowed with 1001/30000 fps\n");
         return -1;
     }
 
-    if (s->tc.str) {
-        s->tc.rate = avpriv_frame_rate_tab[s->frame_rate_index];
-        if (avpriv_init_smpte_timecode(s, &s->tc) < 0)
-            return -1;
-        s->drop_frame_timecode = s->tc.drop;
+    if (s->tc_opt_str) {
+        AVRational rate = avpriv_frame_rate_tab[s->frame_rate_index];
+        int ret = av_timecode_init_from_string(&s->tc, rate, s->tc_opt_str, s);
+        if (ret < 0)
+            return ret;
+        s->drop_frame_timecode = !!(s->tc.flags & AV_TIMECODE_FLAG_DROPFRAME);
         s->avctx->timecode_frame_start = s->tc.start;
     } else {
         s->avctx->timecode_frame_start = 0; // default is -1
@@ -302,9 +298,9 @@ static void mpeg1_encode_sequence_header(MpegEncContext *s)
             time_code = s->current_picture_ptr->f.coded_picture_number + s->avctx->timecode_frame_start;
 
             s->gop_picture_number = s->current_picture_ptr->f.coded_picture_number;
-            av_assert0(s->drop_frame_timecode == s->tc.drop);
-            if (s->tc.drop)
-                time_code = avpriv_framenum_to_drop_timecode(time_code);
+            av_assert0(s->drop_frame_timecode == !!(s->tc.flags & AV_TIMECODE_FLAG_DROPFRAME));
+            if (s->drop_frame_timecode)
+                time_code = av_timecode_adjust_ntsc_framenum(time_code);
             put_bits(&s->pb, 5, (uint32_t)((time_code / (fps * 3600)) % 24));
             put_bits(&s->pb, 6, (uint32_t)((time_code / (fps * 60)) % 60));
             put_bits(&s->pb, 1, 1);
@@ -335,7 +331,7 @@ static av_always_inline void put_qscale(MpegEncContext *s)
 }
 
 void ff_mpeg1_encode_slice_header(MpegEncContext *s){
-    if (s->height > 2800) {
+    if (s->codec_id == CODEC_ID_MPEG2VIDEO && s->height > 2800) {
         put_header(s, SLICE_MIN_START_CODE + (s->mb_y & 127));
         put_bits(&s->pb, 3, s->mb_y >> 7);  /* slice_vertical_position_extension */
     } else {
@@ -345,7 +341,7 @@ void ff_mpeg1_encode_slice_header(MpegEncContext *s){
     put_bits(&s->pb, 1, 0); /* slice extra information */
 }
 
-void mpeg1_encode_picture_header(MpegEncContext *s, int picture_number)
+void ff_mpeg1_encode_picture_header(MpegEncContext *s, int picture_number)
 {
     mpeg1_encode_sequence_header(s);
 
@@ -670,7 +666,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
     }
 }
 
-void mpeg1_encode_mb(MpegEncContext *s, DCTELEM block[6][64], int motion_x, int motion_y)
+void ff_mpeg1_encode_mb(MpegEncContext *s, DCTELEM block[6][64], int motion_x, int motion_y)
 {
     if (s->chroma_format == CHROMA_420) mpeg1_encode_mb_internal(s, block, motion_x, motion_y, 6);
     else                                mpeg1_encode_mb_internal(s, block, motion_x, motion_y, 8);
@@ -729,8 +725,8 @@ void ff_mpeg1_encode_init(MpegEncContext *s)
         int i;
 
         done=1;
-        init_rl(&ff_rl_mpeg1, ff_mpeg12_static_rl_table_store[0]);
-        init_rl(&ff_rl_mpeg2, ff_mpeg12_static_rl_table_store[1]);
+        ff_init_rl(&ff_rl_mpeg1, ff_mpeg12_static_rl_table_store[0]);
+        ff_init_rl(&ff_rl_mpeg2, ff_mpeg12_static_rl_table_store[1]);
 
         for(i=0; i<64; i++)
         {
@@ -935,7 +931,7 @@ static void mpeg1_encode_block(MpegEncContext *s,
 #define OFFSET(x) offsetof(MpegEncContext, x)
 #define VE AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM
 #define COMMON_OPTS\
-        {TIMECODE_OPT(MpegEncContext,\
+        {AV_TIMECODE_OPTION(MpegEncContext, tc_opt_str, \
          AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM)},\
     { "intra_vlc",           "Use MPEG-2 intra VLC table.",       OFFSET(intra_vlc_format),    AV_OPT_TYPE_INT, { 0 }, 0, 1, VE },\
     { "drop_frame_timecode", "Timecode is in drop frame format.", OFFSET(drop_frame_timecode), AV_OPT_TYPE_INT, { 0 }, 0, 1, VE}, \
@@ -943,6 +939,7 @@ static void mpeg1_encode_block(MpegEncContext *s,
 
 static const AVOption mpeg1_options[] = {
     COMMON_OPTS
+    FF_MPV_COMMON_OPTS
     { NULL },
 };
 
@@ -950,6 +947,7 @@ static const AVOption mpeg2_options[] = {
     COMMON_OPTS
     { "non_linear_quant",    "Use nonlinear quantizer.",          OFFSET(q_scale_type),         AV_OPT_TYPE_INT, { 0 }, 0, 1, VE },
     { "alternate_scan",      "Enable alternate scantable.",       OFFSET(alternate_scan),       AV_OPT_TYPE_INT, { 0 }, 0, 1, VE },
+    FF_MPV_COMMON_OPTS
     { NULL },
 };
 
@@ -965,31 +963,34 @@ mpeg12_class(1)
 mpeg12_class(2)
 
 AVCodec ff_mpeg1video_encoder = {
-    .name           = "mpeg1video",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG1VIDEO,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = encode_init,
-    .encode         = MPV_encode_picture,
-    .close          = MPV_encode_end,
-    .supported_framerates= avpriv_frame_rate_tab+1,
-    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_YUV420P, PIX_FMT_NONE},
-    .capabilities= CODEC_CAP_DELAY,
-    .long_name= NULL_IF_CONFIG_SMALL("MPEG-1 video"),
-    .priv_class     = &mpeg1_class,
+    .name                 = "mpeg1video",
+    .type                 = AVMEDIA_TYPE_VIDEO,
+    .id                   = CODEC_ID_MPEG1VIDEO,
+    .priv_data_size       = sizeof(MpegEncContext),
+    .init                 = encode_init,
+    .encode2              = ff_MPV_encode_picture,
+    .close                = ff_MPV_encode_end,
+    .supported_framerates = avpriv_frame_rate_tab+1,
+    .pix_fmts             = (const enum PixelFormat[]){ PIX_FMT_YUV420P,
+                                                        PIX_FMT_NONE },
+    .capabilities         = CODEC_CAP_DELAY,
+    .long_name            = NULL_IF_CONFIG_SMALL("MPEG-1 video"),
+    .priv_class           = &mpeg1_class,
 };
 
 AVCodec ff_mpeg2video_encoder = {
-    .name           = "mpeg2video",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG2VIDEO,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = encode_init,
-    .encode         = MPV_encode_picture,
-    .close          = MPV_encode_end,
-    .supported_framerates= avpriv_frame_rate_tab+1,
-    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_YUV420P, PIX_FMT_YUV422P, PIX_FMT_NONE},
-    .capabilities= CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
-    .long_name= NULL_IF_CONFIG_SMALL("MPEG-2 video"),
-    .priv_class     = &mpeg2_class,
+    .name                 = "mpeg2video",
+    .type                 = AVMEDIA_TYPE_VIDEO,
+    .id                   = CODEC_ID_MPEG2VIDEO,
+    .priv_data_size       = sizeof(MpegEncContext),
+    .init                 = encode_init,
+    .encode2              = ff_MPV_encode_picture,
+    .close                = ff_MPV_encode_end,
+    .supported_framerates = avpriv_frame_rate_tab + 1,
+    .pix_fmts             = (const enum PixelFormat[]){
+        PIX_FMT_YUV420P, PIX_FMT_YUV422P, PIX_FMT_NONE
+    },
+    .capabilities         = CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
+    .long_name            = NULL_IF_CONFIG_SMALL("MPEG-2 video"),
+    .priv_class           = &mpeg2_class,
 };

@@ -24,7 +24,7 @@
  * selection (such as a black frame) we could get with an absolute seek.
  *
  * Simplified version of algorithm by Vadim Zaliva <lord@crocodile.org>.
- * @url http://notbrainsurgery.livejournal.com/29773.html
+ * @see http://notbrainsurgery.livejournal.com/29773.html
  */
 
 #include "avfilter.h"
@@ -176,11 +176,11 @@ static int request_frame(AVFilterLink *link)
 
     /* loop until a frame thumbnail is available (when a frame is queued,
      * thumb->n is reset to zero) */
-    while (thumb->n) {
+    do {
         int ret = avfilter_request_frame(link->src->inputs[0]);
         if (ret < 0)
             return ret;
-    }
+    } while (thumb->n);
     return 0;
 }
 

@@ -152,15 +152,15 @@ static void ape_dumpinfo(AVFormatContext * s, APEContext * ape_ctx)
 #endif
 }
 
-static int ape_read_header(AVFormatContext * s, AVFormatParameters * ap)
+static int ape_read_header(AVFormatContext * s)
 {
     AVIOContext *pb = s->pb;
     APEContext *ape = s->priv_data;
     AVStream *st;
     uint32_t tag;
     int i;
-    int total_blocks;
-    int64_t pts;
+    int total_blocks, final_size = 0;
+    int64_t pts, file_size;
 
     /* Skip any leading junk such as id3v2 tags */
     ape->junklength = avio_tell(pb);
@@ -278,6 +278,9 @@ static int ape_read_header(AVFormatContext * s, AVFormatParameters * ap)
             return AVERROR(ENOMEM);
         for (i = 0; i < ape->seektablelength / sizeof(uint32_t); i++)
             ape->seektable[i] = avio_rl32(pb);
+    }else{
+        av_log(s, AV_LOG_ERROR, "Missing seektable\n");
+        return -1;
     }
 
     ape->frames[0].pos     = ape->firstframe;
@@ -289,8 +292,17 @@ static int ape_read_header(AVFormatContext * s, AVFormatParameters * ap)
         ape->frames[i - 1].size = ape->frames[i].pos - ape->frames[i - 1].pos;
         ape->frames[i].skip     = (ape->frames[i].pos - ape->frames[0].pos) & 3;
     }
-    ape->frames[ape->totalframes - 1].size    = ape->finalframeblocks * 4;
     ape->frames[ape->totalframes - 1].nblocks = ape->finalframeblocks;
+    /* calculate final packet size from total file size, if available */
+    file_size = avio_size(pb);
+    if (file_size > 0) {
+        final_size = file_size - ape->frames[ape->totalframes - 1].pos -
+                     ape->wavtaillength;
+        final_size -= final_size & 3;
+    }
+    if (file_size <= 0 || final_size <= 0)
+        final_size = ape->finalframeblocks * 8;
+    ape->frames[ape->totalframes - 1].size = final_size;
 
     for (i = 0; i < ape->totalframes; i++) {
         if(ape->frames[i].skip){
@@ -326,7 +338,6 @@ static int ape_read_header(AVFormatContext * s, AVFormatParameters * ap)
     st->codec->channels        = ape->channels;
     st->codec->sample_rate     = ape->samplerate;
     st->codec->bits_per_coded_sample = ape->bps;
-    st->codec->frame_size      = MAC_SUBFRAME_SIZE;
 
     st->nb_frames = ape->totalframes;
     st->start_time = 0;
@@ -357,17 +368,26 @@ static int ape_read_packet(AVFormatContext * s, AVPacket * pkt)
     uint32_t extra_size = 8;
 
     if (url_feof(s->pb))
-        return AVERROR(EIO);
-    if (ape->currentframe > ape->totalframes)
-        return AVERROR(EIO);
+        return AVERROR_EOF;
+    if (ape->currentframe >= ape->totalframes)
+        return AVERROR_EOF;
 
-    avio_seek (s->pb, ape->frames[ape->currentframe].pos, SEEK_SET);
+    if (avio_seek(s->pb, ape->frames[ape->currentframe].pos, SEEK_SET) < 0)
+        return AVERROR(EIO);
 
     /* Calculate how many blocks there are in this frame */
     if (ape->currentframe == (ape->totalframes - 1))
         nblocks = ape->finalframeblocks;
     else
         nblocks = ape->blocksperframe;
+
+    if (ape->frames[ape->currentframe].size <= 0 ||
+        ape->frames[ape->currentframe].size > INT_MAX - extra_size) {
+        av_log(s, AV_LOG_ERROR, "invalid packet size: %d\n",
+               ape->frames[ape->currentframe].size);
+        ape->currentframe++;
+        return AVERROR(EIO);
+    }
 
     if (av_new_packet(pkt,  ape->frames[ape->currentframe].size + extra_size) < 0)
         return AVERROR(ENOMEM);
@@ -406,6 +426,8 @@ static int ape_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
     if (index < 0)
         return -1;
 
+    if (avio_seek(s->pb, st->index_entries[index].pos, SEEK_SET) < 0)
+        return -1;
     ape->currentframe = index;
     return 0;
 }
@@ -419,5 +441,5 @@ AVInputFormat ff_ape_demuxer = {
     .read_packet    = ape_read_packet,
     .read_close     = ape_read_close,
     .read_seek      = ape_read_seek,
-    .extensions = "ape,apl,mac"
+    .extensions     = "ape,apl,mac",
 };

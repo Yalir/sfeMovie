@@ -48,6 +48,7 @@
 
 #include "libavutil/imgutils.h"
 #include "avcodec.h"
+#include "internal.h"
 #include "put_bits.h"
 #include "bytestream.h"
 
@@ -191,6 +192,11 @@ static av_cold int flashsv2_encode_init(AVCodecContext * avctx)
                "Input dimensions too large, input must be max 4096x4096 !\n");
         return -1;
     }
+    if ((avctx->width < 16) || (avctx->height < 16)) {
+        av_log(avctx, AV_LOG_ERROR,
+               "Input dimensions too small, input must be at least 16x16 !\n");
+        return -1;
+    }
 
     if (av_image_check_size(avctx->width, avctx->height, 0, avctx) < 0)
         return -1;
@@ -203,6 +209,11 @@ static av_cold int flashsv2_encode_init(AVCodecContext * avctx)
 
     s->block_width  = (s->image_width /  12) & ~15;
     s->block_height = (s->image_height / 12) & ~15;
+
+    if(!s->block_width)
+        s->block_width = 1;
+    if(!s->block_height)
+        s->block_height = 1;
 
     s->rows = (s->image_height + s->block_height - 1) / s->block_height;
     s->cols = (s->image_width +  s->block_width -  1) / s->block_width;
@@ -823,16 +834,18 @@ static int reconfigure_at_keyframe(FlashSV2Context * s, const uint8_t * image,
     return 0;
 }
 
-static int flashsv2_encode_frame(AVCodecContext * avctx, uint8_t * buf,
-                                 int buf_size, void *data)
+static int flashsv2_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
+                                 const AVFrame *pict, int *got_packet)
 {
     FlashSV2Context *const s = avctx->priv_data;
-    AVFrame *pict = data;
     AVFrame *const p = &s->frame;
     int res;
     int keyframe = 0;
 
     *p = *pict;
+
+    if ((res = ff_alloc_packet2(avctx, pkt, s->frame_size + FF_MIN_BUFFER_SIZE)) < 0)
+        return res;
 
     /* First frame needs to be a keyframe */
     if (avctx->frame_number == 0)
@@ -842,12 +855,6 @@ static int flashsv2_encode_frame(AVCodecContext * avctx, uint8_t * buf,
     if (avctx->gop_size > 0) {
         if (avctx->frame_number >= s->last_key_frame + avctx->gop_size)
             keyframe = 1;
-    }
-
-    if (buf_size < s->frame_size) {
-        //Conservative upper bound check for compressed data
-        av_log(avctx, AV_LOG_ERROR, "buf_size %d <  %d\n", buf_size, s->frame_size);
-        return -1;
     }
 
     if (!keyframe
@@ -866,13 +873,14 @@ static int flashsv2_encode_frame(AVCodecContext * avctx, uint8_t * buf,
     if (s->use15_7)
         s->dist = optimum_dist(s);
 
-    res = write_bitstream(s, p->data[0], p->linesize[0], buf, buf_size, keyframe);
+    res = write_bitstream(s, p->data[0], p->linesize[0], pkt->data, pkt->size, keyframe);
 
     if (keyframe) {
         new_key_frame(s);
         p->pict_type = AV_PICTURE_TYPE_I;
         p->key_frame = 1;
         s->last_key_frame = avctx->frame_number;
+        pkt->flags |= AV_PKT_FLAG_KEY;
         av_log(avctx, AV_LOG_DEBUG, "Inserting key frame at frame %d\n", avctx->frame_number);
     } else {
         p->pict_type = AV_PICTURE_TYPE_P;
@@ -881,7 +889,10 @@ static int flashsv2_encode_frame(AVCodecContext * avctx, uint8_t * buf,
 
     avctx->coded_frame = p;
 
-    return res;
+    pkt->size = res;
+    *got_packet = 1;
+
+    return 0;
 }
 
 static av_cold int flashsv2_encode_end(AVCodecContext * avctx)
@@ -899,7 +910,7 @@ AVCodec ff_flashsv2_encoder = {
     .id             = CODEC_ID_FLASHSV2,
     .priv_data_size = sizeof(FlashSV2Context),
     .init           = flashsv2_encode_init,
-    .encode         = flashsv2_encode_frame,
+    .encode2        = flashsv2_encode_frame,
     .close          = flashsv2_encode_end,
     .pix_fmts = (enum PixelFormat[]) {PIX_FMT_BGR24, PIX_FMT_NONE},
     .long_name = NULL_IF_CONFIG_SMALL("Flash Screen Video Version 2"),

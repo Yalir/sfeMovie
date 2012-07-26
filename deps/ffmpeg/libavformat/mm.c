@@ -81,8 +81,7 @@ static int probe(AVProbeData *p)
     return AVPROBE_SCORE_MAX / 2;
 }
 
-static int read_header(AVFormatContext *s,
-                           AVFormatParameters *ap)
+static int read_header(AVFormatContext *s)
 {
     MmDemuxContext *mm = s->priv_data;
     AVIOContext *pb = s->pb;
@@ -175,7 +174,6 @@ static int read_packet(AVFormatContext *s,
         case MM_TYPE_AUDIO :
             if (av_get_packet(s->pb, pkt, length)<0)
                 return AVERROR(ENOMEM);
-            pkt->size = length;
             pkt->stream_index = 1;
             pkt->pts = mm->audio_pts++;
             return 0;

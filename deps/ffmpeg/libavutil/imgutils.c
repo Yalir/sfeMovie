@@ -101,12 +101,10 @@ int av_image_fill_linesizes(int linesizes[4], enum PixelFormat pix_fmt, int widt
 int av_image_fill_pointers(uint8_t *data[4], enum PixelFormat pix_fmt, int height,
                            uint8_t *ptr, const int linesizes[4])
 {
-    int i, total_size, size[4], has_plane[4];
+    int i, total_size, size[4] = { 0 }, has_plane[4] = { 0 };
 
     const AVPixFmtDescriptor *desc = &av_pix_fmt_descriptors[pix_fmt];
     memset(data     , 0, sizeof(data[0])*4);
-    memset(size     , 0, sizeof(size));
-    memset(has_plane, 0, sizeof(has_plane));
 
     if ((unsigned)pix_fmt >= PIX_FMT_NB || desc->flags & PIX_FMT_HWACCEL)
         return AVERROR(EINVAL);
@@ -116,7 +114,8 @@ int av_image_fill_pointers(uint8_t *data[4], enum PixelFormat pix_fmt, int heigh
         return AVERROR(EINVAL);
     size[0] = linesizes[0] * height;
 
-    if (desc->flags & PIX_FMT_PAL) {
+    if (desc->flags & PIX_FMT_PAL ||
+        desc->flags & PIX_FMT_PSEUDOPAL) {
         size[0] = (size[0] + 3) & ~3;
         data[1] = ptr + size[0]; /* palette is stored here as 256 32 bits words */
         return size[0] + 256 * 4;
@@ -189,7 +188,7 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
 
     if ((ret = av_image_check_size(w, h, 0, NULL)) < 0)
         return ret;
-    if ((ret = av_image_fill_linesizes(linesizes, pix_fmt, w)) < 0)
+    if ((ret = av_image_fill_linesizes(linesizes, pix_fmt, align>7 ? FFALIGN(w, 8) : w)) < 0)
         return ret;
 
     for (i = 0; i < 4; i++)
@@ -204,7 +203,8 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
         av_free(buf);
         return ret;
     }
-    if (av_pix_fmt_descriptors[pix_fmt].flags & PIX_FMT_PAL)
+    if (av_pix_fmt_descriptors[pix_fmt].flags & PIX_FMT_PAL ||
+        av_pix_fmt_descriptors[pix_fmt].flags & PIX_FMT_PSEUDOPAL)
         ff_set_systematic_pal2((uint32_t*)pointers[1], pix_fmt);
 
     return ret;
@@ -251,7 +251,8 @@ void av_image_copy(uint8_t *dst_data[4], int dst_linesizes[4],
     if (desc->flags & PIX_FMT_HWACCEL)
         return;
 
-    if (desc->flags & PIX_FMT_PAL) {
+    if (desc->flags & PIX_FMT_PAL ||
+        desc->flags & PIX_FMT_PSEUDOPAL) {
         av_image_copy_plane(dst_data[0], dst_linesizes[0],
                             src_data[0], src_linesizes[0],
                             width, height);

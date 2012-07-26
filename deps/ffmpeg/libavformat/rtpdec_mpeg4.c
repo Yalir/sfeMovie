@@ -1,4 +1,4 @@
-/**
+/*
  * Common code for the RTP depacketization of MPEG-4 formats.
  * Copyright (c) 2010 Fabrice Bellard
  *                    Romain Degez
@@ -222,6 +222,9 @@ static int parse_sdp_line(AVFormatContext *s, int st_index,
                           PayloadContext *data, const char *line)
 {
     const char *p;
+
+    if (st_index < 0)
+        return 0;
 
     if (av_strstart(line, "fmtp:", &p))
         return ff_parse_fmtp(s->streams[st_index], data, p, parse_fmtp);

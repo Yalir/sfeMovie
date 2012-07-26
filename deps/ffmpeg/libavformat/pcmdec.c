@@ -36,6 +36,7 @@ static int raw_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     ret= av_get_packet(s->pb, pkt, size);
 
+    pkt->flags &= ~AV_PKT_FLAG_CORRUPT;
     pkt->stream_index = 0;
     if (ret < 0)
         return ret;
@@ -67,10 +68,10 @@ AVInputFormat ff_pcm_ ## name_ ## _demuxer = {              \
     .priv_data_size = sizeof(RawAudioDemuxerContext),       \
     .read_header    = ff_raw_read_header,                   \
     .read_packet    = raw_read_packet,                      \
-    .read_seek      = pcm_read_seek,                        \
+    .read_seek      = ff_pcm_read_seek,                     \
     .flags          = AVFMT_GENERIC_INDEX,                  \
     .extensions     = ext,                                  \
-    .value          = codec,                                \
+    .raw_codec_id   = codec,                                \
     .priv_class     = &name_ ## _demuxer_class,             \
 };
 

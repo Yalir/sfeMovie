@@ -31,6 +31,9 @@
 
 #if defined(__MINGW32__) && !defined(__MINGW32CE__)
 #  include <fcntl.h>
+#  ifdef lseek
+#   undef lseek
+#  endif
 #  define lseek(f,p,w) _lseeki64((f), (p), (w))
 #  define stat _stati64
 #  define fstat(f,s) _fstati64((f), (s))
@@ -44,6 +47,18 @@ static inline int is_dos_path(const char *path)
 #endif
     return 0;
 }
+
+#if defined(__OS2__)
+#define SHUT_RD 0
+#define SHUT_WR 1
+#define SHUT_RDWR 2
+#endif
+
+#if defined(_WIN32)
+#define SHUT_RD SD_RECEIVE
+#define SHUT_WR SD_SEND
+#define SHUT_RDWR SD_BOTH
+#endif
 
 #if defined(_WIN32) && !defined(__MINGW32CE__)
 int ff_win32_open(const char *filename, int oflag, int pmode);

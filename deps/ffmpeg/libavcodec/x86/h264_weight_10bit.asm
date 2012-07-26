@@ -152,15 +152,15 @@ WEIGHT_FUNC_HALF_MM sse4
 ; void h264_biweight(uint8_t *dst, uint8_t *src, int stride, int height,
 ;                    int log2_denom, int weightd, int weights, int offset);
 ;-----------------------------------------------------------------------------
-%ifdef ARCH_X86_32
+%if ARCH_X86_32
 DECLARE_REG_TMP 3
 %else
-DECLARE_REG_TMP 10
+DECLARE_REG_TMP 7
 %endif
 
 %macro BIWEIGHT_PROLOGUE 0
 .prologue
-    PROLOGUE 0,7,8
+    PROLOGUE 0,8,8
     movifnidn  r0, r0mp
     movifnidn  r1, r1mp
     movifnidn r2d, r2m

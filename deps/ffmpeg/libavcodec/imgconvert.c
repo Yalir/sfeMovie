@@ -55,9 +55,11 @@
 #define deinterlace_line         deinterlace_line_c
 #endif
 
+#define pixdesc_has_alpha(pixdesc) \
+    ((pixdesc)->nb_components == 2 || (pixdesc)->nb_components == 4 || (pixdesc)->flags & PIX_FMT_PAL)
+
 typedef struct PixFmtInfo {
     uint8_t color_type;      /**< color type (see FF_COLOR_xxx constants) */
-    uint8_t is_alpha : 1;    /**< true if alpha can be specified */
     uint8_t padded_size;     /**< padded size in bits if different from the non-padded size */
 } PixFmtInfo;
 
@@ -109,7 +111,14 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
 
     /* YUV formats with alpha plane */
     [PIX_FMT_YUVA420P] = {
-        .is_alpha = 1,
+        .color_type = FF_COLOR_YUV,
+    },
+
+    [PIX_FMT_YUVA422P] = {
+        .color_type = FF_COLOR_YUV,
+    },
+
+    [PIX_FMT_YUVA444P] = {
         .color_type = FF_COLOR_YUV,
     },
 
@@ -135,7 +144,6 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_ARGB] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_RGB48BE] = {
@@ -145,11 +153,9 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_RGBA64BE] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_RGBA64LE] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_RGB565BE] = {
@@ -186,7 +192,6 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .color_type = FF_COLOR_GRAY,
     },
     [PIX_FMT_GRAY8A] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_GRAY,
     },
     [PIX_FMT_MONOWHITE] = {
@@ -198,14 +203,12 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
 
     /* paletted formats */
     [PIX_FMT_PAL8] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_UYYVYY411] = {
         .color_type = FF_COLOR_YUV,
     },
     [PIX_FMT_ABGR] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_BGR48BE] = {
@@ -215,11 +218,9 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_BGRA64BE] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_BGRA64LE] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_BGR565BE] = {
@@ -274,11 +275,9 @@ static const PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
     },
 
     [PIX_FMT_BGRA] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
     [PIX_FMT_RGBA] = {
-        .is_alpha = 1,
         .color_type = FF_COLOR_RGB,
     },
 };
@@ -288,13 +287,6 @@ void avcodec_get_chroma_sub_sample(enum PixelFormat pix_fmt, int *h_shift, int *
     *h_shift = av_pix_fmt_descriptors[pix_fmt].log2_chroma_w;
     *v_shift = av_pix_fmt_descriptors[pix_fmt].log2_chroma_h;
 }
-
-#if FF_API_GET_PIX_FMT_NAME
-const char *avcodec_get_pix_fmt_name(enum PixelFormat pix_fmt)
-{
-    return av_get_pix_fmt_name(pix_fmt);
-}
-#endif
 
 int ff_is_hwaccel_pix_fmt(enum PixelFormat pix_fmt)
 {
@@ -352,8 +344,11 @@ int avpicture_layout(const AVPicture* src, enum PixelFormat pix_fmt, int width, 
         return size;
     }
 
-    if (desc->flags & PIX_FMT_PAL)
-        memcpy((unsigned char *)(((size_t)dest + 3) & ~3), src->data[1], 256 * 4);
+    if (desc->flags & PIX_FMT_PAL) {
+        uint32_t *d32 = (unsigned char *)(((size_t)dest + 3) & ~3);
+        for (i = 0; i<256; i++)
+            AV_WL32(d32 + i, AV_RN32(src->data[1] + 4*i));
+    }
 
     return size;
 }
@@ -363,15 +358,9 @@ int avpicture_get_size(enum PixelFormat pix_fmt, int width, int height)
     AVPicture dummy_pict;
     if(av_image_check_size(width, height, 0, NULL))
         return -1;
-    switch (pix_fmt) {
-    case PIX_FMT_RGB8:
-    case PIX_FMT_BGR8:
-    case PIX_FMT_RGB4_BYTE:
-    case PIX_FMT_BGR4_BYTE:
-    case PIX_FMT_GRAY8:
+    if (av_pix_fmt_descriptors[pix_fmt].flags & PIX_FMT_PSEUDOPAL)
         // do not include palette for these pseudo-paletted formats
         return width * height;
-    }
     return avpicture_fill(&dummy_pict, NULL, pix_fmt, width, height);
 }
 
@@ -453,10 +442,10 @@ int avcodec_get_pix_fmt_loss(enum PixelFormat dst_pix_fmt, enum PixelFormat src_
     if (pf->color_type == FF_COLOR_GRAY &&
         ps->color_type != FF_COLOR_GRAY)
         loss |= FF_LOSS_CHROMA;
-    if (!pf->is_alpha && (ps->is_alpha && has_alpha))
+    if (!pixdesc_has_alpha(dst_desc) && (pixdesc_has_alpha(src_desc) && has_alpha))
         loss |= FF_LOSS_ALPHA;
     if (dst_pix_fmt == PIX_FMT_PAL8 &&
-        (src_pix_fmt != PIX_FMT_PAL8 && (ps->color_type != FF_COLOR_GRAY || (ps->is_alpha && has_alpha))))
+        (src_pix_fmt != PIX_FMT_PAL8 && (ps->color_type != FF_COLOR_GRAY || (pixdesc_has_alpha(src_desc) && has_alpha))))
         loss |= FF_LOSS_COLORQUANT;
 
     return loss;
@@ -500,6 +489,7 @@ enum PixelFormat avcodec_find_best_pix_fmt2(enum PixelFormat dst_pix_fmt1, enum 
         ~(FF_LOSS_COLORSPACE | FF_LOSS_RESOLUTION),
         ~FF_LOSS_COLORQUANT,
         ~FF_LOSS_DEPTH,
+        ~(FF_LOSS_DEPTH|FF_LOSS_COLORSPACE),
         ~(FF_LOSS_RESOLUTION | FF_LOSS_DEPTH | FF_LOSS_COLORSPACE | FF_LOSS_ALPHA |
           FF_LOSS_COLORQUANT | FF_LOSS_CHROMA),
         0x80000, //non zero entry that combines all loss variants including future additions
@@ -753,55 +743,6 @@ int av_picture_pad(AVPicture *dst, const AVPicture *src, int height, int width,
     return 0;
 }
 
-#if FF_API_GET_ALPHA_INFO
-/* NOTE: we scan all the pixels to have an exact information */
-static int get_alpha_info_pal8(const AVPicture *src, int width, int height)
-{
-    const unsigned char *p;
-    int src_wrap, ret, x, y;
-    unsigned int a;
-    uint32_t *palette = (uint32_t *)src->data[1];
-
-    p = src->data[0];
-    src_wrap = src->linesize[0] - width;
-    ret = 0;
-    for(y=0;y<height;y++) {
-        for(x=0;x<width;x++) {
-            a = palette[p[0]] >> 24;
-            if (a == 0x00) {
-                ret |= FF_ALPHA_TRANSP;
-            } else if (a != 0xff) {
-                ret |= FF_ALPHA_SEMI_TRANSP;
-            }
-            p++;
-        }
-        p += src_wrap;
-    }
-    return ret;
-}
-
-int img_get_alpha_info(const AVPicture *src,
-                       enum PixelFormat pix_fmt, int width, int height)
-{
-    const PixFmtInfo *pf = &pix_fmt_info[pix_fmt];
-    int ret;
-
-    /* no alpha can be represented in format */
-    if (!pf->is_alpha)
-        return 0;
-    switch(pix_fmt) {
-    case PIX_FMT_PAL8:
-        ret = get_alpha_info_pal8(src, width, height);
-        break;
-    default:
-        /* we do not know, so everything is indicated */
-        ret = FF_ALPHA_TRANSP | FF_ALPHA_SEMI_TRANSP;
-        break;
-    }
-    return ret;
-}
-#endif
-
 #if !(HAVE_MMX && HAVE_YASM)
 /* filter parameters: [-1 4 2 4 -1] // 8 */
 static void deinterlace_line_c(uint8_t *dst,
@@ -960,4 +901,3 @@ int avpicture_deinterlace(AVPicture *dst, const AVPicture *src,
     emms_c();
     return 0;
 }
-

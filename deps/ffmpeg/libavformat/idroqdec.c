@@ -67,8 +67,7 @@ static int roq_probe(AVProbeData *p)
     return AVPROBE_SCORE_MAX;
 }
 
-static int roq_read_header(AVFormatContext *s,
-                           AVFormatParameters *ap)
+static int roq_read_header(AVFormatContext *s)
 {
     RoqDemuxContext *roq = s->priv_data;
     AVIOContext *pb = s->pb;
@@ -221,7 +220,7 @@ static int roq_read_packet(AVFormatContext *s,
 }
 
 AVInputFormat ff_roq_demuxer = {
-    .name           = "RoQ",
+    .name           = "roq",
     .long_name      = NULL_IF_CONFIG_SMALL("id RoQ format"),
     .priv_data_size = sizeof(RoqDemuxContext),
     .read_probe     = roq_probe,

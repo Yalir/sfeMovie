@@ -164,7 +164,7 @@ AVOutputFormat ff_libnut_muxer = {
     .write_header      = nut_write_header,
     .write_packet      = nut_write_packet,
     .write_trailer     = nut_write_trailer,
-    .flags = AVFMT_GLOBALHEADER,
+    .flags             = AVFMT_GLOBALHEADER,
 };
 #endif /* CONFIG_LIBNUT_MUXER */
 
@@ -188,7 +188,7 @@ static off_t av_seek(void * h, long long pos, int whence) {
     return avio_seek(bc, pos, whence);
 }
 
-static int nut_read_header(AVFormatContext * avf, AVFormatParameters * ap) {
+static int nut_read_header(AVFormatContext * avf) {
     NUTContext * priv = avf->priv_data;
     AVIOContext * bc = avf->pb;
     nut_demuxer_opts_tt dopts = {
@@ -318,5 +318,5 @@ AVInputFormat ff_libnut_demuxer = {
     .read_packet    = nut_read_packet,
     .read_close     = nut_read_close,
     .read_seek      = nut_read_seek,
-    .extensions = "nut",
+    .extensions     = "nut",
 };

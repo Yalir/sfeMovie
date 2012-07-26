@@ -33,7 +33,7 @@
 %define W6sh2  8867 ; W6 = 35468 =  8867<<2
 %define W7sh2  4520 ; W7 = 18081 =  4520<<2 + 1
 
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
 
 SECTION_RODATA
 
@@ -306,7 +306,7 @@ INIT_XMM
 idct_put_fn sse2, 16
 INIT_XMM
 idct_put_fn sse4, 16
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 idct_put_fn avx,  16
 %endif

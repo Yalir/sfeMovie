@@ -52,7 +52,7 @@ static int mpc_probe(AVProbeData *p)
     return 0;
 }
 
-static int mpc_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int mpc_read_header(AVFormatContext *s)
 {
     MPCContext *c = s->priv_data;
     AVStream *st;
@@ -231,5 +231,5 @@ AVInputFormat ff_mpc_demuxer = {
     .read_packet    = mpc_read_packet,
     .read_close     = mpc_read_close,
     .read_seek      = mpc_read_seek,
-    .extensions = "mpc",
+    .extensions     = "mpc",
 };

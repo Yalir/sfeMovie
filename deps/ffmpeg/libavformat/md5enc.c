@@ -21,6 +21,7 @@
 
 #include "libavutil/md5.h"
 #include "avformat.h"
+#include "internal.h"
 
 #define PRIVSIZE 512
 
@@ -89,7 +90,8 @@ static int framemd5_write_packet(struct AVFormatContext *s, AVPacket *pkt)
     av_md5_init(s->priv_data);
     av_md5_update(s->priv_data, pkt->data, pkt->size);
 
-    snprintf(buf, sizeof(buf) - 64, "%d, %"PRId64", %d, ", pkt->stream_index, pkt->dts, pkt->size);
+    snprintf(buf, sizeof(buf) - 64, "%d, %10"PRId64", %10"PRId64", %8d, %8d, ",
+             pkt->stream_index, pkt->dts, pkt->pts, pkt->duration, pkt->size);
     md5_finish(s, buf);
     return 0;
 }
@@ -100,7 +102,8 @@ AVOutputFormat ff_framemd5_muxer = {
     .priv_data_size    = PRIVSIZE,
     .audio_codec       = CODEC_ID_PCM_S16LE,
     .video_codec       = CODEC_ID_RAWVIDEO,
+    .write_header      = ff_framehash_write_header,
     .write_packet      = framemd5_write_packet,
-    .flags             = AVFMT_VARIABLE_FPS,
+    .flags             = AVFMT_VARIABLE_FPS | AVFMT_TS_NONSTRICT,
 };
 #endif

@@ -32,11 +32,13 @@
 #include "libavformat/avformat.h"
 #include "libavfilter/avfilter.h"
 #include "libavdevice/avdevice.h"
+#include "libavresample/avresample.h"
 #include "libswscale/swscale.h"
 #include "libswresample/swresample.h"
 #if CONFIG_POSTPROC
 #include "libpostproc/postprocess.h"
 #endif
+#include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/parseutils.h"
@@ -54,6 +56,7 @@
 #endif
 
 struct SwsContext *sws_opts;
+SwrContext *swr_opts;
 AVDictionary *format_opts, *codec_opts;
 
 const int this_year = 2012;
@@ -66,6 +69,7 @@ void init_opts(void)
     sws_opts = sws_getContext(16, 16, 0, 16, 16, 0, SWS_BICUBIC,
                               NULL, NULL, NULL);
 #endif
+    swr_opts = swr_alloc();
 }
 
 void uninit_opts(void)
@@ -74,6 +78,7 @@ void uninit_opts(void)
     sws_freeContext(sws_opts);
     sws_opts = NULL;
 #endif
+    swr_free(&swr_opts);
     av_dict_free(&format_opts);
     av_dict_free(&codec_opts);
 }
@@ -250,14 +255,12 @@ int parse_option(void *optctx, const char *opt, const char *arg,
     if (!po->name && opt[0] == 'n' && opt[1] == 'o') {
         /* handle 'no' bool option */
         po = find_option(options, opt + 2);
-        if (!(po->name && (po->flags & OPT_BOOL)))
-            goto unknown_opt;
-        bool_val = 0;
+        if ((po->name && (po->flags & OPT_BOOL)))
+            bool_val = 0;
     }
     if (!po->name)
         po = find_option(options, "default");
     if (!po->name) {
-unknown_opt:
         av_log(NULL, AV_LOG_ERROR, "Unrecognized option '%s'\n", opt);
         return AVERROR(EINVAL);
     }
@@ -342,11 +345,8 @@ void parse_options(void *optctx, int argc, char **argv, const OptionDef *options
     }
 }
 
-/*
- * Return index of option opt in argv or 0 if not found.
- */
-static int locate_option(int argc, char **argv, const OptionDef *options,
-                         const char *optname)
+int locate_option(int argc, char **argv, const OptionDef *options,
+                  const char *optname)
 {
     const OptionDef *po;
     int i;
@@ -420,10 +420,10 @@ void parse_loglevel(int argc, char **argv, const OptionDef *options)
 #define FLAGS(o) ((o)->type == AV_OPT_TYPE_FLAGS) ? AV_DICT_APPEND : 0
 int opt_default(const char *opt, const char *arg)
 {
-    const AVOption *oc, *of, *os;
+    const AVOption *oc, *of, *os, *oswr = NULL;
     char opt_stripped[128];
     const char *p;
-    const AVClass *cc = avcodec_get_class(), *fc = avformat_get_class(), *sc;
+    const AVClass *cc = avcodec_get_class(), *fc = avformat_get_class(), *sc, *swr_class;
 
     if (!(p = strchr(opt, ':')))
         p = opt + strlen(opt);
@@ -449,8 +449,17 @@ int opt_default(const char *opt, const char *arg)
         }
     }
 #endif
+    swr_class = swr_get_class();
+    if (!oc && !of && !os && (oswr = av_opt_find(&swr_class, opt, NULL, 0,
+                          AV_OPT_SEARCH_CHILDREN | AV_OPT_SEARCH_FAKE_OBJ))) {
+        int ret = av_opt_set(swr_opts, opt, arg, 0);
+        if (ret < 0) {
+            av_log(NULL, AV_LOG_ERROR, "Error setting option %s.\n", opt);
+            return ret;
+        }
+    }
 
-    if (oc || of || os)
+    if (oc || of || os || oswr)
         return 0;
     av_log(NULL, AV_LOG_ERROR, "Unrecognized option '%s'\n", opt);
     return AVERROR_OPTION_NOT_FOUND;
@@ -537,6 +546,18 @@ int opt_max_alloc(const char *opt, const char *arg)
     return 0;
 }
 
+int opt_cpuflags(const char *opt, const char *arg)
+{
+    int ret;
+    unsigned flags = av_get_cpu_flags();
+
+    if ((ret = av_parse_cpu_caps(&flags, arg)) < 0)
+        return ret;
+
+    av_force_cpu_flags(flags);
+    return 0;
+}
+
 int opt_codec_debug(const char *opt, const char *arg)
 {
     av_log_set_level(AV_LOG_DEBUG);
@@ -578,7 +599,8 @@ static int warned_cfg = 0;
         const char *indent = flags & INDENT? "  " : "";                 \
         if (flags & SHOW_VERSION) {                                     \
             unsigned int version = libname##_version();                 \
-            av_log(NULL, level, "%slib%-11s %2d.%3d.%3d / %2d.%3d.%3d\n",\
+            av_log(NULL, level,                                         \
+                   "%slib%-11s %2d.%3d.%3d / %2d.%3d.%3d\n",            \
                    indent, #libname,                                    \
                    LIB##LIBNAME##_VERSION_MAJOR,                        \
                    LIB##LIBNAME##_VERSION_MINOR,                        \
@@ -607,6 +629,7 @@ static void print_all_libs_info(int flags, int level)
     PRINT_LIB_INFO(avformat, AVFORMAT, flags, level);
     PRINT_LIB_INFO(avdevice, AVDEVICE, flags, level);
     PRINT_LIB_INFO(avfilter, AVFILTER, flags, level);
+//    PRINT_LIB_INFO(avresample, AVRESAMPLE, flags, level);
     PRINT_LIB_INFO(swscale,  SWSCALE,  flags, level);
     PRINT_LIB_INFO(swresample,SWRESAMPLE,  flags, level);
 #if CONFIG_POSTPROC
@@ -804,9 +827,9 @@ int opt_codecs(const char *opt, const char *arg)
                 decode = encode = cap = 0;
             }
             if (p2 && strcmp(p->name, p2->name) == 0) {
-                if (p->decode)
+                if (av_codec_is_decoder(p))
                     decode = 1;
-                if (p->encode)
+                if (av_codec_is_encoder(p))
                     encode = 1;
                 cap |= p->capabilities;
             }
@@ -852,20 +875,16 @@ int opt_bsfs(const char *opt, const char *arg)
 
 int opt_protocols(const char *opt, const char *arg)
 {
-    URLProtocol *up=NULL;
+    void *opaque = NULL;
+    const char *name;
 
     printf("Supported file protocols:\n"
-           "I.. = Input  supported\n"
-           ".O. = Output supported\n"
-           "..S = Seek   supported\n"
-           "FLAGS NAME\n"
-           "----- \n");
-    while((up = av_protocol_next(up)))
-        printf("%c%c%c   %s\n",
-               up->url_read  ? 'I' : '.',
-               up->url_write ? 'O' : '.',
-               up->url_seek  ? 'S' : '.',
-               up->name);
+           "Input:\n");
+    while ((name = avio_enum_protocols(&opaque, 0)))
+        printf("%s\n", name);
+    printf("Output:\n");
+    while ((name = avio_enum_protocols(&opaque, 1)))
+        printf("%s\n", name);
     return 0;
 }
 
@@ -1033,7 +1052,7 @@ FILE *get_preset_file(char *filename, size_t filename_size,
             if (!f && codec_name) {
                 snprintf(filename, filename_size,
                          "%s%s/%s-%s.ffpreset",
-                         base[i],  i != 1 ? "" : "/.ffmpeg", codec_name,
+                         base[i], i != 1 ? "" : "/.ffmpeg", codec_name,
                          preset_name);
                 f = fopen(filename, "r");
             }
@@ -1057,7 +1076,7 @@ int check_stream_specifier(AVFormatContext *s, AVStream *st, const char *spec)
         case 's': type = AVMEDIA_TYPE_SUBTITLE;   break;
         case 'd': type = AVMEDIA_TYPE_DATA;       break;
         case 't': type = AVMEDIA_TYPE_ATTACHMENT; break;
-        default: abort(); // never reached, silence warning
+        default:  av_assert0(0);
         }
         if (type != st->codec->codec_type)
             return 0;
@@ -1090,6 +1109,12 @@ int check_stream_specifier(AVFormatContext *s, AVStream *st, const char *spec)
                     return 1;
         }
         return 0;
+    } else if (*spec == '#') {
+        int sid;
+        char *endptr;
+        sid = strtol(spec + 1, &endptr, 0);
+        if (!*endptr)
+            return st->id == sid;
     } else if (!*spec) /* empty specifier, matches everything */
         return 1;
 

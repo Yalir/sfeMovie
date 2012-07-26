@@ -32,13 +32,14 @@
 
 #include "avformat.h"
 #include "internal.h"
+#include "libavcodec/dv_profile.h"
 #include "libavcodec/dvdata.h"
-#include "libavcodec/timecode.h"
 #include "dv.h"
 #include "libavutil/fifo.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
+#include "libavutil/timecode.h"
 
 struct DVMuxContext {
     AVClass          *av_class;
@@ -51,7 +52,8 @@ struct DVMuxContext {
     int               has_audio;     /* frame under contruction has audio */
     int               has_video;     /* frame under contruction has video */
     uint8_t           frame_buf[DV_MAX_FRAME_SIZE]; /* frame under contruction */
-    struct ff_timecode tc;
+    char             *tc_opt_str;    /* timecode option string */
+    AVTimecode        tc;            /* timecode context */
 };
 
 static const int dv_aaux_packs_dist[12][9] = {
@@ -79,22 +81,13 @@ static int dv_write_pack(enum dv_pack_type pack_id, DVMuxContext *c, uint8_t* bu
 {
     struct tm tc;
     time_t ct;
-    int ltc_frame;
     uint32_t timecode;
     va_list ap;
 
     buf[0] = (uint8_t)pack_id;
     switch (pack_id) {
     case dv_timecode:
-        /*
-         * LTC drop-frame frame counter drops two frames (0 and 1) every
-         * minute, unless it is exactly divisible by 10
-         */
-        ltc_frame = c->tc.start + c->frames;
-        if (c->tc.drop)
-            ltc_frame = avpriv_framenum_to_drop_timecode(ltc_frame);
-        timecode = avpriv_framenum_to_smpte_timecode(ltc_frame, c->sys->ltc_divisor,
-                                                     c->tc.drop);
+        timecode  = av_timecode_get_smpte_from_framenum(&c->tc, c->frames);
         timecode |= 1<<23 | 1<<15 | 1<<7 | 1<<6; // biphase and binary group flags
         AV_WB32(buf + 1, timecode);
         break;
@@ -138,7 +131,7 @@ static int dv_write_pack(enum dv_pack_type pack_id, DVMuxContext *c, uint8_t* bu
     case dv_video_recdate:  /* VAUX recording date */
         ct = c->start_time + av_rescale_rnd(c->frames, c->sys->time_base.num,
                                             c->sys->time_base.den, AV_ROUND_DOWN);
-        brktimegm(ct, &tc);
+        ff_brktimegm(ct, &tc);
         buf[1] = 0xff; /* ds, tm, tens of time zone, units of time zone */
                        /* 0xff is very likely to be "unknown" */
         buf[2] = (3 << 6) | /* reserved -- always 1 */
@@ -154,7 +147,7 @@ static int dv_write_pack(enum dv_pack_type pack_id, DVMuxContext *c, uint8_t* bu
     case dv_video_rectime:  /* VAUX recording time */
         ct = c->start_time + av_rescale_rnd(c->frames, c->sys->time_base.num,
                                                        c->sys->time_base.den, AV_ROUND_DOWN);
-        brktimegm(ct, &tc);
+        ff_brktimegm(ct, &tc);
         buf[1] = (3 << 6) | /* reserved -- always 1 */
                  0x3f; /* tens of frame, units of frame: 0x3f - "unknown" ? */
         buf[2] = (1 << 7) | /* reserved -- always 1 */
@@ -333,11 +326,6 @@ static DVMuxContext* dv_init_mux(AVFormatContext* s)
     c->frames     = 0;
     c->has_audio  = 0;
     c->has_video  = 0;
-#if FF_API_TIMESTAMP
-    if (s->timestamp)
-        c->start_time = s->timestamp;
-    else
-#endif
     if (t = av_dict_get(s->metadata, "creation_time", NULL, 0))
         c->start_time = ff_iso8601_to_unix_time(t->value);
 
@@ -366,6 +354,7 @@ static void dv_delete_mux(DVMuxContext *c)
 
 static int dv_write_header(AVFormatContext *s)
 {
+    AVRational rate;
     DVMuxContext *dvc = s->priv_data;
 
     if (!dv_init_mux(s)) {
@@ -375,13 +364,12 @@ static int dv_write_header(AVFormatContext *s)
                     "     (50Mbps allows an optional second audio stream)\n");
         return -1;
     }
-    if (dvc->tc.str) {
-        dvc->tc.rate.num = dvc->sys->time_base.den;
-        dvc->tc.rate.den = dvc->sys->time_base.num;
-        if (avpriv_init_smpte_timecode(s, &dvc->tc) < 0)
-            return -1;
-    }
-    return 0;
+    rate.num = dvc->sys->ltc_divisor;
+    rate.den = 1;
+    if (dvc->tc_opt_str)
+        return av_timecode_init_from_string(&dvc->tc, rate,
+                                            dvc->tc_opt_str, s);
+    return av_timecode_init(&dvc->tc, rate, 0, 0, s);
 }
 
 static int dv_write_packet(struct AVFormatContext *s, AVPacket *pkt)
@@ -415,7 +403,7 @@ static const AVClass class = {
     .item_name  = av_default_item_name,
     .version    = LIBAVUTIL_VERSION_INT,
     .option     = (const AVOption[]){
-        {TIMECODE_OPT(DVMuxContext, AV_OPT_FLAG_ENCODING_PARAM)},
+        {AV_TIMECODE_OPTION(DVMuxContext, tc_opt_str, AV_OPT_FLAG_ENCODING_PARAM)},
         {NULL},
     },
 };

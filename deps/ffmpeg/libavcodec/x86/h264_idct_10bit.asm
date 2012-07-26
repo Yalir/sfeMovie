@@ -29,24 +29,6 @@ SECTION_RODATA
 
 pw_pixel_max: times 8 dw ((1 << 10)-1)
 pd_32:        times 4 dd 32
-scan8_mem: db  4+ 1*8, 5+ 1*8, 4+ 2*8, 5+ 2*8
-           db  6+ 1*8, 7+ 1*8, 6+ 2*8, 7+ 2*8
-           db  4+ 3*8, 5+ 3*8, 4+ 4*8, 5+ 4*8
-           db  6+ 3*8, 7+ 3*8, 6+ 4*8, 7+ 4*8
-           db  4+ 6*8, 5+ 6*8, 4+ 7*8, 5+ 7*8
-           db  6+ 6*8, 7+ 6*8, 6+ 7*8, 7+ 7*8
-           db  4+ 8*8, 5+ 8*8, 4+ 9*8, 5+ 9*8
-           db  6+ 8*8, 7+ 8*8, 6+ 9*8, 7+ 9*8
-           db  4+11*8, 5+11*8, 4+12*8, 5+12*8
-           db  6+11*8, 7+11*8, 6+12*8, 7+12*8
-           db  4+13*8, 5+13*8, 4+14*8, 5+14*8
-           db  6+13*8, 7+13*8, 6+14*8, 7+14*8
-
-%ifdef PIC
-%define scan8 r11
-%else
-%define scan8 scan8_mem
-%endif
 
 SECTION .text
 
@@ -98,7 +80,7 @@ cglobal h264_idct_add_10_%1, 3,3
 
 INIT_XMM
 IDCT_ADD_10 sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT_ADD_10 avx
 %endif
@@ -128,7 +110,7 @@ add4x4_idct_%1:
 INIT_XMM
 ALIGN 16
 ADD4x4IDCT sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 ALIGN 16
 ADD4x4IDCT avx
@@ -168,7 +150,7 @@ cglobal h264_idct_add16_10_%1, 5,6
 
 INIT_XMM
 IDCT_ADD16_10 sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT_ADD16_10 avx
 %endif
@@ -234,7 +216,7 @@ cglobal h264_idct8_dc_add_10_%1,3,3,7
 
 INIT_XMM
 IDCT8_DC_ADD sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT8_DC_ADD avx
 %endif
@@ -305,7 +287,7 @@ cglobal h264_idct_add16intra_10_%1,5,7,8
 
 INIT_XMM
 IDCT_ADD16INTRA_10 sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT_ADD16INTRA_10 avx
 %endif
@@ -315,17 +297,17 @@ IDCT_ADD16INTRA_10 avx
 ; h264_idct_add8(pixel **dst, const int *block_offset, dctcoef *block, int stride, const uint8_t nnzc[6*8])
 ;-----------------------------------------------------------------------------
 %macro IDCT_ADD8 1
-cglobal h264_idct_add8_10_%1,5,7
-%ifdef ARCH_X86_64
-    mov r10, r0
+cglobal h264_idct_add8_10_%1,5,8,7
+%if ARCH_X86_64
+    mov      r7, r0
 %endif
     add      r2, 1024
     mov      r0, [r0]
     ADD16_OP_INTRA %1, 16, 4+ 6*8
     ADD16_OP_INTRA %1, 18, 4+ 7*8
     add      r2, 1024-128*2
-%ifdef ARCH_X86_64
-    mov      r0, [r10+gprsize]
+%if ARCH_X86_64
+    mov      r0, [r7+gprsize]
 %else
     mov      r0, r0m
     mov      r0, [r0+gprsize]
@@ -342,7 +324,7 @@ cglobal h264_idct_add8_10_%1,5,7
 
 INIT_XMM
 IDCT_ADD8 sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT_ADD8 avx
 %endif
@@ -411,7 +393,7 @@ IDCT_ADD8 avx
 ; %1=int16_t *block, %2=int16_t *dstblock
 %macro IDCT8_ADD_SSE_START 2
     IDCT8_1D_FULL %1
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
     TRANSPOSE4x4D  0,1,2,3,8
     mova    [%2    ], m0
     TRANSPOSE4x4D  4,5,6,7,8
@@ -452,7 +434,7 @@ IDCT_ADD8 avx
 
 %macro IDCT8_ADD 1
 cglobal h264_idct8_add_10_%1, 3,4,16
-%ifndef UNIX64
+%if UNIX64 == 0
     %assign pad 16-gprsize-(stack_offset&15)
     sub  rsp, pad
     call h264_idct8_add1_10_%1
@@ -467,7 +449,7 @@ h264_idct8_add1_10_%1:
     sub          rsp, pad
     add   dword [r1], 32
 
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
     IDCT8_ADD_SSE_START r1, rsp
     SWAP 1,  9
     SWAP 2, 10
@@ -519,7 +501,7 @@ h264_idct8_add1_10_%1:
 
 INIT_XMM
 IDCT8_ADD sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT8_ADD avx
 %endif
@@ -559,7 +541,7 @@ cglobal h264_idct8_add4_10_%1, 0,7,16
 
 INIT_XMM
 IDCT8_ADD4 sse2
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_AVX
 IDCT8_ADD4 avx
 %endif

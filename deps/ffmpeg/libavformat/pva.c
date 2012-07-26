@@ -54,7 +54,7 @@ static int pva_probe(AVProbeData * pd) {
     return AVPROBE_SCORE_MAX / 4;
 }
 
-static int pva_read_header(AVFormatContext *s, AVFormatParameters *ap) {
+static int pva_read_header(AVFormatContext *s) {
     AVStream *st;
 
     if (!(st = avformat_new_stream(s, NULL)))
@@ -221,5 +221,5 @@ AVInputFormat ff_pva_demuxer = {
     .read_probe     = pva_probe,
     .read_header    = pva_read_header,
     .read_packet    = pva_read_packet,
-    .read_timestamp = pva_read_timestamp
+    .read_timestamp = pva_read_timestamp,
 };

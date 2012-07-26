@@ -155,7 +155,7 @@ static int spdif_probe(AVProbeData *p)
     return AVPROBE_SCORE_MAX / 8;
 }
 
-static int spdif_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int spdif_read_header(AVFormatContext *s)
 {
     s->ctx_flags |= AVFMTCTX_NOHEADER;
     return 0;
@@ -231,5 +231,5 @@ AVInputFormat ff_spdif_demuxer = {
     .read_probe     = spdif_probe,
     .read_header    = spdif_read_header,
     .read_packet    = spdif_read_packet,
-    .flags = AVFMT_GENERIC_INDEX,
+    .flags          = AVFMT_GENERIC_INDEX,
 };

@@ -284,7 +284,7 @@ static void gxf_read_index(AVFormatContext *s, int pkt_len) {
     avio_skip(pb, pkt_len);
 }
 
-static int gxf_header(AVFormatContext *s, AVFormatParameters *ap) {
+static int gxf_header(AVFormatContext *s) {
     AVIOContext *pb = s->pb;
     GXFPktType pkt_type;
     int map_len;
@@ -527,7 +527,7 @@ static int gxf_packet(AVFormatContext *s, AVPacket *pkt) {
 
         return ret;
     }
-    return AVERROR(EIO);
+    return AVERROR_EOF;
 }
 
 static int gxf_seek(AVFormatContext *s, int stream_index, int64_t timestamp, int flags) {

@@ -56,7 +56,7 @@ av_cold int ff_h263_decode_init(AVCodecContext *avctx)
     s->workaround_bugs= avctx->workaround_bugs;
 
     // set defaults
-    MPV_decode_defaults(s);
+    ff_MPV_decode_defaults(s);
     s->quant_precision=5;
     s->decode_mb= ff_h263_decode_mb;
     s->low_delay= 1;
@@ -112,10 +112,10 @@ av_cold int ff_h263_decode_init(AVCodecContext *avctx)
 
     /* for h263, we allocate the images after having read the header */
     if (avctx->codec->id != CODEC_ID_H263 && avctx->codec->id != CODEC_ID_MPEG4)
-        if (MPV_common_init(s) < 0)
+        if (ff_MPV_common_init(s) < 0)
             return -1;
 
-        h263_decode_init_vlc(s);
+        ff_h263_decode_init_vlc(s);
 
     return 0;
 }
@@ -124,7 +124,7 @@ av_cold int ff_h263_decode_end(AVCodecContext *avctx)
 {
     MpegEncContext *s = avctx->priv_data;
 
-    MPV_common_end(s);
+    ff_MPV_common_end(s);
     return 0;
 }
 
@@ -222,7 +222,7 @@ static int decode_slice(MpegEncContext *s){
             if(ret<0){
                 const int xy= s->mb_x + s->mb_y*s->mb_stride;
                 if(ret==SLICE_END){
-                    MPV_decode_mb(s, s->block);
+                    ff_MPV_decode_mb(s, s->block);
                     if(s->loop_filter)
                         ff_h263_loop_filter(s);
 
@@ -234,7 +234,7 @@ static int decode_slice(MpegEncContext *s){
                     if(++s->mb_x >= s->mb_width){
                         s->mb_x=0;
                         ff_draw_horiz_band(s, s->mb_y*mb_size, mb_size);
-                        MPV_report_decode_progress(s);
+                        ff_MPV_report_decode_progress(s);
                         s->mb_y++;
                     }
                     return 0;
@@ -249,13 +249,13 @@ static int decode_slice(MpegEncContext *s){
                 return -1;
             }
 
-            MPV_decode_mb(s, s->block);
+            ff_MPV_decode_mb(s, s->block);
             if(s->loop_filter)
                 ff_h263_loop_filter(s);
         }
 
         ff_draw_horiz_band(s, s->mb_y*mb_size, mb_size);
-        MPV_report_decode_progress(s);
+        ff_MPV_report_decode_progress(s);
 
         s->mb_x= 0;
     }
@@ -357,7 +357,7 @@ uint64_t time= rdtsc();
     if (buf_size == 0) {
         /* special case for last picture */
         if (s->low_delay==0 && s->next_picture_ptr) {
-            *pict= *(AVFrame*)s->next_picture_ptr;
+            *pict = s->next_picture_ptr->f;
             s->next_picture_ptr= NULL;
 
             *data_size = sizeof(AVFrame);
@@ -404,7 +404,7 @@ retry:
     s->bitstream_buffer_size=0;
 
     if (!s->context_initialized) {
-        if (MPV_common_init(s) < 0) //we need the idct permutaton for reading a custom matrix
+        if (ff_MPV_common_init(s) < 0) //we need the idct permutaton for reading a custom matrix
             return -1;
     }
 
@@ -421,7 +421,7 @@ retry:
     if (CONFIG_WMV2_DECODER && s->msmpeg4_version==5) {
         ret= ff_wmv2_decode_picture_header(s);
     } else if (CONFIG_MSMPEG4_DECODER && s->msmpeg4_version) {
-        ret = msmpeg4_decode_picture_header(s);
+        ret = ff_msmpeg4_decode_picture_header(s);
     } else if (CONFIG_MPEG4_DECODER && s->h263_pred) {
         if(s->avctx->extradata_size && s->picture_number==0){
             GetBitContext gb;
@@ -435,15 +435,32 @@ retry:
     } else if (CONFIG_FLV_DECODER && s->h263_flv) {
         ret = ff_flv_decode_picture_header(s);
     } else {
-        ret = h263_decode_picture_header(s);
+        ret = ff_h263_decode_picture_header(s);
     }
 
+    if (ret < 0 || ret==FRAME_SKIPPED) {
+        if (   s->width  != avctx->coded_width
+            || s->height != avctx->coded_height) {
+                av_log(s->avctx, AV_LOG_WARNING, "Reverting picture dimensions change due to header decoding failure\n");
+                s->width = avctx->coded_width;
+                s->height= avctx->coded_height;
+        }
+    }
     if(ret==FRAME_SKIPPED) return get_consumed_bytes(s, buf_size);
 
     /* skip if the header was thrashed */
     if (ret < 0){
         av_log(s->avctx, AV_LOG_ERROR, "header damaged\n");
         return -1;
+    } else if ((s->width  != avctx->coded_width  ||
+                s->height != avctx->coded_height ||
+                (s->width  + 15) >> 4 != s->mb_width ||
+                (s->height + 15) >> 4 != s->mb_height) &&
+               (HAVE_THREADS && (s->avctx->active_thread_type & FF_THREAD_FRAME))) {
+        av_log_missing_feature(s->avctx, "Width/height/bit depth/chroma idc changing with threads is", 0);
+        s->width = avctx->coded_width;
+        s->height= avctx->coded_height;
+        return AVERROR_PATCHWELCOME;   // width / height changed during parallelized decoding
     }
 
     avctx->has_b_frames= !s->low_delay;
@@ -571,7 +588,6 @@ retry:
     if (s->codec_id == CODEC_ID_MPEG4 && s->xvid_build>=0 && avctx->idct_algo == FF_IDCT_AUTO && (av_get_cpu_flags() & AV_CPU_FLAG_MMX)) {
         avctx->idct_algo= FF_IDCT_XVIDMMX;
         ff_dct_common_init(s);
-        s->picture_number=0;
     }
 #endif
 
@@ -585,13 +601,8 @@ retry:
         /* H.263 could change picture size any time */
         ParseContext pc= s->parse_context; //FIXME move these demuxng hack to avformat
 
-        if (HAVE_THREADS && (s->avctx->active_thread_type&FF_THREAD_FRAME)) {
-            av_log_missing_feature(s->avctx, "Width/height/bit depth/chroma idc changing with threads is", 0);
-            return -1;   // width / height changed during parallelized decoding
-        }
-
         s->parse_context.buffer=0;
-        MPV_common_end(s);
+        ff_MPV_common_end(s);
         s->parse_context= pc;
     }
     if (!s->context_initialized) {
@@ -632,7 +643,7 @@ retry:
         s->me.qpel_avg= s->dsp.avg_qpel_pixels_tab;
     }
 
-    if(MPV_frame_start(s, avctx) < 0)
+    if(ff_MPV_frame_start(s, avctx) < 0)
         return -1;
 
     if (!s->divx_packed) ff_thread_finish_setup(avctx);
@@ -650,7 +661,7 @@ retry:
     ff_er_frame_start(s);
 
     //the second part of the wmv2 header contains the MB skip bits which are stored in current_picture->mb_type
-    //which is not available before MPV_frame_start()
+    //which is not available before ff_MPV_frame_start()
     if (CONFIG_WMV2_DECODER && s->msmpeg4_version==5){
         ret = ff_wmv2_decode_secondary_picture_header(s);
         if(ret<0) return ret;
@@ -664,7 +675,7 @@ retry:
     ret = decode_slice(s);
     while(s->mb_y<s->mb_height){
         if(s->msmpeg4_version){
-            if(s->slice_height==0 || s->mb_x!=0 || (s->mb_y%s->slice_height)!=0 || get_bits_count(&s->gb) > s->gb.size_in_bits)
+            if(s->slice_height==0 || s->mb_x!=0 || (s->mb_y%s->slice_height)!=0 || get_bits_left(&s->gb)<0)
                 break;
         }else{
             int prev_x=s->mb_x, prev_y=s->mb_y;
@@ -681,7 +692,7 @@ retry:
     }
 
     if (s->msmpeg4_version && s->msmpeg4_version<4 && s->pict_type==AV_PICTURE_TYPE_I)
-        if(!CONFIG_MSMPEG4_DECODER || msmpeg4_decode_ext_header(s, buf_size) < 0){
+        if(!CONFIG_MSMPEG4_DECODER || ff_msmpeg4_decode_ext_header(s, buf_size) < 0){
             s->error_status_table[s->mb_num-1]= ER_MB_ERROR;
         }
 
@@ -722,14 +733,14 @@ intrax8_decoded:
             return -1;
     }
 
-    MPV_frame_end(s);
+    ff_MPV_frame_end(s);
 
     assert(s->current_picture.f.pict_type == s->current_picture_ptr->f.pict_type);
     assert(s->current_picture.f.pict_type == s->pict_type);
     if (s->pict_type == AV_PICTURE_TYPE_B || s->low_delay) {
-        *pict= *(AVFrame*)s->current_picture_ptr;
+        *pict = s->current_picture_ptr->f;
     } else if (s->last_picture_ptr != NULL) {
-        *pict= *(AVFrame*)s->last_picture_ptr;
+        *pict = s->last_picture_ptr->f;
     }
 
     if(s->last_picture_ptr || s->low_delay){
@@ -752,9 +763,10 @@ AVCodec ff_h263_decoder = {
     .init           = ff_h263_decode_init,
     .close          = ff_h263_decode_end,
     .decode         = ff_h263_decode_frame,
-    .capabilities   = CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY,
-    .flush= ff_mpeg_flush,
-    .max_lowres= 3,
-    .long_name= NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
-    .pix_fmts= ff_hwaccel_pixfmt_list_420,
+    .capabilities   = CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
+                      CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY,
+    .flush          = ff_mpeg_flush,
+    .max_lowres     = 3,
+    .long_name      = NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
+    .pix_fmts       = ff_hwaccel_pixfmt_list_420,
 };

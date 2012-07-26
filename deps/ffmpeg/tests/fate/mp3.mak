@@ -33,7 +33,12 @@ fate-mp3-float-conf-si_block: CMD = pcm -acodec mp3float -i $(SAMPLES)/mp3-confo
 fate-mp3-float-conf-si_block: CMP = stddev
 fate-mp3-float-conf-si_block: REF = $(SAMPLES)/mp3-conformance/si_block.pcm
 
-FATE_TESTS += $(FATE_MP3)
+FATE_MP3 += fate-mp3-float-extra_overread
+fate-mp3-float-extra_overread: CMD = pcm -c:a mp3float -i $(SAMPLES)/mpegaudio/extra_overread.mp3
+fate-mp3-float-extra_overread: CMP = stddev
+fate-mp3-float-extra_overread: REF = $(SAMPLES)/mpegaudio/extra_overread.pcm
+
+FATE_SAMPLES_AVCONV += $(FATE_MP3)
 fate-mp3: $(FATE_MP3)
 $(FATE_MP3): CMP = stddev
 $(FATE_MP3): FUZZ = 0.07

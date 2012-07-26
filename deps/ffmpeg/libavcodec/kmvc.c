@@ -33,6 +33,7 @@
 #define KMVC_KEYFRAME 0x80
 #define KMVC_PALETTE  0x40
 #define KMVC_METHOD   0x0F
+#define MAX_PALSIZE   256
 
 /*
  * Decoder context
@@ -43,7 +44,7 @@ typedef struct KmvcContext {
 
     int setpal;
     int palsize;
-    uint32_t pal[256];
+    uint32_t pal[MAX_PALSIZE];
     uint8_t *cur, *prev;
     uint8_t *frm0, *frm1;
     GetByteContext g;
@@ -105,6 +106,10 @@ static int kmvc_decode_intra_8x8(KmvcContext * ctx, int w, int h)
                             val = bytestream2_get_byte(&ctx->g);
                             mx = val & 0xF;
                             my = val >> 4;
+                            if ((l0x-mx) + 320*(l0y-my) < 0 || (l0x-mx) + 320*(l0y-my) > 316*196) {
+                                av_log(ctx->avctx, AV_LOG_ERROR, "Invalid MV\n");
+                                return AVERROR_INVALIDDATA;
+                            }
                             for (j = 0; j < 16; j++)
                                 BLK(ctx->cur, l0x + (j & 3), l0y + (j >> 2)) =
                                     BLK(ctx->cur, l0x + (j & 3) - mx, l0y + (j >> 2) - my);
@@ -126,6 +131,10 @@ static int kmvc_decode_intra_8x8(KmvcContext * ctx, int w, int h)
                                     val = bytestream2_get_byte(&ctx->g);
                                     mx = val & 0xF;
                                     my = val >> 4;
+                                    if ((l1x-mx) + 320*(l1y-my) < 0 || (l1x-mx) + 320*(l1y-my) > 318*198) {
+                                        av_log(ctx->avctx, AV_LOG_ERROR, "Invalid MV\n");
+                                        return AVERROR_INVALIDDATA;
+                                    }
                                     BLK(ctx->cur, l1x, l1y) = BLK(ctx->cur, l1x - mx, l1y - my);
                                     BLK(ctx->cur, l1x + 1, l1y) =
                                         BLK(ctx->cur, l1x + 1 - mx, l1y - my);
@@ -197,6 +206,10 @@ static int kmvc_decode_inter_8x8(KmvcContext * ctx, int w, int h)
                             val = bytestream2_get_byte(&ctx->g);
                             mx = (val & 0xF) - 8;
                             my = (val >> 4) - 8;
+                            if ((l0x+mx) + 320*(l0y+my) < 0 || (l0x+mx) + 320*(l0y+my) > 318*198) {
+                                av_log(ctx->avctx, AV_LOG_ERROR, "Invalid MV\n");
+                                return AVERROR_INVALIDDATA;
+                            }
                             for (j = 0; j < 16; j++)
                                 BLK(ctx->cur, l0x + (j & 3), l0y + (j >> 2)) =
                                     BLK(ctx->prev, l0x + (j & 3) + mx, l0y + (j >> 2) + my);
@@ -218,6 +231,10 @@ static int kmvc_decode_inter_8x8(KmvcContext * ctx, int w, int h)
                                     val = bytestream2_get_byte(&ctx->g);
                                     mx = (val & 0xF) - 8;
                                     my = (val >> 4) - 8;
+                                    if ((l1x+mx) + 320*(l1y+my) < 0 || (l1x+mx) + 320*(l1y+my) > 318*198) {
+                                        av_log(ctx->avctx, AV_LOG_ERROR, "Invalid MV\n");
+                                        return AVERROR_INVALIDDATA;
+                                    }
                                     BLK(ctx->cur, l1x, l1y) = BLK(ctx->prev, l1x + mx, l1y + my);
                                     BLK(ctx->cur, l1x + 1, l1y) =
                                         BLK(ctx->prev, l1x + 1 + mx, l1y + my);
@@ -376,14 +393,15 @@ static av_cold int decode_init(AVCodecContext * avctx)
     }
 
     if (avctx->extradata_size < 12) {
-        av_log(NULL, 0, "Extradata missing, decoding may not work properly...\n");
+        av_log(avctx, AV_LOG_WARNING,
+               "Extradata missing, decoding may not work properly...\n");
         c->palsize = 127;
     } else {
         c->palsize = AV_RL16(avctx->extradata + 10);
-        if (c->palsize > 255U) {
+        if (c->palsize >= (unsigned)MAX_PALSIZE) {
             c->palsize = 127;
-            av_log(NULL, AV_LOG_ERROR, "palsize too big\n");
-            return -1;
+            av_log(avctx, AV_LOG_ERROR, "KMVC palette too large\n");
+            return AVERROR_INVALIDDATA;
         }
     }
 
@@ -428,5 +446,5 @@ AVCodec ff_kmvc_decoder = {
     .close          = decode_end,
     .decode         = decode_frame,
     .capabilities   = CODEC_CAP_DR1,
-    .long_name = NULL_IF_CONFIG_SMALL("Karl Morton's video codec"),
+    .long_name      = NULL_IF_CONFIG_SMALL("Karl Morton's video codec"),
 };

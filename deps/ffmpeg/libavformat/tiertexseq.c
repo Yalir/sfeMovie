@@ -181,7 +181,7 @@ static int seq_parse_frame_data(SeqDemuxContext *seq, AVIOContext *pb)
     return 0;
 }
 
-static int seq_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int seq_read_header(AVFormatContext *s)
 {
     int i, rc;
     SeqDemuxContext *seq = s->priv_data;
@@ -224,6 +224,7 @@ static int seq_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (!st)
         return AVERROR(ENOMEM);
 
+    st->start_time = 0;
     avpriv_set_pts_info(st, 32, 1, SEQ_SAMPLE_RATE);
     seq->audio_stream_index = st->index;
     st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
@@ -233,7 +234,7 @@ static int seq_read_header(AVFormatContext *s, AVFormatParameters *ap)
     st->codec->sample_rate = SEQ_SAMPLE_RATE;
     st->codec->bits_per_coded_sample = 16;
     st->codec->bit_rate = st->codec->sample_rate * st->codec->bits_per_coded_sample * st->codec->channels;
-    st->codec->block_align = st->codec->channels * st->codec->bits_per_coded_sample;
+    st->codec->block_align = st->codec->channels * st->codec->bits_per_coded_sample / 8;
 
     return 0;
 }

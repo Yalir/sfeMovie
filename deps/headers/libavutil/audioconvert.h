@@ -97,6 +97,7 @@
 #define AV_CH_LAYOUT_7POINT0_FRONT     (AV_CH_LAYOUT_5POINT0|AV_CH_FRONT_LEFT_OF_CENTER|AV_CH_FRONT_RIGHT_OF_CENTER)
 #define AV_CH_LAYOUT_7POINT1           (AV_CH_LAYOUT_5POINT1|AV_CH_BACK_LEFT|AV_CH_BACK_RIGHT)
 #define AV_CH_LAYOUT_7POINT1_WIDE      (AV_CH_LAYOUT_5POINT1|AV_CH_FRONT_LEFT_OF_CENTER|AV_CH_FRONT_RIGHT_OF_CENTER)
+#define AV_CH_LAYOUT_7POINT1_WIDE_BACK (AV_CH_LAYOUT_5POINT1_BACK|AV_CH_FRONT_LEFT_OF_CENTER|AV_CH_FRONT_RIGHT_OF_CENTER)
 #define AV_CH_LAYOUT_OCTAGONAL         (AV_CH_LAYOUT_5POINT0|AV_CH_BACK_LEFT|AV_CH_BACK_CENTER|AV_CH_BACK_RIGHT)
 #define AV_CH_LAYOUT_STEREO_DOWNMIX    (AV_CH_STEREO_LEFT|AV_CH_STEREO_RIGHT)
 
@@ -105,19 +106,21 @@
  */
 
 /**
- * Return a channel layout id that matches name, 0 if no match.
+ * Return a channel layout id that matches name, or 0 if no match is found.
+ *
  * name can be one or several of the following notations,
  * separated by '+' or '|':
  * - the name of an usual channel layout (mono, stereo, 4.0, quad, 5.0,
  *   5.0(side), 5.1, 5.1(side), 7.1, 7.1(wide), downmix);
  * - the name of a single channel (FL, FR, FC, LFE, BL, BR, FLC, FRC, BC,
  *   SL, SR, TC, TFL, TFC, TFR, TBL, TBC, TBR, DL, DR);
- * - a number of channels, in decimal, optionnally followed by 'c', yielding
+ * - a number of channels, in decimal, optionally followed by 'c', yielding
  *   the default channel layout for that number of channels (@see
  *   av_get_default_channel_layout);
  * - a channel layout mask, in hexadecimal starting with "0x" (see the
  *   AV_CH_* macros).
- + Example: "stereo+FC" = "2+FC" = "2c+1c" = "0x7"
+ *
+ * Example: "stereo+FC" = "2+FC" = "2c+1c" = "0x7"
  */
 uint64_t av_get_channel_layout(const char *name);
 

@@ -44,7 +44,7 @@ static int nc_probe(AVProbeData *probe_packet)
     return 0;
 }
 
-static int nc_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int nc_read_header(AVFormatContext *s)
 {
     AVStream *st = avformat_new_stream(s, NULL);
 
@@ -97,5 +97,5 @@ AVInputFormat ff_nc_demuxer = {
     .read_probe     = nc_probe,
     .read_header    = nc_read_header,
     .read_packet    = nc_read_packet,
-    .extensions = "v",
+    .extensions     = "v",
 };

@@ -54,8 +54,7 @@ static int aea_read_probe(AVProbeData *p)
     return 0;
 }
 
-static int aea_read_header(AVFormatContext *s,
-                           AVFormatParameters *ap)
+static int aea_read_header(AVFormatContext *s)
 {
     AVStream *st = avformat_new_stream(s, NULL);
     if (!st)
@@ -100,8 +99,7 @@ AVInputFormat ff_aea_demuxer = {
     .read_probe     = aea_read_probe,
     .read_header    = aea_read_header,
     .read_packet    = aea_read_packet,
-    .read_seek      = pcm_read_seek,
-    .flags= AVFMT_GENERIC_INDEX,
-    .extensions = "aea",
+    .read_seek      = ff_pcm_read_seek,
+    .flags          = AVFMT_GENERIC_INDEX,
+    .extensions     = "aea",
 };
-

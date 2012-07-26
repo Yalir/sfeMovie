@@ -47,14 +47,13 @@ static int gsm_read_packet(AVFormatContext *s, AVPacket *pkt)
         av_free_packet(pkt);
         return ret < 0 ? ret : AVERROR(EIO);
     }
-    pkt->size     = ret;
     pkt->duration = 1;
     pkt->pts      = pkt->pos / GSM_BLOCK_SIZE;
 
     return 0;
 }
 
-static int gsm_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int gsm_read_header(AVFormatContext *s)
 {
     GSMDemuxerContext *c = s->priv_data;
     AVStream *st = avformat_new_stream(s, NULL);
@@ -62,7 +61,7 @@ static int gsm_read_header(AVFormatContext *s, AVFormatParameters *ap)
         return AVERROR(ENOMEM);
 
     st->codec->codec_type  = AVMEDIA_TYPE_AUDIO;
-    st->codec->codec_id    = s->iformat->value;
+    st->codec->codec_id    = s->iformat->raw_codec_id;
     st->codec->channels    = 1;
     st->codec->sample_rate = c->sample_rate;
     st->codec->bit_rate    = GSM_BLOCK_SIZE * 8 * c->sample_rate / GSM_BLOCK_SAMPLES;
@@ -94,6 +93,6 @@ AVInputFormat ff_gsm_demuxer = {
     .read_packet    = gsm_read_packet,
     .flags          = AVFMT_GENERIC_INDEX,
     .extensions     = "gsm",
-    .value          = CODEC_ID_GSM,
+    .raw_codec_id   = CODEC_ID_GSM,
     .priv_class     = &class,
 };

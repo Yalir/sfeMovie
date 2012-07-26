@@ -30,11 +30,13 @@
 
 %include "libavutil/x86/x86inc.asm"
 
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
 %define pointer resq
 %else
 %define pointer resd
 %endif
+
+SECTION_RODATA
 
 struc FFTContext
     .nbits:    resd 1
@@ -46,8 +48,6 @@ struc FFTContext
     .tcos:     pointer 1
     .tsin:     pointer 1
 endstruc
-
-SECTION_RODATA
 
 %define M_SQRT1_2 0.70710678118654752440
 %define M_COS_PI_1_8 0.923879532511287
@@ -73,7 +73,7 @@ cextern cos_ %+ i
 %assign i i<<1
 %endrep
 
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
     %define pointer dq
 %else
     %define pointer dd
@@ -299,7 +299,7 @@ IF%1 mova  Z(1), m5
 
 INIT_YMM
 
-%ifdef HAVE_AVX
+%if HAVE_AVX
 align 16
 fft8_avx:
     mova      m0, Z(0)
@@ -535,7 +535,7 @@ DEFINE_ARGS z, w, n, o1, o3
 
 INIT_YMM
 
-%ifdef HAVE_AVX
+%if HAVE_AVX
 %macro INTERL_AVX 5
     vunpckhps      %3, %2, %1
     vunpcklps      %2, %2, %1
@@ -639,7 +639,7 @@ cglobal fft_dispatch%3%2, 2,5,8, z, nbits
     RET
 %endmacro ; DECL_FFT
 
-%ifdef HAVE_AVX
+%if HAVE_AVX
 INIT_YMM
 DECL_FFT 6, _avx
 DECL_FFT 6, _avx, _interleave
@@ -750,14 +750,11 @@ INIT_XMM
 %endmacro
 
 %macro DECL_IMDCT 2
-cglobal imdct_half%1, 3,7,8; FFTContext *s, FFTSample *output, const FFTSample *input
-%ifdef ARCH_X86_64
-%define rrevtab r10
-%define rtcos   r11
-%define rtsin   r12
-    push  r12
-    push  r13
-    push  r14
+cglobal imdct_half%1, 3,12,8; FFTContext *s, FFTSample *output, const FFTSample *input
+%if ARCH_X86_64
+%define rrevtab r7
+%define rtcos   r8
+%define rtsin   r9
 %else
 %define rrevtab r6
 %define rtsin   r6
@@ -770,24 +767,24 @@ cglobal imdct_half%1, 3,7,8; FFTContext *s, FFTSample *output, const FFTSample *
     mov   rtsin, [r0+FFTContext.tsin]
     add   rtcos, r3
     add   rtsin, r3
-%ifndef ARCH_X86_64
+%if ARCH_X86_64 == 0
     push  rtcos
     push  rtsin
 %endif
     shr   r3, 1
     mov   rrevtab, [r0+FFTContext.revtab]
     add   rrevtab, r3
-%ifndef ARCH_X86_64
+%if ARCH_X86_64 == 0
     push  rrevtab
 %endif
 
     sub   r3, 4
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
     xor   r4, r4
     sub   r4, r3
 %endif
 .pre:
-%ifndef ARCH_X86_64
+%if ARCH_X86_64 == 0
 ;unspill
     xor   r4, r4
     sub   r4, r3
@@ -796,15 +793,15 @@ cglobal imdct_half%1, 3,7,8; FFTContext *s, FFTSample *output, const FFTSample *
 %endif
 
     PREROTATER r4, r3, r2, rtcos, rtsin
-%ifdef ARCH_X86_64
+%if ARCH_X86_64
     movzx  r5,  word [rrevtab+r4-4]
     movzx  r6,  word [rrevtab+r4-2]
-    movzx  r13, word [rrevtab+r3]
-    movzx  r14, word [rrevtab+r3+2]
+    movzx  r10, word [rrevtab+r3]
+    movzx  r11, word [rrevtab+r3+2]
     movlps [r1+r5 *8], xmm0
     movhps [r1+r6 *8], xmm0
-    movlps [r1+r13*8], xmm1
-    movhps [r1+r14*8], xmm1
+    movlps [r1+r10*8], xmm1
+    movhps [r1+r11*8], xmm1
     add    r4, 4
 %else
     mov    r6, [esp]
@@ -830,7 +827,7 @@ cglobal imdct_half%1, 3,7,8; FFTContext *s, FFTSample *output, const FFTSample *
     mov  r0d, [r5+FFTContext.mdctsize]
     add  r6, r0
     shr  r0, 1
-%ifndef ARCH_X86_64
+%if ARCH_X86_64 == 0
 %define rtcos r2
 %define rtsin r3
     mov  rtcos, [esp+8]
@@ -840,11 +837,7 @@ cglobal imdct_half%1, 3,7,8; FFTContext *s, FFTSample *output, const FFTSample *
     mov  r1, -mmsize
     sub  r1, r0
     %2 r0, r1, r6, rtcos, rtsin
-%ifdef ARCH_X86_64
-    pop  r14
-    pop  r13
-    pop  r12
-%else
+%if ARCH_X86_64 == 0
     add esp, 12
 %endif
 %ifidn avx_enabled, 1
@@ -857,6 +850,6 @@ DECL_IMDCT _sse, POSROTATESHUF
 
 INIT_YMM
 
-%ifdef HAVE_AVX
+%if HAVE_AVX
 DECL_IMDCT _avx, POSROTATESHUF_AVX
 %endif

@@ -188,7 +188,7 @@ static void mpc8_handle_chunk(AVFormatContext *s, int tag, int64_t chunk_pos, in
     }
 }
 
-static int mpc8_read_header(AVFormatContext *s, AVFormatParameters *ap)
+static int mpc8_read_header(AVFormatContext *s)
 {
     MPCContext *c = s->priv_data;
     AVIOContext *pb = s->pb;
@@ -239,6 +239,8 @@ static int mpc8_read_header(AVFormatContext *s, AVFormatParameters *ap)
     avpriv_set_pts_info(st, 32, 1152  << (st->codec->extradata[1]&3)*2, st->codec->sample_rate);
     st->duration = c->samples / (1152 << (st->codec->extradata[1]&3)*2);
     size -= avio_tell(pb) - pos;
+    if (size > 0)
+        avio_skip(pb, size);
 
     return 0;
 }

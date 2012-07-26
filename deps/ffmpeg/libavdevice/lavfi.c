@@ -32,6 +32,7 @@
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
+#include "libavutil/audioconvert.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/avfiltergraph.h"
 #include "libavfilter/buffersink.h"
@@ -78,8 +79,7 @@ av_cold static int lavfi_read_close(AVFormatContext *avctx)
     return 0;
 }
 
-av_cold static int lavfi_read_header(AVFormatContext *avctx,
-                                     AVFormatParameters *ap)
+av_cold static int lavfi_read_header(AVFormatContext *avctx)
 {
     LavfiContext *lavfi = avctx->priv_data;
     AVFilterInOut *input_links = NULL, *output_links = NULL, *inout;
@@ -206,12 +206,14 @@ av_cold static int lavfi_read_header(AVFormatContext *avctx,
             if (ret < 0)
                 goto end;
         } else if (type == AVMEDIA_TYPE_AUDIO) {
-            enum AVSampleFormat sample_fmts[] = { AV_SAMPLE_FMT_S16, -1 };
-            const int packing_fmts[] = { AVFILTER_PACKED, -1 };
+            enum AVSampleFormat sample_fmts[] = { AV_SAMPLE_FMT_U8,
+                                                  AV_SAMPLE_FMT_S16,
+                                                  AV_SAMPLE_FMT_S32,
+                                                  AV_SAMPLE_FMT_FLT,
+                                                  AV_SAMPLE_FMT_DBL, -1 };
             const int64_t *chlayouts = avfilter_all_channel_layouts;
             AVABufferSinkParams *abuffersink_params = av_abuffersink_params_alloc();
             abuffersink_params->sample_fmts = sample_fmts;
-            abuffersink_params->packing_fmts = packing_fmts;
             abuffersink_params->channel_layouts = chlayouts;
 
             ret = avfilter_graph_create_filter(&sink, abuffersink,
@@ -253,12 +255,16 @@ av_cold static int lavfi_read_header(AVFormatContext *avctx,
             st       ->sample_aspect_ratio =
             st->codec->sample_aspect_ratio = link->sample_aspect_ratio;
         } else if (link->type == AVMEDIA_TYPE_AUDIO) {
-            st->codec->codec_id    = CODEC_ID_PCM_S16LE;
+            st->codec->codec_id    = av_get_pcm_codec(link->format, -1);
             st->codec->channels    = av_get_channel_layout_nb_channels(link->channel_layout);
             st->codec->sample_fmt  = link->format;
             st->codec->sample_rate = link->sample_rate;
             st->codec->time_base   = link->time_base;
             st->codec->channel_layout = link->channel_layout;
+            if (st->codec->codec_id == CODEC_ID_NONE)
+                av_log(avctx, AV_LOG_ERROR,
+                       "Could not find PCM codec for sample format %s.\n",
+                       av_get_sample_fmt_name(link->format));
         }
     }
 

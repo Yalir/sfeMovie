@@ -3,20 +3,20 @@
  *
  * Copyright (c) 2001 Michael Niedermayer <michaelni@gmx.at>
  *
- * This file is part of Libav.
+ * This file is part of FFmpeg.
  *
- * Libav is free software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  *
- * Libav is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with Libav; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -224,50 +224,48 @@ static inline void FUNC(idctSparseColPut)(pixel *dest, int line_size,
                                           DCTELEM *col)
 {
     int a0, a1, a2, a3, b0, b1, b2, b3;
-    INIT_CLIP;
 
     IDCT_COLS;
 
-    dest[0] = CLIP((a0 + b0) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a0 + b0) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a1 + b1) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a1 + b1) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a2 + b2) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a2 + b2) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a3 + b3) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a3 + b3) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a3 - b3) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a3 - b3) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a2 - b2) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a2 - b2) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a1 - b1) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a1 - b1) >> COL_SHIFT);
     dest += line_size;
-    dest[0] = CLIP((a0 - b0) >> COL_SHIFT);
+    dest[0] = av_clip_pixel((a0 - b0) >> COL_SHIFT);
 }
 
 static inline void FUNC(idctSparseColAdd)(pixel *dest, int line_size,
                                           DCTELEM *col)
 {
     int a0, a1, a2, a3, b0, b1, b2, b3;
-    INIT_CLIP;
 
     IDCT_COLS;
 
-    dest[0] = CLIP(dest[0] + ((a0 + b0) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a0 + b0) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a1 + b1) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a1 + b1) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a2 + b2) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a2 + b2) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a3 + b3) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a3 + b3) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a3 - b3) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a3 - b3) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a2 - b2) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a2 - b2) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a1 - b1) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a1 - b1) >> COL_SHIFT));
     dest += line_size;
-    dest[0] = CLIP(dest[0] + ((a0 - b0) >> COL_SHIFT));
+    dest[0] = av_clip_pixel(dest[0] + ((a0 - b0) >> COL_SHIFT));
 }
 
 static inline void FUNC(idctSparseCol)(DCTELEM *col)
