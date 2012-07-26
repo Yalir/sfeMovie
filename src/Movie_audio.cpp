@@ -247,7 +247,7 @@ namespace sfe {
 			{
 				audioPacketOffset += frame_size;
 
-				if (m_codecCtx->sample_fmt != SAMPLE_FMT_S16)
+				if (m_codecCtx->sample_fmt != AV_SAMPLE_FMT_S16)
 				{
 					// Never happened to me for now, which is fine
 					if (Movie::usesDebugMessages())
