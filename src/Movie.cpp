@@ -136,10 +136,17 @@ namespace sfe {
 			if (m_hasAudio)
 			{
 				sf::Time startOffset = m_audio->getPlayingOffset();
+				sf::Clock timer;
 				m_audio->play();
 				
-				while (startOffset == m_audio->getPlayingOffset())
+				timer.restart();
+				while (startOffset == m_audio->getPlayingOffset() && timer.getElapsedTime() < sf::seconds(5))
 					sf::sleep(sf::milliseconds(1));
+				
+				// Note: this is a workaround for SFML issue #201
+				// Audio initialization may silently fail and audio won't start playing
+				if (timer.getElapsedTime() >= sf::seconds(5))
+					std::cerr << "*** warning: Movie::play() - no audio progress for 5 sec, giving up on syncing" << std::endl;
 				
 				m_progressAtPause = m_audio->getPlayingOffset();
 			}
