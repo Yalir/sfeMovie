@@ -142,14 +142,18 @@ namespace sfe {
 		m_size = sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
 		
 		// Setup the image scaler/converter
-		// SWS_ACCURATE_RND can take 4-10ms per conversion
-		// And we don't do any scaling, only YUV->RGBA conversion, thus
-		// use the fastest scaling algorithm
+		int algorithm = SWS_FAST_BILINEAR;
+		
+		// Enable accurate algorithm for low res movies that have non multiple
+		// of 8 width
+		if (m_size.x * m_size.y <= 500000 && m_size.x % 8 != 0)
+			algorithm |= SWS_ACCURATE_RND;
+		
 		m_swsCtx = sws_getCachedContext(NULL, m_size.x, m_size.y,
 										m_codecCtx->pix_fmt,
 										m_size.x, m_size.y,
 										PIX_FMT_RGBA,
-										SWS_FAST_BILINEAR /*| SWS_ACCURATE_RND*/, NULL, NULL, NULL);
+										algorithm, NULL, NULL, NULL);
 		
 		if (!m_swsCtx)
 		{
