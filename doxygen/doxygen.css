@@ -108,8 +108,12 @@ a {
 	color: #395C89;
 }
 
-#bodycontent a:hover {
-	text-decoration: underline;
+#content_frame a, #widescreen_frame a {
+	color:#366cbd;
+}
+
+#content_frame a:hover, #widescreen_frame a:hover, #header a:hover, .footer a:hover {
+    text-decoration:underline;
 }
 
 a.qindex {
