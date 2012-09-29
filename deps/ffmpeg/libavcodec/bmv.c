@@ -143,16 +143,20 @@ static int decode_bmv_frame(const uint8_t *source, int src_len, uint8_t *frame, 
         switch (mode) {
         case 1:
             if (forward) {
-                if (dst - frame + SCREEN_WIDE < -frame_off ||
-                        frame_end - dst < frame_off + len)
+                if (dst - frame + SCREEN_WIDE < frame_off ||
+                        dst - frame + SCREEN_WIDE + frame_off < 0 ||
+                        frame_end - dst < frame_off + len ||
+                        frame_end - dst < len)
                     return -1;
                 for (i = 0; i < len; i++)
                     dst[i] = dst[frame_off + i];
                 dst += len;
             } else {
                 dst -= len;
-                if (dst - frame + SCREEN_WIDE < -frame_off ||
-                        frame_end - dst < frame_off + len)
+                if (dst - frame + SCREEN_WIDE < frame_off ||
+                        dst - frame + SCREEN_WIDE + frame_off < 0 ||
+                        frame_end - dst < frame_off + len ||
+                        frame_end - dst < len)
                     return -1;
                 for (i = len - 1; i >= 0; i--)
                     dst[i] = dst[frame_off + i];
@@ -268,6 +272,11 @@ static av_cold int decode_init(AVCodecContext *avctx)
     c->avctx = avctx;
     avctx->pix_fmt = PIX_FMT_PAL8;
 
+    if (avctx->width != SCREEN_WIDE || avctx->height != SCREEN_HIGH) {
+        av_log(avctx, AV_LOG_ERROR, "Invalid dimension %dx%d\n", avctx->width, avctx->height);
+        return AVERROR_INVALIDDATA;
+    }
+
     c->pic.reference = 1;
     if (avctx->get_buffer(avctx, &c->pic) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
@@ -360,18 +369,19 @@ static int bmv_aud_decode_frame(AVCodecContext *avctx, void *data,
 AVCodec ff_bmv_video_decoder = {
     .name           = "bmv_video",
     .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_BMV_VIDEO,
+    .id             = AV_CODEC_ID_BMV_VIDEO,
     .priv_data_size = sizeof(BMVDecContext),
     .init           = decode_init,
     .close          = decode_end,
     .decode         = decode_frame,
+    .capabilities   = CODEC_CAP_DR1,
     .long_name      = NULL_IF_CONFIG_SMALL("Discworld II BMV video"),
 };
 
 AVCodec ff_bmv_audio_decoder = {
     .name           = "bmv_audio",
     .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_BMV_AUDIO,
+    .id             = AV_CODEC_ID_BMV_AUDIO,
     .priv_data_size = sizeof(BMVAudioDecContext),
     .init           = bmv_aud_decode_init,
     .decode         = bmv_aud_decode_frame,

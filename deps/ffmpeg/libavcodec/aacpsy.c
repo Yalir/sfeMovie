@@ -24,6 +24,8 @@
  * AAC encoder psychoacoustic model
  */
 
+#include "libavutil/libm.h"
+
 #include "avcodec.h"
 #include "aactab.h"
 #include "psymodel.h"
@@ -292,7 +294,7 @@ static av_cold int psy_3gpp_init(FFPsyContext *ctx) {
     int i, j, g, start;
     float prev, minscale, minath, minsnr, pe_min;
     const int chan_bitrate = ctx->avctx->bit_rate / ctx->avctx->channels;
-    const int bandwidth    = ctx->avctx->cutoff ? ctx->avctx->cutoff : ctx->avctx->sample_rate / 2;
+    const int bandwidth    = ctx->avctx->cutoff ? ctx->avctx->cutoff : AAC_CUTOFF(ctx->avctx);
     const float num_bark   = calc_bark((float)bandwidth);
 
     ctx->model_priv_data = av_mallocz(sizeof(AacPsyContext));
@@ -333,7 +335,7 @@ static av_cold int psy_3gpp_init(FFPsyContext *ctx) {
             coeff->spread_low[1] = pow(10.0, -bark_width * en_spread_low);
             coeff->spread_hi [1] = pow(10.0, -bark_width * en_spread_hi);
             pe_min = bark_pe * bark_width;
-            minsnr = pow(2.0f, pe_min / band_sizes[g]) - 1.5f;
+            minsnr = exp2(pe_min / band_sizes[g]) - 1.5f;
             coeff->min_snr = av_clipf(1.0f / minsnr, PSY_SNR_25DB, PSY_SNR_1DB);
         }
         start = 0;
@@ -524,8 +526,11 @@ static float calc_reduction_3gpp(float a, float desired_pe, float pe,
 {
     float thr_avg, reduction;
 
-    thr_avg   = powf(2.0f, (a - pe) / (4.0f * active_lines));
-    reduction = powf(2.0f, (a - desired_pe) / (4.0f * active_lines)) - thr_avg;
+    if(active_lines == 0.0)
+        return 0;
+
+    thr_avg   = exp2f((a - pe) / (4.0f * active_lines));
+    reduction = exp2f((a - desired_pe) / (4.0f * active_lines)) - thr_avg;
 
     return FFMAX(reduction, 0.0f);
 }
@@ -563,7 +568,7 @@ static void psy_3gpp_analyze_channel(FFPsyContext *ctx, int channel,
     AacPsyChannel *pch  = &pctx->ch[channel];
     int start = 0;
     int i, w, g;
-    float desired_bits, desired_pe, delta_pe, reduction, spread_en[128] = {0};
+    float desired_bits, desired_pe, delta_pe, reduction= NAN, spread_en[128] = {0};
     float a = 0.0f, active_lines = 0.0f, norm_fac = 0.0f;
     float pe = pctx->chan_bitrate > 32000 ? 0.0f : FFMAX(50.0f, 100.0f - pctx->chan_bitrate * 100.0f / 32000.0f);
     const int      num_bands   = ctx->num_bands[wi->num_windows == 8];
@@ -583,7 +588,7 @@ static void psy_3gpp_analyze_channel(FFPsyContext *ctx, int channel,
                 form_factor  += sqrtf(fabs(coefs[start+i]));
             }
             band->thr      = band->energy * 0.001258925f;
-            band->nz_lines = form_factor / powf(band->energy / band_sizes[g], 0.25f);
+            band->nz_lines = band->energy>0 ? form_factor / powf(band->energy / band_sizes[g], 0.25f) : 0;
 
             start += band_sizes[g];
         }
@@ -703,7 +708,7 @@ static void psy_3gpp_analyze_channel(FFPsyContext *ctx, int channel,
                         float delta_sfb_pe = band->norm_fac * norm_fac * delta_pe;
                         float thr = band->thr;
 
-                        thr *= powf(2.0f, delta_sfb_pe / band->active_lines);
+                        thr *= exp2f(delta_sfb_pe / band->active_lines);
                         if (thr > coeffs[g].min_snr * band->energy && band->avoid_holes == PSY_3GPP_AH_INACTIVE)
                             thr = FFMAX(band->thr, coeffs[g].min_snr * band->energy);
                         band->thr = thr;

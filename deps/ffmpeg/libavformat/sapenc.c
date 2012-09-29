@@ -24,6 +24,7 @@
 #include "libavutil/random_seed.h"
 #include "libavutil/avstring.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/time.h"
 #include "internal.h"
 #include "network.h"
 #include "os_support.h"
@@ -150,8 +151,10 @@ static int sap_write_header(AVFormatContext *s)
             ret = AVERROR(EIO);
             goto fail;
         }
-        s->streams[i]->priv_data = contexts[i] =
-            ff_rtp_chain_mux_open(s, s->streams[i], fd, 0);
+        ret = ff_rtp_chain_mux_open(&contexts[i], s, s->streams[i], fd, 0);
+        if (ret < 0)
+            goto fail;
+        s->streams[i]->priv_data = contexts[i];
         av_strlcpy(contexts[i]->filename, url, sizeof(contexts[i]->filename));
     }
 
@@ -209,7 +212,7 @@ static int sap_write_header(AVFormatContext *s)
     pos += strlen(&sap->ann[pos]) + 1;
 
     if (av_sdp_create(contexts, s->nb_streams, &sap->ann[pos],
-                       sap->ann_size - pos)) {
+                      sap->ann_size - pos)) {
         ret = AVERROR_INVALIDDATA;
         goto fail;
     }
@@ -251,10 +254,10 @@ static int sap_write_packet(AVFormatContext *s, AVPacket *pkt)
 
 AVOutputFormat ff_sap_muxer = {
     .name              = "sap",
-    .long_name         = NULL_IF_CONFIG_SMALL("SAP output format"),
+    .long_name         = NULL_IF_CONFIG_SMALL("SAP output"),
     .priv_data_size    = sizeof(struct SAPState),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CODEC_ID_MPEG4,
+    .audio_codec       = AV_CODEC_ID_AAC,
+    .video_codec       = AV_CODEC_ID_MPEG4,
     .write_header      = sap_write_header,
     .write_packet      = sap_write_packet,
     .write_trailer     = sap_write_close,

@@ -33,6 +33,7 @@
 
 #include <string.h>
 
+#include "libavutil/avassert.h"
 #include "avcodec.h"
 #include "rangecoder.h"
 #include "bytestream.h"
@@ -103,8 +104,8 @@ int ff_rac_terminate(RangeCoder *c){
     c->range=0xFF;
     renorm_encoder(c);
 
-    assert(c->low   == 0);
-    assert(c->range >= 0x100);
+    av_assert1(c->low   == 0);
+    av_assert1(c->range >= 0x100);
 
     return c->bytestream - c->bytestream_start;
 }
@@ -148,7 +149,7 @@ STOP_TIMER("put_rac")
     for(i=0; i<SIZE; i++){
 START_TIMER
         if( (r[i]&1) != get_rac(&c, state) )
-            av_log(NULL, AV_LOG_DEBUG, "rac failure at %d\n", i);
+            av_log(NULL, AV_LOG_ERROR, "rac failure at %d\n", i);
 STOP_TIMER("get_rac")
     }
 

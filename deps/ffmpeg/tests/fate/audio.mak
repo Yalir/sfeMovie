@@ -35,19 +35,25 @@ fate-nellymoser: CMP = oneoff
 fate-nellymoser: REF = $(SAMPLES)/nellymoser/nellymoser.pcm
 
 FATE_SAMPLES_AUDIO += fate-nellymoser-aref-encode
-fate-nellymoser-aref-encode: $(AREF)
+fate-nellymoser-aref-encode: $(AREF) ./tests/data/asynth-16000-1.wav
 fate-nellymoser-aref-encode: CMD = enc_dec_pcm flv wav s16le $(REF) -c:a nellymoser
 fate-nellymoser-aref-encode: CMP = stddev
-fate-nellymoser-aref-encode: REF = ./tests/data/acodec-16000-1.ref.wav
+fate-nellymoser-aref-encode: REF = ./tests/data/asynth-16000-1.wav
 fate-nellymoser-aref-encode: CMP_SHIFT = -244
 fate-nellymoser-aref-encode: CMP_TARGET = 9612
 fate-nellymoser-aref-encode: SIZE_TOLERANCE = 268
+
+FATE_SAMPLES_AUDIO += fate-paf-audio
+fate-paf-audio: CMD = framecrc -i $(SAMPLES)/paf/hod1-partial.paf -vn
 
 FATE_SAMPLES_AUDIO += fate-sierra-vmd-audio
 fate-sierra-vmd-audio: CMD = framecrc -i $(SAMPLES)/vmd/12.vmd -vn
 
 FATE_SAMPLES_AUDIO += fate-smacker-audio
 fate-smacker-audio: CMD = framecrc -i $(SAMPLES)/smacker/wetlogo.smk -vn
+
+FATE_SAMPLES_AUDIO += fate-vima
+fate-vima: CMD = framecrc -i $(SAMPLES)/smush/ronin_part.znm -vn
 
 FATE_SAMPLES_AUDIO += fate-ws_snd
 fate-ws_snd: CMD = md5 -i $(SAMPLES)/vqa/ws_snd.vqa -f s16le
