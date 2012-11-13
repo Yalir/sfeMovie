@@ -99,7 +99,12 @@ namespace sfe {
 		bool openFromFile(const std::string& filename);
 		
 		
-		/** @brief Starts the movie playback
+		/** @brief Start or resume playing the movie playback
+		 *
+		 * This function starts the stream if it was stopped, resumes it if it was paused,
+		 * and restarts it from beginning if it was already playing. This function uses
+		 * its own thread so that it doesn't block the rest of the program while the stream
+		 * is played.
 		 */
 		void play(void);
 		
@@ -113,6 +118,9 @@ namespace sfe {
 		
 		
 		/** @brief Stops the movie playback. The playing offset is reset to the beginning.
+		 *
+		 * This function stops the stream if it was playing or paused, and does nothing
+		 * if it was already stopped. It also resets the playing position (unlike pause()).
 		 */
 		void stop(void);
 		
@@ -147,7 +155,7 @@ namespace sfe {
 		
 		/** @brief Returns the duration of the movie
 		 *
-		 * @return the duration in milliseconds
+		 * @return the duration as sf::Time
 		 */
 		sf::Time getDuration(void) const;
 		
