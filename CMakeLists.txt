@@ -24,47 +24,42 @@ else()
     return()
 endif()
 
-set (BUILD_WITH_PROVIDED_LIBS TRUE CACHE BOOL "TRUE to build sfeMovie with the provided libraries, FALSE to build with the system libraries")
+set (BUILD_WITH_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg libraries, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
 
 # Set some env vars
 set (LIB_NAME sfeMovie)
 set (VERSION_MAJOR 1)
 set (VERSION_MINOR 0)
-set (VERSION_PATCH 0)
+set (VERSION_PATCH 1)
 set (COMPILER_FLAGS "")
 set (LINKER_FLAGS "")
 
 set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
+set (OTHER_LIBRARIES "")
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	add_definitions("-O2")
 endif()
 	
-if (BUILD_WITH_PROVIDED_LIBS)
-    set (EXTERNAL_HEADERS "deps/headers" "deps/SFML/include")
+if (BUILD_WITH_PROVIDED_FFMPEG)
+    set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "deps/headers")
     set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
-    set (OTHER_LIBRARIES "")
-    set (SFML_LIBRARIES sfml-system sfml-audio sfml-window sfml-graphics)
-    set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build ${CMAKE_SOURCE_DIR}/deps/SFML/lib)
+    set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
 endif()
 
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
 
-
+find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
+set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_LIBRARY} ${SFML_SYSTEM_LIBRARY})
 
 
 if (LINUX) # ========================================== LINUX ========================================== #
 
-    if (${BUILD_WITH_PROVIDED_LIBS})
-    	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/linux-binaries")
-    	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system" "sfml-window" "sfml-graphics" "sfml-audio")
-    else()
-        find_package (SFML COMPONENTS graphics window system audio REQUIRED)
+    if (NOT ${BUILD_WITH_PROVIDED_FFMPEG})
         find_package (FFMPEG REQUIRED)
-        set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_LIBRARY} ${SFML_SYSTEM_LIBRARY})
 	endif()
 	
     add_definitions(-D__STDC_CONSTANT_MACROS)
@@ -86,58 +81,44 @@ elseif (MACOSX) # ========================================== MACOSX ============
 		endif()
 	endif()
 	
-	# set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
-	
 	set (CMAKE_OSX_ARCHITECTURES "x86_64")
     
-    # add an option to let the user specify a custom directory for frameworks installation (SFML, sndfile, ...)
+    # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
 	
 	# find only "root" headers
     file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/*")
     
+    # Make sure sfeMovie headers get imported in the framework
     set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 	
 	
 elseif (WINDOWS) # ========================================== WINDOWS ========================================== #
 
-
-	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries" "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries")
 	
 	if (MSVC)
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
-		set (FFMPEG_LIBRARIES "avdevice" "avformat" "avcodec" "avutil" "swscale")
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
 		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
 		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "z")
-		set (COMPILER_FLAGS ${COMPILER_FLAGS} "-O2")
 	endif()
 	
 	add_definitions(-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS)
-	set (SFML_LIBRARIES ${SFML_LIBRARIES} "sfml-system" "sfml-window" "sfml-graphics" "sfml-audio")
 	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Win32/ConditionImpl.cpp")
 endif()
 
 
-if (${BUILD_WITH_PROVIDED_LIBS})
-	# Build up to date SFML binaries
-	if (MACOSX)
-		set (BUILD_FRAMEWORKS 1) 
-	endif()
-	
-	add_subdirectory("deps/SFML")
-endif()
 
-
-if (NOT ${BUILD_WITH_PROVIDED_LIBS})
-    include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
+if (${BUILD_WITH_PROVIDED_FFMPEG})
+    include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
     link_directories (${FFMPEG_LIBRARY_DIR})
 else ()
     # Set the search directories for compiling and link editing
-    include_directories (${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${EXTERNAL_HEADERS})
+    include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
     link_directories (${EXTERNAL_LIBRARIES_DIR})
 endif ()
 
