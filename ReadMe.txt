@@ -1,1 +1,1 @@
-See https://github.com/LaurentGomila/SFML/wiki/ProjectsfeMovie for information on sfeMovie.
+See http://lucas.soltic.etu.p.luminy.univmed.fr/sfeMovie/ for information on sfeMovie.
