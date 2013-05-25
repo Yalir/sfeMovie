@@ -168,6 +168,12 @@ elseif (MACOSX)
             COMPONENT devel)
 endif()
 
+# Copy include directory to install location
+install(
+	DIRECTORY include
+	DESTINATION .
+)
+
 
 # Define the libraries sfe should link against
 target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
