@@ -26,7 +26,7 @@ else()
     return()
 endif()
 
-set (BUILD_WITH_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg libraries, FALSE to build with the system libraries")
+set (BUILD_WITH_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
 
 # Set some env vars
