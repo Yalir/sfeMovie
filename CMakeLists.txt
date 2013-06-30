@@ -227,3 +227,9 @@ if (BUILD_SFEMOVIE_SAMPLE)
     add_subdirectory(sample)
 endif ()
 
+# add an option for building the documentation
+set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")
+
+if(BUILD_DOC)
+    add_subdirectory(doxygen)
+endif()
