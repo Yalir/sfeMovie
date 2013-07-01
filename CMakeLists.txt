@@ -41,15 +41,33 @@ set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 set (OTHER_LIBRARIES "")
+set (EXTERNAL_LIBRARIES_DIR "")
+set (FFMPEG_LIBRARIES_LIST avdevice avformat avcodec avutil swscale)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	add_definitions("-O2")
 endif()
 	
 if (BUILD_WITH_PROVIDED_FFMPEG)
-    set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "deps/headers")
-    set (FFMPEG_LIBRARIES avdevice avformat avcodec avutil swscale)
-    set (EXTERNAL_LIBRARIES_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
+	# Use our own FFmpeg libraries
+	set (FFMPEG_INCLUDE_DIR "deps/headers")
+    set (FFMPEG_LIBRARY_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
+else()
+	# Use user's FFmpeg libraries
+	set (FFMPEG_INCLUDE_DIR "" CACHE PATH "Path to the directory containing the FFmpeg headers directories (libavcodec, libavformat, etc ; leave empty to let CMake find them)")
+	set (FFMPEG_LIBRARY_DIR "" CACHE PATH "Path to the directory containing the FFmpeg libraries (leave empty to let CMake find them)")
+	
+	if ("${FFMPEG_INCLUDE_DIR}" STREQUAL "" OR "${FFMPEG_LIBRARY_DIR}" STREQUAL "")
+		find_package (FFMPEG REQUIRED)
+		
+		if ("${FFMPEG_FOUND}" STREQUAL "NO")
+			message(FATAL_ERROR "Could not find a full FFmpeg installation")
+		else()
+			set (FFMPEG_INCLUDE_DIR ${FFMPEG_INCLUDE_DIRS})
+			set (FFMPEG_LIBRARY_DIR ${FFMPEG_LIBRARY_DIRS})
+			message(STATUS "LIB=${FFMPEG_LIBRARIES}")
+		endif()
+	endif()
 endif()
 
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
@@ -59,10 +77,6 @@ set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_
 
 
 if (LINUX) # ========================================== LINUX ========================================== #
-
-    if (NOT ${BUILD_WITH_PROVIDED_FFMPEG})
-        find_package (FFMPEG REQUIRED)
-	endif()
 	
     add_definitions(-D__STDC_CONSTANT_MACROS)
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
@@ -76,7 +90,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
 		if (DEFINED HAS_VDA) # HAS_VDA defined but FALSE
 			set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
 		else()
-			# VDA is used for OS X 10.7 and later
+			# VDA is used for OS X 10.7 and later, which is Darwin 11.0
 			if (${CMAKE_HOST_SYSTEM_VERSION} VERSION_EQUAL "11.0.0" OR ${CMAKE_HOST_SYSTEM_VERSION} VERSION_GREATER "11.0.0")
 				set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
 			endif()
@@ -114,15 +128,11 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 endif()
 
 
-
-if (${BUILD_WITH_PROVIDED_FFMPEG})
-    include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
-    link_directories (${FFMPEG_LIBRARY_DIR})
-else ()
-    # Set the search directories for compiling and link editing
-    include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
-    link_directories (${EXTERNAL_LIBRARIES_DIR})
-endif ()
+# Set the search directories for compiling and link editing
+include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
+message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR}")
+link_directories (${FFMPEG_LIBRARY_DIR} ${EXTERNAL_LIBRARIES_DIR})
+message (STATUS "Libraries directories: ${FFMPEG_LIBRARY_DIR} ${EXTERNAL_LIBRARIES_DIR}")
 
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
@@ -174,9 +184,8 @@ install(
 	DESTINATION .
 )
 
-
 # Define the libraries sfe should link against
-target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
+target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES_LIST} ${OTHER_LIBRARIES})
 
 # Build FFmpeg if needed
 if (BUILD_WITH_PROVIDED_FFMPEG)
@@ -195,8 +204,8 @@ if (BUILD_WITH_PROVIDED_FFMPEG)
 		endif()
 	endif()
 
-	set( Decoders_you_can_enable aac aac_latm aasc ac3 adpcm_4xm adpcm_adx adpcm_afc adpcm_ct adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1 adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g722 adpcm_g726 adpcm_ima_amv adpcm_ima_apc adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead adpcm_ima_iss adpcm_ima_oki adpcm_ima_qt adpcm_ima_smjpeg adpcm_ima_wav adpcm_ima_ws adpcm_ms adpcm_sbpro_2 adpcm_sbpro_3 adpcm_sbpro_4 adpcm_swf adpcm_thp adpcm_xa adpcm_yamaha alac als amrnb amrwb amv anm ansi ape ass asv1 asv2 atrac1 atrac3 aura aura2 avrn avrp avs avui ayuv bethsoftvid bfi bink binkaudio_dct binkaudio_rdft bintext bmp bmv_audio bmv_video brender_pix c93 cavs cdgraphics cdxl cinepak cljr cllc comfortnoise cook cpia cscd cyuv dca dfa dirac dnxhd dpx dsicinaudio dsicinvideo dvbsub dvdsub dvvideo dxa dxtory eac3 eacmv eamad eatgq eatgv eatqi eightbps eightsvx_exp eightsvx_fib escape124 escape130 exr ffv1 ffvhuff ffwavesynth flac flashsv flashsv2 flic flv fourxm fraps frwu g723_1 g729 gif gsm gsm_ms h261 h263 h263i h263p h264 h264_crystalhd h264_vda h264_vdpau huffyuv iac idcin idf iff_byterun1 iff_ilbm imc indeo2 indeo3 indeo4 indeo5 interplay_dpcm interplay_video jacosub jpeg2000 jpegls jv kgv1 kmvc lagarith libcelt libgsm libgsm_ms libilbc libopencore_amrnb libopencore_amrwb libopenjpeg libopus libschroedinger libspeex libstagefright_h264 libutvideo libvorbis libvpx loco mace3 mace6 mdec microdvd mimic mjpeg mjpegb mlp mmvideo motionpixels movtext mp1 mp1float mp2 mp2float mp3 mp3adu mp3adufloat mp3float mp3on4 mp3on4float mpc7 mpc8 mpeg1_vdpau mpeg1video mpeg2_crystalhd mpeg2video mpeg4 mpeg4_crystalhd mpeg4_vdpau mpeg_vdpau mpeg_xvmc mpegvideo mpl2 msa1 msmpeg4_crystalhd msmpeg4v1 msmpeg4v2 msmpeg4v3 msrle mss1 mss2 msvideo1 mszh mts2 mvc1 mvc2 mxpeg nellymoser nuv paf_audio paf_video pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_lxf pcm_mulaw pcm_s16be pcm_s16be_planar pcm_s16le pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s24le_planar pcm_s32be pcm_s32le pcm_s32le_planar pcm_s8 pcm_s8_planar pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork pcx pgm pgmyuv pgssub pictor pjs png ppm prores prores_lgpl ptx qcelp qdm2 qdraw qpeg qtrle r10k r210 ra_144 ra_288 ralf rawvideo realtext rl2 roq roq_dpcm rpza rv10 rv20 rv30 rv40 s302m sami sanm sgi sgirle shorten sipr smackaud smacker smc snow sol_dpcm sonic sp5x srt subrip subviewer subviewer1 sunrast svq1 svq3 tak targa targa_y216 text theora thp tiertexseqvideo tiff tmv truehd truemotion1 truemotion2 truespeech tscc tscc2 tta twinvq txd ulti utvideo v210 v210x v308 v408 v410 vb vble vc1 vc1_crystalhd vc1_vdpau vc1image vcr1 vima vmdaudio vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vp8 vplayer vqa wavpack webvtt wmalossless wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wmv3image wnv1 ws_snd1 xan_dpcm xan_wc3 xan_wc4 xbin xbm xface xl xsub xwd y41p yop yuv4 zerocodec zlib zmbv CACHE STRING "Available decoders" FORCE)
-	set( ENABLED_DECODERS theora flac vorbis CACHE STRING "Enabled audio and video decoders")
+	set (Decoders_you_can_enable aac aac_latm aasc ac3 adpcm_4xm adpcm_adx adpcm_afc adpcm_ct adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1 adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g722 adpcm_g726 adpcm_ima_amv adpcm_ima_apc adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead adpcm_ima_iss adpcm_ima_oki adpcm_ima_qt adpcm_ima_smjpeg adpcm_ima_wav adpcm_ima_ws adpcm_ms adpcm_sbpro_2 adpcm_sbpro_3 adpcm_sbpro_4 adpcm_swf adpcm_thp adpcm_xa adpcm_yamaha alac als amrnb amrwb amv anm ansi ape ass asv1 asv2 atrac1 atrac3 aura aura2 avrn avrp avs avui ayuv bethsoftvid bfi bink binkaudio_dct binkaudio_rdft bintext bmp bmv_audio bmv_video brender_pix c93 cavs cdgraphics cdxl cinepak cljr cllc comfortnoise cook cpia cscd cyuv dca dfa dirac dnxhd dpx dsicinaudio dsicinvideo dvbsub dvdsub dvvideo dxa dxtory eac3 eacmv eamad eatgq eatgv eatqi eightbps eightsvx_exp eightsvx_fib escape124 escape130 exr ffv1 ffvhuff ffwavesynth flac flashsv flashsv2 flic flv fourxm fraps frwu g723_1 g729 gif gsm gsm_ms h261 h263 h263i h263p h264 h264_crystalhd h264_vda h264_vdpau huffyuv iac idcin idf iff_byterun1 iff_ilbm imc indeo2 indeo3 indeo4 indeo5 interplay_dpcm interplay_video jacosub jpeg2000 jpegls jv kgv1 kmvc lagarith libcelt libgsm libgsm_ms libilbc libopencore_amrnb libopencore_amrwb libopenjpeg libopus libschroedinger libspeex libstagefright_h264 libutvideo libvorbis libvpx loco mace3 mace6 mdec microdvd mimic mjpeg mjpegb mlp mmvideo motionpixels movtext mp1 mp1float mp2 mp2float mp3 mp3adu mp3adufloat mp3float mp3on4 mp3on4float mpc7 mpc8 mpeg1_vdpau mpeg1video mpeg2_crystalhd mpeg2video mpeg4 mpeg4_crystalhd mpeg4_vdpau mpeg_vdpau mpeg_xvmc mpegvideo mpl2 msa1 msmpeg4_crystalhd msmpeg4v1 msmpeg4v2 msmpeg4v3 msrle mss1 mss2 msvideo1 mszh mts2 mvc1 mvc2 mxpeg nellymoser nuv paf_audio paf_video pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be pcm_f32le pcm_f64be pcm_f64le pcm_lxf pcm_mulaw pcm_s16be pcm_s16be_planar pcm_s16le pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s24le_planar pcm_s32be pcm_s32le pcm_s32le_planar pcm_s8 pcm_s8_planar pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork pcx pgm pgmyuv pgssub pictor pjs png ppm prores prores_lgpl ptx qcelp qdm2 qdraw qpeg qtrle r10k r210 ra_144 ra_288 ralf rawvideo realtext rl2 roq roq_dpcm rpza rv10 rv20 rv30 rv40 s302m sami sanm sgi sgirle shorten sipr smackaud smacker smc snow sol_dpcm sonic sp5x srt subrip subviewer subviewer1 sunrast svq1 svq3 tak targa targa_y216 text theora thp tiertexseqvideo tiff tmv truehd truemotion1 truemotion2 truespeech tscc tscc2 tta twinvq txd ulti utvideo v210 v210x v308 v408 v410 vb vble vc1 vc1_crystalhd vc1_vdpau vc1image vcr1 vima vmdaudio vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vp8 vplayer vqa wavpack webvtt wmalossless wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wmv3image wnv1 ws_snd1 xan_dpcm xan_wc3 xan_wc4 xbin xbm xface xl xsub xwd y41p yop yuv4 zerocodec zlib zmbv CACHE STRING "Available decoders" FORCE)
+	set (ENABLED_DECODERS theora flac vorbis CACHE STRING "Enabled audio and video decoders")
 	
 	if (MACOSX)
 		set(OS_ARG "macosx")

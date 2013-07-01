@@ -1,113 +1,163 @@
-# - Try to find FFMPEG
-# Once done this will define
-#  
-#  FFMPEG_FOUND		 - system has FFMPEG
-#  FFMPEG_INCLUDE_DIR	 - the include directories
-#  FFMPEG_LIBRARY_DIR	 - the directory containing the libraries
-#  FFMPEG_LIBRARIES	 - link these to use FFMPEG
-#  FFMPEG_SWSCALE_FOUND	 - FFMPEG also has SWSCALE
-#   
+# Locate ffmpeg
+# This module defines
+# FFMPEG_LIBRARIES
+# FFMPEG_FOUND, if false, do not try to link to ffmpeg
+# FFMPEG_INCLUDE_DIR, where to find the headers
+#
+# $FFMPEG_DIR is an environment variable that would
+# correspond to the ./configure --prefix=$FFMPEG_DIR
+#
+# Created by Robert Osfield.
 
-SET( FFMPEG_HEADERS avformat.h avcodec.h avutil.h avdevice.h )
-SET( FFMPEG_PATH_SUFFIXES libavformat libavcodec libavutil libavdevice )
-SET( FFMPEG_SWS_HEADERS swscale.h )
-SET( FFMPEG_SWS_PATH_SUFFIXES libswscale )
 
-if( WIN32 )
-   SET( FFMPEG_LIBRARIES avformat-52.lib avcodec-51.lib avutil-49.lib avdevice-52.lib )
-   SET( FFMPEG_SWS_LIBRARIES swscale-0.lib )
-   SET( FFMPEG_LIBRARY_DIR $ENV{FFMPEGDIR}\\lib )
-   SET( FFMPEG_INCLUDE_PATHS $ENV{FFMPEGDIR}\\include )
+#In ffmpeg code, old version use "#include <header.h>" and newer use "#include <libname/header.h>"
+#In OSG ffmpeg plugin, we used "#include <header.h>" for compatibility with old version of ffmpeg
+#With the new version of FFmpeg, a file named "time.h" was added that breaks compatability with the old version of ffmpeg.
 
-   # check to see if we can find swscale
-   SET( TMP_ TMP-NOTFOUND )
-   FIND_PATH( TMP_ ${FFMPEG_SWS_LIBRARIES}
-	      PATHS ${FFMPEG_LIBRARY_DIR} )
-   IF ( TMP_ )
-      SET( SWSCALE_FOUND TRUE )
-   ENDIF( TMP_ )
-else( WIN32 )
-   SET( FFMPEG_LIBRARIES avformat avcodec avutil avdevice )
-   SET( FFMPEG_SWS_LIBRARIES swscale )
-   INCLUDE(FindPkgConfig)
-   if ( PKG_CONFIG_FOUND )
-      pkg_check_modules( AVFORMAT libavformat )
-      pkg_check_modules( AVCODEC libavcodec )
-      pkg_check_modules( AVUTIL libavutil )
-      pkg_check_modules( AVDEVICE libavdevice )
-      pkg_check_modules( SWSCALE libswscale )
-   endif ( PKG_CONFIG_FOUND )
+#We have to search the path which contain the header.h (usefull for old version)
+#and search the path which contain the libname/header.h (usefull for new version)
 
-   SET( FFMPEG_LIBRARY_DIR   ${AVFORMAT_LIBRARY_DIRS}
-			     ${AVCODEC_LIBRARY_DIRS}
-			     ${AVUTIL_LIBRARY_DIRS}
-			     ${AVDEVICE_LIBRARY_DIRS} )
-   SET( FFMPEG_INCLUDE_PATHS ${AVFORMAT_INCLUDE_DIRS}
-			     ${AVCODEC_INCLUDE_DIRS}
-			     ${AVUTIL_INCLUDE_DIRS}
-			     ${AVDEVICE_INCLUDE_DIRS} )
-endif( WIN32 )
+#Then we need to include ${FFMPEG_libname_INCLUDE_DIRS} (in old version case, use by ffmpeg header and osg plugin code)
+#                                                       (in new version case, use by ffmpeg header) 
+#and ${FFMPEG_libname_INCLUDE_DIRS/libname}             (in new version case, use by osg plugin code)
 
-# add in swscale if found
-IF ( SWSCALE_FOUND )
-   SET( FFMPEG_LIBRARY_DIR   ${FFMPEG_LIBRARY_DIR}
-     			     ${SWSCALE_LIBRARY_DIRS} )
-   SET( FFMPEG_INCLUDE_PATHS ${FFMPEG_INCLUDE_PATHS}
-     			     ${SWSCALE_INCLUDE_DIRS} )
-   SET( FFMPEG_HEADERS	     ${FFMPEG_HEADERS}
-     			     ${FFMPEG_SWS_HEADERS} )
-   SET( FFMPEG_PATH_SUFFIXES ${FFMPEG_PATH_SUFFIXES}
-     			     ${FFMPEG_SWS_PATH_SUFFIXES} )
-   SET( FFMPEG_LIBRARIES     ${FFMPEG_LIBRARIES}
-     			     ${FFMPEG_SWS_LIBRARIES} )
-ENDIF ( SWSCALE_FOUND )
 
-# find includes
-SET( INC_SUCCESS 0 )
-SET( TMP_ TMP-NOTFOUND )
-SET( FFMPEG_INCLUDE_DIR ${FFMPEG_INCLUDE_PATHS} )
-FOREACH( INC_ ${FFMPEG_HEADERS} )
-   message( STATUS "checking: " ${INC_} )
+# Macro to find header and lib directories
+# example: FFMPEG_FIND(AVFORMAT avformat avformat.h)
+MACRO(FFMPEG_FIND varname shortname headername)
+    # old version of ffmpeg put header in $prefix/include/[ffmpeg]
+    # so try to find header in include directory
 
-   FIND_PATH( TMP_ ${INC_}
-	      PATHS ${FFMPEG_INCLUDE_PATHS}
-	      PATH_SUFFIXES ${FFMPEG_PATH_SUFFIXES} )
-   IF ( TMP_ )
-      message( STATUS "found: " ${TMP_} )
-      MATH( EXPR INC_SUCCESS ${INC_SUCCESS}+1 )
-      SET( FFMPEG_INCLUDE_DIR ${FFMPEG_INCLUDE_DIR} ${TMP_} )
-   ENDIF ( TMP_ )
-   SET( TMP_ TMP-NOTFOUND )
-ENDFOREACH( INC_ )
+    FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS lib${shortname}/${headername}
+        PATHS
+        ${FFMPEG_ROOT}/include
+        $ENV{FFMPEG_DIR}/include
+        ~/Library/Frameworks
+        /Library/Frameworks
+        /usr/local/include
+        /usr/include
+        /sw/include # Fink
+        /opt/local/include # DarwinPorts
+        /opt/csw/include # Blastwave
+        /opt/include
+        /usr/freeware/include
+        PATH_SUFFIXES ffmpeg
+        DOC "Location of FFMPEG Headers"
+    )
 
-# clear out duplicates
-#LIST( REMOVE_DUPLICATES FFMPEG_INCLUDE_DIR )
-#LIST( REMOVE_DUPLICATES FFMPEG_LIBRARY_DIR )
+    FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS ${headername}
+        PATHS
+        ${FFMPEG_ROOT}/include
+        $ENV{FFMPEG_DIR}/include
+        ~/Library/Frameworks
+        /Library/Frameworks
+        /usr/local/include
+        /usr/include
+        /sw/include # Fink
+        /opt/local/include # DarwinPorts
+        /opt/csw/include # Blastwave
+        /opt/include
+        /usr/freeware/include
+        PATH_SUFFIXES ffmpeg
+        DOC "Location of FFMPEG Headers"
+    )
 
-# find the full paths of the libraries
-SET( TMP_ TMP-NOTFOUND )
-IF ( NOT WIN32 )
-   FOREACH( LIB_ ${FFMPEG_LIBRARIES} )
-      FIND_LIBRARY( TMP_ NAMES ${LIB_} PATHS ${FFMPEG_LIBRARY_DIR} )
-      IF ( TMP_ )
-	 SET( FFMPEG_LIBRARIES_FULL ${FFMPEG_LIBRARIES_FULL} ${TMP_} )
-      ENDIF ( TMP_ )
-      SET( TMP_ TMP-NOTFOUND )
-   ENDFOREACH( LIB_ )
-   SET ( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES_FULL} )
-ENDIF( NOT WIN32 )
+    FIND_LIBRARY(FFMPEG_${varname}_LIBRARIES
+        NAMES ${shortname}
+        PATHS
+        ${FFMPEG_ROOT}/lib
+        $ENV{FFMPEG_DIR}/lib
+        ~/Library/Frameworks
+        /Library/Frameworks
+        /usr/local/lib
+        /usr/local/lib64
+        /usr/lib
+        /usr/lib64
+        /sw/lib
+        /opt/local/lib
+        /opt/csw/lib
+        /opt/lib
+        /usr/freeware/lib64
+        DOC "Location of FFMPEG Libraries"
+    )
 
-#Clear out temp variable
-unset(TMP_ CACHE)
+    IF (FFMPEG_${varname}_LIBRARIES AND FFMPEG_${varname}_INCLUDE_DIRS)
+        SET(FFMPEG_${varname}_FOUND 1)
+    ENDIF(FFMPEG_${varname}_LIBRARIES AND FFMPEG_${varname}_INCLUDE_DIRS)
 
-LIST( LENGTH FFMPEG_HEADERS LIST_SIZE_ )
+ENDMACRO(FFMPEG_FIND)
 
-SET( FFMPEG_FOUND FALSE )
-SET( FFMPEG_SWSCALE_FOUND FALSE )
-IF ( ${INC_SUCCESS} EQUAL ${LIST_SIZE_} )
-   SET( FFMPEG_FOUND TRUE )
-   SET( FFMPEG_SWSCALE_FOUND ${SWSCALE_FOUND} )
-   message( STATUS "FFMPEG include dir: ${FFMPEG_INCLUDE_DIR}" )
-   message( STATUS "FFMPEG library dir: ${FFMPEG_LIBRARY_DIR}" )
-   message( STATUS "FFMPEG libraries: ${FFMPEG_LIBRARIES}" )
-ENDIF ( ${INC_SUCCESS} EQUAL ${LIST_SIZE_} )
+SET(FFMPEG_ROOT "$ENV{FFMPEG_DIR}" CACHE PATH "Location of FFMPEG")
+
+# find stdint.h
+IF(WIN32)
+
+    FIND_PATH(FFMPEG_STDINT_INCLUDE_DIR stdint.h
+        PATHS
+        ${FFMPEG_ROOT}/include
+        $ENV{FFMPEG_DIR}/include
+        ~/Library/Frameworks
+        /Library/Frameworks
+        /usr/local/include
+        /usr/include
+        /sw/include # Fink
+        /opt/local/include # DarwinPorts
+        /opt/csw/include # Blastwave
+        /opt/include
+        /usr/freeware/include
+        PATH_SUFFIXES ffmpeg
+        DOC "Location of FFMPEG stdint.h Header"
+    )
+
+    IF (FFMPEG_STDINT_INCLUDE_DIR)
+        SET(STDINT_OK TRUE)
+    ENDIF()
+
+ELSE()
+
+    SET(STDINT_OK TRUE)
+
+ENDIF()
+
+FFMPEG_FIND(LIBAVFORMAT avformat avformat.h)
+FFMPEG_FIND(LIBAVDEVICE avdevice avdevice.h)
+FFMPEG_FIND(LIBAVCODEC  avcodec  avcodec.h)
+FFMPEG_FIND(LIBAVUTIL   avutil   avutil.h)
+FFMPEG_FIND(LIBSWSCALE  swscale  swscale.h)  # not sure about the header to look for here.
+
+SET(FFMPEG_FOUND "NO")
+# Note we don't check FFMPEG_LIBSWSCALE_FOUND here, it's optional.
+IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODEC_FOUND AND FFMPEG_LIBAVUTIL_FOUND AND STDINT_OK)
+
+    SET(FFMPEG_FOUND "YES")
+
+    SET(FFMPEG_INCLUDE_DIRS
+        ${FFMPEG_LIBAVFORMAT_INCLUDE_DIRS}
+        ${FFMPEG_LIBAVDEVICE_INCLUDE_DIRS}
+        ${FFMPEG_LIBAVCODEC_INCLUDE_DIRS}
+        ${FFMPEG_LIBAVUTIL_INCLUDE_DIRS}
+    )
+
+# Using the new include style for FFmpeg prevents issues with #include <time.h>
+    IF (FFMPEG_STDINT_INCLUDE_DIR)
+        SET(FFMPEG_INCLUDE_DIRS
+            ${FFMPEG_INCLUDE_DIRS}
+            ${FFMPEG_STDINT_INCLUDE_DIR}
+        )
+    ENDIF()
+
+
+    SET(FFMPEG_LIBRARY_DIRS ${FFMPEG_LIBAVFORMAT_LIBRARY_DIRS})
+
+    # Note we don't add FFMPEG_LIBSWSCALE_LIBRARIES here, it will be added if found later.
+    SET(FFMPEG_LIBRARIES
+        ${FFMPEG_LIBAVFORMAT_LIBRARIES}
+        ${FFMPEG_LIBAVDEVICE_LIBRARIES}
+        ${FFMPEG_LIBAVCODEC_LIBRARIES}
+        ${FFMPEG_LIBAVUTIL_LIBRARIES})
+
+ELSE ()
+
+#    MESSAGE(STATUS "Could not find FFMPEG")
+
+ENDIF()
