@@ -26,8 +26,14 @@ else()
     return()
 endif()
 
-set (BUILD_WITH_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
+set (LINK_AGAINST_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
+set (BUILD_FFMPEG TRUE CACHE BOOL "TRUE to build the provided FFmpeg, FALSE to skip rebuilding FFmpeg")
+
+if (${BUILD_FFMPEG} AND NOT ${LINK_AGAINST_PROVIDED_FFMPEG})
+	message(WARNING "BUILD_FFMPEG set to true but LINK_AGAINST_PROVIDED_FFMPEG is false. Inconsistent behaviour. LINK_AGAINST_PROVIDED_FFMPEG set to true.")
+	set (LINK_AGAINST_PROVIDED_FFMPEG TRUE)
+endif()
 
 # Set some env vars
 set (LIB_NAME sfeMovie)
@@ -42,16 +48,74 @@ set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 set (OTHER_LIBRARIES "")
 set (EXTERNAL_LIBRARIES_DIR "")
-set (FFMPEG_LIBRARIES_LIST avdevice avformat avcodec avutil swscale)
+set (FFMPEG_BUILD_DIR "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	add_definitions("-O2")
 endif()
+
+macro(find_ffmpeg searchPath)
+	find_library(FFMPEG_LIBAVFORMAT_LIBRARIES
+				NAMES avformat
+				PATHS "${searchPath}"
+				NO_DEFAULT_PATH
+				NO_CMAKE_ENVIRONMENT_PATH
+				NO_SYSTEM_ENVIRONMENT_PATH
+				NO_CMAKE_SYSTEM_PATH)
+	find_library(FFMPEG_LIBAVDEVICE_LIBRARIES
+				NAMES avdevice
+				PATHS "${searchPath}"
+				NO_DEFAULT_PATH
+				NO_CMAKE_ENVIRONMENT_PATH
+				NO_SYSTEM_ENVIRONMENT_PATH
+				NO_CMAKE_SYSTEM_PATH)
+	find_library(FFMPEG_LIBAVCODEC_LIBRARIES
+				NAMES avcodec
+				PATHS "${searchPath}"
+				NO_DEFAULT_PATH
+				NO_CMAKE_ENVIRONMENT_PATH
+				NO_SYSTEM_ENVIRONMENT_PATH
+				NO_CMAKE_SYSTEM_PATH)
+	find_library(FFMPEG_LIBAVUTIL_LIBRARIES
+				NAMES avutil
+				PATHS "${searchPath}"
+				NO_DEFAULT_PATH
+				NO_CMAKE_ENVIRONMENT_PATH
+				NO_SYSTEM_ENVIRONMENT_PATH
+				NO_CMAKE_SYSTEM_PATH)
+	find_library(FFMPEG_LIBSWSCALE_LIBRARIES
+				NAMES swscale
+				PATHS "${searchPath}"
+				NO_DEFAULT_PATH
+				NO_CMAKE_ENVIRONMENT_PATH
+				NO_SYSTEM_ENVIRONMENT_PATH
+				NO_CMAKE_SYSTEM_PATH)
 	
-if (BUILD_WITH_PROVIDED_FFMPEG)
+	set (FFMPEG_LIBRARIES
+			${FFMPEG_LIBAVFORMAT_LIBRARIES}
+			${FFMPEG_LIBAVDEVICE_LIBRARIES}
+			${FFMPEG_LIBAVCODEC_LIBRARIES}
+			${FFMPEG_LIBAVUTIL_LIBRARIES}
+			${FFMPEG_LIBSWSCALE_LIBRARIES})
+
+	if (${FFMPEG_LIBAVFORMAT_LIBRARIES} MATCHES "#NOTFOUND$#" OR
+		${FFMPEG_LIBAVDEVICE_LIBRARIES} MATCHES "#NOTFOUND$#" OR
+		${FFMPEG_LIBAVCODEC_LIBRARIES} MATCHES "#NOTFOUND$#" OR
+		${FFMPEG_LIBAVUTIL_LIBRARIES} MATCHES "#NOTFOUND$#" OR
+		${FFMPEG_LIBSWSCALE_LIBRARIES} MATCHES "#NOTFOUND$#")
+		message(STATUS "Search results: ${FFMPEG_LIBRARIES}")
+		message(FATAL_ERROR "FFmpeg libraries not found in ${searchPath}")
+	endif()
+endmacro(find_ffmpeg)
+
+
+if (LINK_AGAINST_PROVIDED_FFMPEG)
 	# Use our own FFmpeg libraries
-	set (FFMPEG_INCLUDE_DIR "deps/headers")
-    set (FFMPEG_LIBRARY_DIR ${CMAKE_SOURCE_DIR}/deps/ffmpeg-build)
+	set (FFMPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/headers")
+	
+	find_ffmpeg(${FFMPEG_BUILD_DIR})
+		
+    set (FFMPEG_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
 else()
 	# Use user's FFmpeg libraries
 	set (FFMPEG_INCLUDE_DIR "" CACHE PATH "Path to the directory containing the FFmpeg headers directories (libavcodec, libavformat, etc ; leave empty to let CMake find them)")
@@ -64,11 +128,12 @@ else()
 			message(FATAL_ERROR "Could not find a full FFmpeg installation")
 		else()
 			set (FFMPEG_INCLUDE_DIR ${FFMPEG_INCLUDE_DIRS})
-			set (FFMPEG_LIBRARY_DIR ${FFMPEG_LIBRARY_DIRS})
-			message(STATUS "LIB=${FFMPEG_LIBRARIES}")
+			find_ffmpeg(${FFMPEG_LIBRARY_DIR})
 		endif()
 	endif()
 endif()
+
+message(STATUS "LIB=${FFMPEG_LIBRARIES}")
 
 set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
 
@@ -130,9 +195,10 @@ endif()
 
 # Set the search directories for compiling and link editing
 include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
+link_directories (${EXTERNAL_LIBRARIES_DIR})
+
 message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR}")
-link_directories (${FFMPEG_LIBRARY_DIR} ${EXTERNAL_LIBRARIES_DIR})
-message (STATUS "Libraries directories: ${FFMPEG_LIBRARY_DIR} ${EXTERNAL_LIBRARIES_DIR}")
+message (STATUS "Libraries directories: ${EXTERNAL_LIBRARIES_DIR}")
 
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
@@ -185,10 +251,10 @@ install(
 )
 
 # Define the libraries sfe should link against
-target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES_LIST} ${OTHER_LIBRARIES})
+target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
 
 # Build FFmpeg if needed
-if (BUILD_WITH_PROVIDED_FFMPEG)
+if (${LINK_AGAINST_PROVIDED_FFMPEG} AND ${BUILD_FFMPEG})
 	if (MSVC)
 		set( MINGW_DIR C:/MinGW CACHE PATH "Set the path for the MinGW environment")
 		if (EXISTS "${MINGW_DIR}" AND IS_DIRECTORY "${MINGW_DIR}")
