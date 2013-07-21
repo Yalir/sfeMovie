@@ -2,7 +2,7 @@
 
 # Shell script to run the command given as parameter
 # If this script is called from a batch script, it is expected to have 
-#
+# two unneeded parameters
 
 if [ "$1" == "--from-batch" ]
   then

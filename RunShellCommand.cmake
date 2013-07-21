@@ -9,9 +9,14 @@ function(RunShell target phase shell_command)
                      COMMAND BatchBridgeToShell ARGS ${MINGW_DIR} ${cmd}
 					 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})	
 	else()
-		add_custom_command(TARGET ${target}
-                     ${phase}
-                     COMMAND bash ARGS -c \"${cmd}\"
-					 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})	
+		message(STATUS "add_custom_command(TARGET ${target} ${phase} COMMAND bash ARGS -c \"${cmd}\" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}")
+		add_custom_target(BuildFFMPEG ALL DEPENDS "ffmpeg-libs") 
+		add_custom_command(OUTPUT "ffmpeg-libs"
+					COMMAND bash ARGS -c \"${cmd}\"
+					WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+		# add_custom_command(TARGET ${target}
+  #                    ${phase}
+  #                    COMMAND bash ARGS -c \"${cmd}\"
+		# 			 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})	
 	endif()
 endfunction(RunShell)
