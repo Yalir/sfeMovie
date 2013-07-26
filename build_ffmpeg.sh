@@ -89,6 +89,7 @@ function build_ffmpeg()
 		fi
         
 	    mkdir -p ../ffmpeg-build
+		touch ../ffmpeg-build/build_dir.txt
 		rm ../ffmpeg-build/*
 	    
 		echo "Copying libraries into ffmpeg-build"
