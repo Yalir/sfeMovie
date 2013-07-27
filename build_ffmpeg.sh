@@ -89,7 +89,7 @@ function build_ffmpeg()
 		fi
         
 	    mkdir -p ../ffmpeg-build
-		rm ../ffmpeg-build/*
+		rm -f ../ffmpeg-build/*
 	    
 		echo "Copying libraries into ffmpeg-build"
 		if [ "$vcpp" == "1" ]
