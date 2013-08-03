@@ -123,8 +123,8 @@ else()
 	
 	if ("${FFMPEG_INCLUDE_DIR}" STREQUAL "" OR "${FFMPEG_LIBRARY_DIR}" STREQUAL "")
 		find_package (FFMPEG REQUIRED)
-		set(FFMPEG_INCLUDE_DIR "${FFMPEG_LIBAVCODEC_INCLUDE_DIRS}")
-		
+		set(FFMPEG_INCLUDE_DIR "${FFMPEG_LIBAVCODEC_INCLUDE_DIRS}" CACHE PATH "Path to the directory containing the FFmpeg headers directories (libavcodec, libavformat, etc ; leave empty to let CMake find them)" FORCE)
+
 		if ("${FFMPEG_FOUND}" STREQUAL "NO")
 			message(FATAL_ERROR "Could not find a full FFmpeg installation")
 		endif()
