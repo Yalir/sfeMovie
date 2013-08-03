@@ -287,7 +287,7 @@ endif()
 
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
-add_dependencies(${LIB_NAME} createWikiReports)
+add_dependencies(${LIB_NAME} BuildFFMPEG)
 
 set_target_properties(${LIB_NAME} PROPERTIES
 					  COMPILE_FLAGS "${COMPILER_FLAGS}"
