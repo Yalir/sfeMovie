@@ -1,19 +1,19 @@
 language:
-	- cpp
+  - cpp
 
 compiler:
-	- gcc
+  - gcc
 
 script:
-	cmake -DSFML_ROOT=SFML-2.1 . && make
+  cmake -DSFML_ROOT=SFML-2.1 . && make
 
 before_script:
-	wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-32bits.tar.bz2
-	tar -xjvf SFML-2.1-linux-gcc-32bits.tar.bz2
+  wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-32bits.tar.bz2
+  tar -xjvf SFML-2.1-linux-gcc-32bits.tar.bz2
 
 branches:
-	only:
-		- master
+  only:
+    - master
 
 notifications:
   recipients:
