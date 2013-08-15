@@ -1,0 +1,23 @@
+language:
+  - cpp
+
+compiler:
+  - gcc
+
+script:
+  - cmake -DSFML_ROOT=SFML-2.1 . && make
+
+before_script:
+  - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
+  - tar -xjvf SFML-2.1-linux-gcc-64bits.tar.bz2
+
+branches:
+  only:
+    - master
+
+notifications:
+  recipients:
+    - lucas.soltic@orange.fr
+  email:
+    on_success: always
+    on_failure: always
