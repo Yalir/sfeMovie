@@ -1,1 +1,1 @@
-See http://lucas.soltic.etu.p.luminy.univmed.fr/sfeMovie/ for information on sfeMovie.
+See http://lucas.soltic.etu.p.luminy.univ-amu.fr/sfeMovie/ for information on sfeMovie.

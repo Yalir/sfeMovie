@@ -1,5 +1,0 @@
-
-Please read http://lucas.soltic.etu.p.luminy.univmed.fr/sfeMovie/start.php
-
-Note that running CMake is *NOT* enough to correctly build sfeMovie.
-

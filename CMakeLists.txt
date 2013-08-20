@@ -266,7 +266,7 @@ if (${LINK_AGAINST_PROVIDED_FFMPEG} AND ${BUILD_FFMPEG})
 	vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vp8 vplayer vqa wavpack webvtt wmalossless wmapro wmav1
 	wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wmv3image wnv1 ws_snd1 xan_dpcm xan_wc3
 	xan_wc4 xbin xbm xface xl xsub xwd y41p yop yuv4 zerocodec zlib zmbv CACHE STRING "Available decoders" FORCE)
-	set (ENABLED_DECODERS theora flac vorbis CACHE STRING "Enabled audio and video decoders")
+	set (ENABLED_DECODERS theora flac vorbis vp8 CACHE STRING "Enabled audio and video decoders")
 	
 	if (MACOSX)
 		set(OS_ARG "macosx")
