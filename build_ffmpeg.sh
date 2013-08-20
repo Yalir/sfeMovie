@@ -69,8 +69,10 @@ function build_ffmpeg()
 			old_path=`echo $PATH`
 			export PATH="$PATH:/C/Program Files/Microsoft Visual Studio 9.0/Common7/IDE:/C/Program Files/Microsoft Visual Studio 9.0/VC/bin"
 			export PATH="$PATH:/C/Program Files/Microsoft Visual Studio 10.0/Common7/IDE:/C/Program Files/Microsoft Visual Studio 10.0/VC/bin"
+			export PATH="$PATH:/C/Program Files/Microsoft Visual Studio 11.0/Common7/IDE:/C/Program Files/Microsoft Visual Studio 11.0/VC/bin"
 			export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 9.0/VC/bin"
 			export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin"
+			export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 11.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin"
 		fi
 		
         echo "./configure $args"
