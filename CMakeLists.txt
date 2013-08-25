@@ -48,11 +48,17 @@ set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 set (OTHER_LIBRARIES "")
 set (EXTERNAL_LIBRARIES_DIR "")
-set (BUILTIN_FFMPEG_BUILD_DIR "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+set (BUILTIN_FFMPEG_BUILD_DIR "${CMAKE_BINARY_DIR}/FFmpeg-binaries")
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	add_definitions("-O2")
 endif()
+
+# These variables will be used by build_ffmpeg.sh. We don't give them
+# as parameters to the script because RunShell() doesn't allow parameters
+# with spaces on Windows, thus we use a portable solution
+file(WRITE "${CMAKE_SOURCE_DIR}/SourceDir.var" "${CMAKE_SOURCE_DIR}")
+file(WRITE "${CMAKE_SOURCE_DIR}/BuildDir.var" "${CMAKE_BINARY_DIR}")
 
 #################################################################################################################
 # ============================================== FFMPEG SETUP ================================================= #
@@ -114,7 +120,7 @@ endmacro(check_ffmpeg_libraries)
 if (LINK_AGAINST_PROVIDED_FFMPEG)
 	# Use our own FFmpeg libraries
 	set (FFMPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/headers")
-    set (FFMPEG_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/deps/ffmpeg-build")
+    set (FFMPEG_LIBRARY_DIR "${BUILTIN_FFMPEG_BUILD_DIR}")
     ffmpeg_paths("${BUILTIN_FFMPEG_BUILD_DIR}")
     check_ffmpeg_headers()
 
@@ -310,7 +316,7 @@ if (LINUX)
     install(TARGETS ${LIB_NAME}
             LIBRARY DESTINATION lib)
    	
-   	file(GLOB FFMPEG_BUILD_LIBS RELATIVE ${PROJECT_SOURCE_DIR} "deps/ffmpeg-build/*")
+   	file(GLOB FFMPEG_BUILD_LIBS RELATIVE ${PROJECT_SOURCE_DIR} "${BUILTIN_FFMPEG_BUILD_DIR}/*")
     install(FILES ${FFMPEG_BUILD_LIBS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             COMPONENT devel)

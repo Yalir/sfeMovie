@@ -4,6 +4,8 @@ os=""
 cmake_env=""
 linking=""
 macosx_arch="x86_64" # ppc or i386 or x86_64
+source_dir=""
+build_dir=""
 macosx_sdk=""
 has_vda=0
 vcpp=0
@@ -29,10 +31,8 @@ function build_ffmpeg()
 	fi
 	
     # build ffmpeg
-    if test -d "deps/ffmpeg"
+    if test -d "${source_dir}/deps/ffmpeg"
       then
-        cd "deps/ffmpeg"
-        
         configure_flags="";
         
         for codec in $full_decoders_list
@@ -75,10 +75,12 @@ function build_ffmpeg()
 			export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 11.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin"
 		fi
 		
-        echo "./configure $args"
-        #sh $cmd
-        chmod u+x configure version.sh doc/texi2pod.pl
-        { echo "$args" | xargs ./configure; }
+        chmod u+x "${source_dir}/deps/ffmpeg/configure" "${source_dir}/deps/ffmpeg/version.sh" "${source_dir}/deps/ffmpeg/doc/texi2pod.pl"
+        mkdir -p "${build_dir}/FFmpeg-objects"
+        cd "${build_dir}/FFmpeg-objects"
+
+        echo "${source_dir}/deps/ffmpeg/configure $args"
+        { echo "$args" | xargs "${source_dir}/deps/ffmpeg/configure"; }
         check_err
         make clean
         check_err
@@ -90,29 +92,33 @@ function build_ffmpeg()
 			export PATH="$old_path"
 		fi
         
-	    mkdir -p ../ffmpeg-build
-		rm -f ../ffmpeg-build/*
+        ffmpeg_sources_dir="${source_dir}/deps/ffmpeg"
+        ffmpeg_objects_dir="${build_dir}/FFmpeg-objects"
+        ffmpeg_binaries_dir="${build_dir}/FFmpeg-binaries"
+
+		mkdir -p "${ffmpeg_binaries_dir}"
+		rm -f "${ffmpeg_binaries_dir}/*"
 	    
 		echo "Copying libraries into ffmpeg-build"
 		if [ "$vcpp" == "1" ]
 		  then
-			cp -v `find . -name "*.lib"` ../ffmpeg-build
+			cp -v `find "${ffmpeg_objects_dir}" -name "*.lib"` "${ffmpeg_binaries_dir}"
 			check_err
-			cp -v `find . -name "*.dll"` ../ffmpeg-build
+			cp -v `find "${ffmpeg_objects_dir}" -name "*.dll"` "${ffmpeg_binaries_dir}"
 			check_err
 		else
 			if [ "$os" == "linux" ]
 			  then
-			    cp -vfl `find . -name "*.so*"` ../ffmpeg-build
+			    cp -vfl `find "${ffmpeg_objects_dir}" -name "*.so*"` "${ffmpeg_binaries_dir}"
 			else
-				cp -v `find . -name "*.a"` ../ffmpeg-build
+				cp -v `find "${ffmpeg_objects_dir}" -name "*.a"` "${ffmpeg_binaries_dir}"
 			fi
 			check_err
 		fi
 		
-        cd ../..
+        cd ${source_dir}
     else
-    	echo "Missing directory ffmpeg-sources. Aborting."
+    	echo "Missing ffmpeg sources directory at ${source_dir}/deps/ffmpeg. Aborting."
     	exit 1
     fi
 	
@@ -145,16 +151,19 @@ function main()
 			fi
 			
 			macosx_arch="$3"
-			
+			source_dir=`cat SourceDir.var`
+			build_dir=`cat BuildDir.var`
+
 			shift
 			shift
 			shift
 			full_decoders_list="$*"
 			
-			echo "OS           : $os"
-			echo "Visual Studio: $vcpp"
-			echo "OS X arch    : $macosx_arch"
-			echo "Decoders     : $full_decoders_list"
+			echo "Build directory : ${build_dir}"
+			echo "OS              : $os"
+			echo "Visual Studio   : $vcpp"
+			echo "OS X arch       : $macosx_arch"
+			echo "Decoders        : $full_decoders_list"
 			
 			# build.. well it's written
 			build_ffmpeg $*
