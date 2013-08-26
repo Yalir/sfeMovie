@@ -26,20 +26,19 @@ else()
     return()
 endif()
 
-set (LINK_AGAINST_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
+set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
 set (BUILD_FFMPEG TRUE CACHE BOOL "TRUE to build the provided FFmpeg, FALSE to skip rebuilding FFmpeg")
 
-if (${BUILD_FFMPEG} AND NOT ${LINK_AGAINST_PROVIDED_FFMPEG})
-	message(WARNING "BUILD_FFMPEG set to true but LINK_AGAINST_PROVIDED_FFMPEG is false: inconsistent behaviour. LINK_AGAINST_PROVIDED_FFMPEG set to true.")
-	set (LINK_AGAINST_PROVIDED_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries" FORCE)
+if (${BUILD_FFMPEG} AND NOT ${LINK_AGAINST_INTERNAL_FFMPEG})
+	message(WARNING "BUILD_FFMPEG set to true but LINK_AGAINST_INTERNAL_FFMPEG is false: inconsistent behaviour. LINK_AGAINST_INTERNAL_FFMPEG set to true.")
+	set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries" FORCE)
 endif()
 
 # Set some env vars
 set (LIB_NAME sfeMovie)
 set (VERSION_MAJOR 1)
-set (VERSION_MINOR 0)
-set (VERSION_PATCH 1)
+set (VERSION_MINOR 1)
 set (COMPILER_FLAGS "")
 set (LINKER_FLAGS "")
 
@@ -108,7 +107,7 @@ endmacro(check_ffmpeg_headers)
 macro(check_ffmpeg_libraries)
 	foreach(lib ${FFMPEG_LIBRARIES})
 		if(NOT EXISTS "${lib}")
-			if(${LINK_AGAINST_PROVIDED_FFMPEG})
+			if(${LINK_AGAINST_INTERNAL_FFMPEG})
 				message(WARNING "You chose to link sfeMovie against the provided FFmpeg but you also chose not to build the provided FFmpeg. However, the builtin FFmpeg has not been built yet and the FFmpeg binaries are missing")
 			endif()
 			message(FATAL_ERROR "The chosen FFmpeg is missing a library file: ${lib}")
@@ -117,7 +116,7 @@ macro(check_ffmpeg_libraries)
 endmacro(check_ffmpeg_libraries)
 
 # Setup the paths that will be used for linking against FFmpeg and eventually building it
-if (LINK_AGAINST_PROVIDED_FFMPEG)
+if (LINK_AGAINST_INTERNAL_FFMPEG)
 	# Use our own FFmpeg libraries
 	set (FFMPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/headers")
     set (FFMPEG_LIBRARY_DIR "${BUILTIN_FFMPEG_BUILD_DIR}")
@@ -226,7 +225,7 @@ message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PR
 message (STATUS "Libraries directories: ${EXTERNAL_LIBRARIES_DIR}")
 
 # Build FFmpeg if needed
-if (${LINK_AGAINST_PROVIDED_FFMPEG} AND ${BUILD_FFMPEG})
+if (${LINK_AGAINST_INTERNAL_FFMPEG} AND ${BUILD_FFMPEG})
 	if (MSVC)
 		set( MINGW_DIR C:/MinGW CACHE PATH "Set the path for the MinGW environment")
 		if (EXISTS "${MINGW_DIR}" AND IS_DIRECTORY "${MINGW_DIR}")
@@ -306,29 +305,17 @@ set_target_properties(${LIB_NAME} PROPERTIES
 					  COMPILE_FLAGS "${COMPILER_FLAGS}"
 					  LINK_FLAGS "${LINKER_FLAGS}"
 					  SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
-                      VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+                      VERSION "${VERSION_MAJOR}.${VERSION_MINOR}")
 
 
-if (LINUX)
-	install(DIRECTORY include/sfeMovie
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/include
-            COMPONENT devel)
-    		
-    install(TARGETS ${LIB_NAME}
-            LIBRARY DESTINATION lib)
-   	
-   	file(GLOB FFMPEG_BUILD_LIBS RELATIVE ${PROJECT_SOURCE_DIR} "${BUILTIN_FFMPEG_BUILD_DIR}/*")
-    install(FILES ${FFMPEG_BUILD_LIBS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-            COMPONENT devel)
-elseif (MACOSX)
+if (MACOSX)
     # edit target properties
     set_target_properties(${LIB_NAME} PROPERTIES 
                           FRAMEWORK TRUE
-                          FRAMEWORK_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                          FRAMEWORK_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}
                           MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${LIB_NAME}
-                          MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                          MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                          MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}
+                          MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}
                           PUBLIC_HEADER ${SFE_HEADERS} )
 
 
@@ -336,17 +323,30 @@ elseif (MACOSX)
     set_target_properties(${LIB_NAME} PROPERTIES 
                           BUILD_WITH_INSTALL_RPATH 1 
                           INSTALL_NAME_DIR "@executable_path/../Frameworks")
-    
-    install(TARGETS ${LIB_NAME}
+endif()
+
+# Install sfeMovie library and headers
+if (NOT MACOSX)
+	install(DIRECTORY include
+			DESTINATION .)
+
+	install(TARGETS ${LIB_NAME}
+        RUNTIME DESTINATION bin COMPONENT bin
+        LIBRARY DESTINATION lib${LIB_SUFFIX} COMPONENT bin 
+        ARCHIVE DESTINATION lib${LIB_SUFFIX} COMPONENT devel)
+else()
+	install(TARGETS ${LIB_NAME}
             FRAMEWORK DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX}
             COMPONENT devel)
 endif()
 
-# Copy include directory to install location
-install(
-	DIRECTORY include
-	DESTINATION .
-)
+# Linux and MSVC use FFmpeg's dynamic library (instead of static FFmpeg libraries)
+if (MSVC OR LINUX)
+	file(GLOB FFMPEG_BUILT_LIBS RELATIVE ${PROJECT_SOURCE_DIR} "${BUILTIN_FFMPEG_BUILD_DIR}/*")
+    install(FILES ${FFMPEG_BUILT_LIBS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+            COMPONENT devel)
+endif()
 
 # Define the libraries sfe should link against
 target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
