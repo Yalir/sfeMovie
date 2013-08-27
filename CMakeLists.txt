@@ -301,7 +301,7 @@ add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 add_dependencies(${LIB_NAME} BuildFFMPEG)
 
 set_target_properties(${LIB_NAME} PROPERTIES
-					  CMAKE_DEBUG_POSTFIX "-d"
+					  DEBUG_POSTFIX "-d"
 					  COMPILE_FLAGS "${COMPILER_FLAGS}"
 					  LINK_FLAGS "${LINKER_FLAGS}"
 					  SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
