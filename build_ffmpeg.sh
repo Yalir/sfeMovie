@@ -99,19 +99,19 @@ function build_ffmpeg()
 		mkdir -p "${ffmpeg_binaries_dir}"
 		rm -f "${ffmpeg_binaries_dir}/*"
 	    
-		echo "Copying libraries into ffmpeg-build"
+		echo "Copying libraries into ${ffmpeg_binaries_dir}"
 		if [ "$vcpp" == "1" ]
 		  then
-			cp -v `find "${ffmpeg_objects_dir}" -name "*.lib"` "${ffmpeg_binaries_dir}"
+			find "${ffmpeg_objects_dir}" -name "*.lib" -exec cp -v '{}' "${ffmpeg_binaries_dir}" ';' 
 			check_err
-			cp -v `find "${ffmpeg_objects_dir}" -name "*.dll"` "${ffmpeg_binaries_dir}"
+			find "${ffmpeg_objects_dir}" -name "*.dll" -exec cp -v '{}' "${ffmpeg_binaries_dir}" ';'
 			check_err
 		else
 			if [ "$os" == "linux" ]
 			  then
-			    cp -vfl `find "${ffmpeg_objects_dir}" -name "*.so*"` "${ffmpeg_binaries_dir}"
+			    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}" ';' 
 			else
-				cp -v `find "${ffmpeg_objects_dir}" -name "*.a"` "${ffmpeg_binaries_dir}"
+				find "${ffmpeg_objects_dir}" -name "*.a" -exec cp -v '{}' "${ffmpeg_binaries_dir}" ';' 
 			fi
 			check_err
 		fi
