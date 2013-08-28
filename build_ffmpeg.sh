@@ -37,7 +37,12 @@ function build_ffmpeg()
     if ! test -f "${temporary_dir}/ffmpeg/configure" ; then
     	if test -f "${source_dir}/deps/ffmpeg.tar.bz2" ; then
     		echo "Extracting FFmpeg archive..."
-    		tar -C "${temporary_dir}" -xjf "${source_dir}/deps/ffmpeg.tar.bz2"
+
+    		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
+    		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
+			src=`echo "${source_dir}/deps/ffmpeg.tar.bz2" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
+			echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
+    		tar -C "${temporary_dir}" -xjf "${src}"
     		check_err
     	else
     		echo "Cannot find FFmpeg sources in temporary directory or FFmpeg archive at ${source_dir}/deps/ffmpeg.tar.bz2"
