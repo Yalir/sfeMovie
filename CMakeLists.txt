@@ -337,15 +337,7 @@ if (NOT MACOSX)
 else()
 	install(TARGETS ${LIB_NAME}
             FRAMEWORK DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX}
-            COMPONENT devel)
-endif()
-
-# Linux and MSVC use FFmpeg's dynamic library (instead of static FFmpeg libraries)
-if (MSVC OR LINUX)
-	file(GLOB FFMPEG_BUILT_LIBS RELATIVE ${PROJECT_SOURCE_DIR} "${BUILTIN_FFMPEG_BUILD_DIR}/*")
-    install(FILES ${FFMPEG_BUILT_LIBS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-            COMPONENT devel)
+            COMPONENT bin)
 endif()
 
 # Define the libraries sfe should link against
