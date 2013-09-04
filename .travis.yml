@@ -5,7 +5,7 @@ compiler:
   - gcc
 
 script:
-  - cmake -DSFML_ROOT=SFML-2.1 . && sudo make
+  - cmake -DSFML_ROOT=SFML-2.1 . && sudo make install
 
 before_script:
   - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
