@@ -28,7 +28,7 @@ endif()
 
 set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
-set (BUILD_FFMPEG TRUE CACHE BOOL "TRUE to build the provided FFmpeg, FALSE to skip rebuilding FFmpeg")
+set (BUILD_FFMPEG TRUE) # CACHE BOOL "TRUE to build the provided FFmpeg, FALSE to skip rebuilding FFmpeg")
 
 if (${BUILD_FFMPEG} AND NOT ${LINK_AGAINST_INTERNAL_FFMPEG})
 	message(WARNING "BUILD_FFMPEG set to true but LINK_AGAINST_INTERNAL_FFMPEG is false: inconsistent behaviour. LINK_AGAINST_INTERNAL_FFMPEG set to true.")
@@ -64,7 +64,7 @@ file(WRITE "${CMAKE_SOURCE_DIR}/BuildDir.var" "${CMAKE_BINARY_DIR}")
 #################################################################################################################
 
 # Set ${output} to the full path of the given library (depends on platform and on dynamic/static settings)
-macro(library_path output basePath libName)
+macro(import_library_path output basePath libName)
 	# With Visual Studio, we can't use FFmpeg static libraries
 	if(MSVC OR LINUX)
 		if (MSVC)
@@ -72,19 +72,19 @@ macro(library_path output basePath libName)
 		else()
 			set(SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
 		endif()
-		set(${output} "${basePath}/${CMAKE_SHARED_LIBRARY_PREFIX}${libName}${SUFFIX}")
+		set(${output} "${basePath}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${libName}${SUFFIX}")
 	else()
-		set(${output} "${basePath}/${CMAKE_STATIC_LIBRARY_PREFIX}${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+		set(${output} "${basePath}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 	endif()
-endmacro(library_path)
+endmacro(import_library_path)
 
 # Define ${FFMPEG_LIBRARIES} to the paths of all the required FFmpeg libraries
 macro(ffmpeg_paths search_path)
-	library_path(FFMPEG_LIBAVFORMAT_LIBRARIES "${search_path}" "avformat")
-	library_path(FFMPEG_LIBAVDEVICE_LIBRARIES "${search_path}" "avdevice")
-	library_path(FFMPEG_LIBAVCODEC_LIBRARIES "${search_path}" "avcodec")
-	library_path(FFMPEG_LIBAVUTIL_LIBRARIES "${search_path}" "avutil")
-	library_path(FFMPEG_LIBSWSCALE_LIBRARIES "${search_path}" "swscale")
+	import_library_path(FFMPEG_LIBAVFORMAT_LIBRARIES "${search_path}" "avformat")
+	import_library_path(FFMPEG_LIBAVDEVICE_LIBRARIES "${search_path}" "avdevice")
+	import_library_path(FFMPEG_LIBAVCODEC_LIBRARIES "${search_path}" "avcodec")
+	import_library_path(FFMPEG_LIBAVUTIL_LIBRARIES "${search_path}" "avutil")
+	import_library_path(FFMPEG_LIBSWSCALE_LIBRARIES "${search_path}" "swscale")
 	
 	set (FFMPEG_LIBRARIES
 			${FFMPEG_LIBAVFORMAT_LIBRARIES}
@@ -342,18 +342,26 @@ endif()
 
 # Install FFmpeg
 if (LINK_AGAINST_INTERNAL_FFMPEG)
-	# Linux and MSVC use FFmpeg's dynamic library (instead of static FFmpeg libraries)
-	if (MSVC OR LINUX)
-		if (MSVC)
-			set (FFMPEG_INSTALL_DIR "bin")
-		else ()
-			set (FFMPEG_INSTALL_DIR "lib")
-		endif()
-
-	    install(FILES ${FFMPEG_LIBRARIES}
-	            DESTINATION ${CMAKE_INSTALL_PREFIX}/${FFMPEG_INSTALL_DIR}
-	            COMPONENT devel)
+	if (NOT MACOSX)
+		install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/bin" DESTINATION "${CMAKE_INSTALL_PREFIX}")
 	endif()
+	
+	if (NOT MACOSX OR (WINDOWS AND NOT MSVC))
+		install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/lib" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+	endif()
+
+	# Linux and MSVC use FFmpeg's dynamic library (instead of static FFmpeg libraries)
+	# if (MSVC OR LINUX)
+	# 	if (MSVC)
+	# 		set (FFMPEG_INSTALL_DIR "bin")
+	# 	else ()
+	# 		set (FFMPEG_INSTALL_DIR "lib")
+	# 	endif()
+
+	#     install(FILES ${FFMPEG_LIBRARIES}
+	#             DESTINATION ${CMAKE_INSTALL_PREFIX}/${FFMPEG_INSTALL_DIR}
+	#             COMPONENT devel)
+	# endif()
 endif()
 
 # Define the libraries sfe should link against

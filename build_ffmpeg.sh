@@ -115,22 +115,24 @@ function build_ffmpeg()
     ffmpeg_objects_dir="${build_dir}/FFmpeg-objects"
     ffmpeg_binaries_dir="${build_dir}/FFmpeg-binaries"
 
-	mkdir -p "${ffmpeg_binaries_dir}"
-	rm -f "${ffmpeg_binaries_dir}/*"
+	mkdir -p "${ffmpeg_binaries_dir}/bin"
+	mkdir -p "${ffmpeg_binaries_dir}/lib"
+	rm -f "${ffmpeg_binaries_dir}/bin/*"
+	rm -f "${ffmpeg_binaries_dir}/lib/*"
     
 	echo "Copying libraries into ${ffmpeg_binaries_dir}"
 	if [ "$vcpp" == "1" ]
 	  then
-		find "${ffmpeg_objects_dir}" -name "*.lib" -exec cp -v '{}' "${ffmpeg_binaries_dir}" ';' 
+		find "${ffmpeg_objects_dir}" -name "*.lib" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		check_err
-		find "${ffmpeg_objects_dir}" -name "*.dll" -exec cp -v '{}' "${ffmpeg_binaries_dir}" ';'
+		find "${ffmpeg_objects_dir}" -name "*.dll" -exec cp -v '{}' "${ffmpeg_binaries_dir}/bin" ';'
 		check_err
 	else
 		if [ "$os" == "linux" ]
 		  then
-		    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}" ';' 
+		    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		else
-			find "${ffmpeg_objects_dir}" -name "*.a" -exec cp -v '{}' "${ffmpeg_binaries_dir}" ';' 
+			find "${ffmpeg_objects_dir}" -name "*.a" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		fi
 		check_err
 	fi
