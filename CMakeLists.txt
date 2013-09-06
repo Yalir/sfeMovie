@@ -298,7 +298,7 @@ endif()
 
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
-add_dependencies(${LIB_NAME} BuildFFMPEG)
+add_dependencies(${LIB_NAME} FFmpeg)
 
 set_target_properties(${LIB_NAME} PROPERTIES
 					  DEBUG_POSTFIX "-d"
