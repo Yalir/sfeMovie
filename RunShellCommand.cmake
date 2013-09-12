@@ -3,7 +3,7 @@ function(RunShell target phase shell_command)
 	set(cmd ${ARGV})
 	list(REMOVE_AT cmd 0 1)
 	
-	if (MSVC)
+	if (WINDOWS)
 		add_custom_target(FFmpeg ALL DEPENDS ${FFMPEG_LIBRARIES}) 
 		add_custom_command(OUTPUT ${FFMPEG_LIBRARIES}
 					COMMAND BatchBridgeToShell ARGS ${MINGW_DIR} ${cmd}
