@@ -3,10 +3,6 @@
 #include <sfeMovie/Movie.hpp>
 #include <iostream>
 
-#ifndef MOVIE_FILE
-#define MOVIE_FILE "some_movie.ogv"
-#endif
-
 /*
  * Here is a little use sample for sfeMovie.
  * It'll open and display the movie specified by MOVIE_FILE above.
@@ -19,7 +15,7 @@
  *  - F key to toggle between windowed and fullscreen mode
  */
 
-int main()
+int main(int argc, const char *argv[])
 {
 	// Some settings
 	const std::string windowTitle = "sfeMovie Player";
@@ -27,14 +23,21 @@ int main()
 	const int windowHeight = 600;
 	bool fullscreen = false;
 	
-	std::cout << "Going to open movie file \"" << MOVIE_FILE << "\"" << std::endl;
+	if (argc < 2)
+	{
+		std::cout << "Usage: " << std::string(argv[0]) << " movie_path" << std::endl;
+		return 1;
+	}
+	
+	std::string movieFile = std::string(argv[1]);
+	std::cout << "Going to open movie file \"" << movieFile << "\"" << std::endl;
 	
 	// Create window
 	sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
 	
 	// Create and open movie
 	sfe::Movie movie;
-	if (!movie.openFromFile(MOVIE_FILE))
+	if (!movie.openFromFile(movieFile))
 		return 1;
 
 	// Scale movie to the window drawing area and enable VSync
