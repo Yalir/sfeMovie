@@ -255,7 +255,7 @@ namespace sfe {
 
 	void Movie::resizeToFrame(int x, int y, int width, int height, bool preserveRatio)
 	{
-		resizeToFrame(sf::IntRect(x, y, x + width, y + height), preserveRatio);
+		resizeToFrame(sf::IntRect(x, y, width, height), preserveRatio);
 	}
 
 	void Movie::resizeToFrame(sf::IntRect frame, bool preserveRatio)
