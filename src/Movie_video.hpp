@@ -80,7 +80,8 @@ namespace sfe {
 		void popFrame(void);
 		AVPacket *frontFrame(void);
 		void watchThread(void);
-		AVFrame *alloc_picture(enum PixelFormat pix_fmt, int width, int height);
+		AVFrame *alloc_picture(enum PixelFormat pix_fmt, int width, int height, uint8_t *& picture_buf);
+		void free_picture(AVFrame *&picture, uint8_t *&picture_buffer);
 		
 	private:
 		// ------------------------- Video attributes --------------------------
@@ -92,6 +93,9 @@ namespace sfe {
 		AVFrame *m_rawFrame;		// Original YUV422 frame
 		mutable AVFrame *m_frontRGBAFrame;	// Front converted RGBA frame
 		mutable AVFrame *m_backRGBAFrame;	// Back converted RGBA frame
+		uint8_t *m_rawPictureBuffer;		// Buffers in previous AVFrames
+		uint8_t *m_frontRGBAPictureBuffer;
+		uint8_t *m_backRGBAPictureBuffer;
 		int m_streamID;				// The video stream identifier in the video file
 		sf::Uint8 *m_pictureBuffer; // Buffer used to convert image from pixel matrix to simple array
 		struct SwsContext *m_swsCtx;// Used for converting image from YUV422 to RGBA

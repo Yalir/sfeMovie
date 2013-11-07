@@ -128,9 +128,9 @@ namespace sfe {
 		
 		
 		// Create the frame buffers
-		m_rawFrame = alloc_picture(m_codecCtx->pix_fmt, m_codecCtx->width, m_codecCtx->height);
-		m_backRGBAFrame =  alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height);
-		m_frontRGBAFrame = alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height);
+		m_rawFrame = alloc_picture(m_codecCtx->pix_fmt, m_codecCtx->width, m_codecCtx->height, m_rawPictureBuffer);
+		m_backRGBAFrame =  alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height, m_backRGBAPictureBuffer);
+		m_frontRGBAFrame = alloc_picture(PIX_FMT_RGBA, m_codecCtx->width, m_codecCtx->height, m_frontRGBAPictureBuffer);
 		if (!m_rawFrame || !m_frontRGBAFrame || !m_backRGBAFrame)
 		{
 			std::cerr << "Movie_video::initialize() - allocation error" << std::endl;
@@ -269,11 +269,13 @@ namespace sfe {
 		m_codec = NULL;
 		
 		if (m_rawFrame)
-			av_free(m_rawFrame), m_rawFrame = NULL;
+			free_picture(m_rawFrame, m_rawPictureBuffer);
+		
 		if (m_frontRGBAFrame)
-			av_free(m_frontRGBAFrame), m_frontRGBAFrame = NULL;
+			free_picture(m_frontRGBAFrame, m_frontRGBAPictureBuffer);
+		
 		if (m_backRGBAFrame)
-			av_free(m_backRGBAFrame), m_backRGBAFrame = NULL;
+			free_picture(m_backRGBAFrame, m_backRGBAPictureBuffer);
 		
 		// Free the remaining accumulated packets
 		while (m_packetList.size()) {
@@ -622,10 +624,9 @@ namespace sfe {
 		return m_packetList.front();
 	}
 	
-	AVFrame *Movie_video::alloc_picture(enum PixelFormat pix_fmt, int width, int height)
+	AVFrame *Movie_video::alloc_picture(enum PixelFormat pix_fmt, int width, int height, uint8_t *& picture_buf)
 	{
 		AVFrame *picture;
-		uint8_t *picture_buf;
 		int size;
 	
 		picture = avcodec_alloc_frame();
@@ -640,6 +641,14 @@ namespace sfe {
 		avpicture_fill((AVPicture *)picture, picture_buf,
 		               pix_fmt, width, height);
 		return picture;
+	}
+	
+	void Movie_video::free_picture(AVFrame *&picture, uint8_t *&picture_buffer)
+	{
+		av_free(picture_buffer);
+		avcodec_free_frame(&picture);
+		picture_buffer = NULL;
+		picture = NULL;
 	}
 	
 } // namespace sfe
