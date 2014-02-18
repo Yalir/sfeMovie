@@ -10,8 +10,9 @@ temporary_dir="/tmp"
 macosx_sdk=""
 has_vda=0
 vcpp=0
-jobsCount=4 # how many compilations at a time
+jobsCount=1 # how many compilations at a time
 full_decoders_list=""
+ffmpeg_archive="deps/ffmpeg-2.1.3.tar.bz2"
 
 function check_err()
 {
@@ -34,23 +35,25 @@ function build_ffmpeg()
 	fi
 	
     # build ffmpeg
-    if ! test -f "${temporary_dir}/ffmpeg/configure" ; then
-    	if test -f "${source_dir}/deps/ffmpeg.tar.bz2" ; then
-    		echo "Extracting FFmpeg archive..."
+    temporary_ffmpeg_dir="${temporary_dir}/ffmpeg-2.1.3"
 
-    		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
-    		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
-			src=`echo "${source_dir}/deps/ffmpeg.tar.bz2" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
-			echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
-    		tar -C "${temporary_dir}" -xjf "${src}"
-    		check_err
-    	else
-    		echo "Cannot find FFmpeg sources in temporary directory or FFmpeg archive at ${source_dir}/deps/ffmpeg.tar.bz2"
-    		exit 1
-    	fi
-    else
-    	echo "FFmpeg sources found, skipping archive extraction"
+    if test -d "${temporary_ffmpeg_dir}" ; then
+    	rm -rf "${temporary_ffmpeg_dir}"
     fi
+
+	if test -f "${source_dir}/${ffmpeg_archive}" ; then
+		echo "Extracting FFmpeg archive..."
+
+		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
+		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
+		src=`echo "${source_dir}/${ffmpeg_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
+		echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
+		tar -C "${temporary_dir}" -xjf "${src}"
+		check_err
+	else
+		echo "Cannot find FFmpeg archive at ${source_dir}/${ffmpeg_archive}"
+		exit 1
+	fi
 
     configure_flags="";
     
@@ -94,12 +97,12 @@ function build_ffmpeg()
 		export PATH="$PATH:/C/Program Files (x86)/Microsoft Visual Studio 11.0/Common7/IDE:/C/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin"
 	fi
 	
-    chmod u+x "${temporary_dir}/ffmpeg/configure" "${temporary_dir}/ffmpeg/version.sh" "${temporary_dir}/ffmpeg/doc/texi2pod.pl"
+    chmod u+x "${temporary_ffmpeg_dir}/configure" "${temporary_ffmpeg_dir}/version.sh" "${temporary_ffmpeg_dir}/doc/texi2pod.pl"
     mkdir -p "${build_dir}/FFmpeg-objects"
     cd "${build_dir}/FFmpeg-objects"
 
-    echo "${temporary_dir}/ffmpeg/configure $args"
-    { echo "$args" | xargs "${temporary_dir}/ffmpeg/configure"; }
+    echo "${temporary_ffmpeg_dir}/configure $args"
+    { echo "$args" | xargs "${temporary_ffmpeg_dir}/configure"; }
     check_err
     make clean
     check_err
@@ -111,7 +114,7 @@ function build_ffmpeg()
 		export PATH="$old_path"
 	fi
     
-    ffmpeg_sources_dir="${temporary_dir}/ffmpeg"
+    ffmpeg_sources_dir="${temporary_ffmpeg_dir}"
     ffmpeg_objects_dir="${build_dir}/FFmpeg-objects"
     ffmpeg_binaries_dir="${build_dir}/FFmpeg-binaries"
 

@@ -48,7 +48,7 @@
  * new elements have been added after this struct in AVFormatContext
  * or AVIOContext.
  */
-typedef struct {
+typedef struct AVIOInterruptCB {
     int (*callback)(void*);
     void *opaque;
 } AVIOInterruptCB;
@@ -65,7 +65,7 @@ typedef struct {
  *       when implementing custom I/O. Normally these are set to the
  *       function pointers specified in avio_alloc_context()
  */
-typedef struct {
+typedef struct AVIOContext {
     /**
      * A class for private options.
      *
@@ -120,26 +120,32 @@ typedef struct {
      * max filesize, used to limit allocations
      * This field is internal to libavformat and access from outside is not allowed.
      */
-     int64_t maxsize;
+    int64_t maxsize;
 
-     /**
-      * avio_read and avio_write should if possible be satisfied directly
-      * instead of going through a buffer, and avio_seek will always
-      * call the underlying seek function directly.
-      */
-     int direct;
+    /**
+     * avio_read and avio_write should if possible be satisfied directly
+     * instead of going through a buffer, and avio_seek will always
+     * call the underlying seek function directly.
+     */
+    int direct;
 
     /**
      * Bytes read statistic
      * This field is internal to libavformat and access from outside is not allowed.
      */
-     int64_t bytes_read;
+    int64_t bytes_read;
 
     /**
      * seek statistic
      * This field is internal to libavformat and access from outside is not allowed.
      */
-     int seek_count;
+    int seek_count;
+
+    /**
+     * writeout statistic
+     * This field is internal to libavformat and access from outside is not allowed.
+     */
+    int writeout_count;
 } AVIOContext;
 
 /* unbuffered I/O */
@@ -217,8 +223,8 @@ int avio_put_str16le(AVIOContext *s, const char *str);
 
 /**
  * Oring this flag as into the "whence" parameter to a seek function causes it to
- * seek by any means (like reopening and linear reading) or other normally unreasonble
- * means that can be extreemly slow.
+ * seek by any means (like reopening and linear reading) or other normally unreasonable
+ * means that can be extremely slow.
  * This may be ignored by the seek code.
  */
 #define AVSEEK_FORCE 0x20000
@@ -362,7 +368,7 @@ int avio_get_str16be(AVIOContext *pb, int maxlen, char *buf, int buflen);
  * In case of failure the pointed to value is set to NULL.
  * @param flags flags which control how the resource indicated by url
  * is to be opened
- * @return 0 in case of success, a negative value corresponding to an
+ * @return >= 0 in case of success, a negative value corresponding to an
  * AVERROR code in case of failure
  */
 int avio_open(AVIOContext **s, const char *url, int flags);
@@ -381,7 +387,7 @@ int avio_open(AVIOContext **s, const char *url, int flags);
  * @param options  A dictionary filled with protocol-private options. On return
  * this parameter will be destroyed and replaced with a dict containing options
  * that were not found. May be NULL.
- * @return 0 in case of success, a negative value corresponding to an
+ * @return >= 0 in case of success, a negative value corresponding to an
  * AVERROR code in case of failure
  */
 int avio_open2(AVIOContext **s, const char *url, int flags,
@@ -395,8 +401,23 @@ int avio_open2(AVIOContext **s, const char *url, int flags,
  * resource.
  *
  * @return 0 on success, an AVERROR < 0 on error.
+ * @see avio_closep
  */
 int avio_close(AVIOContext *s);
+
+/**
+ * Close the resource accessed by the AVIOContext *s, free it
+ * and set the pointer pointing to it to NULL.
+ * This function can only be used if s was opened by avio_open().
+ *
+ * The internal buffer is automatically flushed before closing the
+ * resource.
+ *
+ * @return 0 on success, an AVERROR < 0 on error.
+ * @see avio_close
+ */
+int avio_closep(AVIOContext **s);
+
 
 /**
  * Open a write only memory stream.

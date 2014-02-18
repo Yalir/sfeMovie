@@ -23,13 +23,14 @@
 
 /**
  * @file
+ * @ingroup lavfi
  * Libavfilter version macros
  */
 
 #include "libavutil/avutil.h"
 
 #define LIBAVFILTER_VERSION_MAJOR  3
-#define LIBAVFILTER_VERSION_MINOR  17
+#define LIBAVFILTER_VERSION_MINOR  90
 #define LIBAVFILTER_VERSION_MICRO 100
 
 #define LIBAVFILTER_VERSION_INT AV_VERSION_INT(LIBAVFILTER_VERSION_MAJOR, \
@@ -40,15 +41,14 @@
                                            LIBAVFILTER_VERSION_MICRO)
 #define LIBAVFILTER_BUILD       LIBAVFILTER_VERSION_INT
 
+#define LIBAVFILTER_IDENT       "Lavfi" AV_STRINGIFY(LIBAVFILTER_VERSION)
+
 /**
  * FF_API_* defines may be placed below to indicate public API that will be
  * dropped at a future version bump. The defines themselves are not part of
  * the public API and may change, break or disappear at any time.
  */
 
-#ifndef FF_API_OLD_ALL_FORMATS_API
-#define FF_API_OLD_ALL_FORMATS_API (LIBAVFILTER_VERSION_MAJOR < 3)
-#endif
 #ifndef FF_API_AVFILTERPAD_PUBLIC
 #define FF_API_AVFILTERPAD_PUBLIC           (LIBAVFILTER_VERSION_MAJOR < 4)
 #endif
@@ -60,6 +60,30 @@
 #endif
 #ifndef FF_API_BUFFERSRC_BUFFER
 #define FF_API_BUFFERSRC_BUFFER             (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_AVFILTERBUFFER
+#define FF_API_AVFILTERBUFFER               (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_OLD_FILTER_OPTS
+#define FF_API_OLD_FILTER_OPTS              (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_ACONVERT_FILTER
+#define FF_API_ACONVERT_FILTER              (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_AVFILTER_OPEN
+#define FF_API_AVFILTER_OPEN                (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_AVFILTER_INIT_FILTER
+#define FF_API_AVFILTER_INIT_FILTER         (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_OLD_FILTER_REGISTER
+#define FF_API_OLD_FILTER_REGISTER          (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_OLD_GRAPH_PARSE
+#define FF_API_OLD_GRAPH_PARSE              (LIBAVFILTER_VERSION_MAJOR < 4)
+#endif
+#ifndef FF_API_DRAWTEXT_OLD_TIMELINE
+#define FF_API_DRAWTEXT_OLD_TIMELINE        (LIBAVFILTER_VERSION_MAJOR < 4)
 #endif
 
 #endif /* AVFILTER_VERSION_H */
