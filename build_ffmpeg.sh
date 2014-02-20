@@ -166,7 +166,7 @@ function build_ffmpeg()
 		  then
 		    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		else
-			find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+			find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -vR '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		fi
 		check_err
 	fi
@@ -202,6 +202,10 @@ function main()
 			macosx_arch="$3"
 			source_dir=`cat SourceDir.var`
 			build_dir=`cat BuildDir.var`
+
+			if ! [ "$os" == "windows" ] ; then
+				jobsCount=5
+			fi
 
 			shift
 			shift
