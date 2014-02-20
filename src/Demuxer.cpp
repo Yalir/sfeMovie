@@ -42,11 +42,11 @@ namespace sfe {
 			try {
 				switch (ffstream->codec->codec_type) {
 					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(ffstream);
+						m_streams[ffstream->index] = new VideoStream(ffstream, *this);
 						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
-						m_streams[ffstream->index] = new AudioStream(ffstream);
+						m_streams[ffstream->index] = new AudioStream(ffstream, *this);
 						break;
 						
 						/** TODO
@@ -82,25 +82,19 @@ namespace sfe {
 		return m_streams;
 	}
 	
-	void Demuxer::feedStreams(void)
+	void Demuxer::feedStream(Stream& stream)
 	{
-		std::map<int, Stream*>::iterator it;
-		
-		for (it = m_streams.begin(); it != m_streams.end(); it++) {
-			Stream* stream = it->second;
+		while (!didReachEndOfFile() && stream.needsMoreData()) {
+			AVPacketRef pkt = readPacket();
 			
-			while (!didReachEndOfFile() && stream->needsMoreData()) {
-				AVPacketRef pkt = readPacket();
-				
-				if (!pkt) {
-					m_eofReached = true;
-				} else {
-					if (!distributePacket(pkt)) {
-						std::cerr << "Demuxer::feedStreams() - packet with stream index "
-						<< pkt->stream_index << " not handled and dropped" << std::endl;
-						av_free_packet(pkt);
-						av_free(pkt);
-					}
+			if (!pkt) {
+				m_eofReached = true;
+			} else {
+				if (!distributePacket(pkt)) {
+					std::cerr << "Demuxer::feedStreams() - packet with stream index "
+					<< pkt->stream_index << " not handled and dropped" << std::endl;
+					av_free_packet(pkt);
+					av_free(pkt);
 				}
 			}
 		}
@@ -144,5 +138,10 @@ namespace sfe {
 		}
 		
 		return result;
+	}
+	
+	void Demuxer::requestMoreData(Stream& starvingStream)
+	{
+		feedStream(starvingStream);
 	}
 }

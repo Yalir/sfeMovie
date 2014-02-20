@@ -36,8 +36,9 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
-	Stream::Stream(AVStreamRef stream) :
+	Stream::Stream(AVStreamRef stream, DataSource& dataSource) :
 	m_stream(NULL),
+	m_dataSource(dataSource),
 	m_codecCtx(NULL),
 	m_codec(NULL),
 	m_streamID(-1),

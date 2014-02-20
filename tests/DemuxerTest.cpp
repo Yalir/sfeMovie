@@ -20,6 +20,7 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 	
 	std::map<int, sfe::Stream*>::const_iterator it;
 	
+	// Check found streams
 	for (it = streams.begin(); it != streams.end(); it++) {
 		sfe::Stream* stream = it->second;
 		
@@ -38,16 +39,12 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 	BOOST_CHECK(videoStreamCount == 1);
 	BOOST_CHECK(audioStreamCount == 1);
 	
+	// Check stream feeding
 	for (it = streams.begin(); it != streams.end(); it++) {
 		BOOST_CHECK(it->second->needsMoreData());
-	}
-	
-	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	demuxer->feedStreams();
-	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	
-	for (it = streams.begin(); it != streams.end(); it++) {
+		BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+		demuxer->feedStream(*it->second);
+		BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 		BOOST_CHECK(it->second->needsMoreData() == false);
 	}
-	
 }

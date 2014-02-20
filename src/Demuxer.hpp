@@ -31,7 +31,7 @@
 #include <string>
 
 namespace sfe {
-	class Demuxer {
+	class Demuxer : public Stream::DataSource {
 	public:
 		/** Default constructor
 		 *
@@ -50,9 +50,12 @@ namespace sfe {
 		 */
 		const std::map<int, Stream*>& getStreams(void) const;
 		
-		/** Read encoded data from the media and makes sure that each stream has enough data
+		/** Read encoded data from the media and makes sure that the given stream
+		 * has enough data
+		 *
+		 * @param stream The stream to feed
 		 */
-		void feedStreams(void);
+		void feedStream(Stream& stream);
 		
 		/** Tell whether the demuxer has reached the end of the file and can no more feed the streams
 		 *
@@ -77,6 +80,8 @@ namespace sfe {
 		 * @return true if the packet could be distributed, false otherwise
 		 */
 		bool distributePacket(AVPacketRef packet);
+		
+		virtual void requestMoreData(Stream& starvingStream);
 		
 		AVFormatContextRef m_avFormatCtx;
 		bool m_eofReached;

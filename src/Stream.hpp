@@ -31,12 +31,20 @@
 namespace sfe {
 	class Stream {
 	public:
+		class DataSource {
+		public:
+			virtual void requestMoreData(Stream& starvingStream) = 0;
+		};
+		
 		/** Create a stream from the given FFmpeg stream
 		 * 
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
+		 *
+		 * @param stream the FFmpeg stream
+		 * @param dataSource the encoded data provider for this stream
 		 */
-		Stream(AVStreamRef stream);
+		Stream(AVStreamRef stream, DataSource& dataSource);
 		
 		/** Default destructor
 		 */
@@ -90,6 +98,7 @@ namespace sfe {
 		
 	protected:
 		AVStreamRef m_stream;
+		DataSource& m_dataSource;
 		AVCodecContextRef m_codecCtx;
 		AVCodecRef m_codec;
 		int m_streamID;

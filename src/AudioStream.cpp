@@ -9,8 +9,8 @@ extern "C"
 #include "AudioStream.hpp"
 
 namespace sfe {
-	AudioStream::AudioStream(AVStreamRef stream) :
-	Stream(stream)
+	AudioStream::AudioStream(AVStreamRef stream, DataSource& dataSource) :
+	Stream(stream, dataSource)
 	{
 		
 	}
@@ -48,5 +48,15 @@ namespace sfe {
 	AudioStream::Kind AudioStream::getStreamKind(void) const
 	{
 		return AUDIO_STREAM;
+	}
+	
+	bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
+	{
+		return false;
+	}
+	
+	void AudioStream::onSeek(sf::Time timeOffset)
+	{
+		
 	}
 }

@@ -31,8 +31,8 @@ extern "C" {
 #include "VideoStream.hpp"
 
 namespace sfe {
-	VideoStream::VideoStream(AVStreamRef stream) :
-	Stream(stream)
+	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource) :
+	Stream(stream, dataSource)
 	{
 		
 	}

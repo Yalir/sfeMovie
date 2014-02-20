@@ -26,18 +26,19 @@
 #ifndef SFEMOVIE_AUDIOSTREAM_HPP
 #define SFEMOVIE_AUDIOSTREAM_HPP
 
+#include <SFML/Audio.hpp>
 #include "Macros.hpp"
 #include "Stream.hpp"
 
 namespace sfe {
-	class AudioStream : public Stream {
+	class AudioStream : public Stream, private sf::SoundStream {
 	public:
 		/** Create a video stream from the given FFmpeg stream
 		 *
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		AudioStream(AVStreamRef stream);
+		AudioStream(AVStreamRef stream, DataSource& dataSource);
 		
 		/** Default destructor
 		 */
@@ -62,6 +63,10 @@ namespace sfe {
 		 * @return the kind of stream represented by this stream
 		 */
 		virtual Kind getStreamKind(void) const;
+		
+	private:
+		virtual bool onGetData(sf::SoundStream::Chunk& data);
+		virtual void onSeek(sf::Time timeOffset);
 	};
 }
 
