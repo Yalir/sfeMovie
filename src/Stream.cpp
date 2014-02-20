@@ -52,7 +52,7 @@ namespace sfe {
 		
 		// Get the video decoder
 		m_codec = avcodec_find_decoder(m_codecCtx->codec_id);
-		CHECK0(m_codec, "Stream() - no decoder for codec " + CODEC_NAME(m_codecCtx));
+		CHECK(m_codec, "Stream() - no decoder for codec " + CODEC_NAME(m_codecCtx));
 		
 		// Load the video codec
 		err = avcodec_open2(m_codecCtx, m_codec, NULL);

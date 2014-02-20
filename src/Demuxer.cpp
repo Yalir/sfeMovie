@@ -10,6 +10,7 @@ extern "C"
 #include "VideoStream.hpp"
 #include "AudioStream.hpp"
 #include "SubtitleStream.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -23,7 +24,8 @@ namespace sfe {
 		int err = 0;
 		
 		// Load all the decoders
-		av_register_all();
+		ONCE(av_register_all());
+		ONCE(avcodec_register_all());
 		
 		// Open the movie file
 		err = avformat_open_input(&m_avFormatCtx, sourceFile.c_str(), NULL, NULL);
@@ -55,7 +57,7 @@ namespace sfe {
 						 */
 						
 					default:
-						std::cerr << "Demuxer() - stream " << av_get_media_type_string(ffstream->codec->codec_type) << ":" << CODEC_NAME(ffstream->codec)  << " ignored" << std::endl;
+						std::cerr << "Demuxer() - stream '" << av_get_media_type_string(ffstream->codec->codec_type) << "' ignored" << std::endl;
 						break;
 				}
 			} catch (std::runtime_error& e) {
@@ -88,13 +90,15 @@ namespace sfe {
 		for (it = m_streams.begin(); it != m_streams.end(); it++) {
 			Stream* stream = it->second;
 			
-			while (stream->needsMoreData()) {
+			while (!didReachEndOfFile() && stream->needsMoreData()) {
 				AVPacketRef pkt = readPacket();
 				
 				if (!pkt) {
 					m_eofReached = true;
 				} else {
 					if (!distributePacket(pkt)) {
+						std::cerr << "Demuxer::feedStreams() - packet with stream index "
+						<< pkt->stream_index << " not handled and dropped" << std::endl;
 						av_free_packet(pkt);
 						av_free(pkt);
 					}
