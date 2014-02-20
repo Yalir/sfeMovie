@@ -8,11 +8,14 @@ source_dir=""
 build_dir=""
 temporary_dir="/tmp"
 macosx_sdk=""
-has_vda=0
 vcpp=0
 jobsCount=1 # how many compilations at a time
 full_decoders_list=""
-ffmpeg_archive="deps/ffmpeg-2.1.3.tar.bz2"
+ffmpeg_dir="ffmpeg-02.19.2014"
+ffmpeg_archive="${ffmpeg_dir}.tar.bz2"
+yasm_dir="yasm-1.2.0"
+yasm_archive="${yasm_dir}.tar.gz"
+
 
 function check_err()
 {
@@ -23,35 +26,68 @@ function check_err()
 	fi
 }
 
-function build_ffmpeg()
+function build_yasm()
 {
 	cd "${build_dir}"
+	temporary_yasm_dir="${temporary_dir}/${yasm_dir}"
 
-	# Using dynamically linked libraries for MSVC and Linux,
-	# and static libs for Codeblocks (Windows) and Mac OS X
-	if [ "$vcpp" == "1" ] || [ "$os" == "linux" ]
-	  then
-		args="$args --enable-shared --disable-static"
+	if test -d "${temporary_yasm_dir}" ; then
+    	rm -rf "${temporary_yasm_dir}"
+    fi
+
+    if test -f "${source_dir}/deps/${yasm_archive}" ; then
+		echo "Extracting YASM archive..."
+
+		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
+		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
+		src=`echo "${source_dir}/deps/${yasm_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
+		echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
+		tar -C "${temporary_dir}" -xzf "${src}"
+		check_err
+	else
+		echo "Cannot find YASM archive at ${source_dir}/deps/${yasm_archive}"
+		exit 1
 	fi
+
+	chmod u+x "${temporary_yasm_dir}/configure"
+	mkdir -p "${build_dir}/YASM-objects"
+    cd "${build_dir}/YASM-objects"
+
+    echo "${temporary_yasm_dir}/configure"
+    "${temporary_yasm_dir}/configure"
+    check_err
+    make clean
+    check_err
+    make --jobs=$jobsCount
+    check_err
+
+    rm -rf "${temporary_yasm_dir}"
+}
+
+function build_ffmpeg()
+{
+	build_yasm
+
+	cd "${build_dir}"
 	
     # build ffmpeg
-    temporary_ffmpeg_dir="${temporary_dir}/ffmpeg-2.1.3"
+    temporary_ffmpeg_dir="${temporary_dir}/${ffmpeg_dir}"
 
     if test -d "${temporary_ffmpeg_dir}" ; then
     	rm -rf "${temporary_ffmpeg_dir}"
     fi
 
-	if test -f "${source_dir}/${ffmpeg_archive}" ; then
+	if test -f "${source_dir}/deps/${ffmpeg_archive}" ; then
 		echo "Extracting FFmpeg archive..."
 
 		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
 		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
-		src=`echo "${source_dir}/${ffmpeg_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
+		src=`echo "${source_dir}/deps/${ffmpeg_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 		echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
 		tar -C "${temporary_dir}" -xjf "${src}"
 		check_err
 	else
-		echo "Cannot find FFmpeg archive at ${source_dir}/${ffmpeg_archive}"
+		echo "Cannot find FFmpeg archive at ${source_dir}/deps/${ffmpeg_archive}"
 		exit 1
 	fi
 
@@ -67,14 +103,7 @@ function build_ffmpeg()
       	if [ "$macosx_sdk" != "" ]
       	  then
       	    os_flags="$os_flags --sysroot=$macosx_sdk"
-      	fi
-      	
-      	if [ "$has_vda" == "0" ]
-      	  then
-      	    os_flags="$os_flags --disable-vda"
-      	fi
-      		
-    	#os_flags="$os_flags --cc=\"gcc -arch $macosx_arch\" --arch=$macosx_arch --target-os=darwin --enable-cross-compile --host-cflags=\"-arch $macosx_arch\" --host-ldflags=\"-arch $macosx_arch\""
+      	fi	
     fi
 	
 	if [ "$os" == "windows" ]
@@ -82,7 +111,8 @@ function build_ffmpeg()
 		os_flags="--enable-memalign-hack --enable-w32threads"
 	fi
 
-	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --disable-decoders --disable-muxers --disable-yasm $configure_flags $os_flags"
+	# --disable-decoders --disable-muxers
+	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --yasmexe=${build_dir}/YASM-objects/yasm --enable-shared --disable-static $configure_flags $os_flags"
     
 
 	#setup VC++ env variables to find lib.exe
@@ -108,6 +138,7 @@ function build_ffmpeg()
     check_err
     make --jobs=$jobsCount
     check_err
+    rm -rf "${temporary_ffmpeg_dir}"
     
     if [ "$vcpp" == "1" ]
       then
@@ -135,7 +166,7 @@ function build_ffmpeg()
 		  then
 		    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		else
-			find "${ffmpeg_objects_dir}" -name "*.a" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+			find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		fi
 		check_err
 	fi

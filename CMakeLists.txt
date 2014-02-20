@@ -9,6 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 project (sfeMovie)
+include(CTest)
 
 # Import required CMake files
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
@@ -45,7 +46,7 @@ set (LINKER_FLAGS "")
 set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
-set (OTHER_LIBRARIES "")
+set (OTHER_LIBRARIES "iconv")
 set (EXTERNAL_LIBRARIES_DIR "")
 set (BUILTIN_FFMPEG_BUILD_DIR "${CMAKE_BINARY_DIR}/FFmpeg-binaries")
 
@@ -65,17 +66,12 @@ file(WRITE "${CMAKE_SOURCE_DIR}/BuildDir.var" "${CMAKE_BINARY_DIR}")
 
 # Set ${output} to the full path of the given library (depends on platform and on dynamic/static settings)
 macro(import_library_path output basePath libName)
-	# With Visual Studio, we can't use FFmpeg static libraries
-	if(MSVC OR LINUX)
-		if (MSVC)
-			set(SUFFIX ".lib")
-		else()
-			set(SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
-		endif()
-		set(${output} "${basePath}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${libName}${SUFFIX}")
+	if (MSVC)
+		set(SUFFIX ".lib")
 	else()
-		set(${output} "${basePath}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${libName}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+		set(SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
 	endif()
+	set(${output} "${basePath}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${libName}${SUFFIX}")
 endmacro(import_library_path)
 
 # Define ${FFMPEG_LIBRARIES} to the paths of all the required FFmpeg libraries
@@ -163,15 +159,16 @@ set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_
 # ============================================== sfeMovie SETUP =============================================== #
 #################################################################################################################
 
-set (SOURCE_FILES ${SOURCES_DIR}/Movie.cpp ${SOURCES_DIR}/Movie_audio.cpp ${SOURCES_DIR}/Movie_video.cpp ${SOURCES_DIR}/utils.cpp ${SOURCES_DIR}/Condition.cpp)
+file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]*)
 
 if (LINUX) # ========================================== LINUX ========================================== #
-	
+	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/Linux-i386")
     add_definitions(-D__STDC_CONSTANT_MACROS)
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
-	
+	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/OSX-x86_64")
+
 	if (HAS_VDA)
 		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
 	else()
@@ -200,8 +197,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
 	
 	
 elseif (WINDOWS) # ========================================== WINDOWS ========================================== #
-
-	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries")
+	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
 	
 	if (MSVC)
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
@@ -216,6 +212,7 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Win32/ConditionImpl.cpp")
 endif()
 
+source_group(Sources FILES ${SOURCE_FILES})
 
 # Set the search directories for compiling and link editing
 include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
@@ -299,6 +296,7 @@ endif()
 # Define the source files sfe should compile
 add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
 add_dependencies(${LIB_NAME} FFmpeg)
+add_subdirectory(tests)
 
 set_target_properties(${LIB_NAME} PROPERTIES
 					  DEBUG_POSTFIX "-d"
@@ -322,7 +320,7 @@ if (MACOSX)
     # adapt install directory to allow distributing dylibs/frameworks in user’s frameworks/application bundle
     set_target_properties(${LIB_NAME} PROPERTIES 
                           BUILD_WITH_INSTALL_RPATH 1 
-                          INSTALL_NAME_DIR "@executable_path/../Frameworks")
+                          INSTALL_NAME_DIR "@rpath")
 endif()
 
 # Install sfeMovie library and headers
