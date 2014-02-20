@@ -3,8 +3,8 @@
  *  Movie_audio.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2012 Lucas Soltic
- *  soltic.lucas@gmail.com
+ *  Copyright (C) 2010-2014 Lucas Soltic
+ *  lucas.soltic@orange.fr
  *  
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,9 @@
 #include <cassert>
 #include "utils.hpp"
 
-#define AUDIO_BUFSIZ AVCODEC_MAX_AUDIO_FRAME_SIZE // 192000 bytes, 1 second of 48kHz 32bit audio
+#warning TODO
+//#define AUDIO_BUFSIZ AVCODEC_MAX_AUDIO_FRAME_SIZE // 192000 bytes, 1 second of 48kHz 32bit audio
+#define AUDIO_BUFSIZ 192000
 
 namespace sfe {
 	
@@ -91,7 +93,8 @@ namespace sfe {
 			return false;
 		}
 		
-		m_buffer = (sf::Int16 *)av_malloc(AUDIO_BUFSIZ);
+#warning TODO
+//		m_buffer = (sf::Int16 *)av_malloc(AUDIO_BUFSIZ);
 		if (!m_buffer)
 		{
 			std::cerr << "Movie_audio::Initialize() - memory allocation error" << std::endl;

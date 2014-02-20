@@ -1,0 +1,148 @@
+
+/*
+ *  Timer.cpp
+ *  sfeMovie project
+ *
+ *  Copyright (C) 2010-2014 Lucas Soltic
+ *  lucas.soltic@orange.fr
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ */
+
+#include "Timer.hpp"
+
+namespace sfe {
+	Timer::Observer::Observer(void)
+	{
+	}
+	
+	Timer::Observer::~Observer(void)
+	{
+	}
+	
+	void Timer::Observer::didPlay(const Timer& timer, Status previousStatus)
+	{
+	}
+	
+	void Timer::Observer::didPause(const Timer& timer, Status previousStatus)
+	{
+	}
+	
+	void Timer::Observer::didStop(const Timer& timer, Status previousStatus)
+	{
+	}
+	
+	Timer::Timer(void) :
+	m_pausedTime(sf::Time::Zero),
+	m_status(Stopped),
+	m_timer(),
+	m_observers()
+	{
+	}
+	
+	Timer::~Timer(void)
+	{
+		if (getStatus() != Stopped)
+			stop();
+	}
+	
+	void Timer::addObserver(Observer& anObserver)
+	{
+		CHECK(m_observers.find(&anObserver) == m_observers.end(), "Timer::addObserver() - cannot add the same observer twice");
+		
+		m_observers.insert(&anObserver);
+	}
+	
+	void Timer::removeObserver(Observer& anObserver)
+	{
+		std::set<Observer*>::iterator it = m_observers.find(&anObserver);
+		CHECK(it != m_observers.end(), "Timer::removeObserver() - cannot remove an unregistered observer");
+		
+		m_observers.erase(it);
+	}
+	
+	void Timer::play(void)
+	{
+		CHECK(getStatus() != Playing, "Timer::play() - timer playing twice");
+		
+		Status oldStatus = getStatus();
+		m_status = Playing;
+		m_timer.restart();
+		
+		notifyObservers(oldStatus, getStatus());
+	}
+	
+	void Timer::pause(void)
+	{
+		CHECK(getStatus() != Paused, "Timer::pause() - timer paused twice");
+		
+		Status oldStatus = getStatus();
+		m_status = Paused;
+		m_pausedTime += m_timer.getElapsedTime();
+		
+		notifyObservers(oldStatus, getStatus());
+	}
+	
+	void Timer::stop(void)
+	{
+		CHECK(getStatus() != Stopped, "Timer::stop() - timer stopped twice");
+		
+		Status oldStatus = getStatus();
+		m_status = Stopped;
+		m_pausedTime = sf::Time::Zero;
+		
+		notifyObservers(oldStatus, getStatus());
+	}
+	
+	Timer::Status Timer::getStatus(void) const
+	{
+		return m_status;
+	}
+	
+	sf::Time Timer::getOffset(void) const
+	{
+		if (getStatus() == Playing)
+			return m_pausedTime + m_timer.getElapsedTime();
+		else
+			return m_pausedTime;
+	}
+	
+	
+	void Timer::notifyObservers(Status oldStatus, Status newStatus)
+	{
+		CHECK(oldStatus != newStatus, "Timer::notifyObservers() - inconsistency: no change happened");
+		
+		std::set<Observer*>::iterator it;
+		for (it = m_observers.begin(); it != m_observers.end(); it++) {
+			Observer* obs = *it;
+			
+			switch(newStatus) {
+				case Playing:
+					obs->didPlay(*this, oldStatus);
+					break;
+					
+				case Paused:
+					obs->didPause(*this, oldStatus);
+					break;
+					
+				case Stopped:
+					obs->didStop(*this, oldStatus);
+					break;
+			}
+		}
+	}
+	
+}

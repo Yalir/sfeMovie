@@ -3,8 +3,8 @@
  *  utils.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2012 Lucas Soltic
- *  soltic.lucas@gmail.com
+ *  Copyright (C) 2010-2014 Lucas Soltic
+ *  lucas.soltic@orange.fr
  *  
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -113,3 +113,4 @@ extern void output_thread(void);
 	sf::Lock __l(__mtx);\
 	sf::Sleep(0);\
 }
+
