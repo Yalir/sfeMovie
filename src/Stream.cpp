@@ -36,9 +36,10 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
-	Stream::Stream(AVStreamRef stream, DataSource& dataSource) :
+	Stream::Stream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
 	m_stream(NULL),
 	m_dataSource(dataSource),
+	m_timer(timer),
 	m_codecCtx(NULL),
 	m_codec(NULL),
 	m_streamID(-1),
@@ -58,10 +59,14 @@ namespace sfe {
 		// Load the video codec
 		err = avcodec_open2(m_codecCtx, m_codec, NULL);
 		CHECK0(err, "Stream() - unable to load decoder for codec " + std::string(avcodec_get_name(m_codecCtx->codec_id)));
+		
+		m_timer.addObserver(*this);
 	}
 	
 	Stream::~Stream()
 	{
+		m_timer.removeObserver(*this);
+		
 		avcodec_close(m_codecCtx);
 		
 		AVPacketRef pkt;
@@ -82,6 +87,10 @@ namespace sfe {
 	{
 		AVPacketRef result = NULL;
 		
+		if (!m_packetList.size()) {
+			m_dataSource.requestMoreData(*this);
+		}
+		
 		if (m_packetList.size()) {
 			result = m_packetList.front();
 			m_packetList.pop();
@@ -93,5 +102,17 @@ namespace sfe {
 	bool Stream::needsMoreData(void) const
 	{
 		return m_packetList.size() < 10;
+	}
+	
+	void Stream::didPlay(const Timer& timer, Timer::Status previousStatus)
+	{
+	}
+	
+	void Stream::didPause(const Timer& timer, Timer::Status previousStatus)
+	{
+	}
+	
+	void Stream::didStop(const Timer& timer, Timer::Status previousStatus)
+	{
 	}
 }

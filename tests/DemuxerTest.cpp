@@ -4,12 +4,14 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include "Demuxer.hpp"
+#include "Timer.hpp"
 
 BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 {
 	sfe::Demuxer *demuxer = NULL;
-	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("non-existing-file.ogv"), std::runtime_error);
-	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small.ogv"));
+	sfe::Timer timer;
+	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("non-existing-file.ogv", timer), std::runtime_error);
+	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small.ogv", timer));
 	
 	const std::map<int, sfe::Stream*>& streams = demuxer->getStreams();
 	

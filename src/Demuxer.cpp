@@ -14,7 +14,7 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
-	Demuxer::Demuxer(const std::string& sourceFile) :
+	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer) :
 	m_avFormatCtx(NULL),
 	m_streams()
 	{
@@ -42,11 +42,11 @@ namespace sfe {
 			try {
 				switch (ffstream->codec->codec_type) {
 					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(ffstream, *this);
+						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
 						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
-						m_streams[ffstream->index] = new AudioStream(ffstream, *this);
+						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
 						break;
 						
 						/** TODO

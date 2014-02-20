@@ -27,6 +27,7 @@
 
 #include "Macros.hpp"
 #include "Stream.hpp"
+#include "Timer.hpp"
 #include <map>
 #include <string>
 
@@ -37,7 +38,7 @@ namespace sfe {
 		 *
 		 * Open a media file and find its streams
 		 */
-		Demuxer(const std::string& sourceFile);
+		Demuxer(const std::string& sourceFile, Timer& timer);
 		
 		/** Default destructor
 		 */

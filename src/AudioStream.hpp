@@ -38,7 +38,7 @@ namespace sfe {
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		AudioStream(AVStreamRef stream, DataSource& dataSource);
+		AudioStream(AVStreamRef stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */
@@ -67,6 +67,27 @@ namespace sfe {
 	private:
 		virtual bool onGetData(sf::SoundStream::Chunk& data);
 		virtual void onSeek(sf::Time timeOffset);
+		
+		/** Decode the encoded data @a packet into @a outputFrame
+		 *
+		 * @param packet the encoded data
+		 * @param outputFrame one decoded data
+		 * @return true if there's still data to decode in this packet, false otherwise
+		 */
+		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame);
+		
+		// Timer::Observer interface
+		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
+		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
+		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
+		
+		// Public properties
+		unsigned m_channelsCount;
+		unsigned m_sampleRate;
+		
+		// Private data
+		sf::Int16* m_samplesBuffer;
+		AVFrameRef m_audioFrame;
 	};
 }
 

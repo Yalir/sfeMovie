@@ -36,7 +36,7 @@ namespace sfe {
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		VideoStream(AVStreamRef stream, DataSource& dataSource);
+		VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */

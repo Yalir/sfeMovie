@@ -26,10 +26,11 @@
 #define SFEMOVIE_STREAM_HPP
 
 #include "Macros.hpp"
+#include "Timer.hpp"
 #include <queue>
 
 namespace sfe {
-	class Stream {
+	class Stream : public Timer::Observer {
 	public:
 		class DataSource {
 		public:
@@ -44,25 +45,11 @@ namespace sfe {
 		 * @param stream the FFmpeg stream
 		 * @param dataSource the encoded data provider for this stream
 		 */
-		Stream(AVStreamRef stream, DataSource& dataSource);
+		Stream(AVStreamRef stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */
 		virtual ~Stream(void);
-		
-		/* A/V control */
-		
-		/** Start playing this stream
-		 */
-		virtual void play(void) = 0;
-		
-		/** Pause stream playback
-		 */
-		virtual void pause(void) = 0;
-		
-		/** Stop stream playback and go back to beginning
-		 */
-		virtual void stop(void) = 0;
 		
 		/** Called by the demuxer to provide the stream with encoded data
 		 *
@@ -72,7 +59,10 @@ namespace sfe {
 		
 		/** Return the oldest encoded data that was pushed to this stream
 		 *
-		 * @return the oldest encoded data, or null if the fifo is empty
+		 * If no packet is stored when this method is called, it will ask the
+		 * data source to feed this stream first
+		 *
+		 * @return the oldest encoded data, or null if no data could be read from the media
 		 */
 		virtual AVPacketRef popEncodedData(void);
 		
@@ -97,8 +87,14 @@ namespace sfe {
 		virtual Kind getStreamKind(void) const = 0;
 		
 	protected:
+		// Timer::Observer interface
+		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
+		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
+		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
+		
 		AVStreamRef m_stream;
 		DataSource& m_dataSource;
+		Timer& m_timer;
 		AVCodecContextRef m_codecCtx;
 		AVCodecRef m_codec;
 		int m_streamID;

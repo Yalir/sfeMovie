@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef SFEMOVIE_VIDEOSTREAM_HPP
-#define SFEMOVIE_VIDEOSTREAM_HPP
+#ifndef SFEMOVIE_TIMER_HPP
+#define SFEMOVIE_TIMER_HPP
 
 #include <set>
 #include <SFML/System.hpp>

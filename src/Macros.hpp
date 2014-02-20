@@ -34,10 +34,12 @@
 	typedef void* AVCodecRef;
 	typedef void* AVPacketRef;
 	typedef void* AVStreamRef;
+	typedef void* AVFrameRef;
 #else
 	typedef AVFormatContext *AVFormatContextRef;
 	typedef AVCodecContext* AVCodecContextRef;
 	typedef AVCodec* AVCodecRef;
 	typedef AVPacket* AVPacketRef;
 	typedef AVStream* AVStreamRef;
+	typedef AVFrame* AVFrameRef;
 #endif
