@@ -22,7 +22,7 @@ macro(add_full_test testname)
 			$<TARGET_FILE_DIR:${testname}>)
 	elseif(MACOSX)
 		target_link_libraries(${testname} sfeMovie boost_unit_test_framework)
-		set_target_properties(${testname} PROPERTIES INSTALL_RPATH "@loader_path")
+		set_target_properties(${testname} PROPERTIES INSTALL_RPATH "@rpath")
 
 		# Copy dylibs next to the test executables
 		add_custom_command(TARGET ${testname} POST_BUILD
@@ -32,7 +32,9 @@ macro(add_full_test testname)
 	else ()
 		target_link_libraries(${testname} sfeMovie boost_unit_test_framework)
 	endif ()
-	add_test(${testname} ${testname})
+	add_test(NAME ${testname} COMMAND ${testname})
 endmacro()
 
 add_full_test(TimerTest)
+add_full_test(DemuxerTest)
+configure_file("small.ogv" "small.ogv" COPYONLY)
