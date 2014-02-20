@@ -56,4 +56,9 @@ namespace sfe {
 	{
 		
 	}
+	
+	VideoStream::Kind VideoStream::getStreamKind(void) const
+	{
+		return VIDEO_STREAM;
+	}
 }

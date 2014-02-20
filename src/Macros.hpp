@@ -25,6 +25,8 @@
 
 #define CHECK(value, message) if (!(value)) throw std::runtime_error(message);
 #define CHECK0(value, message) CHECK(value == 0, message)
+#define ONCE(sequence)\
+{ static bool __done = false; if (!__done) { { sequence; } __done = true; } }
 
 #ifndef LIBAVCODEC_VERSION
 	typedef void *AVFormatContextRef;
@@ -39,5 +41,3 @@
 	typedef AVPacket* AVPacketRef;
 	typedef AVStream* AVStreamRef;
 #endif
-
-#define CODEC_NAME(codec) std::string(codec->codec_name, sizeof(codec->codec_name))

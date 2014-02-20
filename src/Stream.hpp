@@ -76,6 +76,18 @@ namespace sfe {
 		 */
 		virtual bool needsMoreData(void) const;
 		
+		enum Kind {
+			VIDEO_STREAM,
+			AUDIO_STREAM,
+			SUBTITLE_STREAM
+		};
+		
+		/** Get the stream kind (either audio, video or subtitle stream)
+		 *
+		 * @return the kind of stream represented by this stream
+		 */
+		virtual Kind getStreamKind(void) const = 0;
+		
 	protected:
 		AVStreamRef m_stream;
 		AVCodecContextRef m_codecCtx;

@@ -44,4 +44,9 @@ namespace sfe {
 	{
 		
 	}
+	
+	AudioStream::Kind AudioStream::getStreamKind(void) const
+	{
+		return AUDIO_STREAM;
+	}
 }

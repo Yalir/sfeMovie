@@ -10,7 +10,6 @@ extern "C"
 #include "VideoStream.hpp"
 #include "AudioStream.hpp"
 #include "SubtitleStream.hpp"
-#include "utils.hpp"
 #include <iostream>
 #include <stdexcept>
 

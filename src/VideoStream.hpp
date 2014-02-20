@@ -55,6 +55,12 @@ namespace sfe {
 		/** Stop stream playback and go back to beginning
 		 */
 		virtual void stop(void);
+		
+		/** Get the stream kind (either audio, video or subtitle stream)
+		 *
+		 * @return the kind of stream represented by this stream
+		 */
+		virtual Kind getStreamKind(void) const;
 	};
 }
 

@@ -29,9 +29,6 @@
 #include <sstream>
 #include <SFML/System.hpp>
 
-#define ONCE(sequence)\
-{ static bool __done = false; if (!__done) { { sequence; } __done = true; } }
-
 #define ONCE_PSEC(sequence)\
 { static sf::Clock __timer; static bool __first = true; if (__first || __timer.GetElapsedTime() >= 1000) { { sequence; } __first = false; __timer.Reset(); }}
 

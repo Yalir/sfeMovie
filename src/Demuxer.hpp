@@ -22,7 +22,6 @@
  *
  */
 
-
 #ifndef SFEMOVIE_DEMUXER_HPP
 #define SFEMOVIE_DEMUXER_HPP
 
@@ -55,6 +54,10 @@ namespace sfe {
 		 */
 		void feedStreams(void);
 		
+		/** Tell whether the demuxer has reached the end of the file and can no more feed the streams
+		 *
+		 * @return whether the end of the media file has been reached
+		 */
 		bool didReachEndOfFile(void) const;
 		
 	private:
