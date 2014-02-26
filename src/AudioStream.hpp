@@ -44,20 +44,6 @@ namespace sfe {
 		 */
 		virtual ~AudioStream(void);
 		
-		/* A/V control */
-		
-		/** Start playing this stream
-		 */
-		virtual void play(void);
-		
-		/** Pause stream playback
-		 */
-		virtual void pause(void);
-		
-		/** Stop stream playback and go back to beginning
-		 */
-		virtual void stop(void);
-		
 		/** Get the stream kind (either audio, video or subtitle stream)
 		 *
 		 * @return the kind of stream represented by this stream
@@ -70,11 +56,31 @@ namespace sfe {
 		
 		/** Decode the encoded data @a packet into @a outputFrame
 		 *
+		 * gotFrame being set to false means that decoding should still continue:
+		 *  - with a new packet if false is returned
+		 *	- with the same packet if true is returned
+		 *
 		 * @param packet the encoded data
 		 * @param outputFrame one decoded data
+		 * @param gotFrame set to true if a frame has been extracted to outputFrame, false otherwise
 		 * @return true if there's still data to decode in this packet, false otherwise
 		 */
-		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame);
+		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame);
+		
+		/** Initialize the audio resampler for conversion from many formats to signed 16 bits audio
+		 *
+		 * This must be called before any packet is decoded and resampled
+		 */
+		void initResampler(void);
+		
+		/** Resample the decoded audio frame @a frame into signed 16 bits audio samples
+		 *
+		 * @param frame the audio samples to convert
+		 * @param outSamples [out] the convertedSamples
+		 * @param outNbSamples [out] the count of samples in @a outSamples
+		 * @param outSamplesLength [out] the length of @a outSamples in bytes
+		 */
+		void resampleFrame(AVFrameRef frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
 		
 		// Timer::Observer interface
 		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
@@ -88,6 +94,18 @@ namespace sfe {
 		// Private data
 		sf::Int16* m_samplesBuffer;
 		AVFrameRef m_audioFrame;
+		
+		// Resampling
+		struct SwrContext* m_swrCtx;
+		int m_srcNbSamples;
+		int m_dstNbSamples;
+		int m_maxDstNbSamples;
+		int m_srcNbChannels;
+		int m_dstNbChannels;
+		int m_srcLinesize;
+		int m_dstLinesize;
+		uint8_t** m_srcData;
+		uint8_t** m_dstData;
 	};
 }
 

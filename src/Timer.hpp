@@ -50,21 +50,21 @@ namespace sfe {
 			 */
 			virtual ~Observer(void);
 			
-			/** Called when playing by @a timer if this Observer is registered for notifications
+			/** Called by @a timer when playing if this Observer is registered for notifications
 			 *
 			 * @param timer the timer that generated the notification
 			 * @param previousStatus the timer's status before playing
 			 */
 			virtual void didPlay(const Timer& timer, Status previousStatus);
 			
-			/** Called when pausing by @a timer if this Observer is registered for notifications
+			/** Called by @a timer when pausing if this Observer is registered for notifications
 			 *
 			 * @param timer the timer that generated the notification
 			 * @param previousStatus the timer's status before playing
 			 */
 			virtual void didPause(const Timer& timer, Status previousStatus);
 			
-			/** Called when stopping by @a timer if this Observer is registered for notifications
+			/** Called by @a timer when stopping if this Observer is registered for notifications
 			 *
 			 * @param timer the timer that generated the notification
 			 * @param previousStatus the timer's status before playing

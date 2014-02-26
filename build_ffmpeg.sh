@@ -112,7 +112,7 @@ function build_ffmpeg()
 	fi
 
 	# --disable-decoders --disable-muxers
-	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --yasmexe=${build_dir}/YASM-objects/yasm --enable-shared --disable-static $configure_flags $os_flags"
+	args="$args --disable-stripping --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --yasmexe=${build_dir}/YASM-objects/yasm --enable-shared --disable-static $configure_flags $os_flags"
     
 
 	#setup VC++ env variables to find lib.exe

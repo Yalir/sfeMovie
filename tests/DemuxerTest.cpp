@@ -5,13 +5,14 @@
 #include <iostream>
 #include "Demuxer.hpp"
 #include "Timer.hpp"
+#include <SFML/Audio.hpp>
 
 BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("non-existing-file.ogv", timer), std::runtime_error);
-	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small.ogv", timer));
+	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small_1.ogv", timer));
 	
 	const std::map<int, sfe::Stream*>& streams = demuxer->getStreams();
 	
@@ -49,4 +50,26 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 		BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 		BOOST_CHECK(it->second->needsMoreData() == false);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(DemuxerOGVTest)
+{
+	sfe::Demuxer *demuxer = NULL;
+	sfe::Timer timer;
+	demuxer = new sfe::Demuxer("small_1.ogv", timer);
+	
+	timer.play();
+	sf::sleep(sf::seconds(7));
+	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+}
+
+BOOST_AUTO_TEST_CASE(DemuxerOGGTest)
+{
+	sfe::Demuxer *demuxer = NULL;
+	sfe::Timer timer;
+	demuxer = new sfe::Demuxer("long_1.wav", timer);
+	
+	timer.play();
+	sf::sleep(sf::seconds(30));
+	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
 }

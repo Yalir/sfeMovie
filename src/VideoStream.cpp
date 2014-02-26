@@ -42,21 +42,6 @@ namespace sfe {
 		
 	}
 	
-	void VideoStream::play(void)
-	{
-		
-	}
-	
-	void VideoStream::pause(void)
-	{
-		
-	}
-	
-	void VideoStream::stop(void)
-	{
-		
-	}
-	
 	VideoStream::Kind VideoStream::getStreamKind(void) const
 	{
 		return VIDEO_STREAM;

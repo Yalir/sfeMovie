@@ -42,20 +42,6 @@ namespace sfe {
 		 */
 		virtual ~VideoStream(void);
 		
-		/* A/V control */
-		
-		/** Start playing this stream
-		 */
-		virtual void play(void);
-		
-		/** Pause stream playback
-		 */
-		virtual void pause(void);
-		
-		/** Stop stream playback and go back to beginning
-		 */
-		virtual void stop(void);
-		
 		/** Get the stream kind (either audio, video or subtitle stream)
 		 *
 		 * @return the kind of stream represented by this stream

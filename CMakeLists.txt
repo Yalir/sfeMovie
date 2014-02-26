@@ -81,18 +81,20 @@ macro(ffmpeg_paths search_path)
 	import_library_path(FFMPEG_LIBAVCODEC_LIBRARIES "${search_path}" "avcodec")
 	import_library_path(FFMPEG_LIBAVUTIL_LIBRARIES "${search_path}" "avutil")
 	import_library_path(FFMPEG_LIBSWSCALE_LIBRARIES "${search_path}" "swscale")
+	import_library_path(FFMPEG_LIBSWRESAMPLE_LIBRARIES "${search_path}" "swresample")
 	
 	set (FFMPEG_LIBRARIES
 			${FFMPEG_LIBAVFORMAT_LIBRARIES}
 			${FFMPEG_LIBAVDEVICE_LIBRARIES}
 			${FFMPEG_LIBAVCODEC_LIBRARIES}
 			${FFMPEG_LIBAVUTIL_LIBRARIES}
-			${FFMPEG_LIBSWSCALE_LIBRARIES})
+			${FFMPEG_LIBSWSCALE_LIBRARIES}
+			${FFMPEG_LIBSWRESAMPLE_LIBRARIES})
 endmacro(ffmpeg_paths)
 
 # Check that all of the FFmpeg headers can be found in ${FFMPEG_INCLUDE_DIR}
 macro(check_ffmpeg_headers)
-	foreach(header "libavcodec/avcodec.h" "libavdevice/avdevice.h" "libavformat/avformat.h" "libavutil/avutil.h" "libswscale/swscale.h")
+	foreach(header "libavcodec/avcodec.h" "libavdevice/avdevice.h" "libavformat/avformat.h" "libavutil/avutil.h" "libswscale/swscale.h" "libswresample/swresample.h")
 		if(NOT EXISTS "${FFMPEG_INCLUDE_DIR}/${header}")
 			message(FATAL_ERROR "The chosen FFmpeg is missing a header file: ${header}")
 		endif()
@@ -168,20 +170,7 @@ if (LINUX) # ========================================== LINUX ==================
 
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
 	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/OSX-x86_64")
-
-	if (HAS_VDA)
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
-	else()
-		# In case VDA isn't defined (ie. build.sh is using the current OS SDK), check the current OS version
-		if (DEFINED HAS_VDA) # HAS_VDA defined but FALSE
-			set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2)
-		else()
-			# VDA is used for OS X 10.7 and later, which is Darwin 11.0
-			if (${CMAKE_HOST_SYSTEM_VERSION} VERSION_EQUAL "11.0.0" OR ${CMAKE_HOST_SYSTEM_VERSION} VERSION_GREATER "11.0.0")
-				set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
-			endif()
-		endif()
-	endif()
+	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
 	
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 	set (CMAKE_OSX_ARCHITECTURES "x86_64")

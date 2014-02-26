@@ -37,4 +37,9 @@ endmacro()
 
 add_full_test(TimerTest)
 add_full_test(DemuxerTest)
-configure_file("small.ogv" "small.ogv" COPYONLY)
+configure_file("small_1.ogv" "small_1.ogv" COPYONLY)
+configure_file("long_1.wav" "long_1.wav" COPYONLY)
+configure_file("left-right.wav" "left-right.wav" COPYONLY)
+
+configure_file("small_2.mp3" "small_2.mp3" COPYONLY)
+configure_file("voice_1.mp3" "voice_1.mp3" COPYONLY)

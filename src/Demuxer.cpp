@@ -16,9 +16,10 @@ extern "C"
 namespace sfe {
 	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer) :
 	m_avFormatCtx(NULL),
+	m_eofReached(false),
 	m_streams()
 	{
-		CHECK(sourceFile.size(), "Demuxer() - invalid argument: sourceFile");
+		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
 		
 		int err = 0;
 		
@@ -28,12 +29,12 @@ namespace sfe {
 		
 		// Open the movie file
 		err = avformat_open_input(&m_avFormatCtx, sourceFile.c_str(), NULL, NULL);
-		CHECK0(err, "Demuxer() - error while opening media");
+		CHECK0(err, "Demuxer::Demuxer() - error while opening media");
 		CHECK(m_avFormatCtx, "Demuxer() - inconsistency: media context cannot be null");
 		
 		// Read the general movie informations
 		err = avformat_find_stream_info(m_avFormatCtx, NULL);
-		CHECK0(err, "Demuxer() - error while retreiving media information");
+		CHECK0(err, "Demuxer::Demuxer() - error while retreiving media information");
 		
 		// Find all interesting streams
 		for (int i = 0; i < m_avFormatCtx->nb_streams; i++) {
@@ -56,11 +57,11 @@ namespace sfe {
 						 */
 						
 					default:
-						std::cerr << "Demuxer() - stream '" << av_get_media_type_string(ffstream->codec->codec_type) << "' ignored" << std::endl;
+						std::cerr << "Demuxer::Demuxer() - '" << av_get_media_type_string(ffstream->codec->codec_type) << "' stream ignored" << std::endl;
 						break;
 				}
 			} catch (std::runtime_error& e) {
-				std::cerr << "Demuxer() - " << e.what() << std::endl;
+				std::cerr << "Demuxer::Demuxer() - " << e.what() << std::endl;
 			}
 		}
 	}
@@ -91,7 +92,7 @@ namespace sfe {
 				m_eofReached = true;
 			} else {
 				if (!distributePacket(pkt)) {
-					std::cerr << "Demuxer::feedStreams() - packet with stream index "
+					std::cerr << "Demuxer::feedStream() - packet with stream index "
 					<< pkt->stream_index << " not handled and dropped" << std::endl;
 					av_free_packet(pkt);
 					av_free(pkt);

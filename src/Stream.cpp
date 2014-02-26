@@ -45,7 +45,7 @@ namespace sfe {
 	m_streamID(-1),
 	m_packetList()
 	{
-		assert(stream);
+		CHECK(stream, "Stream::Stream() - invalid stream argument");
 		int err = 0;
 		
 		m_stream = stream;
