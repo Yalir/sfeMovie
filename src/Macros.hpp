@@ -1,4 +1,12 @@
 
+#include <cstring>
+#include <string>
+#include <SFML/Config.hpp>
+
+extern "C" {
+	#include <libavutil/error.h>
+}
+
 /** Define portable import / export macros
  */
 #if defined(SFML_SYSTEM_WINDOWS) && defined(_MSC_VER)
@@ -27,6 +35,18 @@
 #define CHECK0(value, message) CHECK(value == 0, message)
 #define ONCE(sequence)\
 { static bool __done = false; if (!__done) { { sequence; } __done = true; } }
+
+#if defined(SFML_SYSTEM_WINDOWS)
+	#ifdef av_err2str
+	#undef av_err2str
+	#endif
+
+	namespace sfe {
+		std::string ff_err2str(int code);
+	}
+
+	#define av_err2str sfe::ff_err2str
+#endif
 
 #ifndef LIBAVCODEC_VERSION
 	typedef void *AVFormatContextRef;
