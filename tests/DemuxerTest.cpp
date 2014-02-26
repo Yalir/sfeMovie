@@ -52,24 +52,39 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(DemuxerOGVTest)
+BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("small_1.ogv", timer);
 	
 	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	sf::sleep(sf::seconds(7));
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
 }
 
-BOOST_AUTO_TEST_CASE(DemuxerOGGTest)
+BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("long_1.wav", timer);
 	
 	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	sf::sleep(sf::seconds(30));
+	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+}
+
+
+BOOST_AUTO_TEST_CASE(DemuxerShortMP3Test)
+{
+	sfe::Demuxer *demuxer = NULL;
+	sfe::Timer timer;
+	demuxer = new sfe::Demuxer("small_2.mp3", timer);
+	
+	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	sf::sleep(sf::seconds(3));
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
 }
