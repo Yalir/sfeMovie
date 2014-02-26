@@ -11,7 +11,7 @@ macosx_sdk=""
 vcpp=0
 jobsCount=1 # how many compilations at a time
 full_decoders_list=""
-ffmpeg_dir="ffmpeg-02.19.2014"
+ffmpeg_dir="ffmpeg-02.26.2014"
 ffmpeg_archive="${ffmpeg_dir}.tar.bz2"
 yasm_dir="yasm-1.2.0"
 yasm_archive="${yasm_dir}.tar.gz"
@@ -114,9 +114,7 @@ function build_ffmpeg()
 		yasmpath=`echo "${yasmpath}.exe" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 	fi
 
-	# --disable-decoders --disable-muxers
-	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --yasmexe=${yasmpath} --enable-shared --disable-static $configure_flags $os_flags"
-    
+	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-decoders --disable-muxers --disable-encoders --yasmexe=${yasmpath} --enable-shared --disable-static $configure_flags $os_flags"
 
 	#setup VC++ env variables to find lib.exe
 	if [ "$vcpp" == "1" ]
