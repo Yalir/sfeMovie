@@ -46,7 +46,7 @@ set (LINKER_FLAGS "")
 set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
-set (OTHER_LIBRARIES "iconv")
+set (OTHER_LIBRARIES "")
 set (EXTERNAL_LIBRARIES_DIR "")
 set (BUILTIN_FFMPEG_BUILD_DIR "${CMAKE_BINARY_DIR}/FFmpeg-binaries")
 

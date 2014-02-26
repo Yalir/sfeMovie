@@ -106,13 +106,16 @@ function build_ffmpeg()
       	fi	
     fi
 	
+	yasmpath="${build_dir}/YASM-objects/yasm"
+
 	if [ "$os" == "windows" ]
 	  then
-		os_flags="--enable-memalign-hack --enable-w32threads"
+		os_flags="--enable-memalign-hack --enable-pthreads"
+		yasmpath=`echo "${yasmpath}.exe" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 	fi
 
 	# --disable-decoders --disable-muxers
-	args="$args --disable-stripping --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --yasmexe=${build_dir}/YASM-objects/yasm --enable-shared --disable-static $configure_flags $os_flags"
+	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-encoders --yasmexe=${yasmpath} --enable-shared --disable-static $configure_flags $os_flags"
     
 
 	#setup VC++ env variables to find lib.exe
