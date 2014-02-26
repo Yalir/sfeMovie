@@ -170,6 +170,11 @@ function build_ffmpeg()
 			find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -vR '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		fi
 		check_err
+
+		if [ "$os" == "macosx" ] ; then
+			cd "${ffmpeg_binaries_dir}/lib"
+			${source_dir}/install_names.sh
+		fi
 	fi
 	
 	echo "Built ffmpeg"
