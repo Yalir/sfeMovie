@@ -9,3 +9,5 @@ CMakeScripts
 CMakeFiles
 product
 build
+SourceDir.var
+BuildDir.var
