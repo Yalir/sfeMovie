@@ -11,7 +11,7 @@ endif()
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.55 COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost 1.46 COMPONENTS unit_test_framework REQUIRED)
 
 macro(add_full_test testname)
 	include_directories(${Boost_INCLUDE_DIRS})
