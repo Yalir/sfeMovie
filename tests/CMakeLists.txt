@@ -8,9 +8,17 @@ else()
         --force-new-ctest-process --verbose)
 endif()
 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME OFF) 
+find_package(Boost 1.55 COMPONENTS unit_test_framework REQUIRED)
+
 macro(add_full_test testname)
+	include_directories(${Boost_INCLUDE_DIRS})
 	link_directories(${EXTERNAL_LIBRARIES_DIR})
 	add_executable(${testname} ${testname}.cpp)
+	target_link_libraries(${testname} ${Boost_LIBRARIES})
+
 	if (WINDOWS)
 		target_link_libraries(${testname} sfeMovie)
 		add_dependencies(${testname} sfeMovie)
@@ -21,7 +29,7 @@ macro(add_full_test testname)
 			"${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
 			$<TARGET_FILE_DIR:${testname}>)
 	elseif(MACOSX)
-		target_link_libraries(${testname} sfeMovie boost_unit_test_framework)
+		target_link_libraries(${testname} sfeMovie)
 		set_target_properties(${testname} PROPERTIES INSTALL_RPATH "@rpath")
 
 		# Copy dylibs next to the test executables
@@ -29,8 +37,8 @@ macro(add_full_test testname)
 			COMMAND ${CMAKE_COMMAND} -E copy_directory
 			"${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
 			$<TARGET_FILE_DIR:${testname}>)
-	else ()
-		target_link_libraries(${testname} sfeMovie boost_unit_test_framework)
+	elseif(LINUX)
+		target_link_libraries(${testname} sfeMovie)
 	endif ()
 	add_test(NAME ${testname} COMMAND ${testname})
 endmacro()

@@ -164,16 +164,11 @@ set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_
 file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]*)
 
 if (LINUX) # ========================================== LINUX ========================================== #
-	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/Linux-i386")
     add_definitions(-D__STDC_CONSTANT_MACROS)
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
 
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
-	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/OSX-x86_64")
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} z bz2 "-framework VideoDecodeAcceleration" "-framework CoreVideo")
-	
 	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
-	set (CMAKE_OSX_ARCHITECTURES "x86_64")
     
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
@@ -183,11 +178,7 @@ elseif (MACOSX) # ========================================== MACOSX ============
     
     # Make sure sfeMovie headers get imported in the framework
     set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
-	
-	
-elseif (WINDOWS) # ========================================== WINDOWS ========================================== #
-	set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
-	
+elseif (WINDOWS) # ========================================== WINDOWS ==========================================
 	if (MSVC)
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 	else()
