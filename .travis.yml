@@ -7,10 +7,13 @@ compiler:
 script:
   - cmake -DSFML_ROOT=SFML-2.1 . && make && sudo make install
 
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq boost-dev
+
 before_script:
   - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
   - tar -xjf SFML-2.1-linux-gcc-64bits.tar.bz2
-  - apt-get install boost-dev
 
 after_script:
   - ls -l /usr/local/lib
