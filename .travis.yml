@@ -9,7 +9,7 @@ script:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq boost-dev
+  - sudo apt-get install -qq libboost-dev
 
 before_script:
   - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
