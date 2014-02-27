@@ -1,6 +1,7 @@
 
 #include <cstring>
 #include <string>
+#include <stdexcept>
 #include <SFML/Config.hpp>
 
 extern "C" {
