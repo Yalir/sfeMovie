@@ -17,6 +17,7 @@ after_script:
 branches:
   only:
     - master
+    - sfeMovie2
 
 notifications:
   recipients:
