@@ -29,6 +29,7 @@ endif()
 
 set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
+set (BUILD_DEMUXER_CLI TRUE CACHE BOOL "TRUE to build the Demuxer command line program (to check file contents and play audio)")
 set (BUILD_FFMPEG TRUE) # CACHE BOOL "TRUE to build the provided FFmpeg, FALSE to skip rebuilding FFmpeg")
 
 if (${BUILD_FFMPEG} AND NOT ${LINK_AGAINST_INTERNAL_FFMPEG})
@@ -373,6 +374,11 @@ target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER
 if (BUILD_SFEMOVIE_SAMPLE)
     add_subdirectory(sample)
 endif ()
+
+# Demuxer command line tool
+if (BUILD_DEMUXER_CLI)
+	add_subdirectory(DemuxerCLI)
+endif()
 
 # add an option for building the documentation
 set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")

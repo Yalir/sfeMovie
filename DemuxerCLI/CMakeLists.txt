@@ -1,0 +1,12 @@
+set(DEMUXER_CLI "demux")
+
+add_executable(
+    ${DEMUXER_CLI}
+    main.cpp
+)
+
+target_link_libraries(
+    ${DEMUXER_CLI}
+    ${LIB_NAME}
+    ${SFML_LIBRARIES}
+)
