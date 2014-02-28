@@ -182,7 +182,7 @@ function build_ffmpeg()
 
 function main()
 {
-	command_args="linux|windows|macosx novs|vs notosx|i386|x86_64 decoders_list"
+	command_args="linux|windows|macosx novs|vs decoders_list"
 	# want help?
 	if [ "$1" == "-h" ] ||
 	   [ "$1" == "--help" ]
@@ -211,7 +211,6 @@ function main()
 				jobsCount=5
 			fi
 
-			shift
 			shift
 			shift
 			full_decoders_list="$*"
