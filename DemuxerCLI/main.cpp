@@ -4,7 +4,7 @@
 #include "Utilities.hpp"
 #include <iostream>
 
-void pause()
+void my_pause()
 {
 #ifdef SFML_SYSTEM_WINDOWS
 	system("PAUSE");
@@ -18,7 +18,7 @@ int main(int argc, const char *argv[])
 	if (argc < 2)
 	{
 		std::cout << "Usage: " << std::string(argv[0]) << " media_path" << std::endl;
-		pause();
+		my_pause();
 		return 1;
 	}
 	
