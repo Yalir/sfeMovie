@@ -33,6 +33,10 @@ namespace sfe {
 	{
 	}
 	
+	void Timer::Observer::willPlay(const Timer& timer)
+	{
+	}
+	
 	void Timer::Observer::didPlay(const Timer& timer, Status previousStatus)
 	{
 	}
@@ -78,6 +82,8 @@ namespace sfe {
 	{
 		CHECK(getStatus() != Playing, "Timer::play() - timer playing twice");
 		
+		notifyObservers(Playing);
+		
 		Status oldStatus = getStatus();
 		m_status = Playing;
 		m_timer.restart();
@@ -120,6 +126,22 @@ namespace sfe {
 			return m_pausedTime;
 	}
 	
+	void Timer::notifyObservers(Status futureStatus)
+	{
+		std::set<Observer*>::iterator it;
+		for (it = m_observers.begin(); it != m_observers.end(); it++) {
+			Observer* obs = *it;
+			
+			switch(futureStatus) {
+				case Playing:
+					obs->willPlay(*this);
+					break;
+					
+				default:
+					CHECK(false, "Timer::notifyObservers() - unhandled case in switch");
+			}
+		}
+	}
 	
 	void Timer::notifyObservers(Status oldStatus, Status newStatus)
 	{

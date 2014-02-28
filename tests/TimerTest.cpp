@@ -8,6 +8,7 @@ class MyObserver : public sfe::Timer::Observer {
 public:
 	MyObserver() :
 	sfe::Timer::Observer(),
+	m_willPlay(false),
 	m_didPlay(false),
 	m_didPause(false),
 	m_didStop(false)
@@ -15,8 +16,15 @@ public:
 		
 	}
 	
+	void willPlay(const sfe::Timer& timer)
+	{
+		BOOST_CHECK(m_didPlay == false);
+		m_willPlay = true;
+	}
+	
 	void didPlay(const sfe::Timer& timer, sfe::Timer::Status previousStatus)
 	{
+		BOOST_CHECK(m_willPlay == true);
 		m_didPlay = true;
 	}
 	
@@ -30,7 +38,7 @@ public:
 		m_didStop = true;
 	}
 	
-	bool m_didPlay, m_didPause, m_didStop;
+	bool m_willPlay, m_didPlay, m_didPause, m_didStop;
 };
 
 BOOST_AUTO_TEST_CASE(TimerTestBase)
@@ -67,36 +75,44 @@ BOOST_AUTO_TEST_CASE(TimerTestNotifications)
 	timer.addObserver(obs1);
 	timer.addObserver(obs2);
 	
+	BOOST_CHECK(obs1.m_willPlay == false);
 	BOOST_CHECK(obs1.m_didPlay == false);
 	BOOST_CHECK(obs1.m_didPause == false);
 	BOOST_CHECK(obs1.m_didStop == false);
+	BOOST_CHECK(obs2.m_willPlay == false);
 	BOOST_CHECK(obs2.m_didPlay == false);
 	BOOST_CHECK(obs2.m_didPause == false);
 	BOOST_CHECK(obs2.m_didStop == false);
 	
 	timer.play();
 	
+	BOOST_CHECK(obs1.m_willPlay == true);
 	BOOST_CHECK(obs1.m_didPlay == true);
 	BOOST_CHECK(obs1.m_didPause == false);
 	BOOST_CHECK(obs1.m_didStop == false);
+	BOOST_CHECK(obs2.m_willPlay == true);
 	BOOST_CHECK(obs2.m_didPlay == true);
 	BOOST_CHECK(obs2.m_didPause == false);
 	BOOST_CHECK(obs2.m_didStop == false);
 	
 	timer.pause();
 	
+	BOOST_CHECK(obs1.m_willPlay == true);
 	BOOST_CHECK(obs1.m_didPlay == true);
 	BOOST_CHECK(obs1.m_didPause == true);
 	BOOST_CHECK(obs1.m_didStop == false);
+	BOOST_CHECK(obs2.m_willPlay == true);
 	BOOST_CHECK(obs2.m_didPlay == true);
 	BOOST_CHECK(obs2.m_didPause == true);
 	BOOST_CHECK(obs2.m_didStop == false);
 	
 	timer.stop();
 	
+	BOOST_CHECK(obs1.m_willPlay == true);
 	BOOST_CHECK(obs1.m_didPlay == true);
 	BOOST_CHECK(obs1.m_didPause == true);
 	BOOST_CHECK(obs1.m_didStop == true);
+	BOOST_CHECK(obs2.m_willPlay == true);
 	BOOST_CHECK(obs2.m_didPlay == true);
 	BOOST_CHECK(obs2.m_didPause == true);
 	BOOST_CHECK(obs2.m_didStop == true);

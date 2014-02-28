@@ -50,6 +50,14 @@ namespace sfe {
 			 */
 			virtual ~Observer(void);
 			
+			/** Called by @a timer before playing if this Observer is registered for notifications
+			 *
+			 * Playing won't start until all Observers are done executing willPlay()
+			 *
+			 * @param timer the timer that generated the notification
+			 */
+			virtual void willPlay(const Timer& timer);
+			
 			/** Called by @a timer when playing if this Observer is registered for notifications
 			 *
 			 * @param timer the timer that generated the notification
@@ -120,6 +128,14 @@ namespace sfe {
 		sf::Time getOffset(void) const;
 		
 	private:
+		/** Notify all observers that the timer's status is about to change to @a futureStatus
+		 *
+		 * The status change won't occur before all observers have received the noficiation
+		 *
+		 * @param futureStatus the status to which this timer is about to change
+		 */
+		void notifyObservers(Status futureStatus);
+		
 		/** Notify all observers that the timer's status changed from @a oldStatus to @a newStatus
 		 *
 		 * @param oldStatus the timer's status before the state change
