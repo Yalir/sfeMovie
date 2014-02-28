@@ -50,7 +50,8 @@ namespace sfe {
 	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer) :
 	m_avFormatCtx(NULL),
 	m_eofReached(false),
-	m_streams()
+	m_streams(),
+	m_ignoredStreams()
 	{
 		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
 		
@@ -61,7 +62,7 @@ namespace sfe {
 		
 		// Open the movie file
 		err = avformat_open_input(&m_avFormatCtx, sourceFile.c_str(), NULL, NULL);
-		CHECK0(err, "Demuxer::Demuxer() - error while opening media");
+		CHECK0(err, "Demuxer::Demuxer() - error while opening media: " + sourceFile);
 		CHECK(m_avFormatCtx, "Demuxer() - inconsistency: media context cannot be null");
 		
 		// Read the general movie informations
@@ -74,12 +75,14 @@ namespace sfe {
 			
 			try {
 				switch (ffstream->codec->codec_type) {
-					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
-						break;
+//					case AVMEDIA_TYPE_VIDEO:
+//						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
+//						std::cout << "Loaded " << avcodec_get_name(ffstream->codec->codec_id) << " video stream" << std::endl;
+//						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
 						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
+						std::cout << "Loaded " << avcodec_get_name(ffstream->codec->codec_id) << " audio stream" << std::endl;
 						break;
 						
 						/** TODO
@@ -89,7 +92,8 @@ namespace sfe {
 						 */
 						
 					default:
-						std::cerr << "Demuxer::Demuxer() - '" << av_get_media_type_string(ffstream->codec->codec_type) << "' stream ignored" << std::endl;
+						m_ignoredStreams[ffstream->index] = std::string(std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
+						std::cerr << "Demuxer::Demuxer() - '" << m_ignoredStreams[ffstream->index] << "' stream ignored" << std::endl;
 						break;
 				}
 			} catch (std::runtime_error& e) {
@@ -124,8 +128,7 @@ namespace sfe {
 				m_eofReached = true;
 			} else {
 				if (!distributePacket(pkt)) {
-					std::cerr << "Demuxer::feedStream() - packet with stream index "
-					<< pkt->stream_index << " not handled and dropped" << std::endl;
+					std::cerr << "Demuxer::feedStream() - " << m_ignoredStreams[pkt->stream_index] << " packet not handled and dropped" << std::endl;
 					av_free_packet(pkt);
 					av_free(pkt);
 				}

@@ -94,6 +94,7 @@ namespace sfe {
 		AVFormatContextRef m_avFormatCtx;
 		bool m_eofReached;
 		std::map<int, Stream*> m_streams;
+		std::map<int, std::string> m_ignoredStreams;
 		
 		static std::set<std::pair<std::string, MediaType> > g_availableDecoders;
 	};

@@ -34,7 +34,7 @@ namespace sfe {
 	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
 	Stream(stream, dataSource, timer)
 	{
-		
+		CHECK(false, "not implemented");
 	}
 	
 	VideoStream::~VideoStream(void)
