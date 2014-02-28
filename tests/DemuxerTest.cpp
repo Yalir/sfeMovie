@@ -78,6 +78,18 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
 }
 
+BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
+{
+	sfe::Demuxer *demuxer = NULL;
+	sfe::Timer timer;
+	demuxer = new sfe::Demuxer("small_4.wav", timer);
+	
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	timer.play();
+	sf::sleep(sf::seconds(4));
+	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+}
+
 BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 {
 	sfe::Demuxer *demuxer = NULL;
