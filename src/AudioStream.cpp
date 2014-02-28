@@ -78,9 +78,8 @@ namespace sfe {
 		AVPacketRef packet;
 		data.samples = m_samplesBuffer;
 		
-		while (data.sampleCount < m_channelsCount * m_sampleRate &&
+		while (data.sampleCount < av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate &&
 			   (NULL != (packet = popEncodedData()))) {
-			
 			bool needsMoreDecoding = false;
 			bool gotFrame = false;
 			
@@ -97,6 +96,8 @@ namespace sfe {
 					CHECK(nbSamples > 0, "AudioStream::onGetData() - resampleFrame() error");
 					CHECK(nbSamples == samplesLength / 2, "AudioStream::onGetData() resampleFrame() inconsistency");
 					
+					CHECK(data.sampleCount + nbSamples < m_sampleRate * 2 * av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO), "AudioStream::onGetData() - Going to overflow!!");
+					
 					std::memcpy((void *)(data.samples + data.sampleCount),
 								samples, samplesLength);
 					data.sampleCount += nbSamples;
@@ -107,7 +108,7 @@ namespace sfe {
 			av_free(packet);
 		}
 		
-		return (data.sampleCount >= m_channelsCount * m_sampleRate);
+		return (packet != NULL);
 	}
 	
 	void AudioStream::onSeek(sf::Time timeOffset)
@@ -133,6 +134,7 @@ namespace sfe {
 	
 	void AudioStream::initResampler(void)
 	{
+		CHECK0(m_swrCtx, "AudioStream::initResampler() - resampler already initialized");
 		int err = 0;
 		
 		/* create resampler context */
