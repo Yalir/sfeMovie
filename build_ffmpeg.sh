@@ -3,7 +3,6 @@
 os=""
 cmake_env=""
 linking=""
-macosx_arch="x86_64" # ppc or i386 or x86_64
 source_dir=""
 build_dir=""
 temporary_dir="/tmp"
@@ -191,11 +190,11 @@ function main()
 	     echo "Usage: $0 $command_args"
 	else
 		if ([ "$1" != "linux" ] && [ "$1" != "windows" ] && [ "$1" != "macosx" ]) ||
-			([ "$2" != "novs" ] && [ "$2" != "vs" ]) ||
-			([ "$3" != "notosx" ] && [ "$3" != "i386" ] && [ "$3" != "x86_64" ])
+			([ "$2" != "novs" ] && [ "$2" != "vs" ])
 		  then
 		    echo "Usage: $0 $command_args"
 		    echo "Got $*"
+		    exit 1
 		else
 			# do build process
 			os="$1"
@@ -205,7 +204,6 @@ function main()
 				vcpp="1"
 			fi
 			
-			macosx_arch="$3"
 			source_dir=`cat SourceDir.var`
 			build_dir=`cat BuildDir.var`
 
@@ -221,7 +219,6 @@ function main()
 			echo "Build directory : ${build_dir}"
 			echo "OS              : $os"
 			echo "Visual Studio   : $vcpp"
-			echo "OS X arch       : $macosx_arch"
 			echo "Decoders        : $full_decoders_list"
 			
 			# build.. well it's written
