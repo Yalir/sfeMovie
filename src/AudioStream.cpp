@@ -68,9 +68,9 @@ namespace sfe {
 		}
 	}
 	
-	AudioStream::Kind AudioStream::getStreamKind(void) const
+	MediaType AudioStream::getStreamKind(void) const
 	{
-		return AUDIO_STREAM;
+		return MEDIA_TYPE_AUDIO;
 	}
 	
 	bool AudioStream::onGetData(sf::SoundStream::Chunk& data)

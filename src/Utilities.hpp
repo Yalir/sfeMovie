@@ -1,6 +1,6 @@
 
 /*
- *  VideoStream.cpp
+ *  Utilities.hpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -22,28 +22,30 @@
  *
  */
 
-extern "C" {
-	#include <libavformat/avformat.h>
-	#include <libavcodec/avcodec.h>
-	#include <libswscale/swscale.h>
-}
+#ifndef SFEMOVIE_UTILITIES_HPP
+#define SFEMOVIE_UTILITIES_HPP
 
-#include "VideoStream.hpp"
+#include "Stream.hpp"
+#include <string>
 
 namespace sfe {
-	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
-	Stream(stream, dataSource, timer)
-	{
-		
-	}
+	/** Display a list of all the available decoders as follow:
+	 * - decoder_type: decoder_name
+	 */
+	void dumpAvailableDecoders(void);
 	
-	VideoStream::~VideoStream(void)
-	{
-		
-	}
-	
-	MediaType VideoStream::getStreamKind(void) const
-	{
-		return MEDIA_TYPE_VIDEO;
-	}
+	/** Gives the string representing the given @a type
+	 *
+	 * Conversion is done as follow:
+	 * MEDIA_TYPE_AUDIO		-> audio
+	 * MEDIA_TYPE_SUBTITLE	-> subtitle
+	 * MEDIA_TYPE_VIDEO		-> video
+	 * MEDIA_TYPE_UNKNOWN	-> unknown
+	 *
+	 * @param type the media type to stringify
+	 * @return the stringified media type
+	 */
+	std::string MediaTypeToString(MediaType type);
 }
+
+#endif

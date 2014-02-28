@@ -30,6 +30,14 @@
 #include <queue>
 
 namespace sfe {
+	
+	enum MediaType {
+		MEDIA_TYPE_AUDIO,
+		MEDIA_TYPE_SUBTITLE,
+		MEDIA_TYPE_VIDEO,
+		MEDIA_TYPE_UNKNOWN
+	};
+	
 	class Stream : public Timer::Observer {
 	public:
 		class DataSource {
@@ -74,17 +82,11 @@ namespace sfe {
 		 */
 		virtual bool needsMoreData(void) const;
 		
-		enum Kind {
-			VIDEO_STREAM,
-			AUDIO_STREAM,
-			SUBTITLE_STREAM
-		};
-		
 		/** Get the stream kind (either audio, video or subtitle stream)
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual Kind getStreamKind(void) const = 0;
+		virtual MediaType getStreamKind(void) const = 0;
 		
 	protected:
 		// Timer::Observer interface

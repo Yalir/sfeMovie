@@ -46,7 +46,7 @@ namespace sfe {
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual Kind getStreamKind(void) const;
+		virtual MediaType getStreamKind(void) const;
 	};
 }
 

@@ -1,6 +1,6 @@
 
 /*
- *  VideoStream.cpp
+ *  Utilities.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -22,28 +22,31 @@
  *
  */
 
-extern "C" {
-	#include <libavformat/avformat.h>
-	#include <libavcodec/avcodec.h>
-	#include <libswscale/swscale.h>
-}
-
-#include "VideoStream.hpp"
+#include "Utilities.hpp"
+#include "Demuxer.hpp"
+#include <set>
+#include <utility>
+#include <iostream>
 
 namespace sfe {
-	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
-	Stream(stream, dataSource, timer)
+	void dumpAvailableDecoders(void)
 	{
+		const std::set<std::pair<std::string, sfe::MediaType> >& decoders = sfe::Demuxer::getAvailableDecoders();
+		std::set<std::pair<std::string, sfe::MediaType> >::const_iterator it;
 		
+		std::cout << decoders.size() << " decoders available:" << std::endl;
+		for (it = decoders.begin(); it != decoders.end();it++) {
+			std::cout << "- " << sfe::MediaTypeToString(it->second) << ": " << it->first << std::endl;
+		}
 	}
 	
-	VideoStream::~VideoStream(void)
+	std::string MediaTypeToString(MediaType type)
 	{
-		
-	}
-	
-	MediaType VideoStream::getStreamKind(void) const
-	{
-		return MEDIA_TYPE_VIDEO;
+		switch (type) {
+			case MEDIA_TYPE_AUDIO:		return "audio";
+			case MEDIA_TYPE_SUBTITLE:	return "subtitle";
+			case MEDIA_TYPE_VIDEO:		return "video";
+			case MEDIA_TYPE_UNKNOWN:	return "unknown";
+		}
 	}
 }

@@ -30,10 +30,17 @@
 #include "Timer.hpp"
 #include <map>
 #include <string>
+#include <set>
+#include <utility>
 
 namespace sfe {
 	class Demuxer : public Stream::DataSource {
 	public:
+		/** Return a list containing the names of all the decoders included
+		 * in this sfeMovie build
+		 */
+		static const std::set<std::pair<std::string, MediaType> >& getAvailableDecoders(void);
+		
 		/** Default constructor
 		 *
 		 * Open a media file and find its streams
@@ -87,6 +94,8 @@ namespace sfe {
 		AVFormatContextRef m_avFormatCtx;
 		bool m_eofReached;
 		std::map<int, Stream*> m_streams;
+		
+		static std::set<std::pair<std::string, MediaType> > g_availableDecoders;
 	};
 }
 

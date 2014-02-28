@@ -14,6 +14,39 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
+	std::set<std::pair<std::string, MediaType> > Demuxer::g_availableDecoders;
+	
+	static void loadDecoders(void)
+	{
+		ONCE(av_register_all());
+		ONCE(avcodec_register_all());
+	}
+	
+	static MediaType AVMediaTypeToMediaType(AVMediaType type)
+	{
+		switch (type) {
+			case AVMEDIA_TYPE_AUDIO:	return MEDIA_TYPE_AUDIO;
+			case AVMEDIA_TYPE_SUBTITLE:	return MEDIA_TYPE_SUBTITLE;
+			case AVMEDIA_TYPE_VIDEO:	return MEDIA_TYPE_VIDEO;
+			default:					return MEDIA_TYPE_UNKNOWN;
+		}
+	}
+	
+	const std::set<std::pair<std::string, MediaType> >& Demuxer::getAvailableDecoders(void)
+	{
+		AVCodecRef codec = NULL;
+		loadDecoders();
+		
+		if (g_availableDecoders.empty()) {
+			while (NULL != (codec = av_codec_next(codec))) {
+				MediaType type = AVMediaTypeToMediaType(codec->type);
+				g_availableDecoders.insert(std::make_pair(avcodec_get_name(codec->id), type));
+			}
+		}
+		
+		return g_availableDecoders;
+	}
+	
 	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer) :
 	m_avFormatCtx(NULL),
 	m_eofReached(false),
@@ -24,8 +57,7 @@ namespace sfe {
 		int err = 0;
 		
 		// Load all the decoders
-		ONCE(av_register_all());
-		ONCE(avcodec_register_all());
+		loadDecoders();
 		
 		// Open the movie file
 		err = avformat_open_input(&m_avFormatCtx, sourceFile.c_str(), NULL, NULL);

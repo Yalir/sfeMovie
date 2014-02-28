@@ -5,7 +5,20 @@
 #include <iostream>
 #include "Demuxer.hpp"
 #include "Timer.hpp"
+#include "Utilities.hpp"
 #include <SFML/Audio.hpp>
+
+BOOST_AUTO_TEST_CASE(DemuxerAvailableCodecsTest)
+{
+	const std::set<std::pair<std::string, sfe::MediaType> >& decoders = sfe::Demuxer::getAvailableDecoders();
+	BOOST_CHECK(!decoders.empty());
+	sfe::dumpAvailableDecoders();
+	
+//	std::set<std::pair<std::string, sfe::MediaType> >::const_iterator it;
+//	for (it = decoders.begin(); it != decoders.end();it++) {
+//		std::cout << "Decoder: " << it->first << " (" << sfe::MediaTypeToString(it->second) << ")" << std::endl;
+//	}
+}
 
 BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 {
@@ -13,6 +26,7 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 	sfe::Timer timer;
 	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("non-existing-file.ogv", timer), std::runtime_error);
 	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small_1.ogv", timer));
+	BOOST_REQUIRE(demuxer != NULL);
 	
 	const std::map<int, sfe::Stream*>& streams = demuxer->getStreams();
 	
@@ -28,10 +42,10 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 		sfe::Stream* stream = it->second;
 		
 		switch (stream->getStreamKind()) {
-			case sfe::Stream::VIDEO_STREAM:
+			case sfe::MEDIA_TYPE_VIDEO:
 				videoStreamCount++;
 				break;
-			case sfe::Stream::AUDIO_STREAM:
+			case sfe::MEDIA_TYPE_AUDIO:
 				audioStreamCount++;
 				break;
 			default:
@@ -81,12 +95,8 @@ BOOST_AUTO_TEST_CASE(DemuxerShortMP3Test)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
-	demuxer = new sfe::Demuxer("small_2.mp3", timer);
-	
-	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	timer.play();
-	sf::sleep(sf::seconds(3));
-	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+	// With free codecs only, the demuxer is not supposed to be able to load MP3 medias
+	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("small_2.mp3", timer), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerShortFLACTest)
