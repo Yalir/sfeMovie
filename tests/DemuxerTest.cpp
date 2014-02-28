@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 		}
 	}
 	
-	BOOST_CHECK(videoStreamCount == 1);
+	BOOST_CHECK(videoStreamCount == 0); // Until VideoStream is implemented, its loading is disabled
 	BOOST_CHECK(audioStreamCount == 1);
 	
 	// Check stream feeding
