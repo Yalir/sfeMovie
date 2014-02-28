@@ -38,8 +38,8 @@ endif()
 
 # Set some env vars
 set (LIB_NAME sfeMovie)
-set (VERSION_MAJOR 1)
-set (VERSION_MINOR 1)
+set (VERSION_MAJOR 2)
+set (VERSION_MINOR 0)
 set (COMPILER_FLAGS "")
 set (LINKER_FLAGS "")
 
