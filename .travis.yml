@@ -9,7 +9,7 @@ script:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libboost-test-dev libboost-thread-dev libopenal1 libglew1.5 libjpeg62
+  - sudo apt-get install -qq libboost-test-dev libboost-thread-dev libboost-system-dev libopenal1 libglew1.5 libjpeg62
 
 before_script:
   - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
