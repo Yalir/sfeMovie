@@ -30,12 +30,6 @@ endif()
 set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
 set (BUILD_DEMUXER_CLI TRUE CACHE BOOL "TRUE to build the Demuxer command line program (to check file contents and play audio)")
-set (BUILD_FFMPEG TRUE) # CACHE BOOL "TRUE to build the provided FFmpeg, FALSE to skip rebuilding FFmpeg")
-
-if (${BUILD_FFMPEG} AND NOT ${LINK_AGAINST_INTERNAL_FFMPEG})
-	message(WARNING "BUILD_FFMPEG set to true but LINK_AGAINST_INTERNAL_FFMPEG is false: inconsistent behaviour. LINK_AGAINST_INTERNAL_FFMPEG set to true.")
-	set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries" FORCE)
-endif()
 
 # Set some env vars
 set (LIB_NAME sfeMovie)
@@ -121,10 +115,6 @@ if (LINK_AGAINST_INTERNAL_FFMPEG)
     set (FFMPEG_LIBRARY_DIR "${BUILTIN_FFMPEG_BUILD_DIR}")
     ffmpeg_paths("${BUILTIN_FFMPEG_BUILD_DIR}")
     check_ffmpeg_headers()
-
-    if(NOT ${BUILD_FFMPEG})
-    	check_ffmpeg_libraries()
-    endif()
 else()
 	# Use user's FFmpeg libraries
 	set (FFMPEG_INCLUDE_DIR "" CACHE PATH "Path to the directory containing the FFmpeg headers directories (libavcodec, libavformat, etc ; leave empty to let CMake find them)")
@@ -193,7 +183,7 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	else()
 		set (EXTERNAL_LIBRARIES_DIR ${EXTERNAL_LIBRARIES_DIR} "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
 		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "z")
+		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "z") # TODO: use find_library() and discard EXTERNAL_LIBRARIES_DIR
 	endif()
 	
 	add_definitions(-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS)
@@ -211,7 +201,7 @@ message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PR
 message (STATUS "Libraries directories: ${EXTERNAL_LIBRARIES_DIR}")
 
 # Build FFmpeg if needed
-if (${LINK_AGAINST_INTERNAL_FFMPEG} AND ${BUILD_FFMPEG})
+if (${LINK_AGAINST_INTERNAL_FFMPEG})
 	if (WINDOWS)
 		set( MINGW_DIR C:/MinGW CACHE PATH "Set the path for the MinGW environment")
 		if (EXISTS "${MINGW_DIR}" AND IS_DIRECTORY "${MINGW_DIR}")
