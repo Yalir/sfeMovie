@@ -157,6 +157,14 @@ endforeach()
 find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
 set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_LIBRARY} ${SFML_SYSTEM_LIBRARY})
 
+#################################################################################################################
+# =============================================== Boost SETUP ================================================= #
+#################################################################################################################
+
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME OFF) 
+find_package(Boost 1.46 COMPONENTS thread REQUIRED)
 
 #################################################################################################################
 # ============================================== sfeMovie SETUP =============================================== #
@@ -196,10 +204,10 @@ endif()
 source_group(Sources FILES ${SOURCE_FILES})
 
 # Set the search directories for compiling and link editing
-include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
+include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 link_directories (${EXTERNAL_LIBRARIES_DIR})
 
-message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR}")
+message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR} ${Boost_INCLUDE_DIRS}")
 message (STATUS "Libraries directories: ${EXTERNAL_LIBRARIES_DIR}")
 
 # Build FFmpeg if needed
@@ -368,7 +376,7 @@ if (LINK_AGAINST_INTERNAL_FFMPEG)
 endif()
 
 # Define the libraries sfe should link against
-target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES})
+target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
 
 # Sample building
 if (BUILD_SFEMOVIE_SAMPLE)
