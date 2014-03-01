@@ -154,7 +154,7 @@ set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.46 COMPONENTS thread REQUIRED)
+find_package(Boost 1.46 COMPONENTS thread system REQUIRED)
 
 #################################################################################################################
 # ============================================== sfeMovie SETUP =============================================== #
