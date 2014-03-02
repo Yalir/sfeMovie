@@ -142,7 +142,7 @@ if (BUILD_SFEMOVIE_SAMPLE)
 endif ()
 
 # Demuxer command line tool
-set(BUILD_DEMUXER_CLI TRUE CACHE BOOL "TRUE to build the Demuxer command line program (to check file contents and play audio)")
+set(BUILD_DEMUXER_CLI FALSE CACHE BOOL "TRUE to build the Demuxer command line program (to check file contents and play audio)")
 if (BUILD_DEMUXER_CLI)
 	add_subdirectory(DemuxerCLI)
 endif()
