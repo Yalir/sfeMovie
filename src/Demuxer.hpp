@@ -25,6 +25,7 @@
 #ifndef SFEMOVIE_DEMUXER_HPP
 #define SFEMOVIE_DEMUXER_HPP
 
+#include <SFML/System.hpp>
 #include "Macros.hpp"
 #include "Stream.hpp"
 #include "Timer.hpp"
@@ -95,6 +96,7 @@ namespace sfe {
 		bool m_eofReached;
 		std::map<int, Stream*> m_streams;
 		std::map<int, std::string> m_ignoredStreams;
+		sf::Mutex m_synchronized;
 		
 		static std::set<std::pair<std::string, MediaType> > g_availableDecoders;
 	};

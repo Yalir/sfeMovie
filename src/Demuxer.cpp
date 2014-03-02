@@ -1,4 +1,27 @@
 
+/*
+ *  Stream.cpp
+ *  sfeMovie project
+ *
+ *  Copyright (C) 2010-2014 Lucas Soltic
+ *  lucas.soltic@orange.fr
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ */
+
 extern "C"
 {
 #include <libavformat/avformat.h>
@@ -10,6 +33,8 @@ extern "C"
 #include "VideoStream.hpp"
 #include "AudioStream.hpp"
 #include "SubtitleStream.hpp"
+#include "Threads.hpp"
+#include "Log.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -51,7 +76,8 @@ namespace sfe {
 	m_avFormatCtx(NULL),
 	m_eofReached(false),
 	m_streams(),
-	m_ignoredStreams()
+	m_ignoredStreams(),
+	m_synchronized()
 	{
 		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
 		
@@ -77,12 +103,12 @@ namespace sfe {
 				switch (ffstream->codec->codec_type) {
 //					case AVMEDIA_TYPE_VIDEO:
 //						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
-//						std::cout << "Loaded " << avcodec_get_name(ffstream->codec->codec_id) << " video stream" << std::endl;
+//						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
 //						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
 						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
-						std::cout << "Loaded " << avcodec_get_name(ffstream->codec->codec_id) << " audio stream" << std::endl;
+						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
 						break;
 						
 						/** TODO
@@ -93,7 +119,7 @@ namespace sfe {
 						
 					default:
 						m_ignoredStreams[ffstream->index] = std::string(std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
-						std::cerr << "Demuxer::Demuxer() - '" << m_ignoredStreams[ffstream->index] << "' stream ignored" << std::endl;
+						sfeLogWarning(m_ignoredStreams[ffstream->index] + "' stream ignored");
 						break;
 				}
 			} catch (std::runtime_error& e) {
@@ -121,6 +147,9 @@ namespace sfe {
 	
 	void Demuxer::feedStream(Stream& stream)
 	{
+		sf::Lock l(m_synchronized);
+		sfeLogDebug(Threads::currentThreadName());
+		
 		while (!didReachEndOfFile() && stream.needsMoreData()) {
 			AVPacketRef pkt = readPacket();
 			
@@ -128,7 +157,7 @@ namespace sfe {
 				m_eofReached = true;
 			} else {
 				if (!distributePacket(pkt)) {
-					std::cerr << "Demuxer::feedStream() - " << m_ignoredStreams[pkt->stream_index] << " packet not handled and dropped" << std::endl;
+					sfeLogWarning(m_ignoredStreams[pkt->stream_index] + " packet not handled and dropped");
 					av_free_packet(pkt);
 					av_free(pkt);
 				}
@@ -143,6 +172,9 @@ namespace sfe {
 	
 	AVPacketRef Demuxer::readPacket(void)
 	{
+		sf::Lock l(m_synchronized);
+		sfeLogDebug(Threads::currentThreadName());
+		
 		AVPacket *pkt = NULL;
 		int err = 0;
 		
@@ -163,7 +195,9 @@ namespace sfe {
 	
 	bool Demuxer::distributePacket(AVPacketRef packet)
 	{
+		sf::Lock l(m_synchronized);
 		CHECK(packet, "Demuxer::distributePacket() - invalid argument");
+		sfeLogDebug(Threads::currentThreadName());
 		
 		bool result = false;
 		std::map<int, Stream*>::iterator it = m_streams.find(packet->stream_index);
@@ -178,6 +212,9 @@ namespace sfe {
 	
 	void Demuxer::requestMoreData(Stream& starvingStream)
 	{
+		sf::Lock l(m_synchronized);
+		sfeLogDebug(Threads::currentThreadName());
+		
 		feedStream(starvingStream);
 	}
 }

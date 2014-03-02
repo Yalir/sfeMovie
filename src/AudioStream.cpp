@@ -11,6 +11,8 @@ extern "C" {
 #include <cstring>
 #include <iostream>
 #include "AudioStream.hpp"
+#include "Threads.hpp"
+#include "utils.hpp"
 
 namespace sfe {
 	AudioStream::AudioStream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
@@ -75,6 +77,10 @@ namespace sfe {
 	
 	bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
 	{
+		Threads::nameCurrentThread(std::string("") + av_get_media_type_string(m_stream->codec->codec_type) +
+						  "/" + avcodec_get_name(m_stream->codec->codec_id) + " stream ("
+						  + ftostr(m_streamID) + ")");
+		
 		AVPacketRef packet;
 		data.samples = m_samplesBuffer;
 		
