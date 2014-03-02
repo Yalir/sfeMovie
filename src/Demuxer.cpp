@@ -145,6 +145,21 @@ namespace sfe {
 		return m_streams;
 	}
 	
+	
+	std::set<Stream*> Demuxer::getStreamsOfType(MediaType type) const
+	{
+		std::set<Stream*> streamSet;
+		
+		std::map<int, Stream*>::const_iterator it;
+		
+		for (it = m_streams.begin(); it != m_streams.end(); it++) {
+			if (it->second->getStreamKind() == type)
+				streamSet.insert(it->second);
+		}
+		
+		return streamSet;
+	}
+	
 	void Demuxer::feedStream(Stream& stream)
 	{
 		sf::Lock l(m_synchronized);

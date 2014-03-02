@@ -59,6 +59,13 @@ namespace sfe {
 		 */
 		const std::map<int, Stream*>& getStreams(void) const;
 		
+		/** Return a set containing all the streams found in the media that match the given type
+		 *
+		 * @param the media type against which the returned streams should be filtered
+		 * @return the audio streams
+		 */
+		std::set<Stream*> getStreamsOfType(MediaType type) const;
+		
 		/** Read encoded data from the media and makes sure that the given stream
 		 * has enough data
 		 *
