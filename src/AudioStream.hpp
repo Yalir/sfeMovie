@@ -83,6 +83,7 @@ namespace sfe {
 		void resampleFrame(AVFrameRef frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
 		
 		// Timer::Observer interface
+		virtual void willPlay(const Timer &timer);
 		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
 		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
 		virtual void didStop(const Timer& timer, Timer::Status previousStatus);

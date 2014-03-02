@@ -216,9 +216,21 @@ namespace sfe {
 		outSamples = m_dstData[0];
 	}
 	
+	void AudioStream::willPlay(const Timer &timer)
+	{
+		sf::Time initialTime = sf::SoundStream::getPlayingOffset();
+		sf::SoundStream::play();
+		
+		// Some audio drivers take time before the sound is actually played
+		// To avoid desynchronization with the timer, we don't return
+		// until the audio stream is actually started
+		while (sf::SoundStream::getPlayingOffset() == initialTime)
+			sf::sleep(sf::milliseconds(10));
+	}
+	
 	void AudioStream::didPlay(const Timer& timer, Timer::Status previousStatus)
 	{
-		sf::SoundStream::play();
+		CHECK(getStatus() == Playing, "AudioStream::didPlay() - willPlay() not executed!");
 	}
 	
 	void AudioStream::didPause(const Timer& timer, Timer::Status previousStatus)
