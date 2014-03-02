@@ -151,7 +151,7 @@ set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_
 # =============================================== Boost SETUP ================================================= #
 #################################################################################################################
 
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
 find_package(Boost 1.46 COMPONENTS thread system REQUIRED)
@@ -273,13 +273,10 @@ if (${LINK_AGAINST_INTERNAL_FFMPEG})
 		set(VS_ARG "novs")
 	endif()
 	
-	if (MACOSX)
-		set(ARCH_ARG ${CMAKE_OSX_ARCHITECTURES})
-	else()
-		set(ARCH_ARG notosx)
-	endif()
-	
-	RunShell(${LIB_NAME} PRE_LINK ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${ARCH_ARG} ${ENABLED_DECODERS})
+	add_shell_command(FFmpeg
+		OUTPUT ${FFMPEG_LIBRARIES}
+		DEPENDS "${CMAKE_BINARY_DIR}/CMakeCache.txt"
+		COMMAND ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${ENABLED_DECODERS})
 endif()
 
 # Define the source files sfe should compile

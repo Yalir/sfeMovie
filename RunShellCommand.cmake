@@ -1,19 +1,24 @@
+include(CMakeParseArguments)
 
-function(RunShell target phase shell_command)
-	set(cmd ${ARGV})
-	list(REMOVE_AT cmd 0 1)
-	
+function(add_shell_command customTargetName)
+	cmake_parse_arguments(THIS "" "" "OUTPUT;DEPENDS;COMMAND" ${ARGN})
+
+	if (NOT DEFINED THIS_OUTPUT OR NOT DEFINED THIS_COMMAND OR NOT DEFINED THIS_DEPENDS)
+		message(FATAL_ERROR "Invalid arguments given to add_shell_command(newTargetName DEPENDS generatedDependencies COMMAND shell_command")
+	endif()
+
+
 	if (WINDOWS)
-		add_custom_target(FFmpeg ALL DEPENDS ${FFMPEG_LIBRARIES}) 
-		add_custom_command(OUTPUT ${FFMPEG_LIBRARIES}
-					COMMAND BatchBridgeToShell ARGS ${MINGW_DIR} ${cmd}
-					DEPENDS "${CMAKE_BINARY_DIR}/CMakeCache.txt"
+		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 
+		add_custom_command(OUTPUT ${THIS_OUTPUT}
+					COMMAND BatchBridgeToShell ARGS ${MINGW_DIR} ${THIS_COMMAND}
+					DEPENDS "${THIS_DEPENDS}"
 					WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	else()
-		add_custom_target(FFmpeg ALL DEPENDS ${FFMPEG_LIBRARIES}) 
-		add_custom_command(OUTPUT ${FFMPEG_LIBRARIES}
-					COMMAND bash ARGS -c \"${cmd}\"
-					DEPENDS "${CMAKE_BINARY_DIR}/CMakeCache.txt"
+		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 
+		add_custom_command(OUTPUT ${THIS_OUTPUT}
+					COMMAND bash ARGS -c \"${THIS_COMMAND}\"
+					DEPENDS "${THIS_DEPENDS}"
 					WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	endif()
-endfunction(RunShell)
+endfunction(add_shell_command)
