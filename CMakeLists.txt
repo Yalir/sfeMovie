@@ -9,6 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 project (sfeMovie)
+cmake_policy(SET CMP0022 OLD)
 
 # Import required CMake files
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
@@ -118,6 +119,7 @@ add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 # Define the libraries sfe should link against
 message (STATUS "Link sfeMovie against: ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES}")
 target_link_libraries (${SFEMOVIE_LIB} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(${SFEMOVIE_LIB} LINK_INTERFACE_LIBRARIES)
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
 	add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD

@@ -15,11 +15,13 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF) 
 find_package(Boost 1.46 COMPONENTS unit_test_framework REQUIRED)
 
+find_package (SFML 2 COMPONENTS system REQUIRED)
+
 macro(add_full_test testname)
 	include_directories(${Boost_INCLUDE_DIRS})
 	link_directories(${EXTERNAL_LIBRARIES_DIR})
 	add_executable(${testname} ${testname}.cpp)
-	target_link_libraries(${testname} ${Boost_LIBRARIES})
+	target_link_libraries(${testname} ${Boost_LIBRARIES} ${SFML_SYSTEM_LIBRARY})
 
 	if (WINDOWS)
 		target_link_libraries(${testname} ${SFEMOVIE_LIB})

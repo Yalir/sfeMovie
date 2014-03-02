@@ -8,4 +8,7 @@ add_executable(
 target_link_libraries(
     ${DEMUXER_CLI}
     ${SFEMOVIE_LIB}
+    ${SFML_SYSTEM_LIBRARY}
 )
+
+message(STATUS "target_link_libraries(${DEMUXER_CLI} ${SFEMOVIE_LIB})")
