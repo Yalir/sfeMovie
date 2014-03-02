@@ -20,8 +20,8 @@ macro(add_full_test testname)
 	target_link_libraries(${testname} ${Boost_LIBRARIES})
 
 	if (WINDOWS)
-		target_link_libraries(${testname} sfeMovie)
-		add_dependencies(${testname} sfeMovie)
+		target_link_libraries(${testname} ${SFEMOVIE_LIB})
+		add_dependencies(${testname} ${SFEMOVIE_LIB})
 
 		# Copy DLLs next to the test executables
 		add_custom_command(TARGET ${testname} POST_BUILD

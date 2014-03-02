@@ -32,7 +32,7 @@ set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
 set (BUILD_DEMUXER_CLI TRUE CACHE BOOL "TRUE to build the Demuxer command line program (to check file contents and play audio)")
 
 # Set some env vars
-set (LIB_NAME sfeMovie)
+set (SFEMOVIE_LIB sfeMovie)
 set (VERSION_MAJOR 2)
 set (VERSION_MINOR 0)
 set (COMPILER_FLAGS "")
@@ -283,11 +283,11 @@ if (${LINK_AGAINST_INTERNAL_FFMPEG})
 endif()
 
 # Define the source files sfe should compile
-add_library (${LIB_NAME} SHARED ${SOURCE_FILES})
-add_dependencies(${LIB_NAME} FFmpeg)
+add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
+add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
-	add_custom_command(TARGET ${LIB_NAME} POST_BUILD
+	add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 			"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
 			${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
@@ -296,7 +296,7 @@ endif()
 
 add_subdirectory(tests)
 
-set_target_properties(${LIB_NAME} PROPERTIES
+set_target_properties(${SFEMOVIE_LIB} PROPERTIES
 					  DEBUG_POSTFIX "-d"
 					  COMPILE_FLAGS "${COMPILER_FLAGS}"
 					  LINK_FLAGS "${LINKER_FLAGS}"
@@ -306,17 +306,17 @@ set_target_properties(${LIB_NAME} PROPERTIES
 
 if (MACOSX)
     # edit target properties
-    set_target_properties(${LIB_NAME} PROPERTIES 
+    set_target_properties(${SFEMOVIE_LIB} PROPERTIES 
                           FRAMEWORK TRUE
                           FRAMEWORK_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}
-                          MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${LIB_NAME}
+                          MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${SFEMOVIE_LIB}
                           MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}
                           MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}
                           PUBLIC_HEADER ${SFE_HEADERS} )
 
 
     # adapt install directory to allow distributing dylibs/frameworks in user’s frameworks/application bundle
-    set_target_properties(${LIB_NAME} PROPERTIES 
+    set_target_properties(${SFEMOVIE_LIB} PROPERTIES 
                           BUILD_WITH_INSTALL_RPATH 1 
                           INSTALL_NAME_DIR "@rpath")
 endif()
@@ -326,12 +326,12 @@ if (NOT MACOSX)
 	install(DIRECTORY include
 			DESTINATION .)
 
-	install(TARGETS ${LIB_NAME}
+	install(TARGETS ${SFEMOVIE_LIB}
         RUNTIME DESTINATION bin COMPONENT bin
         LIBRARY DESTINATION lib${LIB_SUFFIX} COMPONENT bin 
         ARCHIVE DESTINATION lib${LIB_SUFFIX} COMPONENT devel)
 else()
-	install(TARGETS ${LIB_NAME}
+	install(TARGETS ${SFEMOVIE_LIB}
             FRAMEWORK DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX}
             COMPONENT bin)
 endif()
@@ -366,7 +366,7 @@ if (LINK_AGAINST_INTERNAL_FFMPEG)
 endif()
 
 # Define the libraries sfe should link against
-target_link_libraries (${LIB_NAME} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries (${SFEMOVIE_LIB} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
 
 # Sample building
 if (BUILD_SFEMOVIE_SAMPLE)

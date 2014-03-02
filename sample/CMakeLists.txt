@@ -7,7 +7,6 @@ add_executable(
 
 target_link_libraries(
     ${SFEMOVIE_SAMPLE}
-    ${LIB_NAME}
+    ${SFEMOVIE_LIB}
     ${SFML_LIBRARIES}
-    ${FFMPEG_LIBRARIES}
 )

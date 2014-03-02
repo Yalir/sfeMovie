@@ -7,6 +7,5 @@ add_executable(
 
 target_link_libraries(
     ${DEMUXER_CLI}
-    ${LIB_NAME}
-    ${SFML_LIBRARIES}
+    ${SFEMOVIE_LIB}
 )
