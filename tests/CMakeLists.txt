@@ -1,4 +1,6 @@
 
+include(CTest)
+
 if (CMAKE_CONFIGURATION_TYPES)
     add_custom_target(VERBOSE_RUN_TESTS COMMAND ${CMAKE_CTEST_COMMAND}
         --force-new-ctest-process --verbose

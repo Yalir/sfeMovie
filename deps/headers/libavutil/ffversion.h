@@ -1,4 +1,0 @@
-#ifndef AVUTIL_FFVERSION_H
-#define AVUTIL_FFVERSION_H
-#define FFMPEG_VERSION "N-60740-ga88dee8"
-#endif /* AVUTIL_FFVERSION_H */

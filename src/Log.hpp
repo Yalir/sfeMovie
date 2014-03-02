@@ -29,8 +29,8 @@
 #include <sstream>
 #include <boost/current_function.hpp>
 
-#define sfeLogDebug(message) sfe::Log::debug(std::string("") + message + " (in " + std::string(BOOST_CURRENT_FUNCTION) + " line " + sfe::s(__LINE__) + ")")
-#define sfeLogWarning(message) sfe::Log::warning(std::string("") + message + " (in " + std::string(BOOST_CURRENT_FUNCTION) + " line " + sfe::s(__LINE__) + ")")
+#define sfeLogDebug(message) sfe::Log::debug(std::string("") + message + " (in " + std::string(__func__) + "() line " + sfe::s(__LINE__) + ")")
+#define sfeLogWarning(message) sfe::Log::warning(std::string("") + message + " (in " + std::string(__func__) + "() line " + sfe::s(__LINE__) + ")")
 
 namespace sfe {
 	namespace Log {

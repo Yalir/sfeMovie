@@ -34,17 +34,17 @@ function build_yasm()
     	rm -rf "${temporary_yasm_dir}"
     fi
 
-    if test -f "${source_dir}/deps/${yasm_archive}" ; then
+    if test -f "${source_dir}/FFmpeg/${yasm_archive}" ; then
 		echo "Extracting YASM archive..."
 
 		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
 		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
-		src=`echo "${source_dir}/deps/${yasm_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
+		src=`echo "${source_dir}/FFmpeg/${yasm_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 		echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
 		tar -C "${temporary_dir}" -xzf "${src}"
 		check_err
 	else
-		echo "Cannot find YASM archive at ${source_dir}/deps/${yasm_archive}"
+		echo "Cannot find YASM archive at ${source_dir}/FFmpeg/${yasm_archive}"
 		exit 1
 	fi
 
@@ -76,17 +76,17 @@ function build_ffmpeg()
     	rm -rf "${temporary_ffmpeg_dir}"
     fi
 
-	if test -f "${source_dir}/deps/${ffmpeg_archive}" ; then
+	if test -f "${source_dir}/FFmpeg/${ffmpeg_archive}" ; then
 		echo "Extracting FFmpeg archive..."
 
 		# On Windows, MinGW's tar fails at resolving paths starting with "C:/", thus we replace the beginning with "/C/" which works fine and
 		# won't affect others OSs in most cases (NB: we also handle the cases where the root disk is not C)
-		src=`echo "${source_dir}/deps/${ffmpeg_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
+		src=`echo "${source_dir}/FFmpeg/${ffmpeg_archive}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 		echo "tar -C \"${temporary_dir}\" -xjf \"${src}\""
 		tar -C "${temporary_dir}" -xjf "${src}"
 		check_err
 	else
-		echo "Cannot find FFmpeg archive at ${source_dir}/deps/${ffmpeg_archive}"
+		echo "Cannot find FFmpeg archive at ${source_dir}/FFmpeg/${ffmpeg_archive}"
 		exit 1
 	fi
 

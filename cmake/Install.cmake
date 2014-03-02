@@ -1,0 +1,15 @@
+
+# Install sfeMovie library and headers
+if (LINUX OR WINDOWS)
+	install(DIRECTORY include
+			DESTINATION .)
+
+	install(TARGETS ${SFEMOVIE_LIB}
+        RUNTIME DESTINATION bin COMPONENT bin
+        LIBRARY DESTINATION lib${LIB_SUFFIX} COMPONENT bin 
+        ARCHIVE DESTINATION lib${LIB_SUFFIX} COMPONENT devel)
+else()
+	install(TARGETS ${SFEMOVIE_LIB}
+            FRAMEWORK DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX}
+            COMPONENT bin)
+endif()
