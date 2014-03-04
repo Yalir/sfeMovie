@@ -9,7 +9,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 project (sfeMovie)
-cmake_policy(SET CMP0022 OLD)
 
 # Import required CMake files
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
