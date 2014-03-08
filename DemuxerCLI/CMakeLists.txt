@@ -11,4 +11,10 @@ target_link_libraries(
     ${SFML_SYSTEM_LIBRARY}
 )
 
+if (MACOSX)
+	set_target_properties(${DEMUXER_CLI} PROPERTIES 
+	                      BUILD_WITH_INSTALL_RPATH 1 
+	                      INSTALL_RPATH "@executable_path/")
+endif()
+
 message(STATUS "target_link_libraries(${DEMUXER_CLI} ${SFEMOVIE_LIB})")

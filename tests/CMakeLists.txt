@@ -34,7 +34,9 @@ macro(add_full_test testname)
 			$<TARGET_FILE_DIR:${testname}>)
 	elseif(MACOSX)
 		target_link_libraries(${testname} sfeMovie)
-		set_target_properties(${testname} PROPERTIES INSTALL_RPATH "@rpath")
+		set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES 
+		                      BUILD_WITH_INSTALL_RPATH 1 
+		                      INSTALL_RPATH "@executable_path/")
 
 		# Copy dylibs next to the test executables
 		add_custom_command(TARGET ${testname} POST_BUILD

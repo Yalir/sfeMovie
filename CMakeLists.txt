@@ -124,7 +124,7 @@ if (${LINK_AGAINST_INTERNAL_FFMPEG})
 	add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 			"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
-			${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
+			$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries)
 endif()
 
 include (${CMAKE_SOURCE_DIR}/cmake/Properties.cmake)
