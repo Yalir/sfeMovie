@@ -88,6 +88,7 @@ namespace sfe {
 		 */
 		virtual MediaType getStreamKind(void) const = 0;
 		
+		bool didRequestFeeding;
 	protected:
 		// Timer::Observer interface
 		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);

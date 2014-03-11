@@ -1,6 +1,10 @@
 
+#include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
-#include <sfeMovie/Movie.hpp>
+#include "Demuxer.hpp"
+#include "Utilities.hpp"
+#include "Log.hpp"
+#include "VideoStream.hpp"
 #include <iostream>
 
 /*
@@ -15,39 +19,58 @@
  *  - F key to toggle between windowed and fullscreen mode
  */
 
+void my_pause()
+{
+#ifdef SFML_SYSTEM_WINDOWS
+	system("PAUSE");
+#endif
+}
+
 int main(int argc, const char *argv[])
 {
 	// Some settings
 	const std::string windowTitle = "sfeMovie Player";
-	const int windowWidth = 800;
-	const int windowHeight = 600;
-	bool fullscreen = false;
+	const int windowWidth = 1280;
+	const int windowHeight = 800;
 	
 	if (argc < 2)
 	{
 		std::cout << "Usage: " << std::string(argv[0]) << " movie_path" << std::endl;
+		my_pause();
 		return 1;
 	}
 	
-	std::string movieFile = std::string(argv[1]);
-	std::cout << "Going to open movie file \"" << movieFile << "\"" << std::endl;
+	std::string mediaFile = std::string(argv[1]);
+	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
 	
 	// Create window
 	sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
 	
-	// Create and open movie
-	sfe::Movie movie;
-	if (!movie.openFromFile(movieFile))
-		return 1;
-
+	sfe::dumpAvailableDecoders();
+	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
+	
+	sfe::Timer timer;
+	sfe::Demuxer demuxer(mediaFile, timer);
+	
+	const std::map<int, sfe::Stream*>& vStreams = demuxer.getStreams();
+	sfe::VideoStream* vStream = NULL;
+	
+	if (vStreams.size()) {
+		vStream = dynamic_cast<sfe::VideoStream*>(vStreams.begin()->second);
+	}
+	
+	timer.play();
+	
+	sf::Sprite sp;
+	
+	if (vStream) {
+		sp.setTexture(vStream->getVideoTexture());
+	}
+	
 	// Scale movie to the window drawing area and enable VSync
-	movie.resizeToFrame(0, 0, window.getSize().x, window.getSize().y);
 	window.setVerticalSyncEnabled(true);
 
-	// Start movie playback
-	movie.play();
-
-	while (window.isOpen())
+	while (window.isOpen() && !demuxer.didReachEndOfFile())
 	{
 		sf::Event ev;
 		while (window.pollEvent(ev))
@@ -59,60 +82,18 @@ int main(int argc, const char *argv[])
 			{
 				window.close();
 			}
-			
-			// Handle basic controls
-			else if (ev.type == sf::Event::KeyPressed)
-			{
-				// Play/Pause
-				if (ev.key.code == sf::Keyboard::Space)
-				{
-					if (movie.getStatus() != sfe::Movie::Playing)
-						movie.play();
-					else
-						movie.pause();
-				}
-				
-				// Stop
-				if (ev.key.code == sf::Keyboard::S)
-					movie.stop();
-				
-				// Restart playback
-				if (ev.key.code == sf::Keyboard::R)
-				{
-					movie.stop();
-					movie.play();
-				}
-				
-				// Toggle fullscreen mode
-				if (ev.key.code == sf::Keyboard::F)
-				{
-					fullscreen = !fullscreen;
-					
-					// We want to switch to the full screen mode
-					if (fullscreen)
-					{
-						window.create(sf::VideoMode::getDesktopMode(), windowTitle, sf::Style::Fullscreen);
-						window.setVerticalSyncEnabled(true);
-						movie.resizeToFrame(0, 0, window.getSize().x, window.getSize().y);
-					}
-					
-					// We want to switch back to the windowed mode
-					else
-					{
-						window.create(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
-						window.setVerticalSyncEnabled(true);
-						movie.resizeToFrame(0, 0, window.getSize().x, window.getSize().y);
-					}
-				}
-			}
 		}
+		
+		demuxer.updateVideoStreams();
 		
 		// Render movie
 		window.clear();
-		window.draw(movie);
+		window.draw(sp);
 		window.display();
 	}
 
+//	timer.stop();
+	
 	return 0;
 }
 

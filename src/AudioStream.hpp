@@ -89,7 +89,6 @@ namespace sfe {
 		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
 		
 		// Public properties
-		unsigned m_channelsCount;
 		unsigned m_sampleRate;
 		
 		// Private data

@@ -35,6 +35,7 @@ extern "C"
 #include "SubtitleStream.hpp"
 #include "Threads.hpp"
 #include "Log.hpp"
+#include "Utilities.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -101,10 +102,10 @@ namespace sfe {
 			
 			try {
 				switch (ffstream->codec->codec_type) {
-//					case AVMEDIA_TYPE_VIDEO:
-//						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
-//						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
-//						break;
+					case AVMEDIA_TYPE_VIDEO:
+						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
+						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
+						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
 						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
@@ -163,7 +164,10 @@ namespace sfe {
 	void Demuxer::feedStream(Stream& stream)
 	{
 		sf::Lock l(m_synchronized);
-		sfeLogDebug(Threads::currentThreadName());
+		stream.didRequestFeeding = true;
+		sfeLogDebug("feedStream(" + MediaTypeToString(stream.getStreamKind()) + ")");
+		
+//		sfeLogDebug(Threads::currentThreadName());
 		
 		while (!didReachEndOfFile() && stream.needsMoreData()) {
 			AVPacketRef pkt = readPacket();
@@ -180,6 +184,19 @@ namespace sfe {
 		}
 	}
 	
+	void Demuxer::updateVideoStreams(void)
+	{
+		std::set<Stream*> streams = getStreamsOfType(MEDIA_TYPE_VIDEO);
+		std::set<Stream*>::iterator it;
+		
+		for (it = streams.begin();it != streams.end(); it++) {
+			VideoStream* vStream = dynamic_cast<VideoStream*>(*it);
+			CHECK(vStream, "Demuxer::updateVideoStreams() - got non video streams");
+			
+			vStream->updateTexture();
+		}
+	}
+	
 	bool Demuxer::didReachEndOfFile(void) const
 	{
 		return m_eofReached;
@@ -188,7 +205,7 @@ namespace sfe {
 	AVPacketRef Demuxer::readPacket(void)
 	{
 		sf::Lock l(m_synchronized);
-		sfeLogDebug(Threads::currentThreadName());
+//		sfeLogDebug(Threads::currentThreadName());
 		
 		AVPacket *pkt = NULL;
 		int err = 0;
@@ -212,7 +229,7 @@ namespace sfe {
 	{
 		sf::Lock l(m_synchronized);
 		CHECK(packet, "Demuxer::distributePacket() - invalid argument");
-		sfeLogDebug(Threads::currentThreadName());
+//		sfeLogDebug(Threads::currentThreadName());
 		
 		bool result = false;
 		std::map<int, Stream*>::iterator it = m_streams.find(packet->stream_index);
@@ -228,7 +245,7 @@ namespace sfe {
 	void Demuxer::requestMoreData(Stream& starvingStream)
 	{
 		sf::Lock l(m_synchronized);
-		sfeLogDebug(Threads::currentThreadName());
+//		sfeLogDebug(Threads::currentThreadName());
 		
 		feedStream(starvingStream);
 	}

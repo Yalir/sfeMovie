@@ -48,7 +48,7 @@ namespace sfe {
 		 *
 		 * @param mask the kind of messages that should be logged
 		 */
-		void setMask(Mask mask);
+		void setMask(int mask);
 		
 		/** Log a debug @a message is the currently set mask allows it
 		 *

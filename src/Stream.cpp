@@ -31,12 +31,14 @@ extern "C"
 
 #include "Stream.hpp"
 #include "utils.hpp"
+#include "Utilities.hpp"
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
 
 namespace sfe {
 	Stream::Stream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	didRequestFeeding(false),
 	m_stream(NULL),
 	m_dataSource(dataSource),
 	m_timer(timer),
@@ -70,6 +72,7 @@ namespace sfe {
 		avcodec_close(m_codecCtx);
 		
 		AVPacketRef pkt;
+#warning TODO the pop method will force reading further
 		while (NULL != (pkt = popEncodedData()))
 		{
 			av_free_packet(pkt);
@@ -87,6 +90,7 @@ namespace sfe {
 	{
 		AVPacketRef result = NULL;
 		
+//		BENCH_START
 		if (!m_packetList.size()) {
 			m_dataSource.requestMoreData(*this);
 		}
@@ -95,6 +99,7 @@ namespace sfe {
 			result = m_packetList.front();
 			m_packetList.pop();
 		}
+//		BENCH_END(__func__)
 		
 		return result;
 	}

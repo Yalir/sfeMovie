@@ -27,6 +27,7 @@
 
 #include "Macros.hpp"
 #include "Stream.hpp"
+#include <SFML/Graphics.hpp>
 
 namespace sfe {
 	class VideoStream : public Stream {
@@ -47,6 +48,73 @@ namespace sfe {
 		 * @return the kind of stream represented by this stream
 		 */
 		virtual MediaType getStreamKind(void) const;
+		
+		/** Get the SFML texture that contains the latest video frame
+		 */
+		sf::Texture& getVideoTexture(void);
+		
+		/** Update the video frame
+		 */
+		void updateTexture(void);
+	private:
+		bool onGetData(sf::Texture& texture);
+//		void onSeek(sf::Time timeOffset);
+		
+		/** Returns the difference between the video stream and the reference timer
+		 *
+		 * A positive value means the video stream is ahead of the reference timer
+		 * whereas a nevatige value means the video stream is late
+		 */
+		sf::Time getSynchronizationGap(void);
+		
+		/** Decode the encoded data @a packet into @a outputFrame
+		 *
+		 * gotFrame being set to false means that decoding should still continue:
+		 *  - with a new packet if false is returned
+		 *	- with the same packet if true is returned
+		 *
+		 * @param packet the encoded data
+		 * @param outputFrame one decoded data
+		 * @param gotFrame set to true if a frame has been extracted to outputFrame, false otherwise
+		 * @return true if there's still data to decode in this packet, false otherwise
+		 */
+		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame);
+		
+		/** Initialize the audio resampler for conversion from many formats to signed 16 bits audio
+		 *
+		 * This must be called before any packet is decoded and resampled
+		 */
+		void initRescaler(void);
+		
+		/** Convert the decoded video frame @a frame into RGBA image data
+		 *
+		 * @param frame the audio samples to convert
+		 * @param outSamples [out] the convertedSamples
+		 * @param outNbSamples [out] the count of samples in @a outSamples
+		 * @param outSamplesLength [out] the length of @a outSamples in bytes
+		 */
+		void rescale(AVFrameRef frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4]);
+		
+		/** Load packets until one frame can be decoded
+		 */
+		void preload(void);
+		
+		// Timer::Observer interface
+		virtual void willPlay(const Timer &timer);
+		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
+		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
+		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
+		
+		// Private data
+		sf::Texture m_texture;
+		AVFrameRef m_rawVideoFrame;
+		uint8_t *m_rgbaVideoBuffer[4];
+		int m_rgbaVideoLinesize[4];
+		
+		// Rescaler data
+		struct SwsContext *m_swsCtx;
+		
+		sf::Time m_lastDecodedTimestamp;
 	};
 }
 

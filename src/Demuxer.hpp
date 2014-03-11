@@ -73,6 +73,10 @@ namespace sfe {
 		 */
 		void feedStream(Stream& stream);
 		
+		/** Let the video streams gather and decode new images
+		 */
+		void updateVideoStreams(void);
+		
 		/** Tell whether the demuxer has reached the end of the file and can no more feed the streams
 		 *
 		 * @return whether the end of the media file has been reached

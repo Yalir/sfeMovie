@@ -19,7 +19,6 @@ namespace sfe {
 	Stream(stream, dataSource, timer),
 	
 	// Public properties
-	m_channelsCount(0),
 	m_sampleRate(0),
 	
 	// Private data
@@ -42,7 +41,6 @@ namespace sfe {
 		CHECK(m_audioFrame, "AudioStream::AudioStream() - out of memory");
 		
 		// Get some audio informations
-		m_channelsCount = m_codecCtx->channels;
 		m_sampleRate = m_codecCtx->sample_rate;
 		
 		// Alloc a two seconds buffer
@@ -78,8 +76,8 @@ namespace sfe {
 	bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
 	{
 		Threads::nameCurrentThread(std::string("") + av_get_media_type_string(m_stream->codec->codec_type) +
-						  "/" + avcodec_get_name(m_stream->codec->codec_id) + " stream ("
-						  + ftostr(m_streamID) + ")");
+								   "/" + avcodec_get_name(m_stream->codec->codec_id) +
+								   " stream (" + ftostr(m_streamID) + ")");
 		
 		AVPacketRef packet;
 		data.samples = m_samplesBuffer;
@@ -133,6 +131,8 @@ namespace sfe {
 		
 		if (decodedLength < packet->size) {
 			needsMoreDecoding = true;
+			packet->data += decodedLength;
+			packet->size -= decodedLength;
 		}
 		
 		return needsMoreDecoding;
@@ -150,7 +150,7 @@ namespace sfe {
 		// Some media files don't define the channel layout, in this case take a default one
 		// according to the channels' count
 		if (m_codecCtx->channel_layout == 0) {
-			m_codecCtx->channel_layout = av_get_default_channel_layout(m_channelsCount);
+			m_codecCtx->channel_layout = av_get_default_channel_layout(m_codecCtx->channels);
 		}
 		
 		/* set options */

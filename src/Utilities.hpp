@@ -26,6 +26,7 @@
 #define SFEMOVIE_UTILITIES_HPP
 
 #include "Stream.hpp"
+#include "Log.hpp"
 #include <string>
 
 namespace sfe {
@@ -46,6 +47,15 @@ namespace sfe {
 	 * @return the stringified media type
 	 */
 	std::string MediaTypeToString(MediaType type);
+	
+	#define BENCH_START \
+	{ \
+		sf::Clock __bench;
+
+	#define BENCH_END(title) \
+		sfeLogDebug(std::string(title) + " took " + s(__bench.getElapsedTime().asMilliseconds()) + "ms"); \
+	}
+
 }
 
 #endif

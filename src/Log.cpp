@@ -31,7 +31,7 @@ namespace sfe {
 		static int g_logMask = WarningMask;
 		static sf::Mutex g_synchronized;
 		
-		void setMask(Mask mask)
+		void setMask(int mask)
 		{
 			sf::Lock l(g_synchronized);
 			g_logMask = mask;
