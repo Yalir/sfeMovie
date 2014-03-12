@@ -228,6 +228,6 @@ namespace sfe {
 	
 	void VideoStream::didStop(const Timer& timer, Timer::Status previousStatus)
 	{
-		
+		avcodec_flush_buffers(m_codecCtx);
 	}
 }

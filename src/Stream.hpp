@@ -74,6 +74,10 @@ namespace sfe {
 		 */
 		virtual AVPacketRef popEncodedData(void);
 		
+		/** Empty the encoded data queue and destroy all the packets
+		 */
+		virtual void discardAllEncodedData(void);
+		
 		/** Used by the demuxer to know if this stream should be fed with more data
 		 *
 		 * The default implementation returns true if the packet list contains less than 10 packets
@@ -91,9 +95,9 @@ namespace sfe {
 		bool didRequestFeeding;
 	protected:
 		// Timer::Observer interface
-		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
-		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
-		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
+		virtual void didPlay(const Timer& timer, Timer::Status previousStatus) = 0;
+		virtual void didPause(const Timer& timer, Timer::Status previousStatus) = 0;
+		virtual void didStop(const Timer& timer, Timer::Status previousStatus) = 0;
 		
 		AVStreamRef m_stream;
 		DataSource& m_dataSource;

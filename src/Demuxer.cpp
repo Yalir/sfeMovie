@@ -131,6 +131,9 @@ namespace sfe {
 	
 	Demuxer::~Demuxer(void)
 	{
+		if (m_timer.getStatus() != Timer::Stopped)
+			m_timer.stop();
+		
 		while (m_streams.size()) {
 			delete m_streams.begin()->second;
 			m_streams.erase(m_streams.begin());

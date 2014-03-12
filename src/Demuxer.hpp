@@ -50,7 +50,7 @@ namespace sfe {
 		
 		/** Default destructor
 		 */
-		~Demuxer(void);
+		virtual ~Demuxer(void);
 		
 		/** Return a list of the streams found in the media
 		 * The map key is the index of the stream
@@ -108,6 +108,7 @@ namespace sfe {
 		std::map<int, Stream*> m_streams;
 		std::map<int, std::string> m_ignoredStreams;
 		sf::Mutex m_synchronized;
+		Timer& m_timer;
 		
 		static std::set<std::pair<std::string, MediaType> > g_availableDecoders;
 	};

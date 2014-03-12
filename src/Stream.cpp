@@ -38,7 +38,6 @@ extern "C"
 
 namespace sfe {
 	Stream::Stream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
-	didRequestFeeding(false),
 	m_stream(NULL),
 	m_dataSource(dataSource),
 	m_timer(timer),
@@ -69,15 +68,10 @@ namespace sfe {
 	{
 		m_timer.removeObserver(*this);
 		
-		avcodec_close(m_codecCtx);
+		if (m_codecCtx)
+			avcodec_close(m_codecCtx);
 		
-		AVPacketRef pkt;
-#warning TODO the pop method will force reading further
-		while (NULL != (pkt = popEncodedData()))
-		{
-			av_free_packet(pkt);
-			av_free(pkt);
-		}
+		discardAllEncodedData();
 	}
 	
 	void Stream::pushEncodedData(AVPacketRef packet)
@@ -104,20 +98,21 @@ namespace sfe {
 		return result;
 	}
 	
+	void Stream::discardAllEncodedData(void)
+	{
+		AVPacketRef pkt = NULL;
+		
+		while (m_packetList.size()) {
+			pkt = m_packetList.front();
+			m_packetList.pop();
+			
+			av_free_packet(pkt);
+			av_free(pkt);
+		}
+	}
+	
 	bool Stream::needsMoreData(void) const
 	{
 		return m_packetList.size() < 10;
-	}
-	
-	void Stream::didPlay(const Timer& timer, Timer::Status previousStatus)
-	{
-	}
-	
-	void Stream::didPause(const Timer& timer, Timer::Status previousStatus)
-	{
-	}
-	
-	void Stream::didStop(const Timer& timer, Timer::Status previousStatus)
-	{
 	}
 }
