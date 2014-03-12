@@ -37,21 +37,31 @@ namespace sfe {
 			g_logMask = mask;
 		}
 		
-		void debug(const std::string& message)
+		static std::string filename(const std::string& filepath)
+		{
+			size_t pos = filepath.find_last_of("/");
+			
+			if (pos != std::string::npos && pos+1 != filepath.size())
+				return filepath.substr(pos+1);
+			else
+				return filepath;
+		}
+		
+		void debug(const std::string& file, const std::string& message)
 		{
 			sf::Lock l(g_synchronized);
 			
 			if (g_logMask & DebugMask) {
-				std::cerr << "Debug: " << message << std::endl;
+				std::cerr << "Debug: " << filename(file) << message << std::endl;
 			}
 		}
 		
-		void warning(const std::string& message)
+		void warning(const std::string& file, const std::string& message)
 		{
 			sf::Lock l(g_synchronized);
 			
 			if (g_logMask & WarningMask) {
-				std::cerr << "Warning: " << message << std::endl;
+				std::cerr << "Warning: " << filename(file) << message << std::endl;
 			}
 		}
 	}

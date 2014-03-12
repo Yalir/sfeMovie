@@ -91,8 +91,6 @@ namespace sfe {
 		 * @return the kind of stream represented by this stream
 		 */
 		virtual MediaType getStreamKind(void) const = 0;
-		
-		bool didRequestFeeding;
 	protected:
 		// Timer::Observer interface
 		virtual void didPlay(const Timer& timer, Timer::Status previousStatus) = 0;

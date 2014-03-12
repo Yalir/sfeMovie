@@ -16,5 +16,3 @@ if (MACOSX)
 	                      BUILD_WITH_INSTALL_RPATH 1 
 	                      INSTALL_RPATH "@executable_path/")
 endif()
-
-message(STATUS "target_link_libraries(${DEMUXER_CLI} ${SFEMOVIE_LIB})")

@@ -84,7 +84,6 @@ namespace sfe {
 	{
 		AVPacketRef result = NULL;
 		
-//		BENCH_START
 		if (!m_packetList.size()) {
 			m_dataSource.requestMoreData(*this);
 		}
@@ -93,7 +92,6 @@ namespace sfe {
 			result = m_packetList.front();
 			m_packetList.pop();
 		}
-//		BENCH_END(__func__)
 		
 		return result;
 	}

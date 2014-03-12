@@ -92,37 +92,9 @@ namespace sfe {
 	
 	void VideoStream::updateTexture(void)
 	{
-		static sf::Clock timer;
-		static sf::Clock decodeTimer;
-		static sf::Int64 sum = 0;
-		static int count = 0;
-		
 		if (getSynchronizationGap() < sf::Time::Zero) {
-//			sfeLogDebug("VideoStream::updateTexture() - sync gap = " + s(getSynchronizationGap().asSeconds()) + "s");
-			decodeTimer.restart();
 			onGetData(m_texture);
-			
-			int ms = decodeTimer.getElapsedTime().asMilliseconds();
-//			sfeLogDebug("Last image " + s(timer.restart().asMilliseconds()) + " ms ago and decoding took " + s(ms) + "ms");
-			
-			sum += ms;
-			count++;
-			int avg = sum/count;
-			
-			if (ms > avg) {
-				sfeLogDebug("Decoding time above average (" + s(avg) + "ms) : +" + s(ms - avg) + "ms at " + s(ms) + "ms | FEED = " + s(didRequestFeeding));
-			} else if (didRequestFeeding) {
-				sfeLogDebug("Feeding requested but timing is ok: " + s(ms) + "ms");
-			}
-			
-			sfeLogDebug("onGetData");
-			
-			didRequestFeeding = false;
-		} else {
-//			sfeLogDebug("No need to load video frame now");
 		}
-		
-//		sfeLogDebug("VideoStream::updateTexture() - OUT sync gap = " + s(getSynchronizationGap().asSeconds()) + "s");
 	}
 	
 	bool VideoStream::onGetData(sf::Texture& texture)
@@ -134,24 +106,19 @@ namespace sfe {
 			bool needsMoreDecoding = decodePacket(packet, m_rawVideoFrame, gotFrame);
 			
 			if (needsMoreDecoding) {
-				sfeLogWarning("VideoStream::onGetData() - packet with several video frames not supported yet");
+				sfeLogWarning("packet with several video frames not supported yet");
 			}
 			
 			if (gotFrame) {
-				BENCH_START
 				rescale(m_rawVideoFrame, m_rgbaVideoBuffer, m_rgbaVideoLinesize);
-				BENCH_END("rescale")
-				
-				BENCH_START
 				texture.update(m_rgbaVideoBuffer[0]);
-				BENCH_END("texture.update()");
 			}
 			
 			av_free_packet(packet);
 			av_free(packet);
 			
 			if (!gotFrame) {
-				sfeLogDebug("VideoStream::onGetData() - no image in this packet, reading further");
+				sfeLogDebug("no image in this packet, reading further");
 				packet = popEncodedData();
 			}
 		}
@@ -184,8 +151,6 @@ namespace sfe {
 			int64_t startTime = m_stream->start_time != AV_NOPTS_VALUE ? m_stream->start_time : 0;
 			sf::Int64 ms = 1000 * (timestamp - startTime) * av_q2d(m_stream->time_base);
 			m_lastDecodedTimestamp = sf::milliseconds(ms);
-			
-//			sfeLogDebug("VideoStream::decodePacket() - Decoded image: " + s(m_lastDecodedTimestamp.asSeconds()));
 		}
 		
 		return needsMoreDecoding;

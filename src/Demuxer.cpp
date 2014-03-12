@@ -78,7 +78,8 @@ namespace sfe {
 	m_eofReached(false),
 	m_streams(),
 	m_ignoredStreams(),
-	m_synchronized()
+	m_synchronized(),
+	m_timer(timer)
 	{
 		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
 		
@@ -167,8 +168,6 @@ namespace sfe {
 	void Demuxer::feedStream(Stream& stream)
 	{
 		sf::Lock l(m_synchronized);
-		stream.didRequestFeeding = true;
-		sfeLogDebug("feedStream(" + MediaTypeToString(stream.getStreamKind()) + ")");
 		
 //		sfeLogDebug(Threads::currentThreadName());
 		

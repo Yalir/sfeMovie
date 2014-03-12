@@ -27,10 +27,9 @@
 
 #include <string>
 #include <sstream>
-#include <boost/current_function.hpp>
 
-#define sfeLogDebug(message) sfe::Log::debug(std::string("") + message + " (in " + std::string(__func__) + "() line " + sfe::s(__LINE__) + ")")
-#define sfeLogWarning(message) sfe::Log::warning(std::string("") + message + " (in " + std::string(__func__) + "() line " + sfe::s(__LINE__) + ")")
+#define sfeLogDebug(message) sfe::Log::debug(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
+#define sfeLogWarning(message) sfe::Log::warning(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
 
 namespace sfe {
 	namespace Log {
@@ -54,13 +53,13 @@ namespace sfe {
 		 *
 		 * @param message the debug message to log
 		 */
-		void debug(const std::string& message);
+		void debug(const std::string& file, const std::string& message);
 		
 		/** Log a warning @a message is the currently set mask allows it
 		 *
 		 * @param message the debug message to log
 		 */
-		void warning(const std::string& message);
+		void warning(const std::string& file, const std::string& message);
 	}
 	
 	template <typename T>

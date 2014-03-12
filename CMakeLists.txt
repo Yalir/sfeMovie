@@ -128,7 +128,6 @@ add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
 add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 # Define the libraries sfe should link against
-message (STATUS "Link sfeMovie against: ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES}")
 target_link_libraries (${SFEMOVIE_LIB} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(${SFEMOVIE_LIB} LINK_INTERFACE_LIBRARIES)
 
