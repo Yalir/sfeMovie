@@ -28,6 +28,7 @@
 #include "Macros.hpp"
 #include "Stream.hpp"
 #include <SFML/Graphics.hpp>
+#include <stdint.h>
 
 namespace sfe {
 	class VideoStream : public Stream {
