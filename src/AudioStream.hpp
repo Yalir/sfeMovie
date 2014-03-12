@@ -97,14 +97,10 @@ namespace sfe {
 		
 		// Resampling
 		struct SwrContext* m_swrCtx;
-		int m_srcNbSamples;
 		int m_dstNbSamples;
 		int m_maxDstNbSamples;
-		int m_srcNbChannels;
 		int m_dstNbChannels;
-		int m_srcLinesize;
 		int m_dstLinesize;
-		uint8_t** m_srcData;
 		uint8_t** m_dstData;
 	};
 }

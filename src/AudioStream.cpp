@@ -27,14 +27,10 @@ namespace sfe {
 	
 	// Resampling
 	m_swrCtx(NULL),
-	m_srcNbSamples(1024),
 	m_dstNbSamples(0),
 	m_maxDstNbSamples(0),
-	m_srcNbChannels(0),
 	m_dstNbChannels(0),
-	m_srcLinesize(0),
 	m_dstLinesize(0),
-	m_srcData(NULL),
 	m_dstData(NULL)
 	{
 		m_audioFrame = av_frame_alloc();
@@ -66,6 +62,13 @@ namespace sfe {
 		if (m_samplesBuffer) {
 			av_free(m_samplesBuffer);
 		}
+		
+		if (m_dstData) {
+			av_freep(&m_dstData[0]);
+		}
+		av_freep(&m_dstData);
+		
+		swr_free(&m_swrCtx);
 	}
 	
 	MediaType AudioStream::getStreamKind(void) const
@@ -165,17 +168,10 @@ namespace sfe {
 		err = swr_init(m_swrCtx);
 		CHECK(err >= 0, "AudioStream::initResampler() - resampling context initialization error");
 		
-		/* allocate source and destination samples buffers */
-		m_srcNbChannels = av_get_channel_layout_nb_channels(m_codecCtx->channel_layout);
-		err = av_samples_alloc_array_and_samples(&m_srcData, &m_srcLinesize, m_srcNbChannels,
-												 m_codecCtx->sample_rate, m_codecCtx->sample_fmt, 0);
-		CHECK(err >= 0, "AudioStream::initResampler() - av_samples_alloc_array_and_samples error");
-		
 		/* compute the number of converted samples: buffering is avoided
 		 * ensuring that the output buffer will contain at least all the
 		 * converted input samples */
-		m_maxDstNbSamples = m_dstNbSamples =
-        av_rescale_rnd(m_srcNbSamples, m_codecCtx->sample_rate, m_codecCtx->sample_rate, AV_ROUND_UP);
+		m_maxDstNbSamples = m_dstNbSamples = 1024;
 
 		/* Create the resampling output buffer */
 		m_dstNbChannels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
