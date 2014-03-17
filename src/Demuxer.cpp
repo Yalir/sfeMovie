@@ -67,8 +67,8 @@ namespace sfe {
 		if (g_availableDemuxers.empty()) {
 			while (NULL != (demuxer = av_iformat_next(demuxer))) {
 				DemuxerInfo info = {
-					.name = std::string(demuxer->name),
-					.description = std::string(demuxer->long_name)
+					std::string(demuxer->name),
+					std::string(demuxer->long_name)
 				};
 				
 				g_availableDemuxers.push_back(info);
@@ -86,9 +86,9 @@ namespace sfe {
 		if (g_availableDecoders.empty()) {
 			while (NULL != (codec = av_codec_next(codec))) {
 				DecoderInfo info = {
-					.name = avcodec_get_name(codec->id),
-					.description = codec->long_name,
-					.type = AVMediaTypeToMediaType(codec->type)
+					avcodec_get_name(codec->id),
+					codec->long_name,
+					AVMediaTypeToMediaType(codec->type)
 				};
 				
 				g_availableDecoders.push_back(info);
@@ -128,10 +128,10 @@ namespace sfe {
 			
 			try {
 				switch (ffstream->codec->codec_type) {
-					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
-						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
-						break;
+//					case AVMEDIA_TYPE_VIDEO:
+//						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
+//						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
+//						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
 						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
