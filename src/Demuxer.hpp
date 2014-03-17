@@ -32,15 +32,38 @@
 #include <map>
 #include <string>
 #include <set>
+#include <list>
 #include <utility>
 
 namespace sfe {
 	class Demuxer : public Stream::DataSource {
 	public:
+		/** Describes a demuxer
+		 * Ie. an audio/video container format parser such as avi, mov, mkv, ogv... parsers
+		 */
+		struct DemuxerInfo {
+			std::string name;
+			std::string description;
+		};
+		
+		/** Describes a decoder
+		 * Ie. an audio/video/subtitle stream decoder for h.264, theora, vp9, mp3, pcm, srt... streams
+		 */
+		struct DecoderInfo {
+			std::string name;
+			std::string description;
+			MediaType type;
+		};
+		
+		/** Return a list containing the names of all the demuxers (ie. container parsers) included
+		 * in this sfeMovie build
+		 */
+		static const std::list<DemuxerInfo>& getAvailableDemuxers(void);
+		
 		/** Return a list containing the names of all the decoders included
 		 * in this sfeMovie build
 		 */
-		static const std::set<std::pair<std::string, MediaType> >& getAvailableDecoders(void);
+		static const std::list<DecoderInfo>& getAvailableDecoders(void);
 		
 		/** Default constructor
 		 *
@@ -110,7 +133,8 @@ namespace sfe {
 		sf::Mutex m_synchronized;
 		Timer& m_timer;
 		
-		static std::set<std::pair<std::string, MediaType> > g_availableDecoders;
+		static std::list<DemuxerInfo> g_availableDemuxers;
+		static std::list<DecoderInfo> g_availableDecoders;
 	};
 }
 

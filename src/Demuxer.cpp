@@ -40,9 +40,10 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
-	std::set<std::pair<std::string, MediaType> > Demuxer::g_availableDecoders;
+	std::list<Demuxer::DemuxerInfo> Demuxer::g_availableDemuxers;
+	std::list<Demuxer::DecoderInfo> Demuxer::g_availableDecoders;
 	
-	static void loadDecoders(void)
+	static void loadFFmpeg(void)
 	{
 		ONCE(av_register_all());
 		ONCE(avcodec_register_all());
@@ -58,15 +59,39 @@ namespace sfe {
 		}
 	}
 	
-	const std::set<std::pair<std::string, MediaType> >& Demuxer::getAvailableDecoders(void)
+	const std::list<Demuxer::DemuxerInfo>& Demuxer::getAvailableDemuxers(void)
+	{
+		AVInputFormat* demuxer = NULL;
+		loadFFmpeg();
+		
+		if (g_availableDemuxers.empty()) {
+			while (NULL != (demuxer = av_iformat_next(demuxer))) {
+				DemuxerInfo info = {
+					.name = std::string(demuxer->name),
+					.description = std::string(demuxer->long_name)
+				};
+				
+				g_availableDemuxers.push_back(info);
+			}
+		}
+		
+		return g_availableDemuxers;
+	}
+	
+	const std::list<Demuxer::DecoderInfo>& Demuxer::getAvailableDecoders(void)
 	{
 		AVCodecRef codec = NULL;
-		loadDecoders();
+		loadFFmpeg();
 		
 		if (g_availableDecoders.empty()) {
 			while (NULL != (codec = av_codec_next(codec))) {
-				MediaType type = AVMediaTypeToMediaType(codec->type);
-				g_availableDecoders.insert(std::make_pair(avcodec_get_name(codec->id), type));
+				DecoderInfo info = {
+					.name = avcodec_get_name(codec->id),
+					.description = codec->long_name,
+					.type = AVMediaTypeToMediaType(codec->type)
+				};
+				
+				g_availableDecoders.push_back(info);
 			}
 		}
 		
@@ -86,7 +111,7 @@ namespace sfe {
 		int err = 0;
 		
 		// Load all the decoders
-		loadDecoders();
+		loadFFmpeg();
 		
 		// Open the movie file
 		err = avformat_open_input(&m_avFormatCtx, sourceFile.c_str(), NULL, NULL);

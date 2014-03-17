@@ -61,7 +61,7 @@ namespace sfe {
 		bool onGetData(sf::Texture& texture);
 //		void onSeek(sf::Time timeOffset);
 		
-		/** Returns the difference between the video stream and the reference timer
+		/** Returns the difference between the video stream timer and the reference timer
 		 *
 		 * A positive value means the video stream is ahead of the reference timer
 		 * whereas a nevatige value means the video stream is late

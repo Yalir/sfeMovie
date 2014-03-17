@@ -30,6 +30,11 @@
 #include <string>
 
 namespace sfe {
+	/** Display a list of all the available demuxers as follow:
+	 * - decoder_type: decoder_name
+	 */
+	void dumpAvailableDemuxers(void);
+	
 	/** Display a list of all the available decoders as follow:
 	 * - decoder_type: decoder_name
 	 */

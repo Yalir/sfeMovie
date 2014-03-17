@@ -29,14 +29,25 @@
 #include <iostream>
 
 namespace sfe {
+	void dumpAvailableDemuxers(void)
+	{
+		const std::list<Demuxer::DemuxerInfo>& demuxers = sfe::Demuxer::getAvailableDemuxers();
+		std::list<Demuxer::DemuxerInfo>::const_iterator it;
+		
+		std::cout << demuxers.size() << " demuxers available:" << std::endl;
+		for (it = demuxers.begin(); it != demuxers.end();it++) {
+			std::cout << "- " << it->name << " (" << it->description << ")" << std::endl;
+		}
+	}
+	
 	void dumpAvailableDecoders(void)
 	{
-		const std::set<std::pair<std::string, sfe::MediaType> >& decoders = sfe::Demuxer::getAvailableDecoders();
-		std::set<std::pair<std::string, sfe::MediaType> >::const_iterator it;
+		const std::list<Demuxer::DecoderInfo>& decoders = sfe::Demuxer::getAvailableDecoders();
+		std::list<Demuxer::DecoderInfo>::const_iterator it;
 		
 		std::cout << decoders.size() << " decoders available:" << std::endl;
 		for (it = decoders.begin(); it != decoders.end();it++) {
-			std::cout << "- " << sfe::MediaTypeToString(it->second) << ": " << it->first << std::endl;
+			std::cout << "- " << sfe::MediaTypeToString(it->type) << ": " << it->name << " (" << it->description << ")" << std::endl;
 		}
 	}
 	
