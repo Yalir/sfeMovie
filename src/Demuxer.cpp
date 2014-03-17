@@ -128,10 +128,10 @@ namespace sfe {
 			
 			try {
 				switch (ffstream->codec->codec_type) {
-//					case AVMEDIA_TYPE_VIDEO:
-//						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
-//						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
-//						break;
+					case AVMEDIA_TYPE_VIDEO:
+						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
+						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
+						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
 						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
