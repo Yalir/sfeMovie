@@ -10,14 +10,8 @@
 
 BOOST_AUTO_TEST_CASE(DemuxerAvailableCodecsTest)
 {
-	const std::set<std::pair<std::string, sfe::MediaType> >& decoders = sfe::Demuxer::getAvailableDecoders();
-	BOOST_CHECK(!decoders.empty());
-	sfe::dumpAvailableDecoders();
-	
-//	std::set<std::pair<std::string, sfe::MediaType> >::const_iterator it;
-//	for (it = decoders.begin(); it != decoders.end();it++) {
-//		std::cout << "Decoder: " << it->first << " (" << sfe::MediaTypeToString(it->second) << ")" << std::endl;
-//	}
+	BOOST_CHECK(!sfe::Demuxer::getAvailableDemuxers().empty());
+	BOOST_CHECK(!sfe::Demuxer::getAvailableDecoders().empty());
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
@@ -53,7 +47,7 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 		}
 	}
 	
-	BOOST_CHECK(videoStreamCount == 0); // Until VideoStream is implemented, its loading is disabled
+	BOOST_CHECK(videoStreamCount == 1);
 	BOOST_CHECK(audioStreamCount == 1);
 	
 	// Check stream feeding

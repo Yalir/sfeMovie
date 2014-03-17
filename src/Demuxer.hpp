@@ -39,6 +39,7 @@ namespace sfe {
 	class Demuxer : public Stream::DataSource {
 	public:
 		/** Describes a demuxer
+		 *
 		 * Ie. an audio/video container format parser such as avi, mov, mkv, ogv... parsers
 		 */
 		struct DemuxerInfo {
@@ -47,6 +48,7 @@ namespace sfe {
 		};
 		
 		/** Describes a decoder
+		 *
 		 * Ie. an audio/video/subtitle stream decoder for h.264, theora, vp9, mp3, pcm, srt... streams
 		 */
 		struct DecoderInfo {
