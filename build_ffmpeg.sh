@@ -221,15 +221,15 @@ function main()
 			echo "Visual Studio   : $vcpp"
 			echo "Decoders        : $full_decoders_list"
 			
-			config="${os} ${vcpp} ${full_decoders_list} ${source_dir} ${build_dir}"
+#			config="${os} ${vcpp} ${full_decoders_list} ${source_dir} ${build_dir}"
 
-			if test -f "${build_dir}/FFmpegConfig.shc" ; then
-				previousConfig=`cat "${build_dir}/FFmpegConfig.shc"`
+#			if test -f "${build_dir}/FFmpegConfig.shc" ; then
+#				previousConfig=`cat "${build_dir}/FFmpegConfig.shc"`
 
-				if [ "${previousConfig}" == "${config}" ] ; then
+#				if [ "${previousConfig}" == "${config}" ] ; then
 
-				fi
-			fi
+#				fi
+#			fi
 			
 			build_ffmpeg $*
 		fi
