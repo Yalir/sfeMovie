@@ -113,7 +113,7 @@ function build_ffmpeg()
 		yasmpath=`echo "${yasmpath}.exe" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 	fi
 
-	args="$args --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-decoders --disable-muxers --disable-encoders --yasmexe=${yasmpath} --enable-shared --disable-static $configure_flags $os_flags"
+	args="$args --disable-stripping --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-decoders --disable-muxers --disable-encoders --yasmexe=${yasmpath} --enable-shared --disable-static $configure_flags $os_flags"
 
 	#setup VC++ env variables to find lib.exe
 	if [ "$vcpp" == "1" ]
@@ -206,6 +206,7 @@ function main()
 			
 			source_dir=`cat SourceDir.var`
 			build_dir=`cat BuildDir.var`
+			outputs=`cat FFmpegOutputs.var`
 
 			if ! [ "$os" == "windows" ] ; then
 				jobsCount=5
@@ -220,7 +221,16 @@ function main()
 			echo "Visual Studio   : $vcpp"
 			echo "Decoders        : $full_decoders_list"
 			
-			# build.. well it's written
+			config="${os} ${vcpp} ${full_decoders_list} ${source_dir} ${build_dir}"
+
+			if test -f "${build_dir}/FFmpegConfig.shc" ; then
+				previousConfig=`cat "${build_dir}/FFmpegConfig.shc"`
+
+				if [ "${previousConfig}" == "${config}" ] ; then
+
+				fi
+			fi
+			
 			build_ffmpeg $*
 		fi
 	fi

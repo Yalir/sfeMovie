@@ -93,6 +93,7 @@ namespace sfe {
 	void VideoStream::updateTexture(void)
 	{
 		if (getSynchronizationGap() < sf::Time::Zero) {
+//			sfeLogDebug("Late by " + s(-getSynchronizationGap().asMilliseconds()) + "ms");
 			onGetData(m_texture);
 		}
 	}
@@ -101,29 +102,33 @@ namespace sfe {
 	{
 		AVPacketRef packet = popEncodedData();
 		bool gotFrame = false;
+		bool goOn = true;
 		
-		while (!gotFrame && packet) {
-			bool needsMoreDecoding = decodePacket(packet, m_rawVideoFrame, gotFrame);
+		while (!gotFrame && packet && goOn) {
+			bool needsMoreDecoding = false;
 			
-			if (needsMoreDecoding) {
-				sfeLogWarning("packet with several video frames not supported yet");
-			}
+			CHECK(packet != NULL, "inconsistency error");
+			goOn = decodePacket(packet, m_rawVideoFrame, gotFrame, needsMoreDecoding);
 			
 			if (gotFrame) {
 				rescale(m_rawVideoFrame, m_rgbaVideoBuffer, m_rgbaVideoLinesize);
 				texture.update(m_rgbaVideoBuffer[0]);
 			}
 			
-			av_free_packet(packet);
-			av_free(packet);
+			if (needsMoreDecoding) {
+				prependEncodedData(packet);
+			} else {
+				av_free_packet(packet);
+				av_free(packet);
+			}
 			
-			if (!gotFrame) {
+			if (!gotFrame && goOn) {
 				sfeLogDebug("no image in this packet, reading further");
 				packet = popEncodedData();
 			}
 		}
 		
-		return (packet != NULL);
+		return goOn;
 	}
 	
 	sf::Time VideoStream::getSynchronizationGap(void)
@@ -131,29 +136,32 @@ namespace sfe {
 		return  m_lastDecodedTimestamp - m_timer.getOffset();
 	}
 	
-	bool VideoStream::decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame)
+	bool VideoStream::decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame, bool& needsMoreDecoding)
 	{
-		bool needsMoreDecoding = false;
 		int gotPicture = 0;
+		needsMoreDecoding = false;
 		
 		int decodedLength = avcodec_decode_video2(m_codecCtx, outputFrame, &gotPicture, packet);
-		CHECK(decodedLength >= 0, "VideoStream::decodePacket() - error: " + std::string(av_err2str(decodedLength)));
 		gotFrame = (gotPicture != 0);
 		
-		if (decodedLength < packet->size) {
-			needsMoreDecoding = true;
-			packet->data += decodedLength;
-			packet->size -= decodedLength;
+		if (decodedLength > 0) {
+			if (decodedLength < packet->size) {
+				needsMoreDecoding = true;
+				packet->data += decodedLength;
+				packet->size -= decodedLength;
+			}
+			
+			if (gotFrame) {
+				int64_t timestamp = av_frame_get_best_effort_timestamp(outputFrame);
+				int64_t startTime = m_stream->start_time != AV_NOPTS_VALUE ? m_stream->start_time : 0;
+				sf::Int64 ms = 1000 * (timestamp - startTime) * av_q2d(m_stream->time_base);
+				m_lastDecodedTimestamp = sf::milliseconds(ms);
+			}
+			
+			return true;
+		} else {
+			return false;
 		}
-		
-		if (gotFrame) {
-			int64_t timestamp = av_frame_get_best_effort_timestamp(outputFrame);
-			int64_t startTime = m_stream->start_time != AV_NOPTS_VALUE ? m_stream->start_time : 0;
-			sf::Int64 ms = 1000 * (timestamp - startTime) * av_q2d(m_stream->time_base);
-			m_lastDecodedTimestamp = sf::milliseconds(ms);
-		}
-		
-		return needsMoreDecoding;
 	}
 	
 	void VideoStream::initRescaler(void)

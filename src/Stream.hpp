@@ -27,7 +27,7 @@
 
 #include "Macros.hpp"
 #include "Timer.hpp"
-#include <queue>
+#include <list>
 
 namespace sfe {
 	
@@ -64,6 +64,15 @@ namespace sfe {
 		 * @return packet the encoded data usable by this stream
 		 */
 		virtual void pushEncodedData(AVPacketRef packet);
+		
+		/** Reinsert an AVPacket at the beginning of the queue
+		 *
+		 * This is used for packets that contain several frames, but whose next frames
+		 * cannot be decoded yet. These packets are repushed to be decoded when possible.
+		 *
+		 * @param packet the packet to re-insert at the beginning of the queue
+		 */
+		virtual void prependEncodedData(AVPacketRef packet);
 		
 		/** Return the oldest encoded data that was pushed to this stream
 		 *
@@ -103,7 +112,7 @@ namespace sfe {
 		AVCodecContextRef m_codecCtx;
 		AVCodecRef m_codec;
 		int m_streamID;
-		std::queue <AVPacketRef> m_packetList;
+		std::list <AVPacketRef> m_packetList;
 	};
 }
 

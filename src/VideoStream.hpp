@@ -77,9 +77,10 @@ namespace sfe {
 		 * @param packet the encoded data
 		 * @param outputFrame one decoded data
 		 * @param gotFrame set to true if a frame has been extracted to outputFrame, false otherwise
-		 * @return true if there's still data to decode in this packet, false otherwise
+		 * @param goOn set to true if decoding can continue, or false if no more data can be decoded (EOF)
+		 * @return true if decoding succeeded, false otherwise (EOF)
 		 */
-		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame);
+		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame, bool& needsMoreDecoding);
 		
 		/** Initialize the audio resampler for conversion from many formats to signed 16 bits audio
 		 *

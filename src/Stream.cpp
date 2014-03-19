@@ -76,8 +76,14 @@ namespace sfe {
 	
 	void Stream::pushEncodedData(AVPacketRef packet)
 	{
-		assert(packet);
-		m_packetList.push(packet);
+		CHECK(packet, "invalid argument");
+		m_packetList.push_back(packet);
+	}
+	
+	void Stream::prependEncodedData(AVPacketRef packet)
+	{
+		CHECK(packet, "invalid argument");
+		m_packetList.push_front(packet);
 	}
 	
 	AVPacketRef Stream::popEncodedData(void)
@@ -90,7 +96,15 @@ namespace sfe {
 		
 		if (m_packetList.size()) {
 			result = m_packetList.front();
-			m_packetList.pop();
+			m_packetList.pop_front();
+		} else {
+			if (m_codecCtx->codec->capabilities & CODEC_CAP_DELAY) {
+				AVPacketRef flushPacket = (AVPacketRef)av_malloc(sizeof(*flushPacket));
+				av_init_packet(flushPacket);
+				flushPacket->data = NULL;
+				flushPacket->size = 0;
+				result = flushPacket;
+			}
 		}
 		
 		return result;
@@ -102,7 +116,7 @@ namespace sfe {
 		
 		while (m_packetList.size()) {
 			pkt = m_packetList.front();
-			m_packetList.pop();
+			m_packetList.pop_front();
 			
 			av_free_packet(pkt);
 			av_free(pkt);
