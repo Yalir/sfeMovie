@@ -129,13 +129,28 @@ add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 # Define the libraries sfe should link against
 target_link_libraries (${SFEMOVIE_LIB} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(${SFEMOVIE_LIB} LINK_INTERFACE_LIBRARIES)
+
+if (MACOSX)
+	target_link_libraries(${SFEMOVIE_LIB} LINK_INTERFACE_LIBRARIES)
+endif()
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
-	add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
-			$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries)
+	if (LINUX)
+		add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
+			COMMAND cp -R
+				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
+				$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>)
+	elseif(MACOSX)
+		add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
+			COMMAND cp -R
+				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
+				$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries)
+	elseif(WINDOWS)
+		add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
+				$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>)
+	endif()
 endif()
 
 include (${CMAKE_SOURCE_DIR}/cmake/Properties.cmake)
