@@ -44,7 +44,8 @@ namespace sfe {
 	m_codecCtx(NULL),
 	m_codec(NULL),
 	m_streamID(-1),
-	m_packetList()
+	m_packetList(),
+	m_status(Stopped)
 	{
 		CHECK(stream, "Stream::Stream() - invalid stream argument");
 		int err = 0;
@@ -126,5 +127,15 @@ namespace sfe {
 	bool Stream::needsMoreData(void) const
 	{
 		return m_packetList.size() < 10;
+	}
+	
+	Stream::Status Stream::getStatus(void) const
+	{
+		return m_status;
+	}
+	
+	void Stream::setStatus(Status status)
+	{
+		m_status = status;
 	}
 }

@@ -191,16 +191,17 @@ namespace sfe {
 	
 	void VideoStream::didPlay(const Timer& timer, Timer::Status previousStatus)
 	{
-		
+		setStatus(Stream::Playing);
 	}
 	
 	void VideoStream::didPause(const Timer& timer, Timer::Status previousStatus)
 	{
-		
+		setStatus(Stream::Paused);
 	}
 	
 	void VideoStream::didStop(const Timer& timer, Timer::Status previousStatus)
 	{
 		avcodec_flush_buffers(m_codecCtx);
+		setStatus(Stream::Stopped);
 	}
 }

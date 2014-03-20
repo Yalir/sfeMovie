@@ -226,16 +226,19 @@ namespace sfe {
 	
 	void AudioStream::didPlay(const Timer& timer, Timer::Status previousStatus)
 	{
-		CHECK(getStatus() == Playing, "AudioStream::didPlay() - willPlay() not executed!");
+		CHECK(SoundStream::getStatus() == SoundStream::Playing, "AudioStream::didPlay() - willPlay() not executed!");
+		setStatus(Stream::Playing);
 	}
 	
 	void AudioStream::didPause(const Timer& timer, Timer::Status previousStatus)
 	{
 		sf::SoundStream::pause();
+		setStatus(Stream::Paused);
 	}
 	
 	void AudioStream::didStop(const Timer& timer, Timer::Status previousStatus)
 	{
 		sf::SoundStream::stop();
+		setStatus(Stream::Stopped);
 	}
 }

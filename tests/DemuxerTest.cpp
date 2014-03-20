@@ -66,10 +66,20 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("small_1.ogv", timer);
 	
+	sfe::Stream* videoStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_VIDEO).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(videoStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(videoStream->getStatus() == sfe::Stream::Playing);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
 	sf::sleep(sf::seconds(7));
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+	BOOST_CHECK(videoStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
@@ -78,10 +88,16 @@ BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("small_4.wav", timer);
 	
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
 	sf::sleep(sf::seconds(4));
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
@@ -90,10 +106,16 @@ BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("long_1.wav", timer);
 	
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
 	sf::sleep(sf::seconds(30));
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 }
 
 
@@ -102,6 +124,7 @@ BOOST_AUTO_TEST_CASE(DemuxerShortMP3Test)
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	// With free codecs only, the demuxer is not supposed to be able to load MP3 medias
+	
 	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("small_2.mp3", timer), std::runtime_error);
 }
 
@@ -111,8 +134,14 @@ BOOST_AUTO_TEST_CASE(DemuxerShortFLACTest)
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("small_3.flac", timer);
 	
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 	timer.play();
+	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
 	sf::sleep(sf::seconds(2));
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
 }

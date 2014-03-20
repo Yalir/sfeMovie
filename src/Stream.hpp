@@ -40,8 +40,15 @@ namespace sfe {
 	
 	class Stream : public Timer::Observer {
 	public:
-		class DataSource {
-		public:
+		/** The stream's status
+		 */
+		enum Status {
+			Playing,
+			Paused,
+			Stopped
+		};
+		
+		struct DataSource {
 			virtual void requestMoreData(Stream& starvingStream) = 0;
 		};
 		
@@ -100,11 +107,19 @@ namespace sfe {
 		 * @return the kind of stream represented by this stream
 		 */
 		virtual MediaType getStreamKind(void) const = 0;
+		
+		/** Give the stream's status
+		 *
+		 * @return The stream's status (Playing, Paused or Stopped)
+		 */
+		Status getStatus(void) const;
 	protected:
 		// Timer::Observer interface
 		virtual void didPlay(const Timer& timer, Timer::Status previousStatus) = 0;
 		virtual void didPause(const Timer& timer, Timer::Status previousStatus) = 0;
 		virtual void didStop(const Timer& timer, Timer::Status previousStatus) = 0;
+		
+		void setStatus(Status status);
 		
 		AVStreamRef m_stream;
 		DataSource& m_dataSource;
@@ -113,6 +128,7 @@ namespace sfe {
 		AVCodecRef m_codec;
 		int m_streamID;
 		std::list <AVPacketRef> m_packetList;
+		Status m_status;
 	};
 }
 
