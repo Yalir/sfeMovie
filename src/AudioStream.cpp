@@ -215,13 +215,16 @@ namespace sfe {
 	void AudioStream::willPlay(const Timer &timer)
 	{
 		sf::Time initialTime = sf::SoundStream::getPlayingOffset();
+		sf::Clock timeout;
 		sf::SoundStream::play();
 		
 		// Some audio drivers take time before the sound is actually played
 		// To avoid desynchronization with the timer, we don't return
 		// until the audio stream is actually started
-		while (sf::SoundStream::getPlayingOffset() == initialTime)
+		while (sf::SoundStream::getPlayingOffset() == initialTime && timeout.getElapsedTime() < sf::seconds(5))
 			sf::sleep(sf::milliseconds(10));
+		
+		CHECK(sf::SoundStream::getPlayingOffset() != initialTime, "is your audio device broken? Audio did not start within 5 seconds");
 	}
 	
 	void AudioStream::didPlay(const Timer& timer, Timer::Status previousStatus)
