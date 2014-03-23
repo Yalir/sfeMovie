@@ -1,7 +1,11 @@
 
 #include <SFML/Config.hpp>
+#include <SFML/Graphics.hpp>
 #include "Demuxer.hpp"
 #include "Utilities.hpp"
+#include "Log.hpp"
+#include "AudioStream.hpp"
+#include "VideoStream.hpp"
 #include <iostream>
 
 void my_pause()
@@ -9,6 +13,29 @@ void my_pause()
 #ifdef SFML_SYSTEM_WINDOWS
 	system("PAUSE");
 #endif
+}
+
+class DummyDelegate : public sfe::VideoStream::Delegate {
+	void didUpdateImage(const sfe::VideoStream& sender, const sf::Texture& image)
+	{
+		
+	}
+};
+
+bool finished(const sfe::Demuxer& demuxer)
+{
+	std::set<sfe::Stream*> audioStreams = demuxer.getStreamsOfType(sfe::MEDIA_TYPE_AUDIO);
+	std::set<sfe::Stream*>::iterator it;
+	
+	for (it = audioStreams.begin(); it != audioStreams.end(); it++) {
+		sfe::AudioStream* audioStream = dynamic_cast<sfe::AudioStream*>(*it);
+		
+		if (audioStream->Stream::getStatus() == sfe::Stream::Playing) {
+			return false;
+		}
+	}
+	
+	return true;
 }
 
 int main(int argc, const char *argv[])
@@ -26,13 +53,25 @@ int main(int argc, const char *argv[])
 	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
 	
 	sfe::dumpAvailableDecoders();
+	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
 	
 	sfe::Timer timer;
-	sfe::Demuxer demuxer(mediaFile, timer);
+	DummyDelegate delegate;
+	sfe::Demuxer demuxer(mediaFile, timer, delegate);
+	
+	const std::map<int, sfe::Stream*>& vStreams = demuxer.getStreams();
+	sfe::VideoStream* vStream = NULL;
+	
+	if (vStreams.size()) {
+		vStream = dynamic_cast<sfe::VideoStream*>(vStreams.begin()->second);
+	}
+	
 	timer.play();
 	
-	while (!demuxer.didReachEndOfFile())
+	while (!finished(demuxer)) {
+		demuxer.update();
 		sf::sleep(sf::milliseconds(100));
+	}
 	
 	return 0;
 }

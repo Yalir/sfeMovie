@@ -26,6 +26,13 @@ void my_pause()
 #endif
 }
 
+class DummyDelegate : public sfe::VideoStream::Delegate {
+	void didUpdateImage(const sfe::VideoStream& sender, const sf::Texture& image)
+	{
+		
+	}
+};
+
 int main(int argc, const char *argv[])
 {
 	// Some settings
@@ -44,13 +51,15 @@ int main(int argc, const char *argv[])
 	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
 	
 	// Create window
-	sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), windowTitle, sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode::getDesktopMode(), windowTitle, sf::Style::Fullscreen);
 	
+	sfe::dumpAvailableDemuxers();
 	sfe::dumpAvailableDecoders();
 	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
 	
 	sfe::Timer timer;
-	sfe::Demuxer demuxer(mediaFile, timer);
+	DummyDelegate delegate;
+	sfe::Demuxer demuxer(mediaFile, timer, delegate);
 	
 	const std::map<int, sfe::Stream*>& vStreams = demuxer.getStreams();
 	sfe::VideoStream* vStream = NULL;
@@ -70,7 +79,7 @@ int main(int argc, const char *argv[])
 	// Scale movie to the window drawing area and enable VSync
 	window.setVerticalSyncEnabled(true);
 
-	while (window.isOpen() && !demuxer.didReachEndOfFile())
+	while (window.isOpen()/* && !demuxer.didReachEndOfFile()*/)
 	{
 		sf::Event ev;
 		while (window.pollEvent(ev))
@@ -84,7 +93,7 @@ int main(int argc, const char *argv[])
 			}
 		}
 		
-		demuxer.updateVideoStreams();
+		demuxer.update();
 		
 		// Render movie
 		window.clear();
