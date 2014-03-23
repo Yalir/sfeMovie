@@ -28,6 +28,7 @@
 #include <SFML/System.hpp>
 #include "Macros.hpp"
 #include "Stream.hpp"
+#include "VideoStream.hpp"
 #include "Timer.hpp"
 #include <map>
 #include <string>
@@ -70,8 +71,12 @@ namespace sfe {
 		/** Default constructor
 		 *
 		 * Open a media file and find its streams
+		 *
+		 * @param sourceFile the path of the media to open and play
+		 * @param timer the timer with which the media streams will be synchronized
+		 * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
 		 */
-		Demuxer(const std::string& sourceFile, Timer& timer);
+		Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate);
 		
 		/** Default destructor
 		 */
@@ -98,9 +103,9 @@ namespace sfe {
 		 */
 		void feedStream(Stream& stream);
 		
-		/** Let the video streams gather and decode new images
+		/** Update the media status and eventually decode frames
 		 */
-		void updateVideoStreams(void);
+		void update(void);
 		
 		/** Tell whether the demuxer has reached the end of the file and can no more feed the streams
 		 *

@@ -33,7 +33,6 @@ extern "C"
 #include "VideoStream.hpp"
 #include "AudioStream.hpp"
 #include "SubtitleStream.hpp"
-#include "Threads.hpp"
 #include "Log.hpp"
 #include "Utilities.hpp"
 #include <iostream>
@@ -98,7 +97,7 @@ namespace sfe {
 		return g_availableDecoders;
 	}
 	
-	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer) :
+	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate) :
 	m_avFormatCtx(NULL),
 	m_eofReached(false),
 	m_streams(),
@@ -129,7 +128,7 @@ namespace sfe {
 			try {
 				switch (ffstream->codec->codec_type) {
 					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer);
+						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer, videoDelegate);
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
 						break;
 						
@@ -146,7 +145,7 @@ namespace sfe {
 						
 					default:
 						m_ignoredStreams[ffstream->index] = std::string(std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
-						sfeLogWarning(m_ignoredStreams[ffstream->index] + "' stream ignored");
+						sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
 						break;
 				}
 			} catch (std::runtime_error& e) {
@@ -194,8 +193,6 @@ namespace sfe {
 	{
 		sf::Lock l(m_synchronized);
 		
-//		sfeLogDebug(Threads::currentThreadName());
-		
 		while (!didReachEndOfFile() && stream.needsMoreData()) {
 			AVPacketRef pkt = readPacket();
 			
@@ -211,16 +208,13 @@ namespace sfe {
 		}
 	}
 	
-	void Demuxer::updateVideoStreams(void)
+	void Demuxer::update(void)
 	{
-		std::set<Stream*> streams = getStreamsOfType(MEDIA_TYPE_VIDEO);
-		std::set<Stream*>::iterator it;
+		std::map<int, Stream*> streams = getStreams();
+		std::map<int, Stream*>::iterator it;
 		
 		for (it = streams.begin();it != streams.end(); it++) {
-			VideoStream* vStream = dynamic_cast<VideoStream*>(*it);
-			CHECK(vStream, "Demuxer::updateVideoStreams() - got non video streams");
-			
-			vStream->updateTexture();
+			it->second->update();
 		}
 	}
 	
@@ -232,7 +226,6 @@ namespace sfe {
 	AVPacketRef Demuxer::readPacket(void)
 	{
 		sf::Lock l(m_synchronized);
-//		sfeLogDebug(Threads::currentThreadName());
 		
 		AVPacket *pkt = NULL;
 		int err = 0;
@@ -256,7 +249,6 @@ namespace sfe {
 	{
 		sf::Lock l(m_synchronized);
 		CHECK(packet, "Demuxer::distributePacket() - invalid argument");
-//		sfeLogDebug(Threads::currentThreadName());
 		
 		bool result = false;
 		std::map<int, Stream*>::iterator it = m_streams.find(packet->stream_index);
@@ -272,7 +264,6 @@ namespace sfe {
 	void Demuxer::requestMoreData(Stream& starvingStream)
 	{
 		sf::Lock l(m_synchronized);
-//		sfeLogDebug(Threads::currentThreadName());
 		
 		feedStream(starvingStream);
 	}

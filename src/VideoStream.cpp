@@ -34,12 +34,14 @@ extern "C" {
 #include "Log.hpp"
 
 namespace sfe {
-	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
 	Stream(stream, dataSource, timer),
 	m_texture(),
 	m_rawVideoFrame(NULL),
 	m_rgbaVideoBuffer(),
 	m_rgbaVideoLinesize(),
+	m_delegate(delegate),
+	m_swsCtx(NULL),
 	m_lastDecodedTimestamp(sf::Time::Zero)
 	{
 		int err;
@@ -90,11 +92,16 @@ namespace sfe {
 		return m_texture;
 	}
 	
-	void VideoStream::updateTexture(void)
+	void VideoStream::update(void)
 	{
-		if (getSynchronizationGap() < sf::Time::Zero) {
-//			sfeLogDebug("Late by " + s(-getSynchronizationGap().asMilliseconds()) + "ms");
-			onGetData(m_texture);
+		if (getStatus() == Stream::Playing) {
+			if (getSynchronizationGap() < sf::Time::Zero) {
+				if (!onGetData(m_texture)) {
+					setStatus(Stopped);
+				} else {
+					m_delegate.didUpdateImage(*this, m_texture);
+				}
+			}
 		}
 	}
 	
@@ -102,29 +109,33 @@ namespace sfe {
 	{
 		AVPacketRef packet = popEncodedData();
 		bool gotFrame = false;
-		bool goOn = true;
+		bool goOn = false;
 		
-		while (!gotFrame && packet && goOn) {
-			bool needsMoreDecoding = false;
+		if (packet) {
+			goOn = true;
 			
-			CHECK(packet != NULL, "inconsistency error");
-			goOn = decodePacket(packet, m_rawVideoFrame, gotFrame, needsMoreDecoding);
-			
-			if (gotFrame) {
-				rescale(m_rawVideoFrame, m_rgbaVideoBuffer, m_rgbaVideoLinesize);
-				texture.update(m_rgbaVideoBuffer[0]);
-			}
-			
-			if (needsMoreDecoding) {
-				prependEncodedData(packet);
-			} else {
-				av_free_packet(packet);
-				av_free(packet);
-			}
-			
-			if (!gotFrame && goOn) {
-				sfeLogDebug("no image in this packet, reading further");
-				packet = popEncodedData();
+			while (!gotFrame && packet && goOn) {
+				bool needsMoreDecoding = false;
+				
+				CHECK(packet != NULL, "inconsistency error");
+				goOn = decodePacket(packet, m_rawVideoFrame, gotFrame, needsMoreDecoding);
+				
+				if (gotFrame) {
+					rescale(m_rawVideoFrame, m_rgbaVideoBuffer, m_rgbaVideoLinesize);
+					texture.update(m_rgbaVideoBuffer[0]);
+				}
+				
+				if (needsMoreDecoding) {
+					prependEncodedData(packet);
+				} else {
+					av_free_packet(packet);
+					av_free(packet);
+				}
+				
+				if (!gotFrame && goOn) {
+					sfeLogDebug("no image in this packet, reading further");
+					packet = popEncodedData();
+				}
 			}
 		}
 		

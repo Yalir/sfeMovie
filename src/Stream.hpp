@@ -113,6 +113,10 @@ namespace sfe {
 		 * @return The stream's status (Playing, Paused or Stopped)
 		 */
 		Status getStatus(void) const;
+		
+		/** Update the current stream's status and eventually decode frames
+		 */
+		virtual void update(void) = 0;
 	protected:
 		// Timer::Observer interface
 		virtual void didPlay(const Timer& timer, Timer::Status previousStatus) = 0;

@@ -69,15 +69,6 @@ find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
 set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_LIBRARY} ${SFML_SYSTEM_LIBRARY})
 
 #################################################################################################################
-# =============================================== Boost SETUP ================================================= #
-#################################################################################################################
-
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.46 COMPONENTS thread system REQUIRED)
-
-#################################################################################################################
 # ============================================== sfeMovie SETUP =============================================== #
 #################################################################################################################
 
@@ -120,8 +111,8 @@ endif()
 source_group(Sources FILES ${SOURCE_FILES})
 
 # Set the search directories for compiling and link editing
-include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR} ${Boost_INCLUDE_DIRS}")
+include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
+message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR}")
 
 # Define the source files sfe should compile
 add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
@@ -136,20 +127,22 @@ endif()
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
 	if (LINUX)
-		add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
+		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
 			COMMAND cp -R
 				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
-				$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>)
+				"$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
 	elseif(MACOSX)
-		add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
+		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+			COMMAND mkdir -p "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
+		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
 			COMMAND cp -R
 				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
-				$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries)
+				"$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
 	elseif(WINDOWS)
-		add_custom_command(TARGET ${SFEMOVIE_LIB} POST_BUILD
+		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
 			COMMAND ${CMAKE_COMMAND} -E copy_directory
 				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
-				$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>)
+				"$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
 	endif()
 endif()
 

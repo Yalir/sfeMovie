@@ -33,12 +33,16 @@
 namespace sfe {
 	class VideoStream : public Stream {
 	public:
+		struct Delegate {
+			virtual void didUpdateImage(const VideoStream& sender, const sf::Texture& image) = 0;
+		};
+		
 		/** Create a video stream from the given FFmpeg stream
 		 *
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer);
+		VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
 		
 		/** Default destructor
 		 */
@@ -54,9 +58,9 @@ namespace sfe {
 		 */
 		sf::Texture& getVideoTexture(void);
 		
-		/** Update the video frame
+		/** Update the video frame and the stream's status
 		 */
-		void updateTexture(void);
+		virtual void update(void);
 	private:
 		bool onGetData(sf::Texture& texture);
 //		void onSeek(sf::Time timeOffset);
@@ -112,6 +116,7 @@ namespace sfe {
 		AVFrameRef m_rawVideoFrame;
 		uint8_t *m_rgbaVideoBuffer[4];
 		int m_rgbaVideoLinesize[4];
+		Delegate& m_delegate;
 		
 		// Rescaler data
 		struct SwsContext *m_swsCtx;

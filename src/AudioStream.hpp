@@ -50,6 +50,9 @@ namespace sfe {
 		 */
 		virtual MediaType getStreamKind(void) const;
 		
+		/** Update the stream's status
+		 */
+		virtual void update(void);
 	private:
 		virtual bool onGetData(sf::SoundStream::Chunk& data);
 		virtual void onSeek(sf::Time timeOffset);

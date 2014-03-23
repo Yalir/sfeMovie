@@ -206,7 +206,6 @@ function main()
 			
 			source_dir=`cat SourceDir.var`
 			build_dir=`cat BuildDir.var`
-			outputs=`cat FFmpegOutputs.var`
 
 			if ! [ "$os" == "windows" ] ; then
 				jobsCount=5
@@ -220,16 +219,6 @@ function main()
 			echo "OS              : $os"
 			echo "Visual Studio   : $vcpp"
 			echo "Decoders        : $full_decoders_list"
-			
-#			config="${os} ${vcpp} ${full_decoders_list} ${source_dir} ${build_dir}"
-
-#			if test -f "${build_dir}/FFmpegConfig.shc" ; then
-#				previousConfig=`cat "${build_dir}/FFmpegConfig.shc"`
-
-#				if [ "${previousConfig}" == "${config}" ] ; then
-
-#				fi
-#			fi
 			
 			build_ffmpeg $*
 		fi
