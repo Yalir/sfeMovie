@@ -28,6 +28,7 @@
 #include <SFML/System.hpp>
 #include "Macros.hpp"
 #include "Stream.hpp"
+#include "AudioStream.hpp"
 #include "VideoStream.hpp"
 #include "Timer.hpp"
 #include <map>
@@ -96,6 +97,36 @@ namespace sfe {
 		 */
 		std::set<Stream*> getStreamsOfType(MediaType type) const;
 		
+		/** Enable the given audio stream and connect it to the reference timer
+		 * 
+		 * If another stream of the same kind is already enabled, it is first disabled and disconnected
+		 * so that only one stream of the same kind can be enabled at the same time.
+		 *
+		 * @param stream the audio stream to enable and connect for playing, or NULL to disable audio
+		 */
+		void selectAudioStream(AudioStream* stream);
+		
+		/** Get the currently selected audio stream, if there's one
+		 *
+		 * @return the currently selected audio stream, or NULL if there's none
+		 */
+		AudioStream* getSelectedAudioStream(void) const;
+		
+		/** Enable the given video stream and connect it to the reference timer
+		 *
+		 * If another stream of the same kind is already enabled, it is first disabled and disconnected
+		 * so that only one stream of the same kind can be enabled at the same time.
+		 *
+		 * @param stream the video stream to enable and connect for playing, or NULL to disable video
+		 */
+		void selectVideoStream(VideoStream* stream);
+		
+		/** Get the currently selected video stream, if there's one
+		 *
+		 * @return the currently selected video stream, or NULL if there's none
+		 */
+		VideoStream* getSelectedVideoStream(void) const;
+		
 		/** Read encoded data from the media and makes sure that the given stream
 		 * has enough data
 		 *
@@ -112,6 +143,12 @@ namespace sfe {
 		 * @return whether the end of the media file has been reached
 		 */
 		bool didReachEndOfFile(void) const;
+		
+		/** Give the media duration
+		 *
+		 * @return the media duration
+		 */
+		sf::Time getDuration(void) const;
 		
 	private:
 		/** Read a encoded packet from the media file
@@ -131,6 +168,10 @@ namespace sfe {
 		 */
 		bool distributePacket(AVPacketRef packet);
 		
+		/** Try to extract the media duration from the given stream
+		 */
+		void extractDurationFromStream(AVStreamRef stream);
+		
 		virtual void requestMoreData(Stream& starvingStream);
 		
 		AVFormatContextRef m_avFormatCtx;
@@ -139,6 +180,9 @@ namespace sfe {
 		std::map<int, std::string> m_ignoredStreams;
 		sf::Mutex m_synchronized;
 		Timer& m_timer;
+		Stream* m_connectedAudioStream;
+		Stream* m_connectedVideoStream;
+		sf::Time m_duration;
 		
 		static std::list<DemuxerInfo> g_availableDemuxers;
 		static std::list<DecoderInfo> g_availableDecoders;

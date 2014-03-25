@@ -1,11 +1,10 @@
 
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
-#include "Demuxer.hpp"
+#include <sfeMovie/Movie.hpp>
 #include "Utilities.hpp"
-#include "Log.hpp"
-#include "VideoStream.hpp"
 #include <iostream>
+#include <algorithm>
 
 /*
  * Here is a little use sample for sfeMovie.
@@ -26,20 +25,18 @@ void my_pause()
 #endif
 }
 
-class DummyDelegate : public sfe::VideoStream::Delegate {
-	void didUpdateImage(const sfe::VideoStream& sender, const sf::Texture& image)
-	{
-		
+std::string StatusToString(sfe::Movie::Status status)
+{
+	switch (status) {
+		case sfe::Movie::Stopped: return "Stopped"; break;
+		case sfe::Movie::Paused: return "Paused"; break;
+		case sfe::Movie::Playing: return "Playing"; break;
+		default: return "unknown status"; break;
 	}
-};
+}
 
 int main(int argc, const char *argv[])
 {
-	// Some settings
-	const std::string windowTitle = "sfeMovie Player";
-	const int windowWidth = 1280;
-	const int windowHeight = 800;
-	
 	if (argc < 2)
 	{
 		std::cout << "Usage: " << std::string(argv[0]) << " movie_path" << std::endl;
@@ -49,37 +46,27 @@ int main(int argc, const char *argv[])
 	
 	std::string mediaFile = std::string(argv[1]);
 	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
+
+//	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
+	sfe::Movie movie;
+	
+	if (!movie.openFromFile(mediaFile))
+		return 1;
+	
+	bool fullscreen = false;
+	sf::VideoMode mode = sf::VideoMode::getDesktopMode();
+	int width = std::min((int)mode.width, movie.getSize().x);
+	int height = std::min((int)mode.height, movie.getSize().y);
 	
 	// Create window
-	sf::RenderWindow window(sf::VideoMode::getDesktopMode(), windowTitle, sf::Style::Fullscreen);
-	
-	sfe::dumpAvailableDemuxers();
-	sfe::dumpAvailableDecoders();
-	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
-	
-	sfe::Timer timer;
-	DummyDelegate delegate;
-	sfe::Demuxer demuxer(mediaFile, timer, delegate);
-	
-	const std::map<int, sfe::Stream*>& vStreams = demuxer.getStreams();
-	sfe::VideoStream* vStream = NULL;
-	
-	if (vStreams.size()) {
-		vStream = dynamic_cast<sfe::VideoStream*>(vStreams.begin()->second);
-	}
-	
-	timer.play();
-	
-	sf::Sprite sp;
-	
-	if (vStream) {
-		sp.setTexture(vStream->getVideoTexture());
-	}
+	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
 	
 	// Scale movie to the window drawing area and enable VSync
-	window.setVerticalSyncEnabled(true);
+//	window.setVerticalSyncEnabled(true);
+	window.setFramerateLimit(60);
+	movie.play();
 
-	while (window.isOpen()/* && !demuxer.didReachEndOfFile()*/)
+	while (window.isOpen())
 	{
 		sf::Event ev;
 		while (window.pollEvent(ev))
@@ -91,13 +78,35 @@ int main(int argc, const char *argv[])
 			{
 				window.close();
 			}
+			
+			if (ev.type == sf::Event::KeyPressed) {
+				if (ev.key.code == sf::Keyboard::Space) {
+					if (movie.getStatus() == sfe::Movie::Playing) {
+						movie.pause();
+					} else {
+						movie.play();
+					}
+				} else if (ev.key.code == sf::Keyboard::F) {
+					fullscreen = !fullscreen;
+					window.create(sf::VideoMode(width, height), "sfeMovie Player", fullscreen ? sf::Style::Fullscreen : sf::Style::Close);
+				} else if (ev.key.code == sf::Keyboard::P) {
+					std::cout << "Volume: " << movie.getVolume() << std::endl;
+					std::cout << "Duration: " << movie.getDuration().asSeconds() << "s" << std::endl;
+					std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
+					std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
+					std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
+					std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
+					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
+					std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
+				}
+			}
 		}
 		
-		demuxer.update();
+		movie.update();
 		
 		// Render movie
 		window.clear();
-		window.draw(sp);
+		window.draw(movie);
 		window.display();
 	}
 

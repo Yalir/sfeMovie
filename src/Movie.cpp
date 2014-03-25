@@ -22,506 +22,191 @@
  *
  */
 
-extern "C"
-{
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
-}
-
 #include <sfeMovie/Movie.hpp>
-#include "Condition.hpp"
-#include "Movie_video.hpp"
-#include "Movie_audio.hpp"
-#include "utils.hpp"
-#include <SFML/Graphics.hpp>
-#include <iostream>
-
-#define IFAUDIO(sequence) { if (m_hasAudio) { sequence; } }
-#define IFVIDEO(sequence) { if (m_hasVideo) { sequence; } }
+#include "Demuxer.hpp"
+#include "Timer.hpp"
+#include "Log.hpp"
 
 namespace sfe {
-
-	static bool g_usesDebugMessages = false;
-
+	
 	Movie::Movie(void) :
-	m_avFormatCtx(NULL),
-	m_hasVideo(false),
-	m_hasAudio(false),
-	m_eofReached(false),
-	m_stopMutex(),
-	m_readerMutex(),
-	m_watchThread(&Movie::watch, this),
-	m_shouldStopCond(new Condition()),
-	
-	m_status(Stopped),
-	m_duration(sf::Time::Zero),
-	m_overallTimer(),
-	m_progressAtPause(sf::Time::Zero),
-	
-	m_video(new Movie_video(*this)),
-	m_audio(new Movie_audio(*this))
+	m_demuxer(NULL),
+	m_timer(NULL),
+	m_sprite()
 	{
 	}
-
+	
 	Movie::~Movie(void)
 	{
-		stop();
-		close();
-		delete m_video;
-		delete m_audio;
-		
-		m_shouldStopCond->invalidate();
-		
-		delete m_shouldStopCond;
+		cleanResources();
 	}
-
+	
 	bool Movie::openFromFile(const std::string& filename)
 	{
-		int err = 0;
-		bool preloaded = false;
-
-		// Make sure everything is cleaned before opening a new movie
-		stop();
-		close();
+		cleanResources();
 		
-		// Load all the decoders
-		av_register_all();
-
-		// Open the movie file
-		err = avformat_open_input(&m_avFormatCtx, filename.c_str(), NULL, NULL);
-
-		if (err != 0)
-		{
-			outputError(err, "unable to open file " + filename);
-			return false;
-		}
-
-		// Read the general movie informations
-		err = avformat_find_stream_info(m_avFormatCtx, NULL);
-
-		if (err < 0)
-		{
-			outputError(err);
-			close();
-			return false;
-		}
-
-		if (usesDebugMessages())
-			// Output the movie informations
-			av_dump_format(m_avFormatCtx, 0, filename.c_str(), 0);
-
-		// Perform the audio and video loading
-		m_hasVideo = m_video->initialize();
-		m_hasAudio = m_audio->initialize();
-		
-		if (m_hasVideo)
-		{
-			preloaded = m_video->preLoad();
+		try {
+			m_timer = new Timer;
+			m_demuxer = new Demuxer(filename, *m_timer, *this);
 			
-			if (!preloaded) // Loading first frames failed
-			{
-				if (sfe::Movie::usesDebugMessages())
-					std::cerr << "Movie::OpenFromFile() - Movie_video::PreLoad() failed.\n";
+			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
+			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
+			
+			if (audioStreams.size())
+				m_demuxer->selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
+			
+			if (videoStreams.size())
+				m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
+			
+			if (!audioStreams.size() && !videoStreams.size()) {
+				sfeLogError("No supported audio or video stream in this media");
+				cleanResources();
+				return false;
+			} else {
+				return true;
 			}
+		} catch (std::runtime_error& e) {
+			sfeLogError(e.what());
+			cleanResources();
+			return false;
 		}
-		
-		return m_hasAudio || (m_hasVideo && preloaded);
 	}
-
+	
 	void Movie::play(void)
 	{
-		if (m_status != Playing)
-		{
-			if (m_hasAudio)
-			{
-				sf::Time startOffset = m_audio->getPlayingOffset();
-				sf::Clock timer;
-				m_audio->play();
-				
-				timer.restart();
-				while (startOffset == m_audio->getPlayingOffset() && timer.getElapsedTime() < sf::seconds(5))
-					sf::sleep(sf::milliseconds(1));
-				
-				// Note: this is a workaround for SFML issue #201
-				// Audio initialization may silently fail and audio won't start playing
-				if (timer.getElapsedTime() >= sf::seconds(5))
-					std::cerr << "*** warning: Movie::play() - no audio progress for 5 sec, giving up on syncing" << std::endl;
-				
-				m_progressAtPause = m_audio->getPlayingOffset();
-			}
-			
-			m_overallTimer.restart();
-			IFVIDEO(m_video->play());
-			
-			if (usesDebugMessages())
-				printWithTime("did start movie timer");
-			
-			// Don't restart watch thread if we're resuming
-			if (m_status != Paused)
-			{
-				*m_shouldStopCond = 0;
-				m_shouldStopCond->restore();
-				m_watchThread.launch();
-			}
-			
-			m_status = Playing;
-		}
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		m_timer->play();
+		update();
 	}
-
+	
 	void Movie::pause(void)
 	{
-		if (m_status == Playing)
-		{
-			// Prevent audio from being late compared to video
-			// (audio usually gets a bit later each time you pause and resume
-			// the movie playback, thus fix the video timing according
-			// to the audio's one)
-			// NB: Calling Pause()/Play() is the only way to resynchronize
-			// audio and video when audio gets late for now.
-			if (hasAudioTrack())
-			{
-				m_progressAtPause = m_audio->getPlayingOffset();
-				//std::cout << "synch according to audio track=" << m_progressAtPause << std::endl;
-			}
-			else
-			{
-				//std::cout << "synch according to progrAtPse=" << m_progressAtPause << " + elapsdTme=" << m_overallTimer.GetElapsedTime() << std::endl;
-				m_progressAtPause += m_overallTimer.getElapsedTime();
-			}
-			
-			m_status = Paused;
-			IFAUDIO(m_audio->pause());
-			IFVIDEO(m_video->pause());
-		}
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		m_timer->pause();
+		update();
 	}
-
+	
 	void Movie::stop(void)
 	{
-		internalStop(false);
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		m_timer->stop();
+		update();
 	}
 	
-	void Movie::internalStop(bool calledFromWatchThread)
+	void Movie::update(void)
 	{
-		// prevent Stop() from being executed while already stopping from another thread
-		sf::Lock l(m_stopMutex);
-		
-		if (m_status != Stopped)
-		{
-			m_status = Stopped;
-			IFAUDIO(m_audio->stop());
-			IFVIDEO(m_video->stop());
-			
-			m_progressAtPause = sf::Time::Zero;
-			setEofReached(false);
-			m_shouldStopCond->invalidate();
-			
-			if (!calledFromWatchThread)
-				m_watchThread.wait();
-		}
+		CHECK(m_demuxer, "No media loaded");
+		m_demuxer->update();
 	}
-
-	bool Movie::hasVideoTrack(void) const
-	{
-		return m_hasVideo;
-	}
-
-	bool Movie::hasAudioTrack(void) const
-	{
-		return m_hasAudio;
-	}
-
+	
 	void Movie::setVolume(float volume)
 	{
-		IFAUDIO(m_audio->setVolume(volume));
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
+		std::set<Stream*>::const_iterator it;
+		
+		for (it = audioStreams.begin(); it != audioStreams.end(); it++) {
+			AudioStream* audioStream = dynamic_cast<AudioStream*>(*it);
+			audioStream->setVolume(volume);
+		}
 	}
-
+	
 	float Movie::getVolume(void) const
 	{
-		float volume = 0;
-		IFAUDIO(volume = m_audio->getVolume());
-		return volume;
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+		
+		CHECK(audioStream, "No selected audio stream, cannot return a volume");
+		return audioStream->getVolume();
 	}
-
+	
 	sf::Time Movie::getDuration(void) const
 	{
-		return m_duration;
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		return m_demuxer->getDuration();
 	}
-
+	
 	sf::Vector2i Movie::getSize(void) const
 	{
-		return m_video->getSize();
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
+		CHECK(videoStream, "No selected video stream, cannot return a frame size");
+		return videoStream->getFrameSize();
 	}
-
-	void Movie::resizeToFrame(int x, int y, int width, int height, bool preserveRatio)
-	{
-		resizeToFrame(sf::IntRect(x, y, width, height), preserveRatio);
-	}
-
-	void Movie::resizeToFrame(sf::IntRect frame, bool preserveRatio)
-	{
-		sf::Vector2i movie_size = getSize();
-		sf::Vector2i wanted_size = sf::Vector2i(frame.width, frame.height);
-		sf::Vector2i new_size;
-
-		if (preserveRatio)
-		{
-			sf::Vector2i target_size = movie_size;
-
-			float source_ratio = (float)movie_size.x / movie_size.y;
-			float target_ratio = (float)wanted_size.x / wanted_size.y;
-
-			if (source_ratio > target_ratio)
-			{
-				target_size.x = movie_size.x * ((float)wanted_size.x / movie_size.x);
-				target_size.y = movie_size.y * ((float)wanted_size.x / movie_size.x);
-			}
-			else
-			{
-				target_size.x = movie_size.x * ((float)wanted_size.y / movie_size.y);
-				target_size.y = movie_size.y * ((float)wanted_size.y / movie_size.y);
-			}
-
-			setScale((float)target_size.x / movie_size.x, (float)target_size.y / movie_size.y);
-			new_size = target_size;
-		}
-		else
-		{
-			setScale((float)wanted_size.x / movie_size.x, (float)wanted_size.y / movie_size.y);
-			new_size = wanted_size;
-		}
-
-		setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
-					frame.top + (wanted_size.y - new_size.y) / 2);
-	}
-
+	
 	float Movie::getFramerate(void) const
 	{
-		return 1. / m_video->getWantedFrameTime().asSeconds();
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
+		CHECK(videoStream, "No selected video stream, cannot return a frame rate");
+		return videoStream->getFrameRate();
 	}
-
+	
 	unsigned int Movie::getSampleRate(void) const
 	{
-		unsigned rate = 0;
-		IFAUDIO(rate = m_audio->getSampleRate());
-		return rate;
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+		CHECK(audioStream, "No selected audio stream, cannot return a sample rate");
+		return audioStream->getSampleRate();
 	}
-
+	
 	unsigned int Movie::getChannelCount(void) const
 	{
-		unsigned count = 0;
-		IFAUDIO(count = m_audio->getChannelCount());
-		return count;
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+		CHECK(audioStream, "No selected audio stream, cannot return a channel count");
+		return audioStream->getChannelCount();
 	}
-
-	Movie::Status Movie::getStatus() const
-	{
-		return m_status;
-	}
-
-	/*void Movie::SetPlayingOffset(float position)
-	 #error change floag to int
-	{
-		PrintWithTime("offset before : " + s(GetPlayingOffset()));
-
-		IFAUDIO(m_audio->setPlayingOffset(position));
-		IFVIDEO(m_video->setPlayingOffset(position));
-		m_progressAtPause = position;
-		m_overallTimer.Reset();
-
-		PrintWithTime("offset after : " + s(GetPlayingOffset()));
-	}*/
-
-	sf::Time Movie::getPlayingOffset() const
-	{
-		sf::Time offset = sf::Time::Zero;
-
-		if (m_status == Playing)
-			offset = m_progressAtPause + m_overallTimer.getElapsedTime();
-		else
-			offset = m_progressAtPause;
-
-		return offset;
-	}
-
-	const sf::Texture& Movie::getCurrentFrame(void) const
-	{
-		static sf::Texture emptyTexture;
-		
-		if (m_hasVideo)
-			return m_video->getCurrentFrame();
-		else
-			return emptyTexture;
-	}
-
-	void Movie::useDebugMessages(bool flag)
-	{
-		g_usesDebugMessages = flag;
-
-		if (g_usesDebugMessages)
-			av_log_set_level(AV_LOG_VERBOSE);
-		else
-			av_log_set_level(AV_LOG_ERROR);
-	}
-
 	
-	void Movie::draw(sf::RenderTarget& target, sf::RenderStates states) const
+	Movie::Status Movie::getStatus(void) const
 	{
-		if (usesDebugMessages())
-		{
-			printWithTime("audio playing : " + ftostr(m_audio->getPlayingOffset().asSeconds()) + "s");
-			printWithTime("reference playing : " + ftostr(getPlayingOffset().asSeconds()) + "s");
+		Status st = Stopped;
+		
+		if (m_demuxer) {
+			int statuses[End];
+			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
+			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+			
+			memset(statuses, 0, sizeof(statuses));
+			statuses[videoStream->getStatus()]++;
+			statuses[audioStream->Stream::getStatus()]++;
+			
+			if (statuses[Playing] > 0) {
+				st = Playing;
+			} else if (statuses[Paused] > 0) {
+				st = Paused;
+			}
 		}
 		
+		return st;
+	}
+	
+	sf::Time Movie::getPlayingOffset(void) const
+	{
+		CHECK(m_demuxer && m_timer, "No media loaded");
+		return m_timer->getOffset();
+	}
+	
+	void Movie::cleanResources(void)
+	{
+		if (m_demuxer)
+			delete m_demuxer, m_demuxer = NULL;
+		
+		if (m_timer)
+			delete m_timer, m_timer = NULL;
+	}
+	
+	void Movie::draw(sf::RenderTarget& Target, sf::RenderStates states) const
+	{
 		states.transform *= getTransform();
-		m_video->draw(target, states);
-	}
-
-	void Movie::outputError(int err, const std::string& fallbackMessage)
-	{
-		char buffer[4096] = {0};
-
-		if (/*err != AVERROR_NOENT &&*/ 0 == av_strerror(err, buffer, sizeof(buffer)))
-			std::cerr << "FFmpeg error: " << buffer << std::endl;
-		else
-		{
-		    if (fallbackMessage.length())
-                std::cerr << "FFmpeg error: " << fallbackMessage << std::endl;
-            else
-                std::cerr << "FFmpeg error: unable to retrieve the error message (and no fallback message set)" << std::endl;
-		}
-	}
-
-	void Movie::close(void)
-	{
-		IFVIDEO(m_video->close());
-		IFAUDIO(m_audio->close());
-
-		if (m_avFormatCtx)
-			avformat_close_input(&m_avFormatCtx);
-		m_hasAudio = false;
-		m_hasVideo = false;
-		m_eofReached = false;
-		m_status = Stopped;
-		m_duration = sf::Time::Zero;
-		m_progressAtPause = sf::Time::Zero;
-	}
-
-	AVFormatContext *Movie::getAVFormatContext(void)
-	{
-		return m_avFormatCtx;
-	}
-
-	bool Movie::getEofReached()
-	{
-		return m_eofReached;
-	}
-
-	void Movie::setEofReached(bool flag)
-	{
-		m_eofReached = flag;
-	}
-
-	void Movie::setDuration(sf::Time duration)
-	{
-		m_duration = duration;
-	}
-	 
-	bool Movie::readFrameAndQueue(void)
-	{
-		// Avoid reading from different threads at the same time
-		sf::Lock l(m_readerMutex);
-		bool flag = true;
-		AVPacket *pkt = NULL;
-		
-		// check we're not at eof
-		if (getEofReached())
-			flag = false;
-		else
-		{	
-			// read frame
-			pkt = (AVPacket *)av_malloc(sizeof(*pkt));
-			av_init_packet(pkt);
-			
-			int res = av_read_frame(getAVFormatContext(), pkt);
-			
-			// check we didn't reach eof right now
-			if (res < 0)
-			{
-				setEofReached(true);
-				flag = false;
-				av_free_packet(pkt);
-				av_free(pkt);
-			}
-			else
-			{
-				// When a frame has been read, save it
-				if (!saveFrame(pkt))
-				{
-					if (Movie::usesDebugMessages())
-						std::cerr << "Movie::ReadFrameAndQueue() - did read unknown packet type" << std::endl;
-					av_free_packet(pkt);
-					av_free(pkt);
-				}
-			}
-		}
-		
-		return flag;
+		Target.draw(m_sprite, states);
 	}
 	
-	bool Movie::saveFrame(AVPacket *frame)
+	void Movie::didUpdateImage(const VideoStream& sender, const sf::Texture& image)
 	{
-		bool saved = false;
-
-		if (m_hasAudio && frame->stream_index == m_audio->getStreamID())
-		{
-			// If it was an audio frame...
-			m_audio->pushFrame(frame);
-			saved = true;
-		}
-		else if (m_hasVideo && frame->stream_index == m_video->getStreamID())
-		{
-			// If it was a video frame...
-			m_video->pushFrame(frame);
-			saved = true;
-		}
-		else
-		{
-			if (usesDebugMessages())
-				std::cerr << "Movie::SaveFrame() - unknown packet stream id ("
-				<< frame->stream_index << ")\n";
-		}
-
-		return saved;
-	}
-
-	bool Movie::usesDebugMessages(void)
-	{
-		return g_usesDebugMessages;
-	}
-	
-	void Movie::starvation(void)
-	{
-		bool audioStarvation = true;
-		bool videoStarvation = true;
-		
-		IFAUDIO(audioStarvation = m_audio->isStarving());
-		IFVIDEO(videoStarvation = m_video->isStarving());
-		
-		// No mode audio or video data to read
-		if (audioStarvation && videoStarvation)
-		{
-			*m_shouldStopCond = 1;
+		if (m_sprite.getTexture() == NULL) {
+			m_sprite.setTexture(image);
 		}
 	}
 	
-	void Movie::watch(void)
-	{
-		if (m_shouldStopCond->waitAndLock(1, Condition::AutoUnlock))
-		{
-			internalStop(true);
-		}
-	}
-
 } // namespace sfe
-

@@ -43,9 +43,9 @@ namespace sfe {
 		/** The stream's status
 		 */
 		enum Status {
-			Playing,
+			Stopped,
 			Paused,
-			Stopped
+			Playing
 		};
 		
 		struct DataSource {
@@ -60,11 +60,20 @@ namespace sfe {
 		 * @param stream the FFmpeg stream
 		 * @param dataSource the encoded data provider for this stream
 		 */
-		Stream(AVStreamRef stream, DataSource& dataSource, Timer& timer);
+		Stream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */
 		virtual ~Stream(void);
+		
+		/** Connect this stream against the reference timer to receive playback events; this allows this
+		 * stream to be played
+		 */
+		void connect(void);
+		
+		/** Disconnect this stream from the reference timer ; this disables this stream
+		 */
+		void disconnect(void);
 		
 		/** Called by the demuxer to provide the stream with encoded data
 		 *
@@ -125,6 +134,7 @@ namespace sfe {
 		
 		void setStatus(Status status);
 		
+		AVFormatContextRef m_formatCtx;
 		AVStreamRef m_stream;
 		DataSource& m_dataSource;
 		Timer& m_timer;

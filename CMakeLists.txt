@@ -76,22 +76,16 @@ file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]*)
 
 if (LINUX) # ========================================== LINUX ========================================== #
     add_definitions(-D__STDC_CONSTANT_MACROS)
-	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
-
 elseif (MACOSX) # ========================================== MACOSX ========================================== #
-	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Unix/ConditionImpl.cpp")
-    
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
 	
 	# find only "root" headers
-    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/*")
+    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
     
     # Make sure sfeMovie headers get imported in the framework
     set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 elseif (WINDOWS) # ========================================== WINDOWS ==========================================
-	set (SOURCE_FILES ${SOURCE_FILES} "${SOURCES_DIR}/Win32/ConditionImpl.cpp")
-
 	if (MSVC)
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 	else()

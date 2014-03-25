@@ -28,7 +28,7 @@
 
 namespace sfe {
 	namespace Log {
-		static int g_logMask = WarningMask;
+		static int g_logMask = WarningMask | ErrorMask;
 		static sf::Mutex g_synchronized;
 		
 		void setMask(int mask)
@@ -62,6 +62,15 @@ namespace sfe {
 			
 			if (g_logMask & WarningMask) {
 				std::cerr << "Warning: " << filename(file) << message << std::endl;
+			}
+		}
+		
+		void error(const std::string& file, const std::string& message)
+		{
+			sf::Lock l(g_synchronized);
+			
+			if (g_logMask & ErrorMask) {
+				std::cerr << "Error: " << filename(file) << message << std::endl;
 			}
 		}
 	}

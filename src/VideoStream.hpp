@@ -42,7 +42,7 @@ namespace sfe {
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
+		VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
 		
 		/** Default destructor
 		 */
@@ -53,6 +53,19 @@ namespace sfe {
 		 * @return the kind of stream represented by this stream
 		 */
 		virtual MediaType getStreamKind(void) const;
+		
+		/** Get the video frame size (width, height)
+		 *
+		 * @return the video frame size
+		 */
+		sf::Vector2i getFrameSize(void) const;
+		
+		/** Get the average amount of video frame per second for this stream
+		 *
+		 * @param formatCtx the FFmpeg format context to which this stream belongs
+		 * @return the average framerate
+		 */
+		float getFrameRate(void) const;
 		
 		/** Get the SFML texture that contains the latest video frame
 		 */

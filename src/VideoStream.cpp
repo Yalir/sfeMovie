@@ -34,8 +34,8 @@ extern "C" {
 #include "Log.hpp"
 
 namespace sfe {
-	VideoStream::VideoStream(AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
-	Stream(stream, dataSource, timer),
+	VideoStream::VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+	Stream(formatCtx ,stream, dataSource, timer),
 	m_texture(),
 	m_rawVideoFrame(NULL),
 	m_rgbaVideoBuffer(),
@@ -85,6 +85,16 @@ namespace sfe {
 	MediaType VideoStream::getStreamKind(void) const
 	{
 		return MEDIA_TYPE_VIDEO;
+	}
+	
+	sf::Vector2i VideoStream::getFrameSize(void) const
+	{
+		return sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
+	}
+	
+	float VideoStream::getFrameRate(void) const
+	{
+		return av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, NULL));
 	}
 	
 	sf::Texture& VideoStream::getVideoTexture(void)
@@ -155,7 +165,7 @@ namespace sfe {
 		int decodedLength = avcodec_decode_video2(m_codecCtx, outputFrame, &gotPicture, packet);
 		gotFrame = (gotPicture != 0);
 		
-		if (decodedLength > 0) {
+		if (decodedLength > 0 || gotFrame) {
 			if (decodedLength < packet->size) {
 				needsMoreDecoding = true;
 				packet->data += decodedLength;
@@ -180,7 +190,7 @@ namespace sfe {
 		/* create scaling context */
 		m_swsCtx = sws_getCachedContext(NULL, m_codecCtx->width, m_codecCtx->height, m_codecCtx->pix_fmt,
 										m_codecCtx->width, m_codecCtx->height, PIX_FMT_RGBA,
-										SWS_BILINEAR, NULL, NULL, NULL);
+										SWS_FAST_BILINEAR, NULL, NULL, NULL);
 		CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
 	}
 	
@@ -197,7 +207,8 @@ namespace sfe {
 	
 	void VideoStream::willPlay(const Timer &timer)
 	{
-		preload();
+		if (getStatus() == Stream::Stopped)
+			preload();
 	}
 	
 	void VideoStream::didPlay(const Timer& timer, Timer::Status previousStatus)

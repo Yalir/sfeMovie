@@ -103,7 +103,10 @@ namespace sfe {
 	m_streams(),
 	m_ignoredStreams(),
 	m_synchronized(),
-	m_timer(timer)
+	m_timer(timer),
+	m_connectedAudioStream(NULL),
+	m_connectedVideoStream(NULL),
+	m_duration(sf::Time::Zero)
 	{
 		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
 		
@@ -121,6 +124,15 @@ namespace sfe {
 		err = avformat_find_stream_info(m_avFormatCtx, NULL);
 		CHECK0(err, "Demuxer::Demuxer() - error while retreiving media information");
 		
+		// Get the media duration if possible (otherwise rely on the streams)
+		if (m_avFormatCtx->duration != AV_NOPTS_VALUE)
+		{
+            long secs, us;
+            secs = m_avFormatCtx->duration / AV_TIME_BASE;
+            us = m_avFormatCtx->duration % AV_TIME_BASE;
+			m_duration = sf::seconds(secs + (float)us / AV_TIME_BASE);
+		}
+		
 		// Find all interesting streams
 		for (int i = 0; i < m_avFormatCtx->nb_streams; i++) {
 			AVStreamRef ffstream = m_avFormatCtx->streams[i];
@@ -128,12 +140,22 @@ namespace sfe {
 			try {
 				switch (ffstream->codec->codec_type) {
 					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(ffstream, *this, timer, videoDelegate);
+						m_streams[ffstream->index] = new VideoStream(m_avFormatCtx, ffstream, *this, timer, videoDelegate);
+						
+						if (m_duration == sf::Time::Zero) {
+							extractDurationFromStream(ffstream);
+						}
+						
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " video stream");
 						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
-						m_streams[ffstream->index] = new AudioStream(ffstream, *this, timer);
+						m_streams[ffstream->index] = new AudioStream(m_avFormatCtx, ffstream, *this, timer);
+						
+						if (m_duration == sf::Time::Zero) {
+							extractDurationFromStream(ffstream);
+						}
+						
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
 						break;
 						
@@ -151,6 +173,10 @@ namespace sfe {
 			} catch (std::runtime_error& e) {
 				std::cerr << "Demuxer::Demuxer() - " << e.what() << std::endl;
 			}
+		}
+		
+		if (m_duration == sf::Time::Zero) {
+			sfeLogWarning("The media duration could not be retreived");
 		}
 	}
 	
@@ -189,6 +215,60 @@ namespace sfe {
 		return streamSet;
 	}
 	
+	void Demuxer::selectAudioStream(AudioStream* stream)
+	{
+		Timer::Status oldStatus = m_timer.getStatus();
+		
+		if (oldStatus == Timer::Playing)
+			m_timer.pause();
+		
+		if (stream != m_connectedAudioStream) {
+			if (m_connectedAudioStream) {
+				m_connectedAudioStream->disconnect();
+			}
+			
+			if (stream)
+				stream->connect();
+			
+			m_connectedAudioStream = stream;
+		}
+		
+		if (oldStatus == Timer::Playing)
+			m_timer.play();
+	}
+	
+	AudioStream* Demuxer::getSelectedAudioStream(void) const
+	{
+		return dynamic_cast<AudioStream*>(m_connectedAudioStream);
+	}
+	
+	void Demuxer::selectVideoStream(VideoStream* stream)
+	{
+		Timer::Status oldStatus = m_timer.getStatus();
+		
+		if (oldStatus == Timer::Playing)
+			m_timer.pause();
+		
+		if (stream != m_connectedVideoStream) {
+			if (m_connectedVideoStream) {
+				m_connectedVideoStream->disconnect();
+			}
+			
+			if (stream)
+				stream->connect();
+			
+			m_connectedVideoStream = stream;
+		}
+		
+		if (oldStatus == Timer::Playing)
+			m_timer.play();
+	}
+	
+	VideoStream* Demuxer::getSelectedVideoStream(void) const
+	{
+		return dynamic_cast<VideoStream*>(m_connectedVideoStream);
+	}
+	
 	void Demuxer::feedStream(Stream& stream)
 	{
 		sf::Lock l(m_synchronized);
@@ -213,6 +293,7 @@ namespace sfe {
 		std::map<int, Stream*> streams = getStreams();
 		std::map<int, Stream*>::iterator it;
 		
+//		std::cout << "Timer: " << m_timer.getOffset().asMilliseconds() << " ms" << std::endl;
 		for (it = streams.begin();it != streams.end(); it++) {
 			it->second->update();
 		}
@@ -221,6 +302,11 @@ namespace sfe {
 	bool Demuxer::didReachEndOfFile(void) const
 	{
 		return m_eofReached;
+	}
+	
+	sf::Time Demuxer::getDuration(void) const
+	{
+		return m_duration;
 	}
 	
 	AVPacketRef Demuxer::readPacket(void)
@@ -259,6 +345,20 @@ namespace sfe {
 		}
 		
 		return result;
+	}
+	
+	void Demuxer::extractDurationFromStream(AVStreamRef stream)
+	{
+		if (m_duration != sf::Time::Zero)
+			return;
+		
+		if (stream->duration != AV_NOPTS_VALUE)
+		{
+            long secs, us;
+            secs = stream->duration / AV_TIME_BASE;
+            us = stream->duration % AV_TIME_BASE;
+			m_duration = sf::seconds(secs + (float)us / AV_TIME_BASE);
+		}
 	}
 	
 	void Demuxer::requestMoreData(Stream& starvingStream)

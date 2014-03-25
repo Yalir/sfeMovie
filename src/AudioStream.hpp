@@ -38,7 +38,7 @@ namespace sfe {
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		AudioStream(AVStreamRef stream, DataSource& dataSource, Timer& timer);
+		AudioStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */
@@ -53,6 +53,11 @@ namespace sfe {
 		/** Update the stream's status
 		 */
 		virtual void update(void);
+		
+		using sf::SoundStream::setVolume;
+		using sf::SoundStream::getVolume;
+		using sf::SoundStream::getSampleRate;
+		using sf::SoundStream::getChannelCount;
 	private:
 		virtual bool onGetData(sf::SoundStream::Chunk& data);
 		virtual void onSeek(sf::Time timeOffset);

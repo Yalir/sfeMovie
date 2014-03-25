@@ -59,8 +59,8 @@ namespace sfe {
 	
 	Timer::~Timer(void)
 	{
-		if (getStatus() != Stopped)
-			stop();
+//		if (getStatus() != Stopped)
+//			stop();
 	}
 	
 	void Timer::addObserver(Observer& anObserver)

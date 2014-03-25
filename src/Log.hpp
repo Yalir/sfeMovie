@@ -30,13 +30,15 @@
 
 #define sfeLogDebug(message) sfe::Log::debug(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
 #define sfeLogWarning(message) sfe::Log::warning(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
+#define sfeLogError(message) sfe::Log::error(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
 
 namespace sfe {
 	namespace Log {
 		enum Mask {
 			EmptyMask = 0,
 			DebugMask = 1 << 0,
-			WarningMask = 1 << 1
+			WarningMask = 1 << 1,
+			ErrorMask = 1 << 2
 		};
 		
 		/** Log only the messages allowed by the given @a mask
@@ -49,17 +51,23 @@ namespace sfe {
 		 */
 		void setMask(int mask);
 		
-		/** Log a debug @a message is the currently set mask allows it
+		/** Log a debug @a message if the currently set mask allows it
 		 *
 		 * @param message the debug message to log
 		 */
 		void debug(const std::string& file, const std::string& message);
 		
-		/** Log a warning @a message is the currently set mask allows it
+		/** Log a warning @a message if the currently set mask allows it
 		 *
-		 * @param message the debug message to log
+		 * @param message the warning message to log
 		 */
 		void warning(const std::string& file, const std::string& message);
+		
+		/** Log an error @a message if the currently set mask allows it
+		 *
+		 * @param message the error message to log
+		 */
+		void error(const std::string& file, const std::string& message);
 	}
 	
 	template <typename T>

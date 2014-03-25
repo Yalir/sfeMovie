@@ -35,9 +35,9 @@ namespace sfe {
 		/** The timer's status
 		 */
 		enum Status {
-			Playing,
+			Stopped,
 			Paused,
-			Stopped
+			Playing
 		};
 		
 		class Observer {

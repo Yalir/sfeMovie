@@ -14,8 +14,8 @@ extern "C" {
 #include "utils.hpp"
 
 namespace sfe {
-	AudioStream::AudioStream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
-	Stream(stream, dataSource, timer),
+	AudioStream::AudioStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	Stream(formatCtx, stream, dataSource, timer),
 	
 	// Public properties
 	m_sampleRate(0),
@@ -231,17 +231,21 @@ namespace sfe {
 	
 	void AudioStream::willPlay(const Timer &timer)
 	{
-		sf::Time initialTime = sf::SoundStream::getPlayingOffset();
-		sf::Clock timeout;
-		sf::SoundStream::play();
-		
-		// Some audio drivers take time before the sound is actually played
-		// To avoid desynchronization with the timer, we don't return
-		// until the audio stream is actually started
-		while (sf::SoundStream::getPlayingOffset() == initialTime && timeout.getElapsedTime() < sf::seconds(5))
-			sf::sleep(sf::milliseconds(10));
-		
-		CHECK(sf::SoundStream::getPlayingOffset() != initialTime, "is your audio device broken? Audio did not start within 5 seconds");
+		if (Stream::getStatus() == Stream::Stopped) {
+			sf::Time initialTime = sf::SoundStream::getPlayingOffset();
+			sf::Clock timeout;
+			sf::SoundStream::play();
+			
+			// Some audio drivers take time before the sound is actually played
+			// To avoid desynchronization with the timer, we don't return
+			// until the audio stream is actually started
+			while (sf::SoundStream::getPlayingOffset() == initialTime && timeout.getElapsedTime() < sf::seconds(5))
+				sf::sleep(sf::milliseconds(10));
+			
+			CHECK(sf::SoundStream::getPlayingOffset() != initialTime, "is your audio device broken? Audio did not start within 5 seconds");
+		} else {
+			sf::SoundStream::play();
+		}
 	}
 	
 	void AudioStream::didPlay(const Timer& timer, Timer::Status previousStatus)

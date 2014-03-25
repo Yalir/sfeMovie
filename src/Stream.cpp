@@ -37,7 +37,8 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
-	Stream::Stream(AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	Stream::Stream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	m_formatCtx(formatCtx),
 	m_stream(NULL),
 	m_dataSource(dataSource),
 	m_timer(timer),
@@ -61,18 +62,26 @@ namespace sfe {
 		// Load the video codec
 		err = avcodec_open2(m_codecCtx, m_codec, NULL);
 		CHECK0(err, "Stream() - unable to load decoder for codec " + std::string(avcodec_get_name(m_codecCtx->codec_id)));
-		
-		m_timer.addObserver(*this);
 	}
 	
 	Stream::~Stream()
 	{
-		m_timer.removeObserver(*this);
+		disconnect();
 		
 		if (m_codecCtx)
 			avcodec_close(m_codecCtx);
 		
 		discardAllEncodedData();
+	}
+	
+	void Stream::connect(void)
+	{
+		m_timer.addObserver(*this);
+	}
+	
+	void Stream::disconnect(void)
+	{
+		m_timer.removeObserver(*this);
 	}
 	
 	void Stream::pushEncodedData(AVPacketRef packet)
