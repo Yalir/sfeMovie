@@ -29,6 +29,7 @@
 #include <SFML/Audio.hpp>
 #include "Macros.hpp"
 #include "Stream.hpp"
+#include <stdint.h>
 
 namespace sfe {
 	class AudioStream : public Stream, private sf::SoundStream {

@@ -147,7 +147,7 @@ namespace sfe {
 		
 		int decodedLength = avcodec_decode_audio4(m_codecCtx, outputFrame, &igotFrame, packet);
 		gotFrame = (igotFrame != 0);
-		CHECK(decodedLength >= 0, "AudioStream::decodePacket() - error: " + std::string(av_err2str(decodedLength)));
+		CHECK(decodedLength >= 0, "AudioStream::decodePacket() - error: decodedLength=" + s(decodedLength));
 		
 		if (decodedLength < packet->size) {
 			needsMoreDecoding = true;
