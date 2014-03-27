@@ -2,7 +2,6 @@
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <sfeMovie/Movie.hpp>
-#include "Utilities.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -33,6 +32,33 @@ std::string StatusToString(sfe::Movie::Status status)
 		case sfe::Movie::Playing: return "Playing"; break;
 		default: return "unknown status"; break;
 	}
+}
+
+void drawControls(sf::RenderWindow& window, const sfe::Movie& movie)
+{
+	const int kHorizontalMargin = 10;
+	const int kVerticalMargin = 10;
+	const int kTimelineBackgroundHeight = 20;
+	const int kTimelineInnerMargin = 4;
+	
+	sf::RectangleShape background(sf::Vector2f(window.getSize().x - 2 * kHorizontalMargin, kTimelineBackgroundHeight));
+	background.setPosition(kHorizontalMargin, window.getSize().y - kTimelineBackgroundHeight - kVerticalMargin);
+	background.setFillColor(sf::Color(0, 0, 0, 255/2));
+	
+	sf::RectangleShape border(sf::Vector2f(background.getSize().x - 2 * kTimelineInnerMargin, background.getSize().y - 2 * kTimelineInnerMargin));
+	border.setPosition(background.getPosition().x + kTimelineInnerMargin, background.getPosition().y + kTimelineInnerMargin);
+	border.setFillColor(sf::Color::Transparent);
+	border.setOutlineColor(sf::Color::White);
+	border.setOutlineThickness(1.0);
+	
+	float fprogress = movie.getPlayingOffset().asSeconds() / movie.getDuration().asSeconds();
+	sf::RectangleShape progress(sf::Vector2f(1, border.getSize().y - 2 * border.getOutlineThickness()));
+	progress.setPosition(border.getPosition().x + border.getOutlineThickness() + fprogress * (border.getSize().x - 2 * border.getOutlineThickness()), border.getPosition().y + border.getOutlineThickness());
+	progress.setFillColor(sf::Color::White);
+	
+	window.draw(background);
+	window.draw(border);
+	window.draw(progress);
 }
 
 int main(int argc, const char *argv[])
@@ -90,14 +116,14 @@ int main(int argc, const char *argv[])
 					fullscreen = !fullscreen;
 					window.create(sf::VideoMode(width, height), "sfeMovie Player", fullscreen ? sf::Style::Fullscreen : sf::Style::Close);
 				} else if (ev.key.code == sf::Keyboard::P) {
-					std::cout << "Volume: " << movie.getVolume() << std::endl;
+					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
+					std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
 					std::cout << "Duration: " << movie.getDuration().asSeconds() << "s" << std::endl;
 					std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
 					std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
+					std::cout << "Volume: " << movie.getVolume() << std::endl;
 					std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
 					std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
-					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
-					std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
 				}
 			}
 		}
@@ -107,10 +133,9 @@ int main(int argc, const char *argv[])
 		// Render movie
 		window.clear();
 		window.draw(movie);
+		drawControls(window, movie);
 		window.display();
 	}
-
-//	timer.stop();
 	
 	return 0;
 }

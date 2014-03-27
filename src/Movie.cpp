@@ -97,6 +97,10 @@ namespace sfe {
 	{
 		CHECK(m_demuxer, "No media loaded");
 		m_demuxer->update();
+		
+		if (getStatus() == Stopped && m_timer->getStatus() != Timer::Stopped) {
+			m_timer->stop();
+		}
 	}
 	
 	void Movie::setVolume(float volume)
