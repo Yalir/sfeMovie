@@ -172,9 +172,11 @@ namespace sfe {
 		 */
 		void extractDurationFromStream(AVStreamRef stream);
 		
-		virtual void requestMoreData(Stream& starvingStream);
+		// Data source interface
+		void requestMoreData(Stream& starvingStream);
+		void resetEndOfFileStatus(void);
 		
-		AVFormatContextRef m_avFormatCtx;
+		AVFormatContextRef m_formatCtx;
 		bool m_eofReached;
 		std::map<int, Stream*> m_streams;
 		std::map<int, std::string> m_ignoredStreams;

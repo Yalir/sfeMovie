@@ -50,6 +50,7 @@ namespace sfe {
 		
 		struct DataSource {
 			virtual void requestMoreData(Stream& starvingStream) = 0;
+			virtual void resetEndOfFileStatus() = 0;
 		};
 		
 		/** Create a stream from the given FFmpeg stream
@@ -99,9 +100,9 @@ namespace sfe {
 		 */
 		virtual AVPacketRef popEncodedData(void);
 		
-		/** Empty the encoded data queue and destroy all the packets
+		/** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
 		 */
-		virtual void discardAllEncodedData(void);
+		void flushBuffers(void);
 		
 		/** Used by the demuxer to know if this stream should be fed with more data
 		 *
@@ -115,7 +116,7 @@ namespace sfe {
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual MediaType getStreamKind(void) const = 0;
+		virtual MediaType getStreamKind(void) const;
 		
 		/** Give the stream's status
 		 *
@@ -123,16 +124,23 @@ namespace sfe {
 		 */
 		Status getStatus(void) const;
 		
+		/** Compute the stream position in the media, by possibly fetching a packet
+		 */
+		sf::Time computePosition(void);
+		
 		/** Update the current stream's status and eventually decode frames
 		 */
 		virtual void update(void) = 0;
 	protected:
 		// Timer::Observer interface
-		virtual void didPlay(const Timer& timer, Timer::Status previousStatus) = 0;
-		virtual void didPause(const Timer& timer, Timer::Status previousStatus) = 0;
-		virtual void didStop(const Timer& timer, Timer::Status previousStatus) = 0;
+		void didPlay(const Timer& timer, Timer::Status previousStatus);
+		void didPause(const Timer& timer, Timer::Status previousStatus);
+		void didStop(const Timer& timer, Timer::Status previousStatus);
+		void willSeek(const Timer& timer, sf::Time position);
+		void didSeek(const Timer& timer, sf::Time position);
 		
 		void setStatus(Status status);
+		virtual void discardAllEncodedData(void);
 		
 		AVFormatContextRef m_formatCtx;
 		AVStreamRef m_stream;

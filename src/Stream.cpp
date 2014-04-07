@@ -67,11 +67,10 @@ namespace sfe {
 	Stream::~Stream()
 	{
 		disconnect();
+		flushBuffers();
 		
 		if (m_codecCtx)
 			avcodec_close(m_codecCtx);
-		
-		discardAllEncodedData();
 	}
 	
 	void Stream::connect(void)
@@ -114,10 +113,68 @@ namespace sfe {
 				flushPacket->data = NULL;
 				flushPacket->size = 0;
 				result = flushPacket;
+				
+				sfeLogDebug("Sending flush packet: " + MediaTypeToString(getStreamKind()));
 			}
 		}
 		
 		return result;
+	}
+	
+	void Stream::flushBuffers(void)
+	{
+		if (getStatus() == Playing) {
+			sfeLogWarning("packets flushed while the stream is still playing");
+		}
+		
+		avcodec_flush_buffers(m_codecCtx);
+		discardAllEncodedData();
+		
+		sfeLogDebug("Flushed " + MediaTypeToString(getStreamKind()) + " stream!");
+	}
+	
+	bool Stream::needsMoreData(void) const
+	{
+		return m_packetList.size() < 10;
+	}
+	
+	MediaType Stream::getStreamKind(void) const
+	{
+		return MEDIA_TYPE_UNKNOWN;
+	}
+	
+	Stream::Status Stream::getStatus(void) const
+	{
+		return m_status;
+	}
+	
+	sf::Time Stream::computePosition(void)
+	{
+		if (!m_packetList.size()) {
+			m_dataSource.requestMoreData(*this);
+		}
+		
+		if (!m_packetList.size()) {
+			return sf::Time::Zero;
+		} else {
+			AVPacketRef packet = *m_packetList.begin();
+			CHECK(packet, "internal inconcistency");
+			
+			int64_t timestamp = -424242;
+			
+			if (packet->dts != AV_NOPTS_VALUE) {
+				timestamp = packet->dts;
+			} else if (packet->pts != AV_NOPTS_VALUE) {
+				timestamp = packet->pts;
+			}
+			
+			return sf::seconds(timestamp * av_q2d(m_stream->time_base));
+		}
+	}
+	
+	void Stream::setStatus(Status status)
+	{
+		m_status = status;
 	}
 	
 	void Stream::discardAllEncodedData(void)
@@ -133,18 +190,36 @@ namespace sfe {
 		}
 	}
 	
-	bool Stream::needsMoreData(void) const
+	void Stream::didPlay(const Timer& timer, Timer::Status previousStatus)
 	{
-		return m_packetList.size() < 10;
+		setStatus(Stream::Playing);
 	}
 	
-	Stream::Status Stream::getStatus(void) const
+	void Stream::didPause(const Timer& timer, Timer::Status previousStatus)
 	{
-		return m_status;
+		setStatus(Stream::Paused);
 	}
 	
-	void Stream::setStatus(Status status)
+	void Stream::didStop(const Timer& timer, Timer::Status previousStatus)
 	{
-		m_status = status;
+		setStatus(Stream::Stopped);
+	}
+	
+	void Stream::willSeek(const Timer& timer, sf::Time position)
+	{
+		m_dataSource.resetEndOfFileStatus();
+		
+		if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
+			int err = av_seek_frame(m_formatCtx, m_streamID, m_stream->start_time, AVSEEK_FLAG_BACKWARD);
+			sfeLogDebug("Seek by PTS on " + MediaTypeToString(getStreamKind()) + " stream returned " + s(err) + " ; timestamp=" + s(m_stream->start_time));
+		} else {
+			int err = av_seek_frame(m_formatCtx, m_streamID, m_stream->first_dts, AVSEEK_FLAG_BACKWARD);
+			sfeLogDebug("Seek by DTS on " + MediaTypeToString(getStreamKind()) + " stream returned " + s(err) + " ; timestamp=" + s(m_stream->first_dts));
+		}
+	}
+	
+	void Stream::didSeek(const Timer& timer, sf::Time position)
+	{
+		flushBuffers();
 	}
 }

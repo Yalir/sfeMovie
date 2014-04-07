@@ -76,7 +76,6 @@ namespace sfe {
 		virtual void update(void);
 	private:
 		bool onGetData(sf::Texture& texture);
-//		void onSeek(sf::Time timeOffset);
 		
 		/** Returns the difference between the video stream timer and the reference timer
 		 *
@@ -119,10 +118,7 @@ namespace sfe {
 		void preload(void);
 		
 		// Timer::Observer interface
-		virtual void willPlay(const Timer &timer);
-		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
-		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
-		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
+		void willPlay(const Timer &timer);
 		
 		// Private data
 		sf::Texture m_texture;

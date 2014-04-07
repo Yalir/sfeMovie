@@ -92,10 +92,10 @@ namespace sfe {
 		void resampleFrame(AVFrameRef frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
 		
 		// Timer::Observer interface
-		virtual void willPlay(const Timer &timer);
-		virtual void didPlay(const Timer& timer, Timer::Status previousStatus);
-		virtual void didPause(const Timer& timer, Timer::Status previousStatus);
-		virtual void didStop(const Timer& timer, Timer::Status previousStatus);
+		void willPlay(const Timer &timer);
+		void didPlay(const Timer& timer, Timer::Status previousStatus);
+		void didPause(const Timer& timer, Timer::Status previousStatus);
+		void didStop(const Timer& timer, Timer::Status previousStatus);
 		
 		// Public properties
 		unsigned m_sampleRate;

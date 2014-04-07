@@ -98,7 +98,7 @@ namespace sfe {
 	}
 	
 	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate) :
-	m_avFormatCtx(NULL),
+	m_formatCtx(NULL),
 	m_eofReached(false),
 	m_streams(),
 	m_ignoredStreams(),
@@ -116,31 +116,31 @@ namespace sfe {
 		loadFFmpeg();
 		
 		// Open the movie file
-		err = avformat_open_input(&m_avFormatCtx, sourceFile.c_str(), NULL, NULL);
+		err = avformat_open_input(&m_formatCtx, sourceFile.c_str(), NULL, NULL);
 		CHECK0(err, "Demuxer::Demuxer() - error while opening media: " + sourceFile);
-		CHECK(m_avFormatCtx, "Demuxer() - inconsistency: media context cannot be null");
+		CHECK(m_formatCtx, "Demuxer() - inconsistency: media context cannot be null");
 		
 		// Read the general movie informations
-		err = avformat_find_stream_info(m_avFormatCtx, NULL);
+		err = avformat_find_stream_info(m_formatCtx, NULL);
 		CHECK0(err, "Demuxer::Demuxer() - error while retreiving media information");
 		
 		// Get the media duration if possible (otherwise rely on the streams)
-		if (m_avFormatCtx->duration != AV_NOPTS_VALUE)
+		if (m_formatCtx->duration != AV_NOPTS_VALUE)
 		{
             long secs, us;
-            secs = m_avFormatCtx->duration / AV_TIME_BASE;
-            us = m_avFormatCtx->duration % AV_TIME_BASE;
+            secs = m_formatCtx->duration / AV_TIME_BASE;
+            us = m_formatCtx->duration % AV_TIME_BASE;
 			m_duration = sf::seconds(secs + (float)us / AV_TIME_BASE);
 		}
 		
 		// Find all interesting streams
-		for (int i = 0; i < m_avFormatCtx->nb_streams; i++) {
-			AVStreamRef ffstream = m_avFormatCtx->streams[i];
+		for (int i = 0; i < m_formatCtx->nb_streams; i++) {
+			AVStreamRef ffstream = m_formatCtx->streams[i];
 			
 			try {
 				switch (ffstream->codec->codec_type) {
 					case AVMEDIA_TYPE_VIDEO:
-						m_streams[ffstream->index] = new VideoStream(m_avFormatCtx, ffstream, *this, timer, videoDelegate);
+						m_streams[ffstream->index] = new VideoStream(m_formatCtx, ffstream, *this, timer, videoDelegate);
 						
 						if (m_duration == sf::Time::Zero) {
 							extractDurationFromStream(ffstream);
@@ -150,7 +150,7 @@ namespace sfe {
 						break;
 						
 					case AVMEDIA_TYPE_AUDIO:
-						m_streams[ffstream->index] = new AudioStream(m_avFormatCtx, ffstream, *this, timer);
+						m_streams[ffstream->index] = new AudioStream(m_formatCtx, ffstream, *this, timer);
 						
 						if (m_duration == sf::Time::Zero) {
 							extractDurationFromStream(ffstream);
@@ -190,8 +190,8 @@ namespace sfe {
 			m_streams.erase(m_streams.begin());
 		}
 		
-		if (m_avFormatCtx) {
-			avformat_close_input(&m_avFormatCtx);
+		if (m_formatCtx) {
+			avformat_close_input(&m_formatCtx);
 		}
 	}
 	
@@ -204,7 +204,6 @@ namespace sfe {
 	std::set<Stream*> Demuxer::getStreamsOfType(MediaType type) const
 	{
 		std::set<Stream*> streamSet;
-		
 		std::map<int, Stream*>::const_iterator it;
 		
 		for (it = m_streams.begin(); it != m_streams.end(); it++) {
@@ -272,6 +271,7 @@ namespace sfe {
 	void Demuxer::feedStream(Stream& stream)
 	{
 		sf::Lock l(m_synchronized);
+		sfeLogDebug("Feed " + MediaTypeToString(stream.getStreamKind()) + " stream");
 		
 		while (!didReachEndOfFile() && stream.needsMoreData()) {
 			AVPacketRef pkt = readPacket();
@@ -320,7 +320,7 @@ namespace sfe {
 		CHECK(pkt, "Demuxer::readPacket() - out of memory");
 		av_init_packet(pkt);
 		
-		err = av_read_frame(m_avFormatCtx, pkt);
+		err = av_read_frame(m_formatCtx, pkt);
 		
 		if (err < 0) {
 			av_free_packet(pkt);
@@ -352,8 +352,7 @@ namespace sfe {
 		if (m_duration != sf::Time::Zero)
 			return;
 		
-		if (stream->duration != AV_NOPTS_VALUE)
-		{
+		if (stream->duration != AV_NOPTS_VALUE) {
             long secs, us;
             secs = stream->duration / AV_TIME_BASE;
             us = stream->duration % AV_TIME_BASE;
@@ -366,5 +365,10 @@ namespace sfe {
 		sf::Lock l(m_synchronized);
 		
 		feedStream(starvingStream);
+	}
+	
+	void Demuxer::resetEndOfFileStatus(void)
+	{
+		m_eofReached = false;
 	}
 }

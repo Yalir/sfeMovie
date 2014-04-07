@@ -78,6 +78,24 @@ namespace sfe {
 			 * @param previousStatus the timer's status before playing
 			 */
 			virtual void didStop(const Timer& timer, Status previousStatus);
+			
+			/** Called by @a timer right before seeking if this Observer is registered for notifications
+			 *
+			 * When this method is called, the timer is guaranteed to be paused or stopped
+			 *
+			 * @param timer the timer that generated the notification
+			 * @param newPosition the wished position for seeking
+			 */
+			virtual void willSeek(const Timer& timer, sf::Time newPosition);
+			
+			/** Called by @a timer right after seeking if this Observer is registered for notifications
+			 *
+			 * When this method is called, the timer is guaranteed to be paused or stopped
+			 *
+			 * @param timer the timer that generated the notification
+			 * @param position the position before seeking
+			 */
+			virtual void didSeek(const Timer& timer, sf::Time oldPosition);
 		};
 		
 		/** Default constructor
@@ -115,6 +133,14 @@ namespace sfe {
 		 */
 		void stop(void);
 		
+		/** Seek to the given position, the timer's offset is updated accordingly
+		 *
+		 * If the timer was playing, it is paused, seeking occurs, then it is resumed
+		 *
+		 * @param position the new wished timer position
+		 */
+		void seek(sf::Time position);
+		
 		/** Return this timer status
 		 *
 		 * @return Playing, Paused or Stopped
@@ -142,6 +168,17 @@ namespace sfe {
 		 * @param newStatus the timer's status after the state change
 		 */
 		void notifyObservers(Status oldStatus, Status newStatus);
+		
+		/** Notify all observers that the timer is seeking to a new position
+		 *
+		 * When the observer receives the notification, the timer is guaranteed to be paused or stopped
+		 *
+		 * @param oldPosition the timer position before seeking
+		 * @param newPosition the timer position after seeking
+		 * @param alreadySeeked false if willSeek notification should be sent, true if didSeek should be sent
+		 * instead
+		 */
+		void notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked);
 		
 		sf::Time m_pausedTime;
 		Status m_status;

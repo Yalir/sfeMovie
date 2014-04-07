@@ -11,6 +11,7 @@ extern "C" {
 #include <cstring>
 #include <iostream>
 #include "AudioStream.hpp"
+#include "Log.hpp"
 #include "utils.hpp"
 
 namespace sfe {
@@ -132,6 +133,9 @@ namespace sfe {
 			av_free(packet);
 		}
 		
+		if (!packet) {
+			sfeLogDebug("No more audio packets, do not go further");
+		}
 		return (packet != NULL);
 	}
 	
@@ -231,6 +235,8 @@ namespace sfe {
 	
 	void AudioStream::willPlay(const Timer &timer)
 	{
+		Stream::willPlay(timer);
+		
 		if (Stream::getStatus() == Stream::Stopped) {
 			sf::Time initialTime = sf::SoundStream::getPlayingOffset();
 			sf::Clock timeout;
@@ -251,18 +257,18 @@ namespace sfe {
 	void AudioStream::didPlay(const Timer& timer, Timer::Status previousStatus)
 	{
 		CHECK(SoundStream::getStatus() == SoundStream::Playing, "AudioStream::didPlay() - willPlay() not executed!");
-		setStatus(Stream::Playing);
+		Stream::didPlay(timer, previousStatus);
 	}
 	
 	void AudioStream::didPause(const Timer& timer, Timer::Status previousStatus)
 	{
 		sf::SoundStream::pause();
-		setStatus(Stream::Paused);
+		Stream::didPause(timer, previousStatus);
 	}
 	
 	void AudioStream::didStop(const Timer& timer, Timer::Status previousStatus)
 	{
 		sf::SoundStream::stop();
-		setStatus(Stream::Stopped);
+		Stream::didStop(timer, previousStatus);
 	}
 }

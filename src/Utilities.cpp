@@ -58,6 +58,8 @@ namespace sfe {
 			case MEDIA_TYPE_SUBTITLE:	return "subtitle";
 			case MEDIA_TYPE_VIDEO:		return "video";
 			case MEDIA_TYPE_UNKNOWN:	return "unknown";
+			default:
+				CHECK(0, "inconcistency");
 		}
 	}
 }

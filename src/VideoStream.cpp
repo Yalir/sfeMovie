@@ -188,9 +188,15 @@ namespace sfe {
 	void VideoStream::initRescaler(void)
 	{
 		/* create scaling context */
+		int algorithm = SWS_FAST_BILINEAR;
+		
+		if (getFrameSize().x % 8 != 0 && getFrameSize().x * getFrameSize().y < 500000) {
+			algorithm |= SWS_ACCURATE_RND;
+		}
+		
 		m_swsCtx = sws_getCachedContext(NULL, m_codecCtx->width, m_codecCtx->height, m_codecCtx->pix_fmt,
 										m_codecCtx->width, m_codecCtx->height, PIX_FMT_RGBA,
-										SWS_FAST_BILINEAR, NULL, NULL, NULL);
+										algorithm, NULL, NULL, NULL);
 		CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
 	}
 	
@@ -202,28 +208,15 @@ namespace sfe {
 	
 	void VideoStream::preload(void)
 	{
+		sfeLogDebug("Preload video image");
 		onGetData(m_texture);
 	}
 	
 	void VideoStream::willPlay(const Timer &timer)
 	{
-		if (getStatus() == Stream::Stopped)
+		Stream::willPlay(timer);
+		if (getStatus() == Stream::Stopped) {
 			preload();
-	}
-	
-	void VideoStream::didPlay(const Timer& timer, Timer::Status previousStatus)
-	{
-		setStatus(Stream::Playing);
-	}
-	
-	void VideoStream::didPause(const Timer& timer, Timer::Status previousStatus)
-	{
-		setStatus(Stream::Paused);
-	}
-	
-	void VideoStream::didStop(const Timer& timer, Timer::Status previousStatus)
-	{
-		avcodec_flush_buffers(m_codecCtx);
-		setStatus(Stream::Stopped);
+		}
 	}
 }

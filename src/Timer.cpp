@@ -49,6 +49,14 @@ namespace sfe {
 	{
 	}
 	
+	void Timer::Observer::willSeek(const Timer& timer, sf::Time posiiton)
+	{
+	}
+	
+	void Timer::Observer::didSeek(const Timer& timer, sf::Time oldPosition)
+	{
+	}
+	
 	Timer::Timer(void) :
 	m_pausedTime(sf::Time::Zero),
 	m_status(Stopped),
@@ -82,6 +90,9 @@ namespace sfe {
 	{
 		CHECK(getStatus() != Playing, "Timer::play() - timer playing twice");
 		
+		if (getStatus() == Stopped)
+			seek(sf::Time::Zero);
+		
 		notifyObservers(Playing);
 		
 		Status oldStatus = getStatus();
@@ -111,6 +122,24 @@ namespace sfe {
 		m_pausedTime = sf::Time::Zero;
 		
 		notifyObservers(oldStatus, getStatus());
+		
+		seek(sf::Time::Zero);
+	}
+	
+	void Timer::seek(sf::Time position)
+	{
+		Status oldStatus = getStatus();
+		sf::Time oldPosition = getOffset();
+		
+		if (oldStatus == Playing)
+			pause();
+		
+		notifyObservers(oldPosition, position, false);
+		m_pausedTime = position;
+		notifyObservers(oldPosition, position, true);
+		
+		if (oldStatus == Playing)
+			play();
 	}
 	
 	Timer::Status Timer::getStatus(void) const
@@ -164,6 +193,21 @@ namespace sfe {
 					obs->didStop(*this, oldStatus);
 					break;
 			}
+		}
+	}
+	
+	void Timer::notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked)
+	{
+		CHECK(getStatus() != Playing, "inconsistency in timer");
+		
+		std::set<Observer*>::iterator it;
+		for (it = m_observers.begin(); it != m_observers.end(); it++) {
+			Observer* obs = *it;
+			
+			if (alreadySeeked)
+				obs->didSeek(*this, oldPosition);
+			else
+				obs->willSeek(*this, newPosition);
 		}
 	}
 	
