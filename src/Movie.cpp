@@ -167,18 +167,15 @@ namespace sfe {
 		Status st = Stopped;
 		
 		if (m_demuxer) {
-			int statuses[End];
 			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
 			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+			Stream::Status vStatus = videoStream ? videoStream->getStatus() : Stream::Stopped;
+			Stream::Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stream::Stopped;
 			
-			memset(statuses, 0, sizeof(statuses));
-			statuses[videoStream->getStatus()]++;
-			statuses[audioStream->Stream::getStatus()]++;
-			
-			if (statuses[Playing] > 0) {
-				st = Playing;
-			} else if (statuses[Paused] > 0) {
-				st = Paused;
+			if (vStatus == Stream::Playing || aStatus == Stream::Playing) {
+				st = Movie::Playing;
+			} else if (vStatus == Stream::Paused || aStatus == Stream::Paused) {
+				st = Movie::Paused;
 			}
 		}
 		
