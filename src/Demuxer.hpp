@@ -38,7 +38,7 @@
 #include <utility>
 
 namespace sfe {
-	class Demuxer : public Stream::DataSource {
+	class Demuxer : public Stream::DataSource, public Timer::Observer {
 	public:
 		/** Describes a demuxer
 		 *
@@ -175,6 +175,9 @@ namespace sfe {
 		// Data source interface
 		void requestMoreData(Stream& starvingStream);
 		void resetEndOfFileStatus(void);
+		
+		// Timer interface
+		void willSeek(const Timer& timer, sf::Time position);
 		
 		AVFormatContextRef m_formatCtx;
 		bool m_eofReached;

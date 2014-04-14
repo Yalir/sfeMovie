@@ -178,12 +178,16 @@ namespace sfe {
 		if (m_duration == sf::Time::Zero) {
 			sfeLogWarning("The media duration could not be retreived");
 		}
+		
+		m_timer.addObserver(*this);
 	}
 	
 	Demuxer::~Demuxer(void)
 	{
 		if (m_timer.getStatus() != Timer::Stopped)
 			m_timer.stop();
+		
+		m_timer.removeObserver(*this);
 		
 		while (m_streams.size()) {
 			delete m_streams.begin()->second;
@@ -370,5 +374,26 @@ namespace sfe {
 	void Demuxer::resetEndOfFileStatus(void)
 	{
 		m_eofReached = false;
+	}
+	
+	void Demuxer::willSeek(const Timer &timer, sf::Time position)
+	{
+		resetEndOfFileStatus();
+		
+		if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
+			int64_t timestamp = 0;
+			
+			if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+				timestamp += m_formatCtx->start_time;
+			
+			int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
+			sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+		} else {
+			int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
+//			sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+			
+//			int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
+			sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
+		}
 	}
 }

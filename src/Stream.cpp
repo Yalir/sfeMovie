@@ -207,15 +207,6 @@ namespace sfe {
 	
 	void Stream::willSeek(const Timer& timer, sf::Time position)
 	{
-		m_dataSource.resetEndOfFileStatus();
-		
-		if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
-			int err = av_seek_frame(m_formatCtx, m_streamID, m_stream->start_time, AVSEEK_FLAG_BACKWARD);
-			sfeLogDebug("Seek by PTS on " + MediaTypeToString(getStreamKind()) + " stream returned " + s(err) + " ; timestamp=" + s(m_stream->start_time));
-		} else {
-			int err = av_seek_frame(m_formatCtx, m_streamID, m_stream->first_dts, AVSEEK_FLAG_BACKWARD);
-			sfeLogDebug("Seek by DTS on " + MediaTypeToString(getStreamKind()) + " stream returned " + s(err) + " ; timestamp=" + s(m_stream->first_dts));
-		}
 	}
 	
 	void Stream::didSeek(const Timer& timer, sf::Time position)
