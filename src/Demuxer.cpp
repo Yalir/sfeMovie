@@ -37,6 +37,7 @@ extern "C"
 #include "Utilities.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <cstdint>
 
 namespace sfe {
 	std::list<Demuxer::DemuxerInfo> Demuxer::g_availableDemuxers;

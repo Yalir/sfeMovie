@@ -98,7 +98,7 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "${LIBZ}")
 	endif()
 	
-	add_definitions(-D__STDC_CONSTANT_MACROS -DSFE_EXPORTS)
+	add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 endif()
 

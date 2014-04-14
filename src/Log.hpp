@@ -28,9 +28,15 @@
 #include <string>
 #include <sstream>
 
-#define sfeLogDebug(message) sfe::Log::debug(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
-#define sfeLogWarning(message) sfe::Log::warning(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
-#define sfeLogError(message) sfe::Log::error(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(__func__) + "()" + " - " + message)
+#ifdef _MSC_VER
+#define FUNC_NAME __FUNCTION__
+#else
+#define FUNC_NAME __func__
+#endif
+
+#define sfeLogDebug(message) sfe::Log::debug(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(FUNC_NAME) + "()" + " - " + message)
+#define sfeLogWarning(message) sfe::Log::warning(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(FUNC_NAME) + "()" + " - " + message)
+#define sfeLogError(message) sfe::Log::error(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(FUNC_NAME) + "()" + " - " + message)
 
 namespace sfe {
 	namespace Log {
