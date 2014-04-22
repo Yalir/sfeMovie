@@ -27,6 +27,7 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
+#include <stdint.h>
 }
 
 #include "Demuxer.hpp"
@@ -37,7 +38,6 @@ extern "C"
 #include "Utilities.hpp"
 #include <iostream>
 #include <stdexcept>
-#include <cstdint>
 
 namespace sfe {
 	std::list<Demuxer::DemuxerInfo> Demuxer::g_availableDemuxers;
