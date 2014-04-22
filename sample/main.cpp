@@ -132,7 +132,6 @@ int main(int argc, const char *argv[])
 				volume = std::max(volume, 0.f);
 				movie.setVolume(volume);
 			}
-			}
 		}
 		
 		movie.update();
