@@ -76,8 +76,10 @@ int main(int argc, const char *argv[])
 //	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
 	sfe::Movie movie;
 	
-	if (!movie.openFromFile(mediaFile))
+	if (!movie.openFromFile(mediaFile)) {
+		my_pause();
 		return 1;
+	}
 	
 	bool fullscreen = false;
 	sf::VideoMode mode = sf::VideoMode::getDesktopMode();
