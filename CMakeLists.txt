@@ -74,9 +74,8 @@ set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_
 
 file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]*)
 
-if (LINUX) # ========================================== LINUX ========================================== #
-    add_definitions(-D__STDC_CONSTANT_MACROS)
-elseif (MACOSX) # ========================================== MACOSX ========================================== #
+add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
+if (MACOSX) # ========================================== MACOSX ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
 	
@@ -94,11 +93,11 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 
 		if (NOT LIBZ)
 			message(FATAL_ERROR "Could not find required library libz")
+		else()
+			set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "${LIBZ}")
 		endif()
-		set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "${LIBZ}")
 	endif()
 	
-	add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 endif()
 
