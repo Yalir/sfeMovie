@@ -28,6 +28,7 @@
 #include "Macros.hpp"
 #include "Timer.hpp"
 #include <list>
+#include <SFML/System.hpp>
 
 namespace sfe {
 	
@@ -151,6 +152,7 @@ namespace sfe {
 		int m_streamID;
 		std::list <AVPacketRef> m_packetList;
 		Status m_status;
+		sf::Mutex m_readerMutex;
 	};
 }
 

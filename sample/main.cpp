@@ -88,7 +88,6 @@ int main(int argc, const char *argv[])
 	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
 	
 	// Scale movie to the window drawing area and enable VSync
-//	window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
 	movie.play();
 
@@ -125,6 +124,12 @@ int main(int argc, const char *argv[])
 					std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
 					std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
 				}
+			} else if (ev.type == sf::Event::MouseWheelMoved) {
+				float volume = movie.getVolume() + 10 * ev.mouseWheel.delta;
+				volume = std::min(volume, 100.f);
+				volume = std::max(volume, 0.f);
+				movie.setVolume(volume);
+			}
 			}
 		}
 		

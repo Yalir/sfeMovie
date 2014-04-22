@@ -46,7 +46,8 @@ namespace sfe {
 	m_codec(NULL),
 	m_streamID(-1),
 	m_packetList(),
-	m_status(Stopped)
+	m_status(Stopped),
+	m_readerMutex()
 	{
 		CHECK(stream, "Stream::Stream() - invalid stream argument");
 		int err = 0;
@@ -86,18 +87,21 @@ namespace sfe {
 	void Stream::pushEncodedData(AVPacketRef packet)
 	{
 		CHECK(packet, "invalid argument");
+		sf::Lock l(m_readerMutex);
 		m_packetList.push_back(packet);
 	}
 	
 	void Stream::prependEncodedData(AVPacketRef packet)
 	{
 		CHECK(packet, "invalid argument");
+		sf::Lock l(m_readerMutex);
 		m_packetList.push_front(packet);
 	}
 	
 	AVPacketRef Stream::popEncodedData(void)
 	{
 		AVPacketRef result = NULL;
+		sf::Lock l(m_readerMutex);
 		
 		if (!m_packetList.size()) {
 			m_dataSource.requestMoreData(*this);
@@ -123,6 +127,7 @@ namespace sfe {
 	
 	void Stream::flushBuffers(void)
 	{
+		sf::Lock l(m_readerMutex);
 		if (getStatus() == Playing) {
 			sfeLogWarning("packets flushed while the stream is still playing");
 		}
@@ -165,7 +170,8 @@ namespace sfe {
 			if (packet->dts != AV_NOPTS_VALUE) {
 				timestamp = packet->dts;
 			} else if (packet->pts != AV_NOPTS_VALUE) {
-				timestamp = packet->pts;
+				int64_t startTime = m_stream->start_time != AV_NOPTS_VALUE ? m_stream->start_time : 0;
+				timestamp = packet->pts - startTime;
 			}
 			
 			return sf::seconds(timestamp * av_q2d(m_stream->time_base));
