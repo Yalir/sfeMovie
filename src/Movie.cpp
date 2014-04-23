@@ -188,6 +188,18 @@ namespace sfe {
 		return m_timer->getOffset();
 	}
 	
+	const sf::Texture& Movie::getCurrentFrame(void) const
+	{
+		static sf::Texture emptyTexture;
+		
+		if (m_sprite.getTexture()) {
+			return *m_sprite.getTexture();
+		} else {
+			return emptyTexture;
+		}
+	}
+	
+	
 	void Movie::cleanResources(void)
 	{
 		if (m_demuxer)

@@ -203,17 +203,17 @@ namespace sfe {
 		sf::Time getPlayingOffset(void) const;
 		
 		
-		/** Returns a const reference to the movie texture currently being displayed.
+		/** Returns the latest movie image
 		 *
 		 * The returned image is a texture in VRAM.
-		 * Note: although the returned texture reference remains the same,
-		 * getCurrentFrame() must be called for each new frame until you also use
-		 * draw() ; otherwise the texture won't be updated.
+		 * If the movie has no video stream, this returns an empty texture.
 		 *
-		 * If the movie has no video track, this returns an empty image.
-		 * @return the current image of the movie
+		 * @note As in the classic update()/draw() workflow, update() needs to be called
+		 * before using this method if you want the image to be up to date
+		 *
+		 * @return the current image of the movie for the activated video stream
 		 */
-//		const sf::Texture& getCurrentFrame(void) const;
+		const sf::Texture& getCurrentImage(void) const;
 		
 		
 		//void SetLoop(bool Loop);
