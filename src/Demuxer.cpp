@@ -241,6 +241,13 @@ namespace sfe {
 			m_timer.play();
 	}
 	
+	void Demuxer::selectFirstAudioStream(void)
+	{
+		std::set<Stream*> audioStreams = getStreamsOfType(MEDIA_TYPE_AUDIO);
+		if (audioStreams.size())
+			selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
+	}
+	
 	AudioStream* Demuxer::getSelectedAudioStream(void) const
 	{
 		return dynamic_cast<AudioStream*>(m_connectedAudioStream);
@@ -266,6 +273,13 @@ namespace sfe {
 		
 		if (oldStatus == Timer::Playing)
 			m_timer.play();
+	}
+	
+	void Demuxer::selectFirstVideoStream(void)
+	{
+		std::set<Stream*> videoStreams = getStreamsOfType(MEDIA_TYPE_VIDEO);
+		if (videoStreams.size())
+			selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
 	}
 	
 	VideoStream* Demuxer::getSelectedVideoStream(void) const

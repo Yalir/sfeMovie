@@ -74,6 +74,8 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	sfe::Timer timer;
 	sf::Clock clock;
 	demuxer = new sfe::Demuxer("small_1.ogv", timer, delegate);
+	demuxer->selectFirstVideoStream();
+	demuxer->selectFirstAudioStream();
 	
 	sfe::Stream* videoStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_VIDEO).begin();
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
@@ -103,6 +105,8 @@ BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("small_4.wav", timer, delegate);
+	demuxer->selectFirstVideoStream();
+	demuxer->selectFirstAudioStream();
 	
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	
@@ -123,6 +127,8 @@ BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("long_1.wav", timer, delegate);
+	demuxer->selectFirstVideoStream();
+	demuxer->selectFirstAudioStream();
 	
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	
@@ -153,6 +159,8 @@ BOOST_AUTO_TEST_CASE(DemuxerShortFLACTest)
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	demuxer = new sfe::Demuxer("small_3.flac", timer, delegate);
+	demuxer->selectFirstVideoStream();
+	demuxer->selectFirstAudioStream();
 	
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	

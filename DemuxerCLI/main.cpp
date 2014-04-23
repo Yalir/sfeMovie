@@ -58,15 +58,11 @@ int main(int argc, const char *argv[])
 	sfe::Timer timer;
 	DummyDelegate delegate;
 	sfe::Demuxer demuxer(mediaFile, timer, delegate);
-	
-	const std::map<int, sfe::Stream*>& vStreams = demuxer.getStreams();
-	sfe::VideoStream* vStream = NULL;
-	
-	if (vStreams.size()) {
-		vStream = dynamic_cast<sfe::VideoStream*>(vStreams.begin()->second);
-	}
+	demuxer.selectFirstVideoStream();
+	demuxer.selectFirstAudioStream();
 	
 	timer.play();
+	demuxer.update();
 	
 	while (!finished(demuxer)) {
 		demuxer.update();

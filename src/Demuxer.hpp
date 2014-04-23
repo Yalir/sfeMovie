@@ -106,6 +106,12 @@ namespace sfe {
 		 */
 		void selectAudioStream(AudioStream* stream);
 		
+		/** Enable the first found audio stream, if it exists
+		 * 
+		 * @see selectAudioStream
+		 */
+		void selectFirstAudioStream(void);
+		
 		/** Get the currently selected audio stream, if there's one
 		 *
 		 * @return the currently selected audio stream, or NULL if there's none
@@ -120,6 +126,12 @@ namespace sfe {
 		 * @param stream the video stream to enable and connect for playing, or NULL to disable video
 		 */
 		void selectVideoStream(VideoStream* stream);
+		
+		/** Enable the first found video stream, if it exists
+		 *
+		 * @see selectAudioStream
+		 */
+		void selectFirstVideoStream(void);
 		
 		/** Get the currently selected video stream, if there's one
 		 *

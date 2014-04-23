@@ -53,11 +53,8 @@ namespace sfe {
 			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
 			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
 			
-			if (audioStreams.size())
-				m_demuxer->selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
-			
-			if (videoStreams.size())
-				m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
+			m_demuxer->selectFirstAudioStream();
+			m_demuxer->selectFirstVideoStream();
 			
 			if (!audioStreams.size() && !videoStreams.size()) {
 				sfeLogError("No supported audio or video stream in this media");
