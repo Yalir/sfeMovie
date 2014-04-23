@@ -188,7 +188,7 @@ namespace sfe {
 		return m_timer->getOffset();
 	}
 	
-	const sf::Texture& Movie::getCurrentFrame(void) const
+	const sf::Texture& Movie::getCurrentImage(void) const
 	{
 		static sf::Texture emptyTexture;
 		
