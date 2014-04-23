@@ -136,28 +136,31 @@ namespace sfe {
 		sf::Time getDuration(void) const;
 		
 		
-		/** Returns the size (width, height) of the movie
+		/** Returns the size (width, height) of the currently active video stream
 		 *
-		 * @return the size of the movie
+		 * @return the size of the currently active video stream, or (0, 0) is there is none
 		 */
 		sf::Vector2i getSize(void) const;
 		
 		
-//		/** See resizeToFrame(sf::IntRect, bool)
-//		 * @see resizeToFrame(sf::IntRect, bool)
-//		 */
-//		void resizeToFrame(int x, int y, int width, int height, bool preserveRatio = true);
-//		
-//		
-//		/** Scales the movie to fit the requested frame.
-//		 *
-//		 * If the ratio is preserved, the movie may be centered
-//		 * in the given frame. Thus the movie position may be different from
-//		 * the one you specified.
-//		 * @param frame the target frame in which you want to display the movie
-//		 * @param preserveRatio true to keep the original movie ratio, false otherwise
-//		 */
-//		void resizeToFrame(sf::IntRect frame, bool preserveRatio = true);
+		/** See fitFrame(sf::IntRect, bool)
+		 * @see fitFrame(sf::IntRect, bool)
+		 */
+		void fitFrame(int x, int y, int width, int height, bool preserveRatio = true);
+		
+		
+		/** Scales the movie to fit the requested frame.
+		 *
+		 * If the ratio is preserved, the movie may be centered
+		 * in the given frame, thus the movie position may be different from
+		 * the one you specified.
+		 *
+		 * @note This method will erase any previously set scale and position
+		 *
+		 * @param frame the target frame in which you want to display the movie
+		 * @param preserveRatio true to keep the original movie ratio, false otherwise
+		 */
+		void fitFrame(sf::IntRect frame, bool preserveRatio = true);
 		
 		
 		/** Returns the average amount of video frames per second

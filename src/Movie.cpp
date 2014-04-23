@@ -26,6 +26,7 @@
 #include "Demuxer.hpp"
 #include "Timer.hpp"
 #include "Log.hpp"
+#include <cmath>
 
 namespace sfe {
 	
@@ -101,6 +102,22 @@ namespace sfe {
 		if (getStatus() == Stopped && m_timer->getStatus() != Timer::Stopped) {
 			m_timer->stop();
 		}
+		
+		// Enable smoothing when the video is scaled
+		sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
+		if (vStream) {
+			sf::Vector2f sc = getScale();
+			
+			if (std::fabs(sc.x - 1.f) < 0.00001 &&
+				std::fabs(sc.y - 1.f) < 0.00001)
+			{
+				vStream->getVideoTexture().setSmooth(false);
+			}
+			else
+			{
+				vStream->getVideoTexture().setSmooth(true);
+			}
+		}
 	}
 	
 	void Movie::setVolume(float volume)
@@ -134,8 +151,62 @@ namespace sfe {
 	{
 		CHECK(m_demuxer && m_timer, "No media loaded");
 		VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-		CHECK(videoStream, "No selected video stream, cannot return a frame size");
-		return videoStream->getFrameSize();
+		
+		if (videoStream) {
+			return videoStream->getFrameSize();
+		} else {
+			sfeLogWarning("Movie::getSize() called but there is no active video stream");
+			return sf::Vector2i(0, 0);
+		}
+	}
+	
+	void Movie::fitFrame(int x, int y, int width, int height, bool preserveRatio)
+	{
+		fitFrame(sf::IntRect(x, y, width, height), preserveRatio);
+	}
+	
+	void Movie::fitFrame(sf::IntRect frame, bool preserveRatio)
+	{
+		sf::Vector2i movie_size = getSize();
+		
+		if (movie_size.x == 0 || movie_size.y == 0) {
+			sfeLogWarning("Movie::fitFrame() called but the video frame size is (0, 0)");
+			return;
+		}
+		
+		sf::Vector2i wanted_size = sf::Vector2i(frame.width, frame.height);
+		sf::Vector2i new_size;
+		
+		if (preserveRatio)
+		{
+			sf::Vector2i target_size = movie_size;
+			
+			float source_ratio = (float)movie_size.x / movie_size.y;
+			float target_ratio = (float)wanted_size.x / wanted_size.y;
+			
+			if (source_ratio > target_ratio)
+			{
+				target_size.x = movie_size.x * ((float)wanted_size.x / movie_size.x);
+				target_size.y = movie_size.y * ((float)wanted_size.x / movie_size.x);
+			}
+			else
+			{
+				target_size.x = movie_size.x * ((float)wanted_size.y / movie_size.y);
+				target_size.y = movie_size.y * ((float)wanted_size.y / movie_size.y);
+			}
+			
+			setScale((float)target_size.x / movie_size.x, (float)target_size.y / movie_size.y);
+			new_size = target_size;
+		}
+		else
+		{
+			setScale((float)wanted_size.x / movie_size.x, (float)wanted_size.y / movie_size.y);
+			new_size = wanted_size;
+		}
+		
+		m_sprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
+					frame.top + (wanted_size.y - new_size.y) / 2);
+		setPosition(frame.left, frame.top);
 	}
 	
 	float Movie::getFramerate(void) const
@@ -209,15 +280,15 @@ namespace sfe {
 			delete m_timer, m_timer = NULL;
 	}
 	
-	void Movie::draw(sf::RenderTarget& Target, sf::RenderStates states) const
+	void Movie::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		states.transform *= getTransform();
-		Target.draw(m_sprite, states);
+		target.draw(m_sprite, states);
 	}
 	
 	void Movie::didUpdateImage(const VideoStream& sender, const sf::Texture& image)
 	{
-		if (m_sprite.getTexture() == NULL) {
+		if (m_sprite.getTexture() != &image) {
 			m_sprite.setTexture(image);
 		}
 	}
