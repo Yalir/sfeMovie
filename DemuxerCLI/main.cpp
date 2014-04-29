@@ -53,7 +53,7 @@ int main(int argc, const char *argv[])
 	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
 	
 	sfe::dumpAvailableDecoders();
-	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
+	sfe::Log::setLogLevel(sfe::Log::DebugLogLevel);
 	
 	sfe::Timer timer;
 	DummyDelegate delegate;
