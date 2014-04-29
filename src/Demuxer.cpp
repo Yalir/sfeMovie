@@ -47,6 +47,7 @@ namespace sfe {
 	{
 		ONCE(av_register_all());
 		ONCE(avcodec_register_all());
+		ONCE(Log::initialize());
 	}
 	
 	static MediaType AVMediaTypeToMediaType(AVMediaType type)

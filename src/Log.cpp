@@ -23,18 +23,35 @@
  */
 
 #include "Log.hpp"
+#include "Macros.hpp"
 #include <iostream>
 #include <SFML/System.hpp>
+extern "C" {
+#include <libavutil/avutil.h>
+}
 
 namespace sfe {
 	namespace Log {
-		static int g_logMask = WarningMask | ErrorMask;
+		static int g_logLevel = ErrorLogLevel;
 		static sf::Mutex g_synchronized;
 		
-		void setMask(int mask)
+		void initialize()
+		{
+			setLogLevel(ErrorLogLevel);
+		}
+		
+		void setLogLevel(LogLevel level)
 		{
 			sf::Lock l(g_synchronized);
-			g_logMask = mask;
+			g_logLevel = level;
+			
+			switch (level) {
+				case DebugLogLevel:		av_log_set_level(AV_LOG_INFO); break;
+				case WarningLogLevel:	av_log_set_level(AV_LOG_WARNING); break;
+				case ErrorLogLevel:		av_log_set_level(AV_LOG_ERROR); break;
+				case QuietLogLevel:		av_log_set_level(AV_LOG_QUIET); break;
+				default: CHECK(false, "inconcistency");
+			}
 		}
 		
 		static std::string filename(const std::string& filepath)
@@ -51,7 +68,7 @@ namespace sfe {
 		{
 			sf::Lock l(g_synchronized);
 			
-			if (g_logMask & DebugMask) {
+			if (g_logLevel >= DebugLogLevel) {
 				std::cerr << "Debug: " << filename(file) << message << std::endl;
 			}
 		}
@@ -60,7 +77,7 @@ namespace sfe {
 		{
 			sf::Lock l(g_synchronized);
 			
-			if (g_logMask & WarningMask) {
+			if (g_logLevel >= WarningLogLevel) {
 				std::cerr << "Warning: " << filename(file) << message << std::endl;
 			}
 		}
@@ -69,7 +86,7 @@ namespace sfe {
 		{
 			sf::Lock l(g_synchronized);
 			
-			if (g_logMask & ErrorMask) {
+			if (g_logLevel >= ErrorLogLevel) {
 				std::cerr << "Error: " << filename(file) << message << std::endl;
 			}
 		}

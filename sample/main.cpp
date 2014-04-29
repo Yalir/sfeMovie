@@ -73,9 +73,7 @@ int main(int argc, const char *argv[])
 	std::string mediaFile = std::string(argv[1]);
 	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
 
-//	sfe::Log::setMask(sfe::Log::DebugMask | sfe::Log::WarningMask);
 	sfe::Movie movie;
-	
 	if (!movie.openFromFile(mediaFile)) {
 		my_pause();
 		return 1;

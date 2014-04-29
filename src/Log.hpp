@@ -40,22 +40,22 @@
 
 namespace sfe {
 	namespace Log {
-		enum Mask {
-			EmptyMask = 0,
-			DebugMask = 1 << 0,
-			WarningMask = 1 << 1,
-			ErrorMask = 1 << 2
+		enum LogLevel {
+			QuietLogLevel = 0,
+			ErrorLogLevel = 1,
+			WarningLogLevel = 2,
+			DebugLogLevel = 3
 		};
 		
-		/** Log only the messages allowed by the given @a mask
-		 *
-		 * eg:
-		 * setMask(DebugMask) to allow debug messages only
-		 * setMask(0) to quiet logging
-		 *
-		 * @param mask the kind of messages that should be logged
+		/** Set the initial log level
 		 */
-		void setMask(int mask);
+		void initialize();
+		
+		/** Set the log filter to the given @a level
+		 *
+		 * @param level the kind of messages that can be logged
+		 */
+		void setLogLevel(LogLevel level);
 		
 		/** Log a debug @a message if the currently set mask allows it
 		 *
