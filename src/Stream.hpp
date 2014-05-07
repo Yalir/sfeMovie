@@ -29,6 +29,7 @@
 #include "Timer.hpp"
 #include <list>
 #include <SFML/System.hpp>
+#include <sfeMovie/Status.hpp>
 
 namespace sfe {
 	
@@ -41,14 +42,6 @@ namespace sfe {
 	
 	class Stream : public Timer::Observer {
 	public:
-		/** The stream's status
-		 */
-		enum Status {
-			Stopped,
-			Paused,
-			Playing
-		};
-		
 		struct DataSource {
 			virtual void requestMoreData(Stream& starvingStream) = 0;
 			virtual void resetEndOfFileStatus() = 0;
@@ -134,9 +127,9 @@ namespace sfe {
 		virtual void update(void) = 0;
 	protected:
 		// Timer::Observer interface
-		void didPlay(const Timer& timer, Timer::Status previousStatus);
-		void didPause(const Timer& timer, Timer::Status previousStatus);
-		void didStop(const Timer& timer, Timer::Status previousStatus);
+		void didPlay(const Timer& timer, Status previousStatus);
+		void didPause(const Timer& timer, Status previousStatus);
+		void didStop(const Timer& timer, Status previousStatus);
 		void willSeek(const Timer& timer, sf::Time position);
 		void didSeek(const Timer& timer, sf::Time position);
 		

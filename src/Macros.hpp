@@ -8,6 +8,9 @@ extern "C" {
 	#include <libavutil/error.h>
 }
 
+#ifndef SFEMOVIE_MACROS_HPP
+#define SFEMOVIE_MACROS_HPP
+
 /** Define portable import / export macros
  */
 #if defined(SFML_SYSTEM_WINDOWS) && defined(_MSC_VER)
@@ -63,4 +66,6 @@ extern "C" {
 	typedef AVPacket* AVPacketRef;
 	typedef AVStream* AVStreamRef;
 	typedef AVFrame* AVFrameRef;
+#endif
+
 #endif

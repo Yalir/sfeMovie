@@ -99,7 +99,7 @@ namespace sfe {
 		return g_availableDecoders;
 	}
 	
-	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate) :
+	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStreamDelegate& videoDelegate) :
 	m_formatCtx(NULL),
 	m_eofReached(false),
 	m_streams(),
@@ -186,7 +186,7 @@ namespace sfe {
 	
 	Demuxer::~Demuxer(void)
 	{
-		if (m_timer.getStatus() != Timer::Stopped)
+		if (m_timer.getStatus() != Stopped)
 			m_timer.stop();
 		
 		m_timer.removeObserver(*this);
@@ -222,9 +222,9 @@ namespace sfe {
 	
 	void Demuxer::selectAudioStream(AudioStream* stream)
 	{
-		Timer::Status oldStatus = m_timer.getStatus();
+		Status oldStatus = m_timer.getStatus();
 		
-		if (oldStatus == Timer::Playing)
+		if (oldStatus == Playing)
 			m_timer.pause();
 		
 		if (stream != m_connectedAudioStream) {
@@ -238,7 +238,7 @@ namespace sfe {
 			m_connectedAudioStream = stream;
 		}
 		
-		if (oldStatus == Timer::Playing)
+		if (oldStatus == Playing)
 			m_timer.play();
 	}
 	
@@ -256,9 +256,9 @@ namespace sfe {
 	
 	void Demuxer::selectVideoStream(VideoStream* stream)
 	{
-		Timer::Status oldStatus = m_timer.getStatus();
+		Status oldStatus = m_timer.getStatus();
 		
-		if (oldStatus == Timer::Playing)
+		if (oldStatus == Playing)
 			m_timer.pause();
 		
 		if (stream != m_connectedVideoStream) {
@@ -272,7 +272,7 @@ namespace sfe {
 			m_connectedVideoStream = stream;
 		}
 		
-		if (oldStatus == Timer::Playing)
+		if (oldStatus == Playing)
 			m_timer.play();
 	}
 	

@@ -96,7 +96,7 @@ namespace sfe {
 		CHECK(m_demuxer, "No media loaded");
 		m_demuxer->update();
 		
-		if (getStatus() == Stopped && m_timer->getStatus() != Timer::Stopped) {
+		if (getStatus() == Stopped && m_timer->getStatus() != Stopped) {
 			m_timer->stop();
 		}
 		
@@ -230,20 +230,20 @@ namespace sfe {
 		return audioStream->getChannelCount();
 	}
 	
-	Movie::Status Movie::getStatus(void) const
+	Status Movie::getStatus(void) const
 	{
 		Status st = Stopped;
 		
 		if (m_demuxer) {
 			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
 			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-			Stream::Status vStatus = videoStream ? videoStream->getStatus() : Stream::Stopped;
-			Stream::Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stream::Stopped;
+			Status vStatus = videoStream ? videoStream->getStatus() : Stopped;
+			Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stopped;
 			
-			if (vStatus == Stream::Playing || aStatus == Stream::Playing) {
-				st = Movie::Playing;
-			} else if (vStatus == Stream::Paused || aStatus == Stream::Paused) {
-				st = Movie::Paused;
+			if (vStatus == Playing || aStatus == Playing) {
+				st = Playing;
+			} else if (vStatus == Paused || aStatus == Paused) {
+				st = Paused;
 			}
 		}
 		

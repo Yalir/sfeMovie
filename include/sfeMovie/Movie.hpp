@@ -23,31 +23,22 @@
  */
 
 
-#ifndef MOVIE_HPP
-#define MOVIE_HPP
+#ifndef SFEMOVIE_MOVIE_HPP
+#define SFEMOVIE_MOVIE_HPP
 
-#include "Macros.hpp"
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/Transformable.hpp>
-#include "VideoStream.hpp"
-#include <string>
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <sfeMovie/Visibility.hpp>
+#include <sfeMovie/VideoStreamDelegate.hpp>
+#include <sfeMovie/Status.hpp>
 
 namespace sfe {
 	class Demuxer;
 	class Timer;
+	class string;
 	
-	class SFE_API Movie : public sf::Drawable, public sf::Transformable, public VideoStream::Delegate {
+	class SFE_API Movie : public sf::Drawable, public sf::Transformable, public VideoStreamDelegate {
 	public:
-		/** Constants giving the media playback status
-		 */
-		enum Status {
-			Stopped, //!< The media playback is stopped (ie. not playing and at the beginning)
-			Paused,  //!< The media playback is paused
-			Playing, //!< The media playback is playing
-			End
-		};
-		
-		
 		/** Default constructor
 		 */
 		Movie(void);

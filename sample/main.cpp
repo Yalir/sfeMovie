@@ -24,12 +24,12 @@ void my_pause()
 #endif
 }
 
-std::string StatusToString(sfe::Movie::Status status)
+std::string StatusToString(sfe::Status status)
 {
 	switch (status) {
-		case sfe::Movie::Stopped: return "Stopped"; break;
-		case sfe::Movie::Paused: return "Paused"; break;
-		case sfe::Movie::Playing: return "Playing"; break;
+		case sfe::Stopped: return "Stopped"; break;
+		case sfe::Paused: return "Paused"; break;
+		case sfe::Playing: return "Playing"; break;
 		default: return "unknown status"; break;
 	}
 }
@@ -107,7 +107,7 @@ int main(int argc, const char *argv[])
 			
 			if (ev.type == sf::Event::KeyPressed) {
 				if (ev.key.code == sf::Keyboard::Space) {
-					if (movie.getStatus() == sfe::Movie::Playing) {
+					if (movie.getStatus() == sfe::Playing) {
 						movie.pause();
 					} else {
 						movie.play();

@@ -28,18 +28,11 @@
 #include <set>
 #include <SFML/System.hpp>
 #include "Macros.hpp"
+#include <sfeMovie/Status.hpp>
 
 namespace sfe {
 	class Timer {
 	public:
-		/** The timer's status
-		 */
-		enum Status {
-			Stopped,
-			Paused,
-			Playing
-		};
-		
 		class Observer {
 		public:
 			/** Default constructor

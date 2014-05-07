@@ -76,6 +76,8 @@ namespace sfe {
 		void error(const std::string& file, const std::string& message);
 	}
 	
+	/** Stringify any type of object supported by ostringstream
+	 */
 	template <typename T>
 	std::string s(const T& obj)
 	{

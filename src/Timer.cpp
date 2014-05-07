@@ -142,14 +142,14 @@ namespace sfe {
 			play();
 	}
 	
-	Timer::Status Timer::getStatus(void) const
+	Status Timer::getStatus(void) const
 	{
 		return m_status;
 	}
 	
 	sf::Time Timer::getOffset(void) const
 	{
-		if (getStatus() == Playing)
+		if (Timer::getStatus() == Playing)
 			return m_pausedTime + m_timer.getElapsedTime();
 		else
 			return m_pausedTime;
@@ -191,6 +191,8 @@ namespace sfe {
 					
 				case Stopped:
 					obs->didStop(*this, oldStatus);
+					break;
+				default:
 					break;
 			}
 		}

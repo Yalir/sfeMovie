@@ -93,9 +93,9 @@ namespace sfe {
 		
 		// Timer::Observer interface
 		void willPlay(const Timer &timer);
-		void didPlay(const Timer& timer, Timer::Status previousStatus);
-		void didPause(const Timer& timer, Timer::Status previousStatus);
-		void didStop(const Timer& timer, Timer::Status previousStatus);
+		void didPlay(const Timer& timer, sfe::Status previousStatus);
+		void didPause(const Timer& timer, sfe::Status previousStatus);
+		void didStop(const Timer& timer, sfe::Status previousStatus);
 		
 		// Public properties
 		unsigned m_sampleRate;

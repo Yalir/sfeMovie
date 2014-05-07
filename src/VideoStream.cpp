@@ -34,7 +34,7 @@ extern "C" {
 #include "Log.hpp"
 
 namespace sfe {
-	VideoStream::VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+	VideoStream::VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, VideoStreamDelegate& delegate) :
 	Stream(formatCtx ,stream, dataSource, timer),
 	m_texture(),
 	m_rawVideoFrame(NULL),
@@ -104,7 +104,7 @@ namespace sfe {
 	
 	void VideoStream::update(void)
 	{
-		if (getStatus() == Stream::Playing) {
+		if (getStatus() == Playing) {
 			if (getSynchronizationGap() < sf::Time::Zero) {
 				if (!onGetData(m_texture)) {
 					setStatus(Stopped);
@@ -215,7 +215,7 @@ namespace sfe {
 	void VideoStream::willPlay(const Timer &timer)
 	{
 		Stream::willPlay(timer);
-		if (getStatus() == Stream::Stopped) {
+		if (getStatus() == Stopped) {
 			preload();
 		}
 	}

@@ -12,7 +12,7 @@ extern "C" {
 #include <iostream>
 #include "AudioStream.hpp"
 #include "Log.hpp"
-#include "utils.hpp"
+#include <sfeMovie/Status.hpp>
 
 namespace sfe {
 	AudioStream::AudioStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer) :
@@ -82,15 +82,15 @@ namespace sfe {
 		
 		switch (sfStatus) {
 			case sf::SoundStream::Playing:
-				setStatus(Stream::Playing);
+				setStatus(sfe::Playing);
 				break;
 				
 			case sf::SoundStream::Paused:
-				setStatus(Stream::Paused);
+				setStatus(sfe::Paused);
 				break;
 				
 			case sf::SoundStream::Stopped:
-				setStatus(Stream::Stopped);
+				setStatus(sfe::Stopped);
 				break;
 				
 			default:
@@ -237,7 +237,7 @@ namespace sfe {
 	{
 		Stream::willPlay(timer);
 		
-		if (Stream::getStatus() == Stream::Stopped) {
+		if (Stream::getStatus() == sfe::Stopped) {
 			sf::Time initialTime = sf::SoundStream::getPlayingOffset();
 			sf::Clock timeout;
 			sf::SoundStream::play();
@@ -254,19 +254,19 @@ namespace sfe {
 		}
 	}
 	
-	void AudioStream::didPlay(const Timer& timer, Timer::Status previousStatus)
+	void AudioStream::didPlay(const Timer& timer, sfe::Status previousStatus)
 	{
 		CHECK(SoundStream::getStatus() == SoundStream::Playing, "AudioStream::didPlay() - willPlay() not executed!");
 		Stream::didPlay(timer, previousStatus);
 	}
 	
-	void AudioStream::didPause(const Timer& timer, Timer::Status previousStatus)
+	void AudioStream::didPause(const Timer& timer, sfe::Status previousStatus)
 	{
 		sf::SoundStream::pause();
 		Stream::didPause(timer, previousStatus);
 	}
 	
-	void AudioStream::didStop(const Timer& timer, Timer::Status previousStatus)
+	void AudioStream::didStop(const Timer& timer, sfe::Status previousStatus)
 	{
 		sf::SoundStream::stop();
 		Stream::didStop(timer, previousStatus);

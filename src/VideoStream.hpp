@@ -27,22 +27,19 @@
 
 #include "Macros.hpp"
 #include "Stream.hpp"
+#include <sfeMovie/VideoStreamDelegate.hpp>
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
 
 namespace sfe {
 	class VideoStream : public Stream {
 	public:
-		struct Delegate {
-			virtual void didUpdateImage(const VideoStream& sender, const sf::Texture& image) = 0;
-		};
-		
 		/** Create a video stream from the given FFmpeg stream
 		 *
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
+		VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, VideoStreamDelegate& delegate);
 		
 		/** Default destructor
 		 */
@@ -125,7 +122,7 @@ namespace sfe {
 		AVFrameRef m_rawVideoFrame;
 		uint8_t *m_rgbaVideoBuffer[4];
 		int m_rgbaVideoLinesize[4];
-		Delegate& m_delegate;
+		VideoStreamDelegate& m_delegate;
 		
 		// Rescaler data
 		struct SwsContext *m_swsCtx;

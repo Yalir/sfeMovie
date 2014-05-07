@@ -30,7 +30,6 @@ extern "C"
 }
 
 #include "Stream.hpp"
-#include "utils.hpp"
 #include "Utilities.hpp"
 #include <cassert>
 #include <iostream>
@@ -148,7 +147,7 @@ namespace sfe {
 		return MEDIA_TYPE_UNKNOWN;
 	}
 	
-	Stream::Status Stream::getStatus(void) const
+	Status Stream::getStatus(void) const
 	{
 		return m_status;
 	}
@@ -196,19 +195,19 @@ namespace sfe {
 		}
 	}
 	
-	void Stream::didPlay(const Timer& timer, Timer::Status previousStatus)
+	void Stream::didPlay(const Timer& timer, Status previousStatus)
 	{
-		setStatus(Stream::Playing);
+		setStatus(Playing);
 	}
 	
-	void Stream::didPause(const Timer& timer, Timer::Status previousStatus)
+	void Stream::didPause(const Timer& timer, Status previousStatus)
 	{
-		setStatus(Stream::Paused);
+		setStatus(Paused);
 	}
 	
-	void Stream::didStop(const Timer& timer, Timer::Status previousStatus)
+	void Stream::didStop(const Timer& timer, Status previousStatus)
 	{
-		setStatus(Stream::Stopped);
+		setStatus(Stopped);
 	}
 	
 	void Stream::willSeek(const Timer& timer, sf::Time position)
