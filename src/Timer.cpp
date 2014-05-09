@@ -23,6 +23,7 @@
  */
 
 #include "Timer.hpp"
+#include "Macros.hpp"
 
 namespace sfe {
 	Timer::Observer::Observer(void)

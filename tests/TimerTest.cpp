@@ -22,18 +22,18 @@ public:
 		m_willPlay = true;
 	}
 	
-	void didPlay(const sfe::Timer& timer, sfe::Timer::Status previousStatus)
+	void didPlay(const sfe::Timer& timer, sfe::Status previousStatus)
 	{
 		BOOST_CHECK(m_willPlay == true);
 		m_didPlay = true;
 	}
 	
-	void didPause(const sfe::Timer& timer, sfe::Timer::Status previousStatus)
+	void didPause(const sfe::Timer& timer, sfe::Status previousStatus)
 	{
 		m_didPause = true;
 	}
 
-	void didStop(const sfe::Timer& timer, sfe::Timer::Status previousStatus)
+	void didStop(const sfe::Timer& timer, sfe::Status previousStatus)
 	{
 		m_didStop = true;
 	}
@@ -46,18 +46,18 @@ BOOST_AUTO_TEST_CASE(TimerTestBase)
 	sfe::Timer timer;
 	
 	BOOST_CHECK(timer.getOffset() == sf::Time::Zero);
-	BOOST_CHECK(timer.getStatus() == sfe::Timer::Stopped);
+	BOOST_CHECK(timer.getStatus() == sfe::Stopped);
 	
 	BOOST_CHECK_NO_THROW(timer.play());
-	BOOST_CHECK(timer.getStatus() == sfe::Timer::Playing);
+	BOOST_CHECK(timer.getStatus() == sfe::Playing);
 	BOOST_CHECK_THROW(timer.play(), std::runtime_error);
 	
 	BOOST_CHECK_NO_THROW(timer.pause());
-	BOOST_CHECK(timer.getStatus() == sfe::Timer::Paused);
+	BOOST_CHECK(timer.getStatus() == sfe::Paused);
 	BOOST_CHECK_THROW(timer.pause(), std::runtime_error);
 	
 	BOOST_CHECK_NO_THROW(timer.stop());
-	BOOST_CHECK(timer.getStatus() == sfe::Timer::Stopped);
+	BOOST_CHECK(timer.getStatus() == sfe::Stopped);
 	BOOST_CHECK_THROW(timer.stop(), std::runtime_error);
 	
 	BOOST_CHECK(timer.getOffset() == sf::Time::Zero);

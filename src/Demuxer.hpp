@@ -26,7 +26,6 @@
 #define SFEMOVIE_DEMUXER_HPP
 
 #include <SFML/System.hpp>
-#include "Macros.hpp"
 #include "Stream.hpp"
 #include "AudioStream.hpp"
 #include "VideoStream.hpp"

@@ -27,7 +27,6 @@
 
 #include <set>
 #include <SFML/System.hpp>
-#include "Macros.hpp"
 #include <sfeMovie/Status.hpp>
 
 namespace sfe {

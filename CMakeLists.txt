@@ -154,12 +154,6 @@ if (BUILD_SFEMOVIE_SAMPLE)
     add_subdirectory(sample)
 endif ()
 
-# Demuxer command line tool
-set(BUILD_DEMUXER_CLI FALSE CACHE BOOL "TRUE to build the Demuxer command line program (to check file contents and play audio)")
-if (BUILD_DEMUXER_CLI)
-	add_subdirectory(DemuxerCLI)
-endif()
-
 # add an option for building the documentation
 set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")
 if(BUILD_DOC)

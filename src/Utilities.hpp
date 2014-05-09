@@ -52,15 +52,6 @@ namespace sfe {
 	 * @return the stringified media type
 	 */
 	std::string MediaTypeToString(MediaType type);
-	
-	#define BENCH_START \
-	{ \
-		sf::Clock __bench;
-
-	#define BENCH_END(title) \
-		sfeLogDebug(std::string(title) + " took " + s(__bench.getElapsedTime().asMilliseconds()) + "ms"); \
-	}
-
 }
 
 #endif

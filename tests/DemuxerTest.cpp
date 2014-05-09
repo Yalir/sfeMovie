@@ -8,7 +8,7 @@
 #include "Utilities.hpp"
 #include <SFML/Audio.hpp>
 
-class DummyDelegate : public sfe::VideoStream::Delegate {
+class DummyDelegate : public sfe::VideoStreamDelegate {
 	void didUpdateImage(const sfe::VideoStream& sender, const sf::Texture& image)
 	{
 	}
@@ -81,13 +81,13 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(videoStream->getStatus() == sfe::Stream::Stopped);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(videoStream->getStatus() == sfe::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 	timer.play();
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(videoStream->getStatus() == sfe::Stream::Playing);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
+	BOOST_CHECK(videoStream->getStatus() == sfe::Playing);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Playing);
 	
 	clock.restart();
 	while (clock.getElapsedTime() < sf::seconds(8)) {
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	}
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
-	BOOST_CHECK(videoStream->getStatus() == sfe::Stream::Stopped);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(videoStream->getStatus() == sfe::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
@@ -111,15 +111,15 @@ BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 	timer.play();
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Playing);
 	sf::sleep(sf::seconds(4));
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
@@ -133,15 +133,15 @@ BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 	timer.play();
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Playing);
 	sf::sleep(sf::seconds(30));
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 }
 
 
@@ -165,13 +165,13 @@ BOOST_AUTO_TEST_CASE(DemuxerShortFLACTest)
 	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 	timer.play();
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Playing);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Playing);
 	sf::sleep(sf::seconds(5));
 	demuxer->update();
 	BOOST_CHECK(demuxer->didReachEndOfFile() == true);
-	BOOST_CHECK(audioStream->getStatus() == sfe::Stream::Stopped);
+	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
 }

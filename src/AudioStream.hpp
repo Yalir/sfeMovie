@@ -27,7 +27,6 @@
 #define SFEMOVIE_AUDIOSTREAM_HPP
 
 #include <SFML/Audio.hpp>
-#include "Macros.hpp"
 #include "Stream.hpp"
 #include <stdint.h>
 
