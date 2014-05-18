@@ -72,91 +72,114 @@ namespace sfe {
 	
 	void Movie::play(void)
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		m_timer->play();
-		update();
+		if (m_demuxer && m_timer) {
+			m_timer->play();
+			update();
+		} else {
+			sfeLogError("Movie - No media loaded, cannot play");
+		}
 	}
 	
 	void Movie::pause(void)
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		m_timer->pause();
-		update();
+		if (m_demuxer && m_timer) {
+			m_timer->pause();
+			update();
+		} else {
+			sfeLogError("Movie - No media loaded, cannot pause");
+		}
 	}
 	
 	void Movie::stop(void)
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		m_timer->stop();
-		update();
+		if (m_demuxer && m_timer) {
+			m_timer->stop();
+			update();
+		} else {
+			sfeLogError("Movie - No media loaded, cannot stop");
+		}
 	}
 	
 	void Movie::update(void)
 	{
-		CHECK(m_demuxer, "No media loaded");
-		m_demuxer->update();
-		
-		if (getStatus() == Stopped && m_timer->getStatus() != Stopped) {
-			m_timer->stop();
-		}
-		
-		// Enable smoothing when the video is scaled
-		sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
-		if (vStream) {
-			sf::Vector2f sc = getScale();
+		if (m_demuxer && m_timer) {
+			m_demuxer->update();
 			
-			if (std::fabs(sc.x - 1.f) < 0.00001 &&
-				std::fabs(sc.y - 1.f) < 0.00001)
-			{
-				vStream->getVideoTexture().setSmooth(false);
+			if (getStatus() == Stopped && m_timer->getStatus() != Stopped) {
+				m_timer->stop();
 			}
-			else
-			{
-				vStream->getVideoTexture().setSmooth(true);
+			
+			// Enable smoothing when the video is scaled
+			sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
+			if (vStream) {
+				sf::Vector2f sc = getScale();
+				
+				if (std::fabs(sc.x - 1.f) < 0.00001 &&
+					std::fabs(sc.y - 1.f) < 0.00001)
+				{
+					vStream->getVideoTexture().setSmooth(false);
+				}
+				else
+				{
+					vStream->getVideoTexture().setSmooth(true);
+				}
 			}
+		} else {
+			sfeLogWarning("Movie - No media loaded, nothing to update");
 		}
 	}
 	
 	void Movie::setVolume(float volume)
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
-		std::set<Stream*>::const_iterator it;
-		
-		for (it = audioStreams.begin(); it != audioStreams.end(); it++) {
-			AudioStream* audioStream = dynamic_cast<AudioStream*>(*it);
-			audioStream->setVolume(volume);
+		if (m_demuxer && m_timer) {
+			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
+			std::set<Stream*>::const_iterator it;
+			
+			for (it = audioStreams.begin(); it != audioStreams.end(); it++) {
+				AudioStream* audioStream = dynamic_cast<AudioStream*>(*it);
+				audioStream->setVolume(volume);
+			}
+		} else {
+			sfeLogError("Movie - No media loaded, cannot set volume");
 		}
 	}
 	
 	float Movie::getVolume(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+		if (m_demuxer && m_timer) {
+			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+			
+			if (audioStream)
+				return audioStream->getVolume();
+		}
 		
-		CHECK(audioStream, "No selected audio stream, cannot return a volume");
-		return audioStream->getVolume();
+		sfeLogError("Movie - No selected audio stream, cannot return a volume");
+		return 0;
 	}
 	
 	sf::Time Movie::getDuration(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		return m_demuxer->getDuration();
+		if (m_demuxer && m_timer) {
+			return m_demuxer->getDuration();
+		}
+		
+		sfeLogError("Movie - No media loaded, cannot return a duration");
+		return sf::Time::Zero;
 	}
 	
 	sf::Vector2i Movie::getSize(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-		
-		if (videoStream) {
-			return videoStream->getFrameSize();
-		} else {
-			sfeLogWarning("Movie::getSize() called but there is no active video stream");
-			return sf::Vector2i(0, 0);
+		if (m_demuxer && m_timer) {
+			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
+			
+			if (videoStream) {
+				return videoStream->getFrameSize();
+			}
 		}
+		sfeLogError("Movie::getSize() called but there is no active video stream");
+		return sf::Vector2i(0, 0);
 	}
-	
+		
 	void Movie::fitFrame(int x, int y, int width, int height, bool preserveRatio)
 	{
 		fitFrame(sf::IntRect(x, y, width, height), preserveRatio);
@@ -167,7 +190,7 @@ namespace sfe {
 		sf::Vector2i movie_size = getSize();
 		
 		if (movie_size.x == 0 || movie_size.y == 0) {
-			sfeLogWarning("Movie::fitFrame() called but the video frame size is (0, 0)");
+			sfeLogError("Movie::fitFrame() called but the video frame size is (0, 0)");
 			return;
 		}
 		
@@ -208,26 +231,40 @@ namespace sfe {
 	
 	float Movie::getFramerate(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
+		if (m_demuxer && m_timer) {
 		VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-		CHECK(videoStream, "No selected video stream, cannot return a frame rate");
-		return videoStream->getFrameRate();
+		
+			if (videoStream)
+				return videoStream->getFrameRate();
+		}
+		
+		sfeLogError("Movie - No selected video stream, cannot return a frame rate");
+		return 0;
 	}
 	
 	unsigned int Movie::getSampleRate(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-		CHECK(audioStream, "No selected audio stream, cannot return a sample rate");
-		return audioStream->getSampleRate();
+		if (m_demuxer && m_timer) {
+			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+			
+			if (audioStream)
+				return audioStream->getSampleRate();
+		}
+		
+		sfeLogError("Movie - No selected audio stream, cannot return a sample rate");
+		return 0;
 	}
 	
 	unsigned int Movie::getChannelCount(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-		CHECK(audioStream, "No selected audio stream, cannot return a channel count");
-		return audioStream->getChannelCount();
+		if (m_demuxer && m_timer) {
+			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+			if (audioStream)
+				return audioStream->getChannelCount();
+		}
+		
+		sfeLogError("Movie - No selected audio stream, cannot return a channel count");
+		return 0;
 	}
 	
 	Status Movie::getStatus(void) const
@@ -252,8 +289,12 @@ namespace sfe {
 	
 	sf::Time Movie::getPlayingOffset(void) const
 	{
-		CHECK(m_demuxer && m_timer, "No media loaded");
-		return m_timer->getOffset();
+		if (m_demuxer && m_timer) {
+			return m_timer->getOffset();
+		}
+		
+		sfeLogError("Movie - No media loaded, cannot return a playing offset");
+		return sf::Time::Zero;
 	}
 	
 	const sf::Texture& Movie::getCurrentImage(void) const
