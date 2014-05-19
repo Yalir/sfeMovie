@@ -12,7 +12,7 @@ extern "C" {
 #include <iostream>
 #include "AudioStream.hpp"
 #include "Log.hpp"
-#include <sfeMovie/Status.hpp>
+#include <sfeMovie/Movie.hpp>
 
 namespace sfe {
 	AudioStream::AudioStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer) :
@@ -53,7 +53,7 @@ namespace sfe {
 	
 	/** Default destructor
 	 */
-	AudioStream::~AudioStream(void)
+	AudioStream::~AudioStream()
 	{
 		if (m_audioFrame) {
 			av_frame_free(&m_audioFrame);
@@ -71,12 +71,12 @@ namespace sfe {
 		swr_free(&m_swrCtx);
 	}
 	
-	MediaType AudioStream::getStreamKind(void) const
+	MediaType AudioStream::getStreamKind() const
 	{
 		return MEDIA_TYPE_AUDIO;
 	}
 	
-	void AudioStream::update(void)
+	void AudioStream::update()
 	{
 		sf::SoundStream::Status sfStatus = sf::SoundStream::getStatus();
 		
@@ -162,7 +162,7 @@ namespace sfe {
 		return needsMoreDecoding;
 	}
 	
-	void AudioStream::initResampler(void)
+	void AudioStream::initResampler()
 	{
 		CHECK0(m_swrCtx, "AudioStream::initResampler() - resampler already initialized");
 		int err = 0;

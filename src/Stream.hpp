@@ -29,7 +29,7 @@
 #include "Timer.hpp"
 #include <list>
 #include <SFML/System.hpp>
-#include <sfeMovie/Status.hpp>
+#include <sfeMovie/Movie.hpp>
 
 namespace sfe {
 	
@@ -59,16 +59,16 @@ namespace sfe {
 		
 		/** Default destructor
 		 */
-		virtual ~Stream(void);
+		virtual ~Stream();
 		
 		/** Connect this stream against the reference timer to receive playback events; this allows this
 		 * stream to be played
 		 */
-		void connect(void);
+		void connect();
 		
 		/** Disconnect this stream from the reference timer ; this disables this stream
 		 */
-		void disconnect(void);
+		void disconnect();
 		
 		/** Called by the demuxer to provide the stream with encoded data
 		 *
@@ -92,11 +92,11 @@ namespace sfe {
 		 *
 		 * @return the oldest encoded data, or null if no data could be read from the media
 		 */
-		virtual AVPacketRef popEncodedData(void);
+		virtual AVPacketRef popEncodedData();
 		
 		/** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
 		 */
-		void flushBuffers(void);
+		void flushBuffers();
 		
 		/** Used by the demuxer to know if this stream should be fed with more data
 		 *
@@ -104,27 +104,27 @@ namespace sfe {
 		 *
 		 * @return true if the demuxer should give more data to this stream, false otherwise
 		 */
-		virtual bool needsMoreData(void) const;
+		virtual bool needsMoreData() const;
 		
 		/** Get the stream kind (either audio, video or subtitle stream)
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual MediaType getStreamKind(void) const;
+		virtual MediaType getStreamKind() const;
 		
 		/** Give the stream's status
 		 *
 		 * @return The stream's status (Playing, Paused or Stopped)
 		 */
-		Status getStatus(void) const;
+		Status getStatus() const;
 		
 		/** Compute the stream position in the media, by possibly fetching a packet
 		 */
-		sf::Time computePosition(void);
+		sf::Time computePosition();
 		
 		/** Update the current stream's status and eventually decode frames
 		 */
-		virtual void update(void) = 0;
+		virtual void update() = 0;
 	protected:
 		// Timer::Observer interface
 		void didPlay(const Timer& timer, Status previousStatus);
@@ -134,7 +134,7 @@ namespace sfe {
 		void didSeek(const Timer& timer, sf::Time position);
 		
 		void setStatus(Status status);
-		virtual void discardAllEncodedData(void);
+		virtual void discardAllEncodedData();
 		
 		AVFormatContextRef m_formatCtx;
 		AVStreamRef m_stream;

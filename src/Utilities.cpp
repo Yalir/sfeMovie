@@ -29,7 +29,7 @@
 #include <iostream>
 
 namespace sfe {
-	void dumpAvailableDemuxers(void)
+	void dumpAvailableDemuxers()
 	{
 		const std::list<Demuxer::DemuxerInfo>& demuxers = sfe::Demuxer::getAvailableDemuxers();
 		std::list<Demuxer::DemuxerInfo>::const_iterator it;
@@ -40,7 +40,7 @@ namespace sfe {
 		}
 	}
 	
-	void dumpAvailableDecoders(void)
+	void dumpAvailableDecoders()
 	{
 		const std::list<Demuxer::DecoderInfo>& decoders = sfe::Demuxer::getAvailableDecoders();
 		std::list<Demuxer::DecoderInfo>::const_iterator it;

@@ -73,12 +73,12 @@ namespace sfe {
 			avcodec_close(m_codecCtx);
 	}
 	
-	void Stream::connect(void)
+	void Stream::connect()
 	{
 		m_timer.addObserver(*this);
 	}
 	
-	void Stream::disconnect(void)
+	void Stream::disconnect()
 	{
 		m_timer.removeObserver(*this);
 	}
@@ -97,7 +97,7 @@ namespace sfe {
 		m_packetList.push_front(packet);
 	}
 	
-	AVPacketRef Stream::popEncodedData(void)
+	AVPacketRef Stream::popEncodedData()
 	{
 		AVPacketRef result = NULL;
 		sf::Lock l(m_readerMutex);
@@ -124,7 +124,7 @@ namespace sfe {
 		return result;
 	}
 	
-	void Stream::flushBuffers(void)
+	void Stream::flushBuffers()
 	{
 		sf::Lock l(m_readerMutex);
 		if (getStatus() == Playing) {
@@ -137,22 +137,22 @@ namespace sfe {
 		sfeLogDebug("Flushed " + MediaTypeToString(getStreamKind()) + " stream!");
 	}
 	
-	bool Stream::needsMoreData(void) const
+	bool Stream::needsMoreData() const
 	{
 		return m_packetList.size() < 10;
 	}
 	
-	MediaType Stream::getStreamKind(void) const
+	MediaType Stream::getStreamKind() const
 	{
 		return MEDIA_TYPE_UNKNOWN;
 	}
 	
-	Status Stream::getStatus(void) const
+	Status Stream::getStatus() const
 	{
 		return m_status;
 	}
 	
-	sf::Time Stream::computePosition(void)
+	sf::Time Stream::computePosition()
 	{
 		if (!m_packetList.size()) {
 			m_dataSource.requestMoreData(*this);
@@ -182,7 +182,7 @@ namespace sfe {
 		m_status = status;
 	}
 	
-	void Stream::discardAllEncodedData(void)
+	void Stream::discardAllEncodedData()
 	{
 		AVPacketRef pkt = NULL;
 		

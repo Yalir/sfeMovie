@@ -33,12 +33,12 @@ namespace sfe {
 	/** Display a list of all the available demuxers as follow:
 	 * - decoder_type: decoder_name
 	 */
-	void dumpAvailableDemuxers(void);
+	void dumpAvailableDemuxers();
 	
 	/** Display a list of all the available decoders as follow:
 	 * - decoder_type: decoder_name
 	 */
-	void dumpAvailableDecoders(void);
+	void dumpAvailableDecoders();
 	
 	/** Gives the string representing the given @a type
 	 *

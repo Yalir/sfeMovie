@@ -1,6 +1,6 @@
 
 /*
- *  Movie.hpp
+ *  MovieImpl.hpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -22,29 +22,21 @@
  *
  */
 
-
-#ifndef SFEMOVIE_MOVIE_HPP
-#define SFEMOVIE_MOVIE_HPP
-
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <sfeMovie/Visibility.hpp>
+#include <cstring>
 #include <string>
+#include <stdexcept>
+#include <SFML/Config.hpp>
+#include "VideoStream.hpp"
+#include "Demuxer.hpp"
+
+#ifndef SFEMOVIE_MOVIEIMPL_HPP
+#define SFEMOVIE_MOVIEIMPL_HPP
 
 namespace sfe {
-	/** Constants giving the a playback status
-	 */
-	enum Status {
-		Stopped, //!< The playback is stopped (ie. not playing and at the beginning)
-		Paused,  //!< The playback is paused
-		Playing, //!< The playback is playing
-		End
-	};
-	
-	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
+	class MovieImpl : public VideoStream::Delegate, public sf::Drawable {
 	public:
-		Movie();
-		~Movie();
+		MovieImpl(sf::Transformable& movieView);
+		virtual ~MovieImpl();
 		
 		/** Attemps to open a media file (movie or audio)
 		 *
@@ -57,6 +49,7 @@ namespace sfe {
 		 */
 		bool openFromFile(const std::string& filename);
 		
+		
 		/** Start or resume playing the media playback
 		 *
 		 * This function starts the stream if it was stopped, resumes it if it was paused,
@@ -66,12 +59,14 @@ namespace sfe {
 		 */
 		void play();
 		
+		
 		/** Pauses the media playback
 		 *
 		 * If the media playback is already paused,
 		 * this does nothing, otherwise the playback is paused.
 		 */
 		void pause();
+		
 		
 		/** Stops the media playback. The playing offset is reset to the beginning.
 		 *
@@ -80,9 +75,11 @@ namespace sfe {
 		 */
 		void stop();
 		
+		
 		/** Update the media status and eventually decode frames
 		 */
 		void update();
+		
 		
 		/** Sets the sound's volume (default is 100)
 		 *
@@ -90,11 +87,13 @@ namespace sfe {
 		 */
 		void setVolume(float volume);
 		
+		
 		/** Returns the current sound's volume
 		 *
 		 * @return the sound's volume, in range [0, 100]
 		 */
 		float getVolume() const;
+		
 		
 		/** Returns the duration of the movie
 		 *
@@ -102,16 +101,19 @@ namespace sfe {
 		 */
 		sf::Time getDuration() const;
 		
+		
 		/** Returns the size (width, height) of the currently active video stream
 		 *
 		 * @return the size of the currently active video stream, or (0, 0) is there is none
 		 */
 		sf::Vector2i getSize() const;
 		
+		
 		/** See fitFrame(sf::IntRect, bool)
 		 * @see fitFrame(sf::IntRect, bool)
 		 */
 		void fit(int x, int y, int width, int height, bool preserveRatio = true);
+		
 		
 		/** Scales the movie to fit the requested frame.
 		 *
@@ -126,11 +128,13 @@ namespace sfe {
 		 */
 		void fit(sf::IntRect frame, bool preserveRatio = true);
 		
+		
 		/** Returns the average amount of video frames per second
 		 *
 		 * @return the average video frame rate
 		 */
 		float getFramerate() const;
+		
 		
 		/** Returns the amount of audio samples per second
 		 *
@@ -138,11 +142,13 @@ namespace sfe {
 		 */
 		unsigned int getSampleRate() const;
 		
+		
 		/** Returns the count of audio channels
 		 *
 		 * @return the channels' count
 		 */
 		unsigned int getChannelCount() const;
+		
 		
 		/** Returns the current status of the movie
 		 *
@@ -150,11 +156,13 @@ namespace sfe {
 		 */
 		Status getStatus() const;
 		
+		
 		/** Returns the current playing position in the movie
 		 *
 		 * @return the playing position
 		 */
 		sf::Time getPlayingOffset() const;
+		
 		
 		/** Returns the latest movie image
 		 *
@@ -167,11 +175,17 @@ namespace sfe {
 		 * @return the current image of the movie for the activated video stream
 		 */
 		const sf::Texture& getCurrentImage() const;
-	private:
-		void draw(sf::RenderTarget& Target, sf::RenderStates states) const;
 		
-		class MovieImpl* m_impl;
+		void cleanResources();
+		void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+		void didUpdateImage(const VideoStream& sender, const sf::Texture& image);
+		
+		sf::Transformable& m_movieView;
+		Demuxer* m_demuxer;
+		Timer* m_timer;
+		sf::Sprite m_sprite;
 	};
-} // namespace sfe
+	
+}
 
 #endif

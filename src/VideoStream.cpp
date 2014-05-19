@@ -34,7 +34,7 @@ extern "C" {
 #include "Log.hpp"
 
 namespace sfe {
-	VideoStream::VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, VideoStreamDelegate& delegate) :
+	VideoStream::VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
 	Stream(formatCtx ,stream, dataSource, timer),
 	m_texture(),
 	m_rawVideoFrame(NULL),
@@ -67,7 +67,7 @@ namespace sfe {
 		initRescaler();
 	}
 	
-	VideoStream::~VideoStream(void)
+	VideoStream::~VideoStream()
 	{
 		if (m_rawVideoFrame) {
 			av_frame_free(&m_rawVideoFrame);
@@ -82,27 +82,27 @@ namespace sfe {
 		}
 	}
 	
-	MediaType VideoStream::getStreamKind(void) const
+	MediaType VideoStream::getStreamKind() const
 	{
 		return MEDIA_TYPE_VIDEO;
 	}
 	
-	sf::Vector2i VideoStream::getFrameSize(void) const
+	sf::Vector2i VideoStream::getFrameSize() const
 	{
 		return sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
 	}
 	
-	float VideoStream::getFrameRate(void) const
+	float VideoStream::getFrameRate() const
 	{
 		return av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, NULL));
 	}
 	
-	sf::Texture& VideoStream::getVideoTexture(void)
+	sf::Texture& VideoStream::getVideoTexture()
 	{
 		return m_texture;
 	}
 	
-	void VideoStream::update(void)
+	void VideoStream::update()
 	{
 		if (getStatus() == Playing) {
 			if (getSynchronizationGap() < sf::Time::Zero) {
@@ -152,7 +152,7 @@ namespace sfe {
 		return goOn;
 	}
 	
-	sf::Time VideoStream::getSynchronizationGap(void)
+	sf::Time VideoStream::getSynchronizationGap()
 	{
 		return  m_lastDecodedTimestamp - m_timer.getOffset();
 	}
@@ -185,7 +185,7 @@ namespace sfe {
 		}
 	}
 	
-	void VideoStream::initRescaler(void)
+	void VideoStream::initRescaler()
 	{
 		/* create scaling context */
 		int algorithm = SWS_FAST_BILINEAR;
@@ -206,7 +206,7 @@ namespace sfe {
 		sws_scale(m_swsCtx, frame->data, frame->linesize, 0, frame->height, outVideoBuffer, outVideoLinesize);
 	}
 	
-	void VideoStream::preload(void)
+	void VideoStream::preload()
 	{
 		sfeLogDebug("Preload video image");
 		onGetData(m_texture);

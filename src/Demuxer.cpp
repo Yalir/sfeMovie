@@ -43,7 +43,7 @@ namespace sfe {
 	std::list<Demuxer::DemuxerInfo> Demuxer::g_availableDemuxers;
 	std::list<Demuxer::DecoderInfo> Demuxer::g_availableDecoders;
 	
-	static void loadFFmpeg(void)
+	static void loadFFmpeg()
 	{
 		ONCE(av_register_all());
 		ONCE(avcodec_register_all());
@@ -60,7 +60,7 @@ namespace sfe {
 		}
 	}
 	
-	const std::list<Demuxer::DemuxerInfo>& Demuxer::getAvailableDemuxers(void)
+	const std::list<Demuxer::DemuxerInfo>& Demuxer::getAvailableDemuxers()
 	{
 		AVInputFormat* demuxer = NULL;
 		loadFFmpeg();
@@ -79,7 +79,7 @@ namespace sfe {
 		return g_availableDemuxers;
 	}
 	
-	const std::list<Demuxer::DecoderInfo>& Demuxer::getAvailableDecoders(void)
+	const std::list<Demuxer::DecoderInfo>& Demuxer::getAvailableDecoders()
 	{
 		AVCodecRef codec = NULL;
 		loadFFmpeg();
@@ -99,7 +99,7 @@ namespace sfe {
 		return g_availableDecoders;
 	}
 	
-	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStreamDelegate& videoDelegate) :
+	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate) :
 	m_formatCtx(NULL),
 	m_eofReached(false),
 	m_streams(),
@@ -184,7 +184,7 @@ namespace sfe {
 		m_timer.addObserver(*this);
 	}
 	
-	Demuxer::~Demuxer(void)
+	Demuxer::~Demuxer()
 	{
 		if (m_timer.getStatus() != Stopped)
 			m_timer.stop();
@@ -201,7 +201,7 @@ namespace sfe {
 		}
 	}
 	
-	const std::map<int, Stream*>& Demuxer::getStreams(void) const
+	const std::map<int, Stream*>& Demuxer::getStreams() const
 	{
 		return m_streams;
 	}
@@ -242,14 +242,14 @@ namespace sfe {
 			m_timer.play();
 	}
 	
-	void Demuxer::selectFirstAudioStream(void)
+	void Demuxer::selectFirstAudioStream()
 	{
 		std::set<Stream*> audioStreams = getStreamsOfType(MEDIA_TYPE_AUDIO);
 		if (audioStreams.size())
 			selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
 	}
 	
-	AudioStream* Demuxer::getSelectedAudioStream(void) const
+	AudioStream* Demuxer::getSelectedAudioStream() const
 	{
 		return dynamic_cast<AudioStream*>(m_connectedAudioStream);
 	}
@@ -276,14 +276,14 @@ namespace sfe {
 			m_timer.play();
 	}
 	
-	void Demuxer::selectFirstVideoStream(void)
+	void Demuxer::selectFirstVideoStream()
 	{
 		std::set<Stream*> videoStreams = getStreamsOfType(MEDIA_TYPE_VIDEO);
 		if (videoStreams.size())
 			selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
 	}
 	
-	VideoStream* Demuxer::getSelectedVideoStream(void) const
+	VideoStream* Demuxer::getSelectedVideoStream() const
 	{
 		return dynamic_cast<VideoStream*>(m_connectedVideoStream);
 	}
@@ -308,7 +308,7 @@ namespace sfe {
 		}
 	}
 	
-	void Demuxer::update(void)
+	void Demuxer::update()
 	{
 		std::map<int, Stream*> streams = getStreams();
 		std::map<int, Stream*>::iterator it;
@@ -319,17 +319,17 @@ namespace sfe {
 		}
 	}
 	
-	bool Demuxer::didReachEndOfFile(void) const
+	bool Demuxer::didReachEndOfFile() const
 	{
 		return m_eofReached;
 	}
 	
-	sf::Time Demuxer::getDuration(void) const
+	sf::Time Demuxer::getDuration() const
 	{
 		return m_duration;
 	}
 	
-	AVPacketRef Demuxer::readPacket(void)
+	AVPacketRef Demuxer::readPacket()
 	{
 		sf::Lock l(m_synchronized);
 		
@@ -387,7 +387,7 @@ namespace sfe {
 		feedStream(starvingStream);
 	}
 	
-	void Demuxer::resetEndOfFileStatus(void)
+	void Demuxer::resetEndOfFileStatus()
 	{
 		m_eofReached = false;
 	}

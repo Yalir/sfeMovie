@@ -42,17 +42,17 @@ namespace sfe {
 		
 		/** Default destructor
 		 */
-		virtual ~AudioStream(void);
+		virtual ~AudioStream();
 		
 		/** Get the stream kind (either audio, video or subtitle stream)
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual MediaType getStreamKind(void) const;
+		virtual MediaType getStreamKind() const;
 		
 		/** Update the stream's status
 		 */
-		virtual void update(void);
+		virtual void update();
 		
 		using sf::SoundStream::setVolume;
 		using sf::SoundStream::getVolume;
@@ -79,7 +79,7 @@ namespace sfe {
 		 *
 		 * This must be called before any packet is decoded and resampled
 		 */
-		void initResampler(void);
+		void initResampler();
 		
 		/** Resample the decoded audio frame @a frame into signed 16 bits audio samples
 		 *

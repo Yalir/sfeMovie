@@ -27,50 +27,53 @@
 
 #include "Macros.hpp"
 #include "Stream.hpp"
-#include <sfeMovie/VideoStreamDelegate.hpp>
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
 
 namespace sfe {
 	class VideoStream : public Stream {
 	public:
+		struct Delegate {
+			virtual void didUpdateImage(const VideoStream& sender, const sf::Texture& image) = 0;
+		};
+		
 		/** Create a video stream from the given FFmpeg stream
 		 *
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, VideoStreamDelegate& delegate);
+		VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
 		
 		/** Default destructor
 		 */
-		virtual ~VideoStream(void);
+		virtual ~VideoStream();
 		
 		/** Get the stream kind (either audio, video or subtitle stream)
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual MediaType getStreamKind(void) const;
+		virtual MediaType getStreamKind() const;
 		
 		/** Get the video frame size (width, height)
 		 *
 		 * @return the video frame size
 		 */
-		sf::Vector2i getFrameSize(void) const;
+		sf::Vector2i getFrameSize() const;
 		
 		/** Get the average amount of video frame per second for this stream
 		 *
 		 * @param formatCtx the FFmpeg format context to which this stream belongs
 		 * @return the average framerate
 		 */
-		float getFrameRate(void) const;
+		float getFrameRate() const;
 		
 		/** Get the SFML texture that contains the latest video frame
 		 */
-		sf::Texture& getVideoTexture(void);
+		sf::Texture& getVideoTexture();
 		
 		/** Update the video frame and the stream's status
 		 */
-		virtual void update(void);
+		virtual void update();
 	private:
 		bool onGetData(sf::Texture& texture);
 		
@@ -79,7 +82,7 @@ namespace sfe {
 		 * A positive value means the video stream is ahead of the reference timer
 		 * whereas a nevatige value means the video stream is late
 		 */
-		sf::Time getSynchronizationGap(void);
+		sf::Time getSynchronizationGap();
 		
 		/** Decode the encoded data @a packet into @a outputFrame
 		 *
@@ -99,7 +102,7 @@ namespace sfe {
 		 *
 		 * This must be called before any packet is decoded and resampled
 		 */
-		void initRescaler(void);
+		void initRescaler();
 		
 		/** Convert the decoded video frame @a frame into RGBA image data
 		 *
@@ -112,7 +115,7 @@ namespace sfe {
 		
 		/** Load packets until one frame can be decoded
 		 */
-		void preload(void);
+		void preload();
 		
 		// Timer::Observer interface
 		void willPlay(const Timer &timer);
@@ -122,7 +125,7 @@ namespace sfe {
 		AVFrameRef m_rawVideoFrame;
 		uint8_t *m_rgbaVideoBuffer[4];
 		int m_rgbaVideoLinesize[4];
-		VideoStreamDelegate& m_delegate;
+		Delegate& m_delegate;
 		
 		// Rescaler data
 		struct SwsContext *m_swsCtx;

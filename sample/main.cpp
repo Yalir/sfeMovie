@@ -86,7 +86,7 @@ int main(int argc, const char *argv[])
 	
 	// Create window
 	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
-	movie.fitFrame(0, 0, width, height);
+	movie.fit(0, 0, width, height);
 	
 	// Scale movie to the window drawing area and enable VSync
 	window.setFramerateLimit(60);
@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
 				} else if (ev.key.code == sf::Keyboard::F) {
 					fullscreen = !fullscreen;
 					window.create(sf::VideoMode(width, height), "sfeMovie Player", fullscreen ? sf::Style::Fullscreen : sf::Style::Close);
-					movie.fitFrame(0, 0, window.getSize().x, window.getSize().y);
+					movie.fit(0, 0, window.getSize().x, window.getSize().y);
 				} else if (ev.key.code == sf::Keyboard::P) {
 					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
 					std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;

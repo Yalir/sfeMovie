@@ -61,12 +61,12 @@ namespace sfe {
 		/** Return a list containing the names of all the demuxers (ie. container parsers) included
 		 * in this sfeMovie build
 		 */
-		static const std::list<DemuxerInfo>& getAvailableDemuxers(void);
+		static const std::list<DemuxerInfo>& getAvailableDemuxers();
 		
 		/** Return a list containing the names of all the decoders included
 		 * in this sfeMovie build
 		 */
-		static const std::list<DecoderInfo>& getAvailableDecoders(void);
+		static const std::list<DecoderInfo>& getAvailableDecoders();
 		
 		/** Default constructor
 		 *
@@ -76,18 +76,18 @@ namespace sfe {
 		 * @param timer the timer with which the media streams will be synchronized
 		 * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
 		 */
-		Demuxer(const std::string& sourceFile, Timer& timer, VideoStreamDelegate& videoDelegate);
+		Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate);
 		
 		/** Default destructor
 		 */
-		virtual ~Demuxer(void);
+		virtual ~Demuxer();
 		
 		/** Return a list of the streams found in the media
 		 * The map key is the index of the stream
 		 *
 		 * @return the list of streams
 		 */
-		const std::map<int, Stream*>& getStreams(void) const;
+		const std::map<int, Stream*>& getStreams() const;
 		
 		/** Return a set containing all the streams found in the media that match the given type
 		 *
@@ -109,13 +109,13 @@ namespace sfe {
 		 * 
 		 * @see selectAudioStream
 		 */
-		void selectFirstAudioStream(void);
+		void selectFirstAudioStream();
 		
 		/** Get the currently selected audio stream, if there's one
 		 *
 		 * @return the currently selected audio stream, or NULL if there's none
 		 */
-		AudioStream* getSelectedAudioStream(void) const;
+		AudioStream* getSelectedAudioStream() const;
 		
 		/** Enable the given video stream and connect it to the reference timer
 		 *
@@ -130,13 +130,13 @@ namespace sfe {
 		 *
 		 * @see selectAudioStream
 		 */
-		void selectFirstVideoStream(void);
+		void selectFirstVideoStream();
 		
 		/** Get the currently selected video stream, if there's one
 		 *
 		 * @return the currently selected video stream, or NULL if there's none
 		 */
-		VideoStream* getSelectedVideoStream(void) const;
+		VideoStream* getSelectedVideoStream() const;
 		
 		/** Read encoded data from the media and makes sure that the given stream
 		 * has enough data
@@ -147,19 +147,19 @@ namespace sfe {
 		
 		/** Update the media status and eventually decode frames
 		 */
-		void update(void);
+		void update();
 		
 		/** Tell whether the demuxer has reached the end of the file and can no more feed the streams
 		 *
 		 * @return whether the end of the media file has been reached
 		 */
-		bool didReachEndOfFile(void) const;
+		bool didReachEndOfFile() const;
 		
 		/** Give the media duration
 		 *
 		 * @return the media duration
 		 */
-		sf::Time getDuration(void) const;
+		sf::Time getDuration() const;
 		
 	private:
 		/** Read a encoded packet from the media file
@@ -168,7 +168,7 @@ namespace sfe {
 		 *
 		 * @return the read packet, or NULL if the end of file has been reached
 		 */
-		AVPacketRef readPacket(void);
+		AVPacketRef readPacket();
 		
 		/** Distribute the given packet to the correct stream
 		 *
@@ -185,7 +185,7 @@ namespace sfe {
 		
 		// Data source interface
 		void requestMoreData(Stream& starvingStream);
-		void resetEndOfFileStatus(void);
+		void resetEndOfFileStatus();
 		
 		// Timer interface
 		void willSeek(const Timer& timer, sf::Time position);

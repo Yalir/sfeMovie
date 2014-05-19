@@ -26,11 +26,11 @@
 #include "Macros.hpp"
 
 namespace sfe {
-	Timer::Observer::Observer(void)
+	Timer::Observer::Observer()
 	{
 	}
 	
-	Timer::Observer::~Observer(void)
+	Timer::Observer::~Observer()
 	{
 	}
 	
@@ -58,7 +58,7 @@ namespace sfe {
 	{
 	}
 	
-	Timer::Timer(void) :
+	Timer::Timer() :
 	m_pausedTime(sf::Time::Zero),
 	m_status(Stopped),
 	m_timer(),
@@ -66,7 +66,7 @@ namespace sfe {
 	{
 	}
 	
-	Timer::~Timer(void)
+	Timer::~Timer()
 	{
 //		if (getStatus() != Stopped)
 //			stop();
@@ -87,7 +87,7 @@ namespace sfe {
 		m_observers.erase(it);
 	}
 	
-	void Timer::play(void)
+	void Timer::play()
 	{
 		CHECK(getStatus() != Playing, "Timer::play() - timer playing twice");
 		
@@ -103,7 +103,7 @@ namespace sfe {
 		notifyObservers(oldStatus, getStatus());
 	}
 	
-	void Timer::pause(void)
+	void Timer::pause()
 	{
 		CHECK(getStatus() != Paused, "Timer::pause() - timer paused twice");
 		
@@ -114,7 +114,7 @@ namespace sfe {
 		notifyObservers(oldStatus, getStatus());
 	}
 	
-	void Timer::stop(void)
+	void Timer::stop()
 	{
 		CHECK(getStatus() != Stopped, "Timer::stop() - timer stopped twice");
 		
@@ -143,12 +143,12 @@ namespace sfe {
 			play();
 	}
 	
-	Status Timer::getStatus(void) const
+	Status Timer::getStatus() const
 	{
 		return m_status;
 	}
 	
-	sf::Time Timer::getOffset(void) const
+	sf::Time Timer::getOffset() const
 	{
 		if (Timer::getStatus() == Playing)
 			return m_pausedTime + m_timer.getElapsedTime();

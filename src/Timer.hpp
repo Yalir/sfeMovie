@@ -27,7 +27,7 @@
 
 #include <set>
 #include <SFML/System.hpp>
-#include <sfeMovie/Status.hpp>
+#include <sfeMovie/Movie.hpp>
 
 namespace sfe {
 	class Timer {
@@ -36,11 +36,11 @@ namespace sfe {
 		public:
 			/** Default constructor
 			 */
-			Observer(void);
+			Observer();
 			
 			/** Default destructor
 			 */
-			virtual ~Observer(void);
+			virtual ~Observer();
 			
 			/** Called by @a timer before playing if this Observer is registered for notifications
 			 *
@@ -92,13 +92,13 @@ namespace sfe {
 		
 		/** Default constructor
 		 */
-		Timer(void);
+		Timer();
 		
 		/** Default destructor
 		 *
 		 * Before destruction, the timer is stopped
 		 */
-		~Timer(void);
+		~Timer();
 		
 		/** Register an observer that should be notified when this timer is
 		 * played, paused or stopped
@@ -115,15 +115,15 @@ namespace sfe {
 		
 		/** Start this timer and notify all observers
 		 */
-		void play(void);
+		void play();
 		
 		/** Pause this timer (but do not reset it) and notify all observers
 		 */
-		void pause(void);
+		void pause();
 		
 		/** Stop this timer and reset it and notify all observers
 		 */
-		void stop(void);
+		void stop();
 		
 		/** Seek to the given position, the timer's offset is updated accordingly
 		 *
@@ -137,13 +137,13 @@ namespace sfe {
 		 *
 		 * @return Playing, Paused or Stopped
 		 */
-		Status getStatus(void) const;
+		Status getStatus() const;
 		
 		/** Return the timer's time
 		 *
 		 * @return the timer's time
 		 */
-		sf::Time getOffset(void) const;
+		sf::Time getOffset() const;
 		
 	private:
 		/** Notify all observers that the timer's status is about to change to @a futureStatus

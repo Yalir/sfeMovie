@@ -23,312 +23,126 @@
  */
 
 #include <sfeMovie/Movie.hpp>
-#include "Demuxer.hpp"
-#include "Timer.hpp"
-#include "Log.hpp"
-#include <cmath>
+#include "MovieImpl.hpp"
+
 
 namespace sfe {
-	
-	Movie::Movie(void) :
-	m_demuxer(NULL),
-	m_timer(NULL),
-	m_sprite()
+	Movie::Movie() :
+	m_impl(new MovieImpl(*this))
 	{
 	}
 	
-	Movie::~Movie(void)
+	Movie::~Movie()
 	{
-		cleanResources();
+		delete m_impl;
 	}
+	
 	
 	bool Movie::openFromFile(const std::string& filename)
 	{
-		cleanResources();
-		
-		try {
-			m_timer = new Timer;
-			m_demuxer = new Demuxer(filename, *m_timer, *this);
-			
-			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
-			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
-			
-			m_demuxer->selectFirstAudioStream();
-			m_demuxer->selectFirstVideoStream();
-			
-			if (!audioStreams.size() && !videoStreams.size()) {
-				sfeLogError("No supported audio or video stream in this media");
-				cleanResources();
-				return false;
-			} else {
-				return true;
-			}
-		} catch (std::runtime_error& e) {
-			sfeLogError(e.what());
-			cleanResources();
-			return false;
-		}
+		return m_impl->openFromFile(filename);
 	}
 	
-	void Movie::play(void)
+	
+	void Movie::play()
 	{
-		if (m_demuxer && m_timer) {
-			m_timer->play();
-			update();
-		} else {
-			sfeLogError("Movie - No media loaded, cannot play");
-		}
+		m_impl->play();
 	}
 	
-	void Movie::pause(void)
+	
+	void Movie::pause()
 	{
-		if (m_demuxer && m_timer) {
-			m_timer->pause();
-			update();
-		} else {
-			sfeLogError("Movie - No media loaded, cannot pause");
-		}
+		m_impl->pause();
 	}
 	
-	void Movie::stop(void)
+	
+	void Movie::stop()
 	{
-		if (m_demuxer && m_timer) {
-			m_timer->stop();
-			update();
-		} else {
-			sfeLogError("Movie - No media loaded, cannot stop");
-		}
+		m_impl->stop();
 	}
 	
-	void Movie::update(void)
+	
+	void Movie::update()
 	{
-		if (m_demuxer && m_timer) {
-			m_demuxer->update();
-			
-			if (getStatus() == Stopped && m_timer->getStatus() != Stopped) {
-				m_timer->stop();
-			}
-			
-			// Enable smoothing when the video is scaled
-			sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
-			if (vStream) {
-				sf::Vector2f sc = getScale();
-				
-				if (std::fabs(sc.x - 1.f) < 0.00001 &&
-					std::fabs(sc.y - 1.f) < 0.00001)
-				{
-					vStream->getVideoTexture().setSmooth(false);
-				}
-				else
-				{
-					vStream->getVideoTexture().setSmooth(true);
-				}
-			}
-		} else {
-			sfeLogWarning("Movie - No media loaded, nothing to update");
-		}
+		m_impl->update();
 	}
+	
 	
 	void Movie::setVolume(float volume)
 	{
-		if (m_demuxer && m_timer) {
-			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
-			std::set<Stream*>::const_iterator it;
-			
-			for (it = audioStreams.begin(); it != audioStreams.end(); it++) {
-				AudioStream* audioStream = dynamic_cast<AudioStream*>(*it);
-				audioStream->setVolume(volume);
-			}
-		} else {
-			sfeLogError("Movie - No media loaded, cannot set volume");
-		}
-	}
-	
-	float Movie::getVolume(void) const
-	{
-		if (m_demuxer && m_timer) {
-			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-			
-			if (audioStream)
-				return audioStream->getVolume();
-		}
-		
-		sfeLogError("Movie - No selected audio stream, cannot return a volume");
-		return 0;
-	}
-	
-	sf::Time Movie::getDuration(void) const
-	{
-		if (m_demuxer && m_timer) {
-			return m_demuxer->getDuration();
-		}
-		
-		sfeLogError("Movie - No media loaded, cannot return a duration");
-		return sf::Time::Zero;
-	}
-	
-	sf::Vector2i Movie::getSize(void) const
-	{
-		if (m_demuxer && m_timer) {
-			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-			
-			if (videoStream) {
-				return videoStream->getFrameSize();
-			}
-		}
-		sfeLogError("Movie::getSize() called but there is no active video stream");
-		return sf::Vector2i(0, 0);
-	}
-		
-	void Movie::fitFrame(int x, int y, int width, int height, bool preserveRatio)
-	{
-		fitFrame(sf::IntRect(x, y, width, height), preserveRatio);
-	}
-	
-	void Movie::fitFrame(sf::IntRect frame, bool preserveRatio)
-	{
-		sf::Vector2i movie_size = getSize();
-		
-		if (movie_size.x == 0 || movie_size.y == 0) {
-			sfeLogError("Movie::fitFrame() called but the video frame size is (0, 0)");
-			return;
-		}
-		
-		sf::Vector2i wanted_size = sf::Vector2i(frame.width, frame.height);
-		sf::Vector2i new_size;
-		
-		if (preserveRatio)
-		{
-			sf::Vector2i target_size = movie_size;
-			
-			float source_ratio = (float)movie_size.x / movie_size.y;
-			float target_ratio = (float)wanted_size.x / wanted_size.y;
-			
-			if (source_ratio > target_ratio)
-			{
-				target_size.x = movie_size.x * ((float)wanted_size.x / movie_size.x);
-				target_size.y = movie_size.y * ((float)wanted_size.x / movie_size.x);
-			}
-			else
-			{
-				target_size.x = movie_size.x * ((float)wanted_size.y / movie_size.y);
-				target_size.y = movie_size.y * ((float)wanted_size.y / movie_size.y);
-			}
-			
-			setScale((float)target_size.x / movie_size.x, (float)target_size.y / movie_size.y);
-			new_size = target_size;
-		}
-		else
-		{
-			setScale((float)wanted_size.x / movie_size.x, (float)wanted_size.y / movie_size.y);
-			new_size = wanted_size;
-		}
-		
-		m_sprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
-					frame.top + (wanted_size.y - new_size.y) / 2);
-		setPosition(frame.left, frame.top);
-	}
-	
-	float Movie::getFramerate(void) const
-	{
-		if (m_demuxer && m_timer) {
-		VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-		
-			if (videoStream)
-				return videoStream->getFrameRate();
-		}
-		
-		sfeLogError("Movie - No selected video stream, cannot return a frame rate");
-		return 0;
-	}
-	
-	unsigned int Movie::getSampleRate(void) const
-	{
-		if (m_demuxer && m_timer) {
-			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-			
-			if (audioStream)
-				return audioStream->getSampleRate();
-		}
-		
-		sfeLogError("Movie - No selected audio stream, cannot return a sample rate");
-		return 0;
-	}
-	
-	unsigned int Movie::getChannelCount(void) const
-	{
-		if (m_demuxer && m_timer) {
-			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-			if (audioStream)
-				return audioStream->getChannelCount();
-		}
-		
-		sfeLogError("Movie - No selected audio stream, cannot return a channel count");
-		return 0;
-	}
-	
-	Status Movie::getStatus(void) const
-	{
-		Status st = Stopped;
-		
-		if (m_demuxer) {
-			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-			Status vStatus = videoStream ? videoStream->getStatus() : Stopped;
-			Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stopped;
-			
-			if (vStatus == Playing || aStatus == Playing) {
-				st = Playing;
-			} else if (vStatus == Paused || aStatus == Paused) {
-				st = Paused;
-			}
-		}
-		
-		return st;
-	}
-	
-	sf::Time Movie::getPlayingOffset(void) const
-	{
-		if (m_demuxer && m_timer) {
-			return m_timer->getOffset();
-		}
-		
-		sfeLogError("Movie - No media loaded, cannot return a playing offset");
-		return sf::Time::Zero;
-	}
-	
-	const sf::Texture& Movie::getCurrentImage(void) const
-	{
-		static sf::Texture emptyTexture;
-		
-		if (m_sprite.getTexture()) {
-			return *m_sprite.getTexture();
-		} else {
-			return emptyTexture;
-		}
+		m_impl->setVolume(volume);
 	}
 	
 	
-	void Movie::cleanResources(void)
+	float Movie::getVolume() const
 	{
-		if (m_demuxer)
-			delete m_demuxer, m_demuxer = NULL;
-		
-		if (m_timer)
-			delete m_timer, m_timer = NULL;
+		return m_impl->getVolume();
+	}
+	
+	
+	sf::Time Movie::getDuration() const
+	{
+		return m_impl->getDuration();
+	}
+	
+	
+	sf::Vector2i Movie::getSize() const
+	{
+		return m_impl->getSize();
+	}
+	
+	
+	void Movie::fit(int x, int y, int width, int height, bool preserveRatio)
+	{
+		m_impl->fit(x, y, width, height, preserveRatio);
+	}
+	
+	
+	void Movie::fit(sf::IntRect frame, bool preserveRatio)
+	{
+		m_impl->fit(frame, preserveRatio);
+	}
+	
+	
+	float Movie::getFramerate() const
+	{
+		return m_impl->getFramerate();
+	}
+	
+	
+	unsigned int Movie::getSampleRate() const
+	{
+		return m_impl->getSampleRate();
+	}
+	
+	
+	unsigned int Movie::getChannelCount() const
+	{
+		return m_impl->getChannelCount();
+	}
+	
+	
+	Status Movie::getStatus() const
+	{
+		return m_impl->getStatus();
+	}
+	
+	
+	sf::Time Movie::getPlayingOffset() const
+	{
+		return m_impl->getPlayingOffset();
+	}
+	
+	
+	const sf::Texture& Movie::getCurrentImage() const
+	{
+		return m_impl->getCurrentImage();
 	}
 	
 	void Movie::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		states.transform *= getTransform();
-		target.draw(m_sprite, states);
-	}
-	
-	void Movie::didUpdateImage(const VideoStream& sender, const sf::Texture& image)
-	{
-		if (m_sprite.getTexture() != &image) {
-			m_sprite.setTexture(image);
-		}
+		target.draw(*m_impl, states);
 	}
 	
 } // namespace sfe

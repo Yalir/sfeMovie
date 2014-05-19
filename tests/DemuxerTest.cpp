@@ -8,7 +8,7 @@
 #include "Utilities.hpp"
 #include <SFML/Audio.hpp>
 
-class DummyDelegate : public sfe::VideoStreamDelegate {
+class DummyDelegate : public sfe::VideoStream::Delegate {
 	void didUpdateImage(const sfe::VideoStream& sender, const sf::Texture& image)
 	{
 	}
