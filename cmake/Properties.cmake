@@ -1,8 +1,16 @@
 
+if (MSVC)
+  target_compile_options(${SFEMOVIE_LIB} PRIVATE "$<$<CONFIG:Release>:/O2>")
+  target_compile_options(${SFEMOVIE_LIB} PRIVATE "$<$<CONFIG:Debug>:/Od>")
+else()
+  target_compile_options(${SFEMOVIE_LIB} PRIVATE "$<$<CONFIG:Release>:-O2>")
+  target_compile_options(${SFEMOVIE_LIB} PRIVATE "$<$<CONFIG:Debug>:-O0>")
+endif()
+
 set_target_properties(${SFEMOVIE_LIB} PROPERTIES
-					  DEBUG_POSTFIX "-d"
-					  LINK_FLAGS "${LINKER_FLAGS}"
-					  SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
+                      DEBUG_POSTFIX "-d"
+                      LINK_FLAGS "${LINKER_FLAGS}"
+                      SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
                       VERSION "${VERSION_MAJOR}.${VERSION_MINOR}")
 
 

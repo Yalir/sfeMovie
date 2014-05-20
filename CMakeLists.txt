@@ -1,5 +1,5 @@
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.12)
 
 
 # set a default build type if none was provided
@@ -49,10 +49,6 @@ set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
 set (OTHER_LIBRARIES "")
 set (LINKER_FLAGS "")
-
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-	add_definitions("-O2")
-endif()
 
 #################################################################################################################
 # ============================================== FFMPEG SETUP ================================================= #
