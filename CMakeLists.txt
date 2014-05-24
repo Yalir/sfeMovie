@@ -108,11 +108,7 @@ add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
 add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 # Define the libraries sfe should link against
-target_link_libraries (${SFEMOVIE_LIB} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
-
-if (MACOSX)
-	target_link_libraries(${SFEMOVIE_LIB} LINK_INTERFACE_LIBRARIES)
-endif()
+target_link_libraries (${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${Boost_LIBRARIES})
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
 	if (LINUX)
