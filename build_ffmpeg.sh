@@ -172,7 +172,7 @@ function build_ffmpeg()
 
 		if [ "$os" == "macosx" ] ; then
 			cd "${ffmpeg_binaries_dir}/lib"
-			${source_dir}/install_names.sh
+			"${source_dir}/install_names.sh"
 		fi
 	fi
 	
