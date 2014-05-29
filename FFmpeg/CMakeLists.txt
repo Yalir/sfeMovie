@@ -103,8 +103,8 @@ else()
 	else()
 		set(VS_ARG "novs")
 	endif()
-
-	if ("${CMAKE_GENERATOR}" MATCHES "/.*Makefile.*/g" OR WINDOWS)
+	
+	if ("${CMAKE_GENERATOR}" MATCHES ".*Makefile.*" OR WINDOWS)
 		set(JOBS "1")
 	else()
 		include(ProcessorCount)
@@ -115,7 +115,7 @@ else()
 			set(JOBS 1)
 		endif()
 	endif()
-	message(STATUS "Jobs=${JOBS}")
+	message(STATUS "Parallel jobs: ${JOBS}")
 
 	add_shell_command(FFmpeg
 		OUTPUT ${FFMPEG_LIBRARIES}
