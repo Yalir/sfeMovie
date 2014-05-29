@@ -61,6 +61,7 @@ add_subdirectory(FFmpeg)
 # ================================================ SFML SETUP ================================================= #
 #################################################################################################################
 
+set (SFML_STATIC_LIBRARIES FALSE CACHE BOOL "TRUE to link sfeMovie against static SFML libraries instead of dynamic ones")
 find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
 set(SFML_LIBRARIES ${SFML_GRAPHICS_LIBRARY} ${SFML_WINDOW_LIBRARY} ${SFML_AUDIO_LIBRARY} ${SFML_SYSTEM_LIBRARY})
 
