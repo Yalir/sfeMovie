@@ -113,7 +113,7 @@ function build_ffmpeg()
 		yasmpath=`echo "${yasmpath}.exe" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
 	fi
 
-	args="$args --disable-stripping --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-network --disable-decoders --disable-muxers --disable-encoders --yasmexe=${yasmpath} --enable-shared --disable-static $configure_flags $os_flags"
+	args="$args --disable-stripping --disable-ffmpeg --disable-ffplay --disable-ffprobe --disable-ffserver --disable-doc --disable-network --disable-decoders --disable-muxers --disable-encoders --yasmexe=\"${yasmpath}\" --enable-shared --disable-static $configure_flags $os_flags"
 
 	#setup VC++ env variables to find lib.exe
 	if [ "$vcpp" == "1" ]
@@ -182,7 +182,7 @@ function build_ffmpeg()
 
 function main()
 {
-	command_args="linux|windows|macosx novs|vs decoders_list"
+	command_args="linux|windows|macosx novs|vs jobsCount decoders_list"
 	# want help?
 	if [ "$1" == "-h" ] ||
 	   [ "$1" == "--help" ]
@@ -203,14 +203,13 @@ function main()
 			  then
 				vcpp="1"
 			fi
+
+			jobsCount="$3"
 			
 			source_dir=`cat SourceDir.var`
 			build_dir=`cat BuildDir.var`
 
-			if ! [ "$os" == "windows" ] ; then
-				jobsCount=5
-			fi
-
+			shift
 			shift
 			shift
 			full_decoders_list="$*"

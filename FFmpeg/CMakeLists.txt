@@ -104,10 +104,23 @@ else()
 		set(VS_ARG "novs")
 	endif()
 
+	if ("${CMAKE_GENERATOR}" MATCHES "/.*Makefile.*/g" OR WINDOWS)
+		set(JOBS "1")
+	else()
+		include(ProcessorCount)
+		ProcessorCount(N)
+		if(NOT N EQUAL 0)
+			set(JOBS ${N})
+		else()
+			set(JOBS 1)
+		endif()
+	endif()
+	message(STATUS "Jobs=${JOBS}")
+
 	add_shell_command(FFmpeg
 		OUTPUT ${FFMPEG_LIBRARIES}
 		DEPENDS "${CMAKE_BINARY_DIR}/CMakeCache.txt"
-		COMMAND ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${ENABLED_DECODERS})
+		COMMAND ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${JOBS} ${ENABLED_DECODERS})
 
 
 	# ============== Install rules =============
