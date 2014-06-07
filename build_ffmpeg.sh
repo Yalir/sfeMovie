@@ -175,6 +175,10 @@ function build_ffmpeg()
 			"${source_dir}/install_names.sh"
 		fi
 	fi
+
+	echo "Writing cache file into ${build_dir}/SelectedDecoders.cache"
+	cmakeDecodersList=`echo ${full_decoders_list} | sed -e 's_ _;_g'`
+	echo "${cmakeDecodersList}" > "${build_dir}/SelectedDecoders.cache"
 	
 	echo "Built ffmpeg"
 }
