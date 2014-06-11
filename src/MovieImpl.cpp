@@ -164,7 +164,7 @@ namespace sfe {
 		}
 		
 		sfeLogError("Movie - No media loaded, cannot return a duration");
-		return sf::Time::Zero;
+		return sf::Time();
 	}
 	
 	sf::Vector2i MovieImpl::getSize() const
@@ -294,7 +294,7 @@ namespace sfe {
 		}
 		
 		sfeLogError("Movie - No media loaded, cannot return a playing offset");
-		return sf::Time::Zero;
+		return sf::Time();
 	}
 	
 	const sf::Texture& MovieImpl::getCurrentImage() const

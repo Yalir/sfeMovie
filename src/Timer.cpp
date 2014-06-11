@@ -59,7 +59,7 @@ namespace sfe {
 	}
 	
 	Timer::Timer() :
-	m_pausedTime(sf::Time::Zero),
+	m_pausedTime(sf::Time()),
 	m_status(Stopped),
 	m_timer(),
 	m_observers()
@@ -92,7 +92,7 @@ namespace sfe {
 		CHECK(getStatus() != Playing, "Timer::play() - timer playing twice");
 		
 		if (getStatus() == Stopped)
-			seek(sf::Time::Zero);
+			seek(sf::Time());
 		
 		notifyObservers(Playing);
 		
@@ -120,11 +120,11 @@ namespace sfe {
 		
 		Status oldStatus = getStatus();
 		m_status = Stopped;
-		m_pausedTime = sf::Time::Zero;
+		m_pausedTime = sf::Time();
 		
 		notifyObservers(oldStatus, getStatus());
 		
-		seek(sf::Time::Zero);
+		seek(sf::Time());
 	}
 	
 	void Timer::seek(sf::Time position)
