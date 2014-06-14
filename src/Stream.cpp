@@ -159,7 +159,7 @@ namespace sfe {
 		}
 		
 		if (!m_packetList.size()) {
-			return sf::Time::Zero;
+			return sf::Time();
 		} else {
 			AVPacketRef packet = *m_packetList.begin();
 			CHECK(packet, "internal inconcistency");

@@ -42,7 +42,7 @@ namespace sfe {
 	m_rgbaVideoLinesize(),
 	m_delegate(delegate),
 	m_swsCtx(NULL),
-	m_lastDecodedTimestamp(sf::Time::Zero)
+	m_lastDecodedTimestamp(sf::Time())
 	{
 		int err;
 		
@@ -105,7 +105,7 @@ namespace sfe {
 	void VideoStream::update()
 	{
 		if (getStatus() == Playing) {
-			if (getSynchronizationGap() < sf::Time::Zero) {
+			if (getSynchronizationGap() < sf::Time()) {
 				if (!onGetData(m_texture)) {
 					setStatus(Stopped);
 				} else {

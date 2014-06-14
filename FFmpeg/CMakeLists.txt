@@ -99,6 +99,7 @@ else()
 	set (NeedsFFmpegCompilation TRUE)
 	if (EXISTS "${CMAKE_BINARY_DIR}/SelectedDecoders.cache")
 		file(READ "${CMAKE_BINARY_DIR}/SelectedDecoders.cache" CachedSelectedDecoders)
+		string(STRIP "${CachedSelectedDecoders}" CachedSelectedDecoders)
 
 		if ("${CachedSelectedDecoders}" STREQUAL "${ENABLED_DECODERS}")
 			# Check for FFmpeg files
