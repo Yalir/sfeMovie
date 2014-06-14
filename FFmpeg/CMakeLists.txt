@@ -112,7 +112,7 @@ else()
 		endif()
 	endif()
 
-	message(STATUS "Will build FFmpeg: ${NeedsFFmpegCompilation}")
+	message(STATUS "Needs to (re)build FFmpeg: ${NeedsFFmpegCompilation}")
 
 	if (MACOSX)
 		set(OS_ARG "macosx")
@@ -162,6 +162,7 @@ else()
 	if (LINUX OR (WINDOWS AND NOT MSVC))
 		install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/lib" DESTINATION "${CMAKE_INSTALL_PREFIX}")
 	endif()
+	# For OS X, the FFmpeg libs are bundled in the sfeMovie framework
 
 	# Linux and MSVC use FFmpeg's dynamic library (instead of static FFmpeg libraries)
 	# if (MSVC OR LINUX)
