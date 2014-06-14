@@ -63,6 +63,8 @@ add_subdirectory(FFmpeg)
 
 set (SFML_STATIC_LIBRARIES FALSE CACHE BOOL "TRUE to link sfeMovie against static SFML libraries instead of dynamic ones")
 find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
+message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
+message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
 #################################################################################################################
 # ============================================== sfeMovie SETUP =============================================== #
