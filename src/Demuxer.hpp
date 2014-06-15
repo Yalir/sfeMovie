@@ -96,6 +96,12 @@ namespace sfe {
 		 */
 		std::set<Stream*> getStreamsOfType(MediaType type) const;
 		
+		/** Gather the required stream metadata from each stream
+		 *
+		 * @return the stream entries computed from the gathered metadata
+		 */
+		std::vector<StreamEntry> computeStreamEntries() const;
+		
 		/** Enable the given audio stream and connect it to the reference timer
 		 * 
 		 * If another stream of the same kind is already enabled, it is first disabled and disconnected

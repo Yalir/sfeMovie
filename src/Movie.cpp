@@ -43,6 +43,11 @@ namespace sfe {
 		return m_impl->openFromFile(filename);
 	}
 	
+	const std::vector<StreamEntry>& Movie::getStreams() const
+	{
+		return m_impl->getStreams();
+	}
+	
 	
 	void Movie::play()
 	{

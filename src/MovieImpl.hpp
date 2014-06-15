@@ -28,6 +28,7 @@
 #include <SFML/Config.hpp>
 #include "VideoStream.hpp"
 #include "Demuxer.hpp"
+#include <sfeMovie/Movie.hpp>
 
 #ifndef SFEMOVIE_MOVIEIMPL_HPP
 #define SFEMOVIE_MOVIEIMPL_HPP
@@ -48,6 +49,11 @@ namespace sfe {
 		 * @return true on success, false otherwise
 		 */
 		bool openFromFile(const std::string& filename);
+		
+		
+		/** Return a description of all the streams contained in the opened media
+		 */
+		const std::vector<StreamEntry>& getStreams() const;
 		
 		
 		/** Start or resume playing the media playback
@@ -180,10 +186,12 @@ namespace sfe {
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 		void didUpdateImage(const VideoStream& sender, const sf::Texture& image);
 		
+	private:
 		sf::Transformable& m_movieView;
 		Demuxer* m_demuxer;
 		Timer* m_timer;
 		sf::Sprite m_sprite;
+		std::vector<StreamEntry> m_streamEntries;
 	};
 	
 }

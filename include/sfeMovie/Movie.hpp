@@ -29,6 +29,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <sfeMovie/Visibility.hpp>
+#include <vector>
 #include <string>
 
 namespace sfe {
@@ -39,6 +40,19 @@ namespace sfe {
 		Paused,  //!< The playback is paused
 		Playing, //!< The playback is playing
 		End
+	};
+	
+	enum MediaType {
+		MEDIA_TYPE_AUDIO,
+		MEDIA_TYPE_SUBTITLE,
+		MEDIA_TYPE_VIDEO,
+		MEDIA_TYPE_UNKNOWN
+	};
+	
+	struct StreamEntry {
+		int index;				//!< Stream index in the media, used for chosing which stream to enable
+		MediaType type;			//!< Stream king: video, audio or subtitle
+		std::string language;	//!< language code defined by ISO 639-2, if set by the media
 	};
 	
 	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
@@ -56,6 +70,10 @@ namespace sfe {
 		 * @return true on success, false otherwise
 		 */
 		bool openFromFile(const std::string& filename);
+		
+		/** Return a description of all the streams contained in the opened media
+		 */
+		const std::vector<StreamEntry>& getStreams() const;
 		
 		/** Start or resume playing the media playback
 		 *

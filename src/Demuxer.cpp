@@ -220,6 +220,23 @@ namespace sfe {
 		return streamSet;
 	}
 	
+	std::vector<StreamEntry> Demuxer::computeStreamEntries() const
+	{
+		std::vector<StreamEntry> entries;
+		std::set<Stream*> streamSet;
+		std::map<int, Stream*>::const_iterator it;
+		
+		for (it = m_streams.begin(); it != m_streams.end(); it++) {
+			StreamEntry entry;
+			entry.index = it->first;
+			entry.language = it->second->getLanguage();
+			entry.type = it->second->getStreamKind();
+			entries.push_back(entry);
+		}
+		
+		return entries;
+	}
+	
 	void Demuxer::selectAudioStream(AudioStream* stream)
 	{
 		Status oldStatus = m_timer.getStatus();

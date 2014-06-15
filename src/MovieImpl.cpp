@@ -49,6 +49,7 @@ namespace sfe {
 		try {
 			m_timer = new Timer;
 			m_demuxer = new Demuxer(filename, *m_timer, *this);
+			m_streamEntries = m_demuxer->computeStreamEntries();
 			
 			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
 			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
@@ -68,6 +69,11 @@ namespace sfe {
 			cleanResources();
 			return false;
 		}
+	}
+	
+	const std::vector<StreamEntry>& MovieImpl::getStreams() const
+	{
+		return m_streamEntries;
 	}
 	
 	void MovieImpl::play()
