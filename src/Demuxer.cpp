@@ -108,7 +108,7 @@ namespace sfe {
 	m_timer(timer),
 	m_connectedAudioStream(NULL),
 	m_connectedVideoStream(NULL),
-	m_duration(sf::Time())
+	m_duration(sf::Time::Zero)
 	{
 		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
 		
@@ -144,7 +144,7 @@ namespace sfe {
 					case AVMEDIA_TYPE_VIDEO:
 						m_streams[ffstream->index] = new VideoStream(m_formatCtx, ffstream, *this, timer, videoDelegate);
 						
-						if (m_duration == sf::Time()) {
+						if (m_duration == sf::Time::Zero) {
 							extractDurationFromStream(ffstream);
 						}
 						
@@ -154,7 +154,7 @@ namespace sfe {
 					case AVMEDIA_TYPE_AUDIO:
 						m_streams[ffstream->index] = new AudioStream(m_formatCtx, ffstream, *this, timer);
 						
-						if (m_duration == sf::Time()) {
+						if (m_duration == sf::Time::Zero) {
 							extractDurationFromStream(ffstream);
 						}
 						
@@ -177,7 +177,7 @@ namespace sfe {
 			}
 		}
 		
-		if (m_duration == sf::Time()) {
+		if (m_duration == sf::Time::Zero) {
 			sfeLogWarning("The media duration could not be retreived");
 		}
 		
@@ -369,7 +369,7 @@ namespace sfe {
 	
 	void Demuxer::extractDurationFromStream(AVStreamRef stream)
 	{
-		if (m_duration != sf::Time())
+		if (m_duration != sf::Time::Zero)
 			return;
 		
 		if (stream->duration != AV_NOPTS_VALUE) {

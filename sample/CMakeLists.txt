@@ -9,6 +9,7 @@ target_link_libraries(
     ${SFEMOVIE_SAMPLE}
     ${SFEMOVIE_LIB}
     ${SFML_LIBRARIES}
+    ${SFML_DEPENDENCIES}
 )
 
 if (MACOSX)
