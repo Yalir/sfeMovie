@@ -48,6 +48,10 @@ namespace sfe {
 		return m_impl->getStreams();
 	}
 	
+	void Movie::selectStream(const StreamDescriptor& stream)
+	{
+		return m_impl->selectStream(stream);
+	}
 	
 	void Movie::play()
 	{

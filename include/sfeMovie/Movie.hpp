@@ -75,6 +75,16 @@ namespace sfe {
 		 */
 		const std::vector<StreamDescriptor>& getStreams() const;
 		
+		/** Request activation of the given stream. In case another stream of the same kind is already active,
+		 * it is deactivated.
+		 *
+		 * @note When opening a new media file, the default behaviour is to automatically  activate the first
+		 * found audio and video streams
+		 *
+		 * @param stream the stream descriptor of the stream to activate
+		 */
+		void selectStream(const StreamDescriptor& stream);
+		
 		/** Start or resume playing the media playback
 		 *
 		 * This function starts the stream if it was stopped, resumes it if it was paused,

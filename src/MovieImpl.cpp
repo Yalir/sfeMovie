@@ -26,6 +26,7 @@
 #include "Demuxer.hpp"
 #include "Timer.hpp"
 #include "Log.hpp"
+#include "Utilities.hpp"
 #include <cmath>
 
 namespace sfe {
@@ -74,6 +75,28 @@ namespace sfe {
 	const std::vector<StreamDescriptor>& MovieImpl::getStreams() const
 	{
 		return m_streamEntries;
+	}
+	
+	void MovieImpl::selectStream(const StreamDescriptor& stream)
+	{
+		std::map<int, Stream*> streams = m_demuxer->getStreams();
+		std::map<int, Stream*>::iterator it = streams.find(stream.index);
+		
+		if (it == streams.end()) {
+			sfeLogError("Movie - tried to activate unknown stream with index " + s(stream.index));
+		} else {
+			switch (it->second->getStreamKind()) {
+				case MEDIA_TYPE_AUDIO:
+					m_demuxer->selectAudioStream(dynamic_cast<AudioStream*>(it->second));
+					break;
+				case MEDIA_TYPE_VIDEO:
+					m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(it->second));
+					break;
+				default:
+					sfeLogWarning("Movie - stream activation for stream of kind " + MediaTypeToString(it->second->getStreamKind()) + " is not supported");
+					break;
+			}
+		}
 	}
 	
 	void MovieImpl::play()
