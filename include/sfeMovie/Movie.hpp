@@ -49,10 +49,10 @@ namespace sfe {
 		MEDIA_TYPE_UNKNOWN
 	};
 	
-	struct StreamEntry {
-		int index;				//!< Stream index in the media, used for chosing which stream to enable
-		MediaType type;			//!< Stream king: video, audio or subtitle
-		std::string language;	//!< language code defined by ISO 639-2, if set by the media
+	struct StreamDescriptor {
+		int index;				//!< Stream index in the media, used for choosing which stream to enable
+		MediaType type;			//!< Stream kind: video, audio or subtitle
+		std::string language;	//!< Language code defined by ISO 639-2, if set by the media
 	};
 	
 	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
@@ -73,7 +73,7 @@ namespace sfe {
 		
 		/** Return a description of all the streams contained in the opened media
 		 */
-		const std::vector<StreamEntry>& getStreams() const;
+		const std::vector<StreamDescriptor>& getStreams() const;
 		
 		/** Start or resume playing the media playback
 		 *

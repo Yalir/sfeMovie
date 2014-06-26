@@ -53,7 +53,7 @@ namespace sfe {
 		
 		/** Return a description of all the streams contained in the opened media
 		 */
-		const std::vector<StreamEntry>& getStreams() const;
+		const std::vector<StreamDescriptor>& getStreams() const;
 		
 		
 		/** Start or resume playing the media playback
@@ -191,7 +191,7 @@ namespace sfe {
 		Demuxer* m_demuxer;
 		Timer* m_timer;
 		sf::Sprite m_sprite;
-		std::vector<StreamEntry> m_streamEntries;
+		std::vector<StreamDescriptor> m_streamEntries;
 	};
 	
 }

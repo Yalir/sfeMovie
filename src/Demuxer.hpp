@@ -100,7 +100,7 @@ namespace sfe {
 		 *
 		 * @return the stream entries computed from the gathered metadata
 		 */
-		std::vector<StreamEntry> computeStreamEntries() const;
+		std::vector<StreamDescriptor> computeStreamDescriptors() const;
 		
 		/** Enable the given audio stream and connect it to the reference timer
 		 * 

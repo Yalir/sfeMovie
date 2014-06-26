@@ -220,14 +220,14 @@ namespace sfe {
 		return streamSet;
 	}
 	
-	std::vector<StreamEntry> Demuxer::computeStreamEntries() const
+	std::vector<StreamDescriptor> Demuxer::computeStreamDescriptors() const
 	{
-		std::vector<StreamEntry> entries;
+		std::vector<StreamDescriptor> entries;
 		std::set<Stream*> streamSet;
 		std::map<int, Stream*>::const_iterator it;
 		
 		for (it = m_streams.begin(); it != m_streams.end(); it++) {
-			StreamEntry entry;
+			StreamDescriptor entry;
 			entry.index = it->first;
 			entry.language = it->second->getLanguage();
 			entry.type = it->second->getStreamKind();
