@@ -213,6 +213,18 @@ function main()
 
 			jobsCount="$3"
 			
+			if ! test -f "SourceDir.var" ; then
+				cwd=`pwd`
+				echo "Cannot find required file \"${cwd}/SourceDir.var\"! Exiting"
+				exit 1
+			fi
+
+			if ! test -f "BuildDir.var" ; then
+				cwd=`pwd`
+				echo "Cannot find required file \"${cwd}/BuildDir.var\"! Exiting"
+				exit 1
+			fi
+
 			source_dir=`cat SourceDir.var`
 			build_dir=`cat BuildDir.var`
 

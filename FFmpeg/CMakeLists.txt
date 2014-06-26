@@ -26,7 +26,18 @@ else()
 	# as parameters to the script because add_shell_command() doesn't allow parameters
 	# with spaces on Windows, thus we use a portable solution
 	file(WRITE "${CMAKE_SOURCE_DIR}/SourceDir.var" "${CMAKE_SOURCE_DIR}")
+	if (NOT EXISTS "${CMAKE_SOURCE_DIR}/SourceDir.var")
+		message(FATAL_ERROR "Writing file \"${CMAKE_SOURCE_DIR}/SourceDir.var\" failed!")
+	else()
+		message(STATUS "Written file \"${CMAKE_SOURCE_DIR}/SourceDir.var\"")
+	endif()
+
 	file(WRITE "${CMAKE_SOURCE_DIR}/BuildDir.var" "${CMAKE_BINARY_DIR}")
+	if (NOT EXISTS "${CMAKE_SOURCE_DIR}/BuildDir.var")
+		message(FATAL_ERROR "Writing file \"${CMAKE_SOURCE_DIR}/BuildDir.var\" failed!")
+	else()
+		message(STATUS "Written file \"${CMAKE_SOURCE_DIR}/BuildDir.var\"")
+	endif()
 
 	# Use our own FFmpeg libraries
 	set (BUILTIN_FFMPEG_BUILD_DIR "${CMAKE_BINARY_DIR}/FFmpeg-binaries")
