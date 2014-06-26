@@ -34,6 +34,17 @@ std::string StatusToString(sfe::Status status)
 	}
 }
 
+std::string MediaTypeToString(sfe::MediaType type)
+{
+	switch (type) {
+		case sfe::MEDIA_TYPE_AUDIO:		return "audio";
+		case sfe::MEDIA_TYPE_SUBTITLE:	return "subtitle";
+		case sfe::MEDIA_TYPE_VIDEO:		return "video";
+		case sfe::MEDIA_TYPE_UNKNOWN:	return "unknown";
+		default:						return "(null)";
+	}
+}
+
 void drawControls(sf::RenderWindow& window, const sfe::Movie& movie)
 {
 	const int kHorizontalMargin = 10;
@@ -59,6 +70,29 @@ void drawControls(sf::RenderWindow& window, const sfe::Movie& movie)
 	window.draw(background);
 	window.draw(border);
 	window.draw(progress);
+}
+
+void printMovieInfo(const sfe::Movie& movie)
+{
+	std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
+	std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
+	std::cout << "Duration: " << movie.getDuration().asSeconds() << "s" << std::endl;
+	std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
+	std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
+	std::cout << "Volume: " << movie.getVolume() << std::endl;
+	std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
+	std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
+	
+	const std::vector<sfe::StreamDescriptor>& streams = movie.getStreams();
+	std::cout << streams.size() << " streams found in the media" << std::endl;
+	
+	for (std::vector<sfe::StreamDescriptor>::const_iterator it = streams.begin(); it != streams.end(); ++it) {
+		std::cout << " #" << it->index << " : " << MediaTypeToString(it->type);
+		
+		if (!it->language.empty())
+			std::cout << " (language: " << it->language << ")";
+		std::cout << std::endl;
+	}
 }
 
 int main(int argc, const char *argv[])
@@ -117,14 +151,7 @@ int main(int argc, const char *argv[])
 					window.create(sf::VideoMode(width, height), "sfeMovie Player", fullscreen ? sf::Style::Fullscreen : sf::Style::Close);
 					movie.fit(0, 0, window.getSize().x, window.getSize().y);
 				} else if (ev.key.code == sf::Keyboard::P) {
-					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
-					std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
-					std::cout << "Duration: " << movie.getDuration().asSeconds() << "s" << std::endl;
-					std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
-					std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
-					std::cout << "Volume: " << movie.getVolume() << std::endl;
-					std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
-					std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
+					printMovieInfo(movie);
 				}
 			} else if (ev.type == sf::Event::MouseWheelMoved) {
 				float volume = movie.getVolume() + 10 * ev.mouseWheel.delta;
