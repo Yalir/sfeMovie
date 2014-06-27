@@ -135,6 +135,7 @@ function build_ffmpeg()
     cd "${build_dir}/FFmpeg-objects"
 
     echo "${temporary_ffmpeg_dir}/configure $args"
+    echo "Note: FFmpeg configuration may take some time, please be patient :)"
     { echo "$args" | xargs "${temporary_ffmpeg_dir}/configure"; }
     check_err
     make clean
