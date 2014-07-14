@@ -20,8 +20,8 @@ if(BUILD_DOC)
 
 	# copy the files needed by the documentation
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/doxygen.css ${DOXYGEN_OUTPUT_DIR}/doxygen.css COPYONLY)
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.html ${DOXYGEN_OUTPUT_DIR}/footer.html COPYONLY)
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.html ${DOXYGEN_OUTPUT_DIR}/header.html COPYONLY)
+	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.php ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
+	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.php ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
 
 	# target setup
 	add_custom_target(doxygen ALL
