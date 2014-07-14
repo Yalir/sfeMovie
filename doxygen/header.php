@@ -13,4 +13,4 @@
 			display_head("documentation");
 			?>
 	       	
-			<div id="widescreen_frame">
+			<div id="widescreen_frame"><div>
