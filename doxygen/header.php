@@ -10,7 +10,7 @@
 		<div class="wrapper">
 			<?php
 			include("../head.php");
-			display_head("documentation");
+			display_head("documentation", "..");
 			?>
 	       	
 			<div id="widescreen_frame"><div class="doxygen"><div>
