@@ -4,6 +4,7 @@
    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" >
+	<head><link rel="stylesheet" href="doxygen.css" /></head>
 	<?php include("../html_head.php"); ?>
 	<body>
 		<div class="wrapper">
