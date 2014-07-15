@@ -24,7 +24,6 @@
 
 extern "C"
 {
-#include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
 }
@@ -36,7 +35,7 @@ extern "C"
 #include <stdexcept>
 
 namespace sfe {
-	Stream::Stream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	Stream::Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer) :
 	m_formatCtx(formatCtx),
 	m_stream(NULL),
 	m_dataSource(dataSource),
@@ -83,23 +82,23 @@ namespace sfe {
 		m_timer.removeObserver(*this);
 	}
 	
-	void Stream::pushEncodedData(AVPacketRef packet)
+	void Stream::pushEncodedData(AVPacket* packet)
 	{
 		CHECK(packet, "invalid argument");
 		sf::Lock l(m_readerMutex);
 		m_packetList.push_back(packet);
 	}
 	
-	void Stream::prependEncodedData(AVPacketRef packet)
+	void Stream::prependEncodedData(AVPacket* packet)
 	{
 		CHECK(packet, "invalid argument");
 		sf::Lock l(m_readerMutex);
 		m_packetList.push_front(packet);
 	}
 	
-	AVPacketRef Stream::popEncodedData()
+	AVPacket* Stream::popEncodedData()
 	{
-		AVPacketRef result = NULL;
+		AVPacket* result = NULL;
 		sf::Lock l(m_readerMutex);
 		
 		if (!m_packetList.size()) {
@@ -111,7 +110,7 @@ namespace sfe {
 			m_packetList.pop_front();
 		} else {
 			if (m_codecCtx->codec->capabilities & CODEC_CAP_DELAY) {
-				AVPacketRef flushPacket = (AVPacketRef)av_malloc(sizeof(*flushPacket));
+				AVPacket* flushPacket = (AVPacket*)av_malloc(sizeof(*flushPacket));
 				av_init_packet(flushPacket);
 				flushPacket->data = NULL;
 				flushPacket->size = 0;
@@ -161,7 +160,7 @@ namespace sfe {
 		if (!m_packetList.size()) {
 			return sf::Time::Zero;
 		} else {
-			AVPacketRef packet = *m_packetList.begin();
+			AVPacket* packet = *m_packetList.begin();
 			CHECK(packet, "internal inconcistency");
 			
 			int64_t timestamp = -424242;
@@ -184,7 +183,7 @@ namespace sfe {
 	
 	void Stream::discardAllEncodedData()
 	{
-		AVPacketRef pkt = NULL;
+		AVPacket* pkt = NULL;
 		
 		while (m_packetList.size()) {
 			pkt = m_packetList.front();

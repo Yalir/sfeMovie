@@ -81,7 +81,7 @@ namespace sfe {
 	
 	const std::list<Demuxer::DecoderInfo>& Demuxer::getAvailableDecoders()
 	{
-		AVCodecRef codec = NULL;
+		AVCodec* codec = NULL;
 		loadFFmpeg();
 		
 		if (g_availableDecoders.empty()) {
@@ -137,7 +137,7 @@ namespace sfe {
 		
 		// Find all interesting streams
 		for (int i = 0; i < m_formatCtx->nb_streams; i++) {
-			AVStreamRef ffstream = m_formatCtx->streams[i];
+			AVStream* ffstream = m_formatCtx->streams[i];
 			
 			try {
 				switch (ffstream->codec->codec_type) {
@@ -294,7 +294,7 @@ namespace sfe {
 		sfeLogDebug("Feed " + MediaTypeToString(stream.getStreamKind()) + " stream");
 		
 		while (!didReachEndOfFile() && stream.needsMoreData()) {
-			AVPacketRef pkt = readPacket();
+			AVPacket* pkt = readPacket();
 			
 			if (!pkt) {
 				m_eofReached = true;
@@ -329,7 +329,7 @@ namespace sfe {
 		return m_duration;
 	}
 	
-	AVPacketRef Demuxer::readPacket()
+	AVPacket* Demuxer::readPacket()
 	{
 		sf::Lock l(m_synchronized);
 		
@@ -351,7 +351,7 @@ namespace sfe {
 		return pkt;
 	}
 	
-	bool Demuxer::distributePacket(AVPacketRef packet)
+	bool Demuxer::distributePacket(AVPacket* packet)
 	{
 		sf::Lock l(m_synchronized);
 		CHECK(packet, "Demuxer::distributePacket() - invalid argument");
@@ -367,7 +367,7 @@ namespace sfe {
 		return result;
 	}
 	
-	void Demuxer::extractDurationFromStream(AVStreamRef stream)
+	void Demuxer::extractDurationFromStream(AVStream* stream)
 	{
 		if (m_duration != sf::Time::Zero)
 			return;

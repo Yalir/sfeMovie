@@ -59,20 +59,4 @@ sfeLogDebug(std::string(title) + " took " + s(__bench.getElapsedTime().asMillise
 	#define av_err2str sfe::ff_err2str
 #endif
 
-#ifndef LIBAVCODEC_VERSION
-	typedef void *AVFormatContextRef;
-	typedef void* AVCodecContextRef;
-	typedef void* AVCodecRef;
-	typedef void* AVPacketRef;
-	typedef void* AVStreamRef;
-	typedef void* AVFrameRef;
-#else
-	typedef AVFormatContext *AVFormatContextRef;
-	typedef AVCodecContext* AVCodecContextRef;
-	typedef AVCodec* AVCodecRef;
-	typedef AVPacket* AVPacketRef;
-	typedef AVStream* AVStreamRef;
-	typedef AVFrame* AVFrameRef;
-#endif
-
 #endif

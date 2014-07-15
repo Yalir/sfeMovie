@@ -168,7 +168,7 @@ namespace sfe {
 		 *
 		 * @return the read packet, or NULL if the end of file has been reached
 		 */
-		AVPacketRef readPacket();
+		AVPacket* readPacket();
 		
 		/** Distribute the given packet to the correct stream
 		 *
@@ -177,11 +177,11 @@ namespace sfe {
 		 * @param packet the packet to distribute
 		 * @return true if the packet could be distributed, false otherwise
 		 */
-		bool distributePacket(AVPacketRef packet);
+		bool distributePacket(AVPacket* packet);
 		
 		/** Try to extract the media duration from the given stream
 		 */
-		void extractDurationFromStream(AVStreamRef stream);
+		void extractDurationFromStream(AVStream* stream);
 		
 		// Data source interface
 		void requestMoreData(Stream& starvingStream);
@@ -190,7 +190,7 @@ namespace sfe {
 		// Timer interface
 		void willSeek(const Timer& timer, sf::Time position);
 		
-		AVFormatContextRef m_formatCtx;
+		AVFormatContext* m_formatCtx;
 		bool m_eofReached;
 		std::map<int, Stream*> m_streams;
 		std::map<int, std::string> m_ignoredStreams;
