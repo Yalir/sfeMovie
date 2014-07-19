@@ -392,24 +392,36 @@ namespace sfe {
 		m_eofReached = false;
 	}
 	
-	void Demuxer::willSeek(const Timer &timer, sf::Time position)
+	void Demuxer::willSeek(const Timer &timer, sf::Time newPosition)
 	{
 		resetEndOfFileStatus();
 		
-		if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
-			int64_t timestamp = 0;
-			
-			if (m_formatCtx->start_time != AV_NOPTS_VALUE)
-				timestamp += m_formatCtx->start_time;
-			
-			int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-			sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+		if (newPosition == sf::Time::Zero) {
+			if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
+				int64_t timestamp = 0;
+				
+				if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+					timestamp += m_formatCtx->start_time;
+				
+				int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
+				sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+			} else {
+				int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
+				sfeLogDebug("Seek by DTS at timestamp " + s(0) + " returned " + s(err));
+			}
 		} else {
-			int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-//			sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+			int64_t timestamp = newPosition.asMilliseconds() * AV_TIME_BASE / 1000;
 			
-//			int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
-			sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
+			if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
+				if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+					timestamp += m_formatCtx->start_time;
+				
+				int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
+				CHECK0(err, "avformat_seek_file failure");
+			} else {
+				int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
+				CHECK0(err, "avformat_seek_file failure");
+			}
 		}
 	}
 }

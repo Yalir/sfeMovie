@@ -134,6 +134,12 @@ namespace sfe {
 	}
 	
 	
+	void Movie::setPlayingOffset(const sf::Time& targetSeekTime)
+	{
+		m_impl->setPlayingOffset(targetSeekTime);
+	}
+	
+	
 	const sf::Texture& Movie::getCurrentImage() const
 	{
 		return m_impl->getCurrentImage();

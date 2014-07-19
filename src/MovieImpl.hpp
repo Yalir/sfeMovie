@@ -163,6 +163,11 @@ namespace sfe {
 		 */
 		sf::Time getPlayingOffset() const;
 		
+		/** Seek up to @a targetSeekTime
+		 *
+		 * @param targetSeekTime the new expected playing offset
+		 */
+		void setPlayingOffset(const sf::Time& targetSeekTime);
 		
 		/** Returns the latest movie image
 		 *

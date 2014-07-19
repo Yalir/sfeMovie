@@ -297,6 +297,15 @@ namespace sfe {
 		return sf::Time::Zero;
 	}
 	
+	void MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime)
+	{
+		if (m_demuxer && m_timer) {
+			m_timer->seek(targetSeekTime);
+		} else {
+			sfeLogError("Movie - No media loaded, cannot seek");
+		}
+	}
+	
 	const sf::Texture& MovieImpl::getCurrentImage() const
 	{
 		static sf::Texture emptyTexture;
