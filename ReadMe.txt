@@ -1,1 +1,1 @@
-See http://sfemovie.yalir.info/ for information on sfeMovie.
+See http://sfemovie.yalir.org/ for information on sfeMovie.
