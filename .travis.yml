@@ -14,7 +14,7 @@ before_install:
 before_script:
   - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
   - tar -xjf SFML-2.1-linux-gcc-64bits.tar.bz2
-  - wget http://sfemovie.yalir.org/downloads/cmake -o cmake-2.8.12
+  - wget http://sfemovie.yalir.org/downloads/cmake -O cmake-2.8.12
   - chmod +x cmake-2.8.12
 
 after_script:
