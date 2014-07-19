@@ -29,6 +29,7 @@
 #include "Stream.hpp"
 #include "AudioStream.hpp"
 #include "VideoStream.hpp"
+#include "SubtitleStream.hpp"
 #include "Timer.hpp"
 #include <map>
 #include <string>
@@ -137,6 +138,27 @@ namespace sfe {
 		 * @return the currently selected video stream, or NULL if there's none
 		 */
 		VideoStream* getSelectedVideoStream() const;
+
+		/** Enable the given subtitle stream and connect it to the reference timer
+		*
+		* If another stream of the same kind is already enabled, it is first disabled and disconnected
+		* so that only one stream of the same kind can be enabled at the same time.
+		*
+		* @param stream the video stream to enable and connect for playing, or NULL to disable video
+		*/
+		void selectSubtitleStream(SubtitleStream* stream);
+
+		/** Enable the first found video stream, if it exists
+		*
+		* @see selectAudioStream
+		*/
+		void selectFirstSubtitleStream();
+
+		/** Get the currently selected subtitle stream, if there's one
+		*
+		* @return the currently selected subtitle stream, or NULL if there's none
+		*/
+		SubtitleStream* getSelectedSubtitleStream() const;
 		
 		/** Read encoded data from the media and makes sure that the given stream
 		 * has enough data
@@ -198,6 +220,7 @@ namespace sfe {
 		Timer& m_timer;
 		Stream* m_connectedAudioStream;
 		Stream* m_connectedVideoStream;
+		Stream* m_connectedSubtitleStream;
 		sf::Time m_duration;
 		
 		static std::list<DemuxerInfo> g_availableDemuxers;

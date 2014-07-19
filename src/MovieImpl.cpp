@@ -52,9 +52,11 @@ namespace sfe {
 			
 			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
 			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
+			std::set<Stream*> subtitleStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_SUBTITLE);
 			
 			m_demuxer->selectFirstAudioStream();
 			m_demuxer->selectFirstVideoStream();
+			m_demuxer->selectFirstSubtitleStream();
 			
 			if (!audioStreams.size() && !videoStreams.size()) {
 				sfeLogError("No supported audio or video stream in this media");
@@ -110,6 +112,7 @@ namespace sfe {
 			}
 			
 			// Enable smoothing when the video is scaled
+			sfe::SubtitleStream* sStream = m_demuxer->getSelectedSubtitleStream();
 			sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
 			if (vStream) {
 				sf::Vector2f sc = m_movieView.getScale();

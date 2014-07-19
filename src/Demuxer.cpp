@@ -108,6 +108,7 @@ namespace sfe {
 	m_timer(timer),
 	m_connectedAudioStream(NULL),
 	m_connectedVideoStream(NULL),
+	m_connectedSubtitleStream(NULL),
 	m_duration(sf::Time::Zero)
 	{
 		CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
@@ -159,14 +160,11 @@ namespace sfe {
 						}
 						
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
-						break;
-						
-						/** TODO
-						 case AVMEDIA_TYPE_SUBTITLE:
-						 m_streams.push_back(new SubtitleStream(ffstream));
-						 break;
-						 */
-						
+						break;			
+					case AVMEDIA_TYPE_SUBTITLE:
+						m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer);
+						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
+						 break;				
 					default:
 						m_ignoredStreams[ffstream->index] = std::string(std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
 						sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
@@ -282,10 +280,44 @@ namespace sfe {
 		if (videoStreams.size())
 			selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
 	}
-	
+
 	VideoStream* Demuxer::getSelectedVideoStream() const
 	{
 		return dynamic_cast<VideoStream*>(m_connectedVideoStream);
+	}
+
+	void Demuxer::selectSubtitleStream(SubtitleStream* stream)
+	{
+		Status oldStatus = m_timer.getStatus();
+
+		if (oldStatus == Playing)
+			m_timer.pause();
+
+		if (stream != m_connectedSubtitleStream) {
+			if (m_connectedSubtitleStream) {
+				m_connectedSubtitleStream->disconnect();
+			}
+
+			if (stream)
+				stream->connect();
+
+			m_connectedSubtitleStream = stream;
+		}
+
+		if (oldStatus == Playing)
+			m_timer.play();
+	}
+
+	void Demuxer::selectFirstSubtitleStream()
+	{
+		std::set<Stream*> videoStreams = getStreamsOfType(MEDIA_TYPE_SUBTITLE);
+		if (videoStreams.size())
+			selectSubtitleStream(dynamic_cast<SubtitleStream*>(*videoStreams.begin()));
+	}
+	
+	SubtitleStream* Demuxer::getSelectedSubtitleStream() const
+	{
+		return dynamic_cast<SubtitleStream*>(m_connectedSubtitleStream);
 	}
 	
 	void Demuxer::feedStream(Stream& stream)
