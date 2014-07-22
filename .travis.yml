@@ -5,15 +5,17 @@ compiler:
   - gcc
 
 script:
-  - cmake -DSFML_ROOT=SFML-2.1 -DBUILD_UNIT_TESTS=TRUE -DBUILD_SFEMOVIE_SAMPLE=TRUE -DBUILD_DEMUXER_CLI=TRUE . && make && sudo make install
+  - ./cmake-2.8.12 -DSFML_ROOT=SFML-2.1 -DBUILD_UNIT_TESTS=TRUE -DBUILD_SFEMOVIE_SAMPLE=TRUE -DBUILD_DEMUXER_CLI=TRUE . && make && sudo make install
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libboost-test-dev libboost-thread-dev libboost-system-dev libopenal1 libglew1.5 libjpeg62
+  - sudo apt-get install libboost-test-dev libboost-thread-dev libboost-system-dev libopenal1 libglew1.5 libjpeg62
 
 before_script:
   - wget http://www.sfml-dev.org/download/sfml/2.1/SFML-2.1-linux-gcc-64bits.tar.bz2
   - tar -xjf SFML-2.1-linux-gcc-64bits.tar.bz2
+  - wget http://sfemovie.yalir.org/downloads/cmake -O cmake-2.8.12
+  - chmod +x cmake-2.8.12
 
 after_script:
   - ls -l /usr/local/lib
