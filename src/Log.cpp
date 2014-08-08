@@ -37,7 +37,7 @@ namespace sfe {
 		
 		void initialize()
 		{
-			setLogLevel(ErrorLogLevel);
+			setLogLevel(DebugLogLevel);
 		}
 		
 		void setLogLevel(LogLevel level)

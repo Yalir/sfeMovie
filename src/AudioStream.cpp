@@ -73,7 +73,7 @@ namespace sfe {
 	
 	MediaType AudioStream::getStreamKind() const
 	{
-		return MEDIA_TYPE_AUDIO;
+		return MediaTypeAudio;
 	}
 	
 	void AudioStream::update()

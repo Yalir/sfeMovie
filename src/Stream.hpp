@@ -39,10 +39,10 @@ extern "C"
 namespace sfe {
 	
 	enum MediaType {
-		MEDIA_TYPE_AUDIO,
-		MEDIA_TYPE_SUBTITLE,
-		MEDIA_TYPE_VIDEO,
-		MEDIA_TYPE_UNKNOWN
+		MediaTypeAudio,
+		MediaTypeSubtitle,
+		MediaTypeVideo,
+		MediaTypeUnknown
 	};
 	
 	class Stream : public Timer::Observer {

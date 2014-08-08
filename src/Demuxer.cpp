@@ -53,10 +53,10 @@ namespace sfe {
 	static MediaType AVMediaTypeToMediaType(AVMediaType type)
 	{
 		switch (type) {
-			case AVMEDIA_TYPE_AUDIO:	return MEDIA_TYPE_AUDIO;
-			case AVMEDIA_TYPE_SUBTITLE:	return MEDIA_TYPE_SUBTITLE;
-			case AVMEDIA_TYPE_VIDEO:	return MEDIA_TYPE_VIDEO;
-			default:					return MEDIA_TYPE_UNKNOWN;
+			case AVMEDIA_TYPE_AUDIO:	return MediaTypeAudio;
+			case AVMEDIA_TYPE_SUBTITLE:	return MediaTypeSubtitle;
+			case AVMEDIA_TYPE_VIDEO:	return MediaTypeVideo;
+			default:					return MediaTypeUnknown;
 		}
 	}
 	
@@ -162,7 +162,7 @@ namespace sfe {
 						break;
 						
 						/** TODO
-						 case AVMEDIA_TYPE_SUBTITLE:
+						 case AVMediaTypeSubtitle:
 						 m_streams.push_back(new SubtitleStream(ffstream));
 						 break;
 						 */
@@ -244,7 +244,7 @@ namespace sfe {
 	
 	void Demuxer::selectFirstAudioStream()
 	{
-		std::set<Stream*> audioStreams = getStreamsOfType(MEDIA_TYPE_AUDIO);
+		std::set<Stream*> audioStreams = getStreamsOfType(MediaTypeAudio);
 		if (audioStreams.size())
 			selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
 	}
@@ -278,7 +278,7 @@ namespace sfe {
 	
 	void Demuxer::selectFirstVideoStream()
 	{
-		std::set<Stream*> videoStreams = getStreamsOfType(MEDIA_TYPE_VIDEO);
+		std::set<Stream*> videoStreams = getStreamsOfType(MediaTypeVideo);
 		if (videoStreams.size())
 			selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
 	}
@@ -410,18 +410,79 @@ namespace sfe {
 				sfeLogDebug("Seek by DTS at timestamp " + s(0) + " returned " + s(err));
 			}
 		} else {
-			int64_t timestamp = newPosition.asMilliseconds() * AV_TIME_BASE / 1000;
+			static const int kAudioIndex = 0;
+			static const int kVideoIndex = 1;
+			static const int kEndIndex = 2;
 			
-			if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
-				if (m_formatCtx->start_time != AV_NOPTS_VALUE)
-					timestamp += m_formatCtx->start_time;
+			int64_t timestamp = newPosition.asMilliseconds() * AV_TIME_BASE / 1000;
+			sf::Time seekingGaps[2]; // audio + video
+			bool didReseekBackward = false;
+			bool didReseekForward = false;
+			
+			do {
+				if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
+					if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+						timestamp += m_formatCtx->start_time;
+					
+					int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
+					CHECK0(err, "avformat_seek_file failure");
+				} else {
+					int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
+					CHECK0(err, "avformat_seek_file failure");
+				}
 				
-				int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
-				CHECK0(err, "avformat_seek_file failure");
-			} else {
-				int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
-				CHECK0(err, "avformat_seek_file failure");
-			}
+				CHECK(m_connectedAudioStream || m_connectedVideoStream, "seeking with no active stream");
+				
+				/*
+				 {
+				 flushBuffers();
+				 sf::Time streamPos = computePosition();
+				 return streamPos - targetTime;
+				 }
+				 */
+				if (m_connectedAudioStream) {
+					m_connectedAudioStream->flushBuffers();
+					
+					// < 0 = before seek point
+					// > 0 = after seek point
+					seekingGaps[kAudioIndex] = m_connectedAudioStream->computePosition() - newPosition;
+				}
+				
+				if (m_connectedVideoStream) {
+					m_connectedVideoStream->flushBuffers();
+					seekingGaps[kVideoIndex] = m_connectedVideoStream->computePosition() - newPosition;
+				}
+				
+				sf::Time tooEarlyThreshold(-sf::seconds(10));
+				sf::Time brokenSeekingThreshold((sf::Int64)2 * tooEarlyThreshold);
+				int tooEarlyCount = 0;
+				int tooLateCount = 0;
+				int brokenSeekingCount = 0;
+				
+				for (int i = 0; i < kEndIndex; i++) {
+					if (seekingGaps[i] < tooEarlyThreshold * -2.lf)
+						brokenSeekingCount++;
+					if (seekingGaps[i] < -tooEarlyThreshold)
+						tooEarlyCount++;
+					
+					if (seekingGaps[i] > sf::Time::Zero)
+						tooLateCount++;
+				}
+				
+				CHECK(!(tooEarlyCount && tooLateCount), "Unhandled situation");
+				
+				
+				if (tooEarlyCount) {
+					// Go forward by 1 sec
+					timestamp += AV_TIME_BASE;
+					didReseekForward = true;
+				} else if (tooLateCount) {
+					timestamp -= AV_TIME_BASE;
+					didReseekBackward = true;
+				}
+				
+				CHECK(!(didReseekBackward && didReseekForward), "infinitely seeking backward and forward");
+			} while (seekingStatus != Stream::SeekingStatusOk);
 		}
 	}
 }

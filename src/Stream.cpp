@@ -143,7 +143,7 @@ namespace sfe {
 	
 	MediaType Stream::getStreamKind() const
 	{
-		return MEDIA_TYPE_UNKNOWN;
+		return MediaTypeUnknown;
 	}
 	
 	Status Stream::getStatus() const
@@ -160,6 +160,7 @@ namespace sfe {
 		if (!m_packetList.size()) {
 			return sf::Time::Zero;
 		} else {
+			sf::Lock l(m_readerMutex);
 			AVPacket* packet = *m_packetList.begin();
 			CHECK(packet, "internal inconcistency");
 			

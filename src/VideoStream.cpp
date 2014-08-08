@@ -84,7 +84,7 @@ namespace sfe {
 	
 	MediaType VideoStream::getStreamKind() const
 	{
-		return MEDIA_TYPE_VIDEO;
+		return MediaTypeVideo;
 	}
 	
 	sf::Vector2i VideoStream::getFrameSize() const

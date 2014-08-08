@@ -50,8 +50,8 @@ namespace sfe {
 			m_timer = new Timer;
 			m_demuxer = new Demuxer(filename, *m_timer, *this);
 			
-			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
-			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
+			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MediaTypeAudio);
+			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MediaTypeVideo);
 			
 			m_demuxer->selectFirstAudioStream();
 			m_demuxer->selectFirstVideoStream();
@@ -132,7 +132,7 @@ namespace sfe {
 	void MovieImpl::setVolume(float volume)
 	{
 		if (m_demuxer && m_timer) {
-			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
+			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MediaTypeAudio);
 			std::set<Stream*>::const_iterator it;
 			
 			for (it = audioStreams.begin(); it != audioStreams.end(); it++) {
