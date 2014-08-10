@@ -80,9 +80,9 @@ int main(int argc, const char *argv[])
 	}
 	
 	bool fullscreen = false;
-	sf::VideoMode mode = sf::VideoMode::getDesktopMode();
-	int width = std::min((int)mode.width, movie.getSize().x);
-	int height = std::min((int)mode.height, movie.getSize().y);
+	sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+	int width = std::min((int)desktopMode.width, movie.getSize().x);
+	int height = std::min((int)desktopMode.height, movie.getSize().y);
 	
 	// Create window
 	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
@@ -114,7 +114,13 @@ int main(int argc, const char *argv[])
 					}
 				} else if (ev.key.code == sf::Keyboard::F) {
 					fullscreen = !fullscreen;
-					window.create(sf::VideoMode(width, height), "sfeMovie Player", fullscreen ? sf::Style::Fullscreen : sf::Style::Close);
+					
+					if (fullscreen)
+						window.create(desktopMode, "sfeMovie Player", sf::Style::Fullscreen);
+					else
+						window.create(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
+					
+					std::cout << "fit " << window.getSize().x << "x" << window.getSize().y << std::endl;
 					movie.fit(0, 0, window.getSize().x, window.getSize().y);
 				} else if (ev.key.code == sf::Keyboard::P) {
 					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
