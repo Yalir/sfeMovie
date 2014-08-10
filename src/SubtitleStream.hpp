@@ -37,12 +37,15 @@ namespace sfe
 {
 	class SubtitleStream : public Stream{
 	public:
+		struct Delegate {
+			virtual void didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite*>& subimages) = 0;
+		};
 		/** Create a subtitle stream from the given FFmpeg stream
 		*
 		* At the end of the constructor, the stream is guaranteed
 		* to have all of its fields set and the decoder loaded
 		*/
-		SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer);
+		SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
 
 		/** Default destructor
 		*/
@@ -60,23 +63,22 @@ namespace sfe
 	private:
 		struct SubImage
 		{
-			double pts;
-			std::vector<sf::Texture> out;
+			std::vector<sf::Sprite*> out;
+			int64_t pts;	
 			AVSubtitle sub;
 		};
 
-		AVPicture* ARGBtoRGBA(AVPicture* input, int width, int height);
+		std::vector<sf::Sprite*>  SubToSprites(AVSubtitle* sub);
 
 
-		bool onGetData(sf::Texture& texture);
+		bool onGetData();
 
-		const int m_buffersize = 10;
-		sf::Texture m_output;
-		sf::Texture m_subtexture;
+		Delegate& m_delegate;
+		const uint32_t m_buffersize = 10;
+		sf::Texture* m_texture;
 		sf::Text m_subtext;
-		std::vector<SubImage*> m_active;
 		std::vector<SubImage*> m_inactive;
-		SubImage* m_current;
+		std::vector<SubImage*> m_active;
 	};
 
 };

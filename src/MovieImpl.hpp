@@ -33,7 +33,7 @@
 #define SFEMOVIE_MOVIEIMPL_HPP
 
 namespace sfe {
-	class MovieImpl : public VideoStream::Delegate, public sf::Drawable {
+	class MovieImpl : public VideoStream::Delegate, public SubtitleStream::Delegate, public sf::Drawable {
 	public:
 		MovieImpl(sf::Transformable& movieView);
 		virtual ~MovieImpl();
@@ -178,12 +178,14 @@ namespace sfe {
 		
 		void cleanResources();
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-		void didUpdateImage(const VideoStream& sender, const sf::Texture& image);
+		void didUpdateVideo(const VideoStream& sender, const sf::Texture& image);
+		void didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite*>& sprites);
 		
 		sf::Transformable& m_movieView;
 		Demuxer* m_demuxer;
 		Timer* m_timer;
 		sf::Sprite m_sprite;
+		std::vector<sf::Sprite*> m_subtitles;
 	};
 	
 }

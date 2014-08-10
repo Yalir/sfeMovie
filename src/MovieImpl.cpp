@@ -48,7 +48,7 @@ namespace sfe {
 		
 		try {
 			m_timer = new Timer;
-			m_demuxer = new Demuxer(filename, *m_timer, *this);
+			m_demuxer = new Demuxer(filename, *m_timer, *this,*this);
 			
 			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
 			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
@@ -324,13 +324,24 @@ namespace sfe {
 	void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		states.transform *= m_movieView.getTransform();
+		
 		target.draw(m_sprite, states);
+		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
+		{
+			target.draw(*m_subtitles[i], states);
+		}
 	}
 	
-	void MovieImpl::didUpdateImage(const VideoStream& sender, const sf::Texture& image)
+	void MovieImpl::didUpdateVideo(const VideoStream& sender, const sf::Texture& image)
 	{
 		if (m_sprite.getTexture() != &image) {
 			m_sprite.setTexture(image);
 		}
+	}
+
+	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite*>& subs)
+	{
+		m_subtitles = subs;
+		int a = 0;
 	}
 }

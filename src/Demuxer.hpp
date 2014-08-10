@@ -77,7 +77,7 @@ namespace sfe {
 		 * @param timer the timer with which the media streams will be synchronized
 		 * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
 		 */
-		Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate);
+		Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate,SubtitleStream::Delegate& subtitleDelegate);
 		
 		/** Default destructor
 		 */

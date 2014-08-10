@@ -109,7 +109,7 @@ namespace sfe {
 				if (!onGetData(m_texture)) {
 					setStatus(Stopped);
 				} else {
-					m_delegate.didUpdateImage(*this, m_texture);
+					m_delegate.didUpdateVideo(*this, m_texture);
 				}
 			}
 		}

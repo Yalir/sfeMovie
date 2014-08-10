@@ -99,7 +99,7 @@ namespace sfe {
 		return g_availableDecoders;
 	}
 	
-	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate) :
+	Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate,SubtitleStream::Delegate& subtitleDelegate) :
 	m_formatCtx(NULL),
 	m_eofReached(false),
 	m_streams(),
@@ -162,7 +162,7 @@ namespace sfe {
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
 						break;			
 					case AVMEDIA_TYPE_SUBTITLE:
-						m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer);
+						m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
 						 break;				
 					default:
