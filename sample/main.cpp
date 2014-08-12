@@ -85,7 +85,8 @@ int main(int argc, const char *argv[])
 	int height = std::min((int)desktopMode.height, movie.getSize().y);
 	
 	// Create window
-	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player",
+							sf::Style::Close | sf::Style::Resize);
 	movie.fit(0, 0, width, height);
 	
 	// Scale movie to the window drawing area and enable VSync
@@ -118,7 +119,8 @@ int main(int argc, const char *argv[])
 					if (fullscreen)
 						window.create(desktopMode, "sfeMovie Player", sf::Style::Fullscreen);
 					else
-						window.create(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
+						window.create(sf::VideoMode(width, height), "sfeMovie Player",
+									  sf::Style::Close | sf::Style::Resize);
 					
 					std::cout << "fit " << window.getSize().x << "x" << window.getSize().y << std::endl;
 					movie.fit(0, 0, window.getSize().x, window.getSize().y);
@@ -137,6 +139,8 @@ int main(int argc, const char *argv[])
 				volume = std::min(volume, 100.f);
 				volume = std::max(volume, 0.f);
 				movie.setVolume(volume);
+			} else if (ev.type == sf::Event::Resized) {
+				movie.fit(0, 0, window.getSize().x, window.getSize().y);
 			}
 		}
 		
