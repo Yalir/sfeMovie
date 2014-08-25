@@ -36,9 +36,9 @@ namespace sfe {
 	void SubtitleStream::update()
 	{
 		//only get new subtitles if we are running low
-		if (m_status == Playing && m_inactive.size()<m_buffersize)
+		if (m_status == Playing && hasPackets())
 		{
-			if (!onGetData()) {
+				if (!onGetData()) {
 				setStatus(Stopped);
 			}
 		}

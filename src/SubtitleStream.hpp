@@ -74,7 +74,6 @@ namespace sfe
 		bool onGetData();
 
 		Delegate& m_delegate;
-		const uint32_t m_buffersize = 10;
 		sf::Texture* m_texture;
 		sf::Text m_subtext;
 		std::vector<SubImage*> m_inactive;
