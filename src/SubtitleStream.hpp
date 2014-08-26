@@ -1,6 +1,6 @@
 
 /*
-*  AudioStream.hpp
+*  SubtitleStream.hpp
 *  sfeMovie project
 *
 *  Copyright (C) 2010-2014 Stephan Vedder
@@ -38,7 +38,7 @@ namespace sfe
 	class SubtitleStream : public Stream{
 	public:
 		struct Delegate {
-			virtual void didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite*>& subimages) = 0;
+			virtual void didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subimages) = 0;
 		};
 		/** Create a subtitle stream from the given FFmpeg stream
 		*
@@ -63,21 +63,21 @@ namespace sfe
 	private:
 		struct SubImage
 		{
-			std::vector<sf::Sprite*> out;
+			std::vector<sf::Sprite> out;
 			int64_t pts;	
 			AVSubtitle sub;
 		};
 
-		std::vector<sf::Sprite*>  SubToSprites(AVSubtitle* sub);
+		std::vector<sf::Sprite>  SubToSprites(AVSubtitle* sub);
 
 
 		bool onGetData();
 
 		Delegate& m_delegate;
-		sf::Texture* m_texture;
+		sf::Texture m_texture;
 		sf::Text m_subtext;
-		std::vector<SubImage*> m_inactive;
-		std::vector<SubImage*> m_active;
+		std::vector<SubImage> m_inactive;
+		std::vector<SubImage> m_active;
 	};
 
 };

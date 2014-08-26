@@ -328,7 +328,7 @@ namespace sfe {
 		target.draw(m_sprite, states);
 		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
 		{
-			target.draw(*m_subtitles[i], states);
+			target.draw(m_subtitles[i], states);
 		}
 	}
 	
@@ -339,7 +339,7 @@ namespace sfe {
 		}
 	}
 
-	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite*>& subs)
+	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subs)
 	{
 		m_subtitles = subs;
 		int a = 0;
