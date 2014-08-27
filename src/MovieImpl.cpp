@@ -27,6 +27,7 @@
 #include "Timer.hpp"
 #include "Log.hpp"
 #include <cmath>
+#include <iostream>
 
 namespace sfe {
 	MovieImpl::MovieImpl(sf::Transformable& movieView) :
@@ -215,18 +216,17 @@ namespace sfe {
 				target_size.y = movie_size.y * ((float)wanted_size.y / movie_size.y);
 			}
 			
-			m_movieView.setScale((float)target_size.x / movie_size.x, (float)target_size.y / movie_size.y);
 			new_size = target_size;
 		}
 		else
 		{
-			m_movieView.setScale((float)wanted_size.x / movie_size.x, (float)wanted_size.y / movie_size.y);
 			new_size = wanted_size;
 		}
 		
 		m_sprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
 							 frame.top + (wanted_size.y - new_size.y) / 2);
 		m_movieView.setPosition(frame.left, frame.top);
+		m_sprite.setScale((float)new_size.x / movie_size.x, (float)new_size.y / movie_size.y);
 	}
 	
 	float MovieImpl::getFramerate() const
@@ -320,7 +320,6 @@ namespace sfe {
 	
 	void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
-		states.transform *= m_movieView.getTransform();
 		target.draw(m_sprite, states);
 	}
 	
