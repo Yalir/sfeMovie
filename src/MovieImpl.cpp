@@ -113,10 +113,13 @@ namespace sfe {
 			// Enable smoothing when the video is scaled
 			sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
 			if (vStream) {
-				sf::Vector2f sc = m_movieView.getScale();
+				sf::Vector2f movieScale = m_movieView.getScale();
+                sf::Vector2f subviewScale = m_sprite.getScale();
 				
-				if (std::fabs(sc.x - 1.f) < 0.00001 &&
-					std::fabs(sc.y - 1.f) < 0.00001)
+				if (std::fabs(movieScale.x - 1.f) < 0.00001 &&
+					std::fabs(movieScale.y - 1.f) < 0.00001 &&
+                    std::fabs(subviewScale.x - 1.f) < 0.00001 &&
+                    std::fabs(subviewScale.y - 1.f) < 0.00001)
 				{
 					vStream->getVideoTexture().setSmooth(false);
 				}
