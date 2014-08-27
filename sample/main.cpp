@@ -122,7 +122,6 @@ int main(int argc, const char *argv[])
 						window.create(sf::VideoMode(width, height), "sfeMovie Player",
 									  sf::Style::Close | sf::Style::Resize);
 					
-					std::cout << "fit " << window.getSize().x << "x" << window.getSize().y << std::endl;
 					movie.fit(0, 0, window.getSize().x, window.getSize().y);
 				} else if (ev.key.code == sf::Keyboard::P) {
 					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
@@ -141,6 +140,7 @@ int main(int argc, const char *argv[])
 				movie.setVolume(volume);
 			} else if (ev.type == sf::Event::Resized) {
 				movie.fit(0, 0, window.getSize().x, window.getSize().y);
+            window.setView(sf::View(sf::FloatRect(0, 0, window.getSize().x, window.getSize().y)));
 			}
 		}
 		

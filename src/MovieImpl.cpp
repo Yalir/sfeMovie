@@ -223,17 +223,9 @@ namespace sfe {
 			new_size = wanted_size;
 		}
 		
-		
-		std::cout << "set sprite pos : " << (frame.left + (wanted_size.x - new_size.x) / 2) << " x "
-		<< (frame.top + (wanted_size.y - new_size.y) / 2) << std::endl;
 		m_sprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
 							 frame.top + (wanted_size.y - new_size.y) / 2);
-		
-		std::cout << "set view pos : " << frame.left << " x " << frame.top << std::endl;
 		m_movieView.setPosition(frame.left, frame.top);
-		
-		std::cout << "set scale : {" << (float)wanted_size.x / movie_size.x << ", "
-		<< (float)wanted_size.y / movie_size.y << "}" << std::endl;
 		m_sprite.setScale((float)new_size.x / movie_size.x, (float)new_size.y / movie_size.y);
 	}
 	
