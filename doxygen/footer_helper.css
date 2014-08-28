@@ -1,0 +1,17 @@
+
+html, body {
+	height: 100%;
+}
+.wrapper {
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	margin: 0 auto -25px; /* the bottom margin is the negative value of the footer's height */
+}
+.push {
+	height: 25px; /* .push must be the same height as .footer */
+}
+
+.footer {
+	height: 24px;
+}
