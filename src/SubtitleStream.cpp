@@ -158,17 +158,16 @@ namespace sfe {
 				 palette[j] = *(uint32_t*)&sub->rects[i]->pict.data[1][j*4];
 			}
 			
-			sf::Texture tex;
-			m_texture = tex;
-			tex.create(sub->rects[i]->w, sub->rects[i]->h);
+
+			m_texture.create(sub->rects[i]->w, sub->rects[i]->h);
 
 			uint32_t* data = new uint32_t[sub->rects[i]->w* sub->rects[i]->h];
 			for (int j = 0; j < sub->rects[i]->w* sub->rects[i]->h; ++j)
 			{
 				data[j] = palette[sub->rects[i]->pict.data[0][j]];
 			}
-			tex.update((uint8_t*)data);
-			sprite.setTexture(tex);
+			m_texture.update((uint8_t*)data);
+			sprite.setTexture(m_texture);
 			sprites.push_back(sprite);
 			delete[] data;
 			delete[] palette;
