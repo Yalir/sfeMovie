@@ -6,6 +6,11 @@ macro(import_library_path output basePath libName)
 	else()
 		set(SUFFIX ${CMAKE_IMPORT_LIBRARY_SUFFIX})
 	endif()
+
+	if (NOT "${SUFFIX}")
+		set(SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
+	endif()
+
 	set(${output} "${basePath}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${libName}${SUFFIX}")
 endmacro(import_library_path)
 
