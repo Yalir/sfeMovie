@@ -147,7 +147,6 @@ namespace sfe {
 		AVCodec* m_codec;
 		int m_streamID;
 		std::string m_language;
-		std::string m_language;
 		std::list <AVPacket*> m_packetList;
 		Status m_status;
 		sf::Mutex m_readerMutex;
