@@ -42,7 +42,7 @@ namespace sfe {
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
+		VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
 		
 		/** Default destructor
 		 */
@@ -96,7 +96,7 @@ namespace sfe {
 		 * @param goOn set to true if decoding can continue, or false if no more data can be decoded (EOF)
 		 * @return true if decoding succeeded, false otherwise (EOF)
 		 */
-		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame, bool& needsMoreDecoding);
+		bool decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding);
 		
 		/** Initialize the audio resampler for conversion from many formats to signed 16 bits audio
 		 *
@@ -111,7 +111,7 @@ namespace sfe {
 		 * @param outNbSamples [out] the count of samples in @a outSamples
 		 * @param outSamplesLength [out] the length of @a outSamples in bytes
 		 */
-		void rescale(AVFrameRef frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4]);
+		void rescale(AVFrame* frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4]);
 		
 		/** Load packets until one frame can be decoded
 		 */
@@ -122,7 +122,7 @@ namespace sfe {
 		
 		// Private data
 		sf::Texture m_texture;
-		AVFrameRef m_rawVideoFrame;
+		AVFrame* m_rawVideoFrame;
 		uint8_t *m_rgbaVideoBuffer[4];
 		int m_rgbaVideoLinesize[4];
 		Delegate& m_delegate;

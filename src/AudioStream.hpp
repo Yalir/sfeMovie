@@ -33,12 +33,12 @@
 namespace sfe {
 	class AudioStream : public Stream, private sf::SoundStream {
 	public:
-		/** Create a video stream from the given FFmpeg stream
+		/** Create an audio stream from the given FFmpeg stream
 		 *
 		 * At the end of the constructor, the stream is guaranteed
 		 * to have all of its fields set and the decoder loaded
 		 */
-		AudioStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer);
+		AudioStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */
@@ -73,7 +73,7 @@ namespace sfe {
 		 * @param gotFrame set to true if a frame has been extracted to outputFrame, false otherwise
 		 * @return true if there's still data to decode in this packet, false otherwise
 		 */
-		bool decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame);
+		bool decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame);
 		
 		/** Initialize the audio resampler for conversion from many formats to signed 16 bits audio
 		 *
@@ -88,7 +88,7 @@ namespace sfe {
 		 * @param outNbSamples [out] the count of samples in @a outSamples
 		 * @param outSamplesLength [out] the length of @a outSamples in bytes
 		 */
-		void resampleFrame(AVFrameRef frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
+		void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
 		
 		// Timer::Observer interface
 		void willPlay(const Timer &timer);
@@ -101,7 +101,7 @@ namespace sfe {
 		
 		// Private data
 		sf::Int16* m_samplesBuffer;
-		AVFrameRef m_audioFrame;
+		AVFrame* m_audioFrame;
 		
 		// Resampling
 		struct SwrContext* m_swrCtx;

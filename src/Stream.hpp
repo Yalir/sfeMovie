@@ -31,6 +31,11 @@
 #include <SFML/System.hpp>
 #include <sfeMovie/Movie.hpp>
 
+extern "C"
+{
+#include <libavformat/avformat.h>
+}
+
 namespace sfe {
 	class Stream : public Timer::Observer {
 	public:
@@ -47,7 +52,7 @@ namespace sfe {
 		 * @param stream the FFmpeg stream
 		 * @param dataSource the encoded data provider for this stream
 		 */
-		Stream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer);
+		Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer);
 		
 		/** Default destructor
 		 */
@@ -66,7 +71,7 @@ namespace sfe {
 		 *
 		 * @return packet the encoded data usable by this stream
 		 */
-		virtual void pushEncodedData(AVPacketRef packet);
+		virtual void pushEncodedData(AVPacket* packet);
 		
 		/** Reinsert an AVPacket at the beginning of the queue
 		 *
@@ -75,7 +80,7 @@ namespace sfe {
 		 *
 		 * @param packet the packet to re-insert at the beginning of the queue
 		 */
-		virtual void prependEncodedData(AVPacketRef packet);
+		virtual void prependEncodedData(AVPacket* packet);
 		
 		/** Return the oldest encoded data that was pushed to this stream
 		 *
@@ -84,7 +89,7 @@ namespace sfe {
 		 *
 		 * @return the oldest encoded data, or null if no data could be read from the media
 		 */
-		virtual AVPacketRef popEncodedData();
+		virtual AVPacket* popEncodedData();
 		
 		/** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
 		 */
@@ -134,15 +139,16 @@ namespace sfe {
 		void setStatus(Status status);
 		virtual void discardAllEncodedData();
 		
-		AVFormatContextRef m_formatCtx;
-		AVStreamRef m_stream;
+		AVFormatContext* m_formatCtx;
+		AVStream* m_stream;
 		DataSource& m_dataSource;
 		Timer& m_timer;
-		AVCodecContextRef m_codecCtx;
-		AVCodecRef m_codec;
+		AVCodecContext* m_codecCtx;
+		AVCodec* m_codec;
 		int m_streamID;
 		std::string m_language;
-		std::list <AVPacketRef> m_packetList;
+		std::string m_language;
+		std::list <AVPacket*> m_packetList;
 		Status m_status;
 		sf::Mutex m_readerMutex;
 	};

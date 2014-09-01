@@ -15,7 +15,7 @@ extern "C" {
 #include <sfeMovie/Movie.hpp>
 
 namespace sfe {
-	AudioStream::AudioStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer) :
+	AudioStream::AudioStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer) :
 	Stream(formatCtx, stream, dataSource, timer),
 	
 	// Public properties
@@ -100,7 +100,7 @@ namespace sfe {
 	
 	bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
 	{
-		AVPacketRef packet;
+		AVPacket* packet;
 		data.samples = m_samplesBuffer;
 		
 		while (data.sampleCount < av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate &&
@@ -144,7 +144,7 @@ namespace sfe {
 //		CHECK(0, "AudioStream::onSeek() - not implemented");
 	}
 	
-	bool AudioStream::decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame)
+	bool AudioStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame)
 	{
 		bool needsMoreDecoding = false;
 		int igotFrame = 0;
@@ -201,7 +201,7 @@ namespace sfe {
 		CHECK(err >= 0, "AudioStream::initResampler() - av_samples_alloc_array_and_samples error");
 	}
 	
-	void AudioStream::resampleFrame(const AVFrameRef frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength)
+	void AudioStream::resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength)
 	{
 		CHECK(m_swrCtx, "AudioStream::resampleFrame() - resampler is not initialized, call AudioStream::initResamplerFirst() !");
 		CHECK(frame, "AudioStream::resampleFrame() - invalid argument");

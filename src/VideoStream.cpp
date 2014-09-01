@@ -34,7 +34,7 @@ extern "C" {
 #include "Log.hpp"
 
 namespace sfe {
-	VideoStream::VideoStream(AVFormatContextRef formatCtx, AVStreamRef stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+	VideoStream::VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
 	Stream(formatCtx ,stream, dataSource, timer),
 	m_texture(),
 	m_rawVideoFrame(NULL),
@@ -117,7 +117,7 @@ namespace sfe {
 	
 	bool VideoStream::onGetData(sf::Texture& texture)
 	{
-		AVPacketRef packet = popEncodedData();
+		AVPacket* packet = popEncodedData();
 		bool gotFrame = false;
 		bool goOn = false;
 		
@@ -157,7 +157,7 @@ namespace sfe {
 		return  m_lastDecodedTimestamp - m_timer.getOffset();
 	}
 	
-	bool VideoStream::decodePacket(AVPacketRef packet, AVFrameRef outputFrame, bool& gotFrame, bool& needsMoreDecoding)
+	bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)
 	{
 		int gotPicture = 0;
 		needsMoreDecoding = false;
@@ -200,7 +200,7 @@ namespace sfe {
 		CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
 	}
 	
-	void VideoStream::rescale(AVFrameRef frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4])
+	void VideoStream::rescale(AVFrame* frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4])
 	{
 		CHECK(frame, "VideoStream::rescale() - invalid argument");
 		sws_scale(m_swsCtx, frame->data, frame->linesize, 0, frame->height, outVideoBuffer, outVideoLinesize);

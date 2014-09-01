@@ -84,10 +84,11 @@ namespace sfe {
 	{
 		std::set<Observer*>::iterator it = m_observers.find(&anObserver);
 		
-		if (it == m_observers.end())
-			sfeLogDebug("Timer::removeObserver() - cannot remove an unregistered observer");
-		else
+		if (it == m_observers.end()) {
+			sfeLogWarning("Timer::removeObserver() - removing an unregistered observer. Ignored.");
+		} else {
 			m_observers.erase(it);
+		}
 	}
 	
 	void Timer::play()
