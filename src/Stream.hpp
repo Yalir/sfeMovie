@@ -107,7 +107,7 @@ namespace sfe {
 		 *
 		 * @return the kind of stream represented by this stream
 		 */
-		virtual MediaType getStreamKind() const;
+		virtual MediaType getStreamKind() const = 0;
 		
 		/** Give the stream's status
 		 *

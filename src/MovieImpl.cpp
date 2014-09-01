@@ -53,8 +53,8 @@ namespace sfe {
 			m_demuxer = new Demuxer(filename, *m_timer, *this);
 			m_streamEntries = m_demuxer->computeStreamDescriptors();
 			
-			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
-			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_VIDEO);
+			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(Audio);
+			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(Video);
 			
 			m_demuxer->selectFirstAudioStream();
 			m_demuxer->selectFirstVideoStream();
@@ -87,10 +87,10 @@ namespace sfe {
 			sfeLogError("Movie - tried to activate unknown stream with index " + s(stream.index));
 		} else {
 			switch (it->second->getStreamKind()) {
-				case MEDIA_TYPE_AUDIO:
+				case Audio:
 					m_demuxer->selectAudioStream(dynamic_cast<AudioStream*>(it->second));
 					break;
-				case MEDIA_TYPE_VIDEO:
+				case Video:
 					m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(it->second));
 					break;
 				default:
@@ -165,7 +165,7 @@ namespace sfe {
 	void MovieImpl::setVolume(float volume)
 	{
 		if (m_demuxer && m_timer) {
-			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(MEDIA_TYPE_AUDIO);
+			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(Audio);
 			std::set<Stream*>::const_iterator it;
 			
 			for (it = audioStreams.begin(); it != audioStreams.end(); it++) {

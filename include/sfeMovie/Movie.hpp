@@ -43,10 +43,10 @@ namespace sfe {
 	};
 	
 	enum MediaType {
-		MEDIA_TYPE_AUDIO,
-		MEDIA_TYPE_SUBTITLE,
-		MEDIA_TYPE_VIDEO,
-		MEDIA_TYPE_UNKNOWN
+		Audio,
+		Subtitle,
+		Video,
+		Unknown
 	};
 	
 	struct StreamDescriptor {

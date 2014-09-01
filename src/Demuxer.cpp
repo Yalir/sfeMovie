@@ -53,10 +53,10 @@ namespace sfe {
 	static MediaType AVMediaTypeToMediaType(AVMediaType type)
 	{
 		switch (type) {
-			case AVMEDIA_TYPE_AUDIO:	return MEDIA_TYPE_AUDIO;
-			case AVMEDIA_TYPE_SUBTITLE:	return MEDIA_TYPE_SUBTITLE;
-			case AVMEDIA_TYPE_VIDEO:	return MEDIA_TYPE_VIDEO;
-			default:					return MEDIA_TYPE_UNKNOWN;
+			case AVMEDIA_TYPE_AUDIO:	return Audio;
+			case AVMEDIA_TYPE_SUBTITLE:	return Subtitle;
+			case AVMEDIA_TYPE_VIDEO:	return Video;
+			default:					return Unknown;
 		}
 	}
 	
@@ -261,7 +261,7 @@ namespace sfe {
 	
 	void Demuxer::selectFirstAudioStream()
 	{
-		std::set<Stream*> audioStreams = getStreamsOfType(MEDIA_TYPE_AUDIO);
+		std::set<Stream*> audioStreams = getStreamsOfType(Audio);
 		if (audioStreams.size())
 			selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
 	}
@@ -295,7 +295,7 @@ namespace sfe {
 	
 	void Demuxer::selectFirstVideoStream()
 	{
-		std::set<Stream*> videoStreams = getStreamsOfType(MEDIA_TYPE_VIDEO);
+		std::set<Stream*> videoStreams = getStreamsOfType(Video);
 		if (videoStreams.size())
 			selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
 	}

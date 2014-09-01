@@ -148,7 +148,7 @@ namespace sfe {
 	
 	MediaType Stream::getStreamKind() const
 	{
-		return MEDIA_TYPE_UNKNOWN;
+		return Unknown;
 	}
 	
 	Status Stream::getStatus() const

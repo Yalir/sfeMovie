@@ -27,21 +27,21 @@ void my_pause()
 std::string StatusToString(sfe::Status status)
 {
 	switch (status) {
-		case sfe::Stopped: return "Stopped"; break;
-		case sfe::Paused: return "Paused"; break;
-		case sfe::Playing: return "Playing"; break;
-		default: return "unknown status"; break;
+		case sfe::Stopped:  return "Stopped";
+		case sfe::Paused:   return "Paused";
+		case sfe::Playing:  return "Playing";
+		default:            return "unknown status";
 	}
 }
 
 std::string MediaTypeToString(sfe::MediaType type)
 {
 	switch (type) {
-		case sfe::MEDIA_TYPE_AUDIO:		return "audio";
-		case sfe::MEDIA_TYPE_SUBTITLE:	return "subtitle";
-		case sfe::MEDIA_TYPE_VIDEO:		return "video";
-		case sfe::MEDIA_TYPE_UNKNOWN:	return "unknown";
-		default:						return "(null)";
+		case sfe::Audio:    return "audio";
+		case sfe::Subtitle:	return "subtitle";
+		case sfe::Video:	return "video";
+		case sfe::Unknown:	return "unknown";
+		default:			return "(null)";
 	}
 }
 
