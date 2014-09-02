@@ -41,7 +41,7 @@ extern "C" {
 
 namespace sfe {
 	SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer,Delegate& delegate) :
-		Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate), m_texture(sf::Texture())
+		Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
 	{
 	}
 
@@ -73,7 +73,7 @@ namespace sfe {
 			if (m_inactive[i].pts + m_inactive[i].sub.start_display_time < m_timer.getOffset().asMilliseconds())
 			{
 				SubImage& c = m_inactive[i];	
-				c.out = SubToSprites(&c.sub);
+				c.out = SubtitleToSprites(&c.sub);
 				m_delegate.didUpdateSubtitle(*this, c.out);
 				m_active.push_back(c);
 				m_inactive.erase(m_inactive.begin() + i);
@@ -91,6 +91,7 @@ namespace sfe {
 				{
 					std::vector<sf::Sprite> empty;
 					m_delegate.didUpdateSubtitle(*this, empty);
+					m_textures.clear();
 				}
 			}
 		}
@@ -101,11 +102,11 @@ namespace sfe {
 		AVPacket* packet = popEncodedData();
 		AVSubtitle sub;
 		int32_t gotSub = 0;
-		int32_t goOn = 0;
+		uint32_t goOn = 0;
 		int64_t pts = 0;
 
 		if (packet) {
-			goOn = true;
+			goOn = 1;
 
 			while (!gotSub && packet && goOn) {
 				bool needsMoreDecoding = false;
@@ -118,7 +119,7 @@ namespace sfe {
 					pts =  packet->pts;
 
 				if (gotSub && pts) {
-					SubImage subimg = SubImage();
+					SubImage subimg;
 					subimg.sub = sub;
 					subimg.pts = pts;
 					
@@ -134,7 +135,7 @@ namespace sfe {
 				}
 
 				if (!gotSub && goOn) {
-					sfeLogDebug("no image in this packet, reading further");
+					sfeLogDebug("no subtitle in this packet, reading further");
 					packet = popEncodedData();
 				}
 			}
@@ -143,31 +144,34 @@ namespace sfe {
 		return static_cast<bool>(goOn);
 	}
 
-	std::vector<sf::Sprite> SubtitleStream::SubToSprites(AVSubtitle* sub)
+	std::vector<sf::Sprite> SubtitleStream::SubtitleToSprites(AVSubtitle* sub)
 	{
 		std::vector<sf::Sprite> sprites;
 
 		for (int i = 0; i < sub->num_rects; ++i)
 		{
 			sf::Sprite sprite;
-			sprite.setOrigin(sf::Vector2f(sub->rects[i]->x, sub->rects[i]->y));
-			sprite.setPosition(sf::Vector2f(sub->rects[i]->x * 2, sub->rects[i]->y * 1.75f));
-			uint32_t* palette = new uint32_t[sub->rects[i]->nb_colors];
-			for(int j = 0; j < sub->rects[i]->nb_colors; j++)
+			AVSubtitleRect* cRect = sub->rects[i];
+			sprite.setOrigin(sf::Vector2f(cRect->x, cRect->y));
+			sprite.setPosition(sf::Vector2f(cRect->x * 2, cRect->y * 1.75f));
+			uint32_t* palette = new uint32_t[cRect->nb_colors];
+			for (int j = 0; j < cRect->nb_colors; j++)
 			{
-				 palette[j] = *(uint32_t*)&sub->rects[i]->pict.data[1][j*4];
+				palette[j] = *(uint32_t*)&cRect->pict.data[1][j * kRgbaSize];
 			}
 			
 
-			m_texture.create(sub->rects[i]->w, sub->rects[i]->h);
+			m_textures.push_back(sf::Texture());
+			sf::Texture& tex = m_textures.back();
+			tex.create(cRect->w, cRect->h);
 
-			uint32_t* data = new uint32_t[sub->rects[i]->w* sub->rects[i]->h];
-			for (int j = 0; j < sub->rects[i]->w* sub->rects[i]->h; ++j)
+			uint32_t* data = new uint32_t[cRect->w* sub->rects[i]->h];
+			for (int j = 0; j <cRect->w* cRect->h; ++j)
 			{
-				data[j] = palette[sub->rects[i]->pict.data[0][j]];
+				data[j] = palette[cRect->pict.data[0][j]];
 			}
-			m_texture.update((uint8_t*)data);
-			sprite.setTexture(m_texture);
+			tex.update((uint8_t*)data);
+			sprite.setTexture(tex);
 			sprites.push_back(sprite);
 			delete[] data;
 			delete[] palette;

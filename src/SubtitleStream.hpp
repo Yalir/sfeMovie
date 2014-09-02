@@ -30,11 +30,15 @@
 #include "Stream.hpp"
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
-
+#include <list>
 
 
 namespace sfe
 {
+	namespace{
+		const int kRgbaSize = 4;
+	}
+
 	class SubtitleStream : public Stream{
 	public:
 		struct Delegate {
@@ -61,6 +65,8 @@ namespace sfe
 		*/
 		virtual void update();
 	private:
+		/** The struct we use to store our subtitles
+		*/
 		struct SubImage
 		{
 			std::vector<sf::Sprite> out;
@@ -68,13 +74,20 @@ namespace sfe
 			AVSubtitle sub;
 		};
 
-		std::vector<sf::Sprite>  SubToSprites(AVSubtitle* sub);
+		/**Convert an AVSubtitle to an RGBA image and set the position of the subtitle in the sprite
+		*
+		* @return A vector of sprites which will be rendered as the subtitles
+		*/
+		std::vector<sf::Sprite>  SubtitleToSprites(AVSubtitle* sub);
 
-
+		/** Decode the packages that were send to the stream by the demuxer
+		*
+		* @return if the stream is finished or not
+		*/
 		bool onGetData();
 
 		Delegate& m_delegate;
-		sf::Texture m_texture;
+		std::list<sf::Texture> m_textures;
 		sf::Text m_subtext;
 		std::vector<SubImage> m_inactive;
 		std::vector<SubImage> m_active;
