@@ -37,14 +37,6 @@ extern "C"
 }
 
 namespace sfe {
-	
-	enum MediaType {
-		MEDIA_TYPE_AUDIO,
-		MEDIA_TYPE_SUBTITLE,
-		MEDIA_TYPE_VIDEO,
-		MEDIA_TYPE_UNKNOWN
-	};
-	
 	class Stream : public Timer::Observer {
 	public:
 		struct DataSource {
@@ -123,6 +115,12 @@ namespace sfe {
 		 */
 		Status getStatus() const;
 		
+		/** Return the stream's language code
+		 *
+		 * @return the language code of the stream as ISO 639-2 format
+		 */
+		std::string getLanguage() const;
+		
 		/** Compute the stream position in the media, by possibly fetching a packet
 		 */
 		sf::Time computePosition();
@@ -148,6 +146,7 @@ namespace sfe {
 		AVCodecContext* m_codecCtx;
 		AVCodec* m_codec;
 		int m_streamID;
+		std::string m_language;
 		std::list <AVPacket*> m_packetList;
 		Status m_status;
 		sf::Mutex m_readerMutex;

@@ -29,6 +29,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <sfeMovie/Visibility.hpp>
+#include <vector>
 #include <string>
 
 namespace sfe {
@@ -41,6 +42,28 @@ namespace sfe {
 		End
 	};
 	
+	enum MediaType {
+		Audio,
+		Subtitle,
+		Video,
+		Unknown
+	};
+    
+	struct SFE_API StreamDescriptor {
+        /** Return a stream descriptor that identifies no stream. This allows disabling a specific stream kind
+         * 
+         * @param type the stream kind (audio, video...) to disable
+         * @return a StreamDescriptor that can be used to disable the given stream kind
+         */
+        static StreamDescriptor NoSelection(MediaType type);
+        
+		MediaType type;			//!< Stream kind: video, audio or subtitle
+		int identifier;			//!< Stream identifier in the media, used for choosing which stream to enable
+		std::string language;	//!< Language code defined by ISO 639-2, if set by the media
+	};
+	
+    typedef std::vector<StreamDescriptor> Streams;
+    
 	class SFE_API Movie : public sf::Drawable, public sf::Transformable {
 	public:
 		Movie();
@@ -56,6 +79,24 @@ namespace sfe {
 		 * @return true on success, false otherwise
 		 */
 		bool openFromFile(const std::string& filename);
+		
+		/** Return a description of all the streams of the given type contained in the opened media
+         *
+         * @param type the stream type (audio, video...) to return
+		 */
+		const Streams& getStreams(MediaType type) const;
+		
+		/** Request activation of the given stream. In case another stream of the same kind is already active,
+		 * it is deactivated.
+		 *
+		 * @note When opening a new media file, the default behaviour is to automatically activate the first
+		 * found audio and video streams
+         *
+         * @warning This method can only be used when the movie is stopped
+		 *
+		 * @param streamDescriptor the descriptor of the stream to activate
+		 */
+		void selectStream(const StreamDescriptor& streamDescriptor);
 		
 		/** Start or resume playing the media playback
 		 *

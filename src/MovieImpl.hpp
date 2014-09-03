@@ -28,6 +28,7 @@
 #include <SFML/Config.hpp>
 #include "VideoStream.hpp"
 #include "Demuxer.hpp"
+#include <sfeMovie/Movie.hpp>
 
 #ifndef SFEMOVIE_MOVIEIMPL_HPP
 #define SFEMOVIE_MOVIEIMPL_HPP
@@ -49,6 +50,24 @@ namespace sfe {
 		 */
 		bool openFromFile(const std::string& filename);
 		
+		
+		/** Return a description of all the streams of the given type contained in the opened media
+         *
+         * @param type the stream type (audio, video...) to return
+		 */
+		const Streams& getStreams(MediaType type) const;
+		
+		/** Request activation of the given stream. In case another stream of the same kind is already active,
+		 * it is deactivated.
+		 *
+		 * @note When opening a new media file, the default behaviour is to automatically activate the first
+		 * found audio and video streams
+         *
+         * @warning This method can only be used when the movie is stopped
+		 *
+		 * @param streamDescriptor the descriptor of the stream to activate
+		 */
+		void selectStream(const StreamDescriptor& streamDescriptor);
 		
 		/** Start or resume playing the media playback
 		 *
@@ -180,10 +199,13 @@ namespace sfe {
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 		void didUpdateImage(const VideoStream& sender, const sf::Texture& image);
 		
+	private:
 		sf::Transformable& m_movieView;
 		Demuxer* m_demuxer;
 		Timer* m_timer;
 		sf::Sprite m_sprite;
+		Streams m_audioStreamsDesc;
+        Streams m_videoStreamsDesc;
 	};
 	
 }
