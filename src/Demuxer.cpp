@@ -136,7 +136,7 @@ namespace sfe {
 		}
 		
 		// Find all interesting streams
-		for (int i = 0; i < m_formatCtx->nb_streams; i++) {
+		for (unsigned int i = 0; i < m_formatCtx->nb_streams; i++) {
 			AVStream* ffstream = m_formatCtx->streams[i];
 			
 			try {

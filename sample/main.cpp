@@ -13,8 +13,9 @@
  *  - Escape key to exit
  *  - Space key to play/pause the movie playback
  *  - S key to stop and go back to the beginning of the movie
- *  - R key to restart playing from the beginning of the movie
  *  - F key to toggle between windowed and fullscreen mode
+ *  - A key to select the next audio stream
+ *  - V key to select the next video stream
  */
 
 void my_pause()
@@ -138,6 +139,8 @@ int main(int argc, const char *argv[])
     
 	// Scale movie to the window drawing area and enable VSync
 	window.setFramerateLimit(60);
+	window.setVerticalSyncEnabled(true);
+	movie.play();
 
 	while (window.isOpen())
 	{
@@ -159,6 +162,8 @@ int main(int argc, const char *argv[])
 					} else {
 						movie.play();
 					}
+				} else if (ev.key.code == sf::Keyboard::S) {
+					movie.stop();
 				} else if (ev.key.code == sf::Keyboard::F) {
 					fullscreen = !fullscreen;
 					
