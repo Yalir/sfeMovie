@@ -1,0 +1,237 @@
+
+body {
+	font-family:arial, sans-serif;
+	font-size: 13px;
+	margin: 0px;
+	min-width: 900px;
+}
+
+/* ====================== Links ====================== */
+a {
+	text-decoration: none;
+}
+
+#content_frame a, #widescreen_frame a {
+	color:#366cbd;
+}
+
+#content_frame a:hover, #widescreen_frame a:hover, #header a:hover, .footer a:hover {
+    text-decoration:underline;
+}
+
+/* ====================== Titles ====================== */
+h3 {
+	margin-top:30px;
+	background-color:#eeedef;
+	border: 1px solid #e5e5e6;
+	border-radius: 3px;
+	color: #2E2E2E;
+	padding: 2px;
+	padding-left: 5px;
+	behavior: url("/sfeMovie-v1.0/css/PIE.htc");
+}
+
+h4 {
+	margin-bottom: 10px;
+	margin-left: 10px;
+	padding: 0px;
+	padding-left: 5px;
+	background-color: #f8f8f8;
+	border: 1px solid #e5e5e6;
+	border-radius: 3px;
+}
+
+.first_title {
+	margin-top:15px;
+}
+
+/* ====================== Contents ====================== */
+p {
+	margin-top: 5px;
+}
+
+table {
+	border-collapse: collapse;
+	margin:20px;
+	font-size:12px;
+}
+
+td, tr, th {
+	border: 1px solid #777;
+	padding:5px;
+	padding-left:10px;
+	padding-right:10px;
+}
+
+th {
+	background-color: #353535;
+	color: #ddd;
+}
+
+img {
+	border: none;
+}
+
+#content_frame {
+	background-color:#F3F3F3;
+	border: 1px solid #e5e5e6;
+	margin:auto;
+	width:768px;
+	margin-top:20px;
+    border-radius:5px; /* NB: propriété du CSS 3 */
+    -moz-border-radius:5px; /* Firefox ne gère pas le radius sans cette extension */
+    padding:15px;
+    padding-top:15px;
+    padding-bottom: 1px;
+    margin-bottom: 10px;
+    line-height: 18px;
+}
+
+#widescreen_frame {
+	margin-left: 20px;
+	padding-right: 20px;
+	padding-top: 10px;
+	line-height: 18px;
+}
+
+.widescreen {
+	width:95%;
+}
+
+.highlight {
+	font-weight: bold;
+}
+
+.warning {
+	color: red;
+}
+
+.note {
+	background-color: #E0E0E0;
+	border-radius: 3px;
+	color: black;
+	padding: 2px;
+	padding-left: 5px;
+	padding-right: 5px;
+	margin-right: 5px;
+	font-weight: bold;
+}
+
+.screenshot {
+	display: block;
+	margin: auto;
+}
+
+.screenshot_container {
+	width: 960px;
+	margin: auto;
+}
+
+.screenshot, .screenshot_container img {
+	border: 1px solid grey;
+}
+
+.photo {
+    float:left;
+    margin:10px;
+    clear:left;
+}
+
+p.accroche {
+    font-weight:bold;
+}
+
+.article_intro {
+	color:#444444;
+}
+
+/* ====================== Page head ====================== */
+#banner {
+	font-size: 32px;
+	font-weight: bold;
+	padding-bottom: 10px;
+	padding-left: 20px;
+	padding-top: 15px;
+	background-color: #1e1e1e;
+	color: white;
+	line-height: 25px;
+}
+
+#banner_shadow {
+	-moz-box-shadow: 0px 0px 6px #1e1e1e; 
+	-webkit-box-shadow: 0px 0px 6px #1e1e1e; 
+	box-shadow: 0px 0px 6px #1e1e1e;
+	
+	margin-bottom: 0px;
+}
+
+.subbanner {
+	font-size: 18px;
+	color: #a0a0a0;
+}
+
+#header {
+	padding-top: 9px;
+	padding-bottom: 4px;
+	
+	padding-left: 20px;
+	font-size: 18px;
+	margin-bottom: 6px;
+	border-bottom: 1px solid #494949;
+}
+
+#header a {
+	color: #E6E6E6;
+}
+
+.header_item {
+	color: #E6E6E6;
+	padding-top: 10px;
+	padding-bottom: 5px;
+	
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.current_header_item {
+	padding-top: 10px;
+	padding-bottom: 8px;
+	-webkit-border-bottom-right-radius: 3px;
+	-webkit-border-bottom-left-radius: 3px;
+	-moz-border-radius-bottomright: 3px;
+	-moz-border-radius-bottomleft: 3px;
+	border-bottom-right-radius: 3px;
+	border-bottom-left-radius: 3px;
+	
+	-moz-box-shadow: 0px 0px 6px #1e1e1e; 
+	-webkit-box-shadow: 0px 0px 6px #1e1e1e; 
+	box-shadow: 0px 0px 6px #1e1e1e;
+	
+	padding-left: 10px;
+	padding-right: 10px;
+	background-color: #1e1e1e;
+	color: white;
+	behavior: url("/sfeMovie-v1.0/css/PIE.htc");
+}
+
+.current_header_item a {
+	color: white;
+}
+
+/* ====================== Page footer ====================== */
+
+.footer {
+	background-color: #353535;
+	color: #ddd;
+	border-top: solid 1px #2F65D0;
+	
+	/*padding: 5px;*/
+	line-height: 24px;
+	padding-left: 20px;
+	max-width: 100%;
+}
+
+.footer a {
+	color: white;
+}
+
