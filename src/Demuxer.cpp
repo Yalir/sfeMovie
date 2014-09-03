@@ -168,7 +168,7 @@ namespace sfe {
 						 */
 						
 					default:
-						m_ignoredStreams[ffstream->index] = std::string(std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
+						m_ignoredStreams[ffstream->index] = std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
 						sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
 						break;
 				}
@@ -220,18 +220,20 @@ namespace sfe {
 		return streamSet;
 	}
 	
-	std::vector<StreamDescriptor> Demuxer::computeStreamDescriptors() const
+	Streams Demuxer::computeStreamDescriptors(MediaType type) const
 	{
-		std::vector<StreamDescriptor> entries;
+		Streams entries;
 		std::set<Stream*> streamSet;
 		std::map<int, Stream*>::const_iterator it;
 		
 		for (it = m_streams.begin(); it != m_streams.end(); it++) {
-			StreamDescriptor entry;
-			entry.index = it->first;
-			entry.language = it->second->getLanguage();
-			entry.type = it->second->getStreamKind();
-			entries.push_back(entry);
+            if (it->second->getStreamKind() == type) {
+                StreamDescriptor entry;
+                entry.type = type;
+                entry.identifier = it->first;
+                entry.language = it->second->getLanguage();
+                entries.push_back(entry);
+            }
 		}
 		
 		return entries;
@@ -240,7 +242,9 @@ namespace sfe {
 	void Demuxer::selectAudioStream(AudioStream* stream)
 	{
 		Status oldStatus = m_timer.getStatus();
-		
+		CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
+              "the movie playback isn't supported yet");
+        
 		if (oldStatus == Playing)
 			m_timer.pause();
 		
@@ -274,6 +278,8 @@ namespace sfe {
 	void Demuxer::selectVideoStream(VideoStream* stream)
 	{
 		Status oldStatus = m_timer.getStatus();
+        CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
+              "the movie playback isn't supported yet");
 		
 		if (oldStatus == Playing)
 			m_timer.pause();
@@ -330,7 +336,6 @@ namespace sfe {
 		std::map<int, Stream*> streams = getStreams();
 		std::map<int, Stream*>::iterator it;
 		
-//		std::cout << "Timer: " << m_timer.getOffset().asMilliseconds() << " ms" << std::endl;
 		for (it = streams.begin();it != streams.end(); it++) {
 			it->second->update();
 		}

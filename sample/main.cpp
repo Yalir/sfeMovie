@@ -83,11 +83,17 @@ void printMovieInfo(const sfe::Movie& movie)
 	std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
 	std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
 	
-	const std::vector<sfe::StreamDescriptor>& streams = movie.getStreams();
-	std::cout << streams.size() << " streams found in the media" << std::endl;
+	const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
+    const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
+    
+	std::cout << videoStreams.size() + audioStreams.size() << " streams found in the media" << std::endl;
 	
-	for (std::vector<sfe::StreamDescriptor>::const_iterator it = streams.begin(); it != streams.end(); ++it) {
-		std::cout << " #" << it->index << " : " << MediaTypeToString(it->type);
+    for (sfe::Streams::const_iterator it = videoStreams.begin(); it != videoStreams.end(); ++it) {
+        std::cout << " #" << it->identifier << " : " << MediaTypeToString(it->type) << std::endl;
+    }
+    
+    for (sfe::Streams::const_iterator it = audioStreams.begin(); it != audioStreams.end(); ++it) {
+		std::cout << " #" << it->identifier << " : " << MediaTypeToString(it->type);
 		
 		if (!it->language.empty())
 			std::cout << " (language: " << it->language << ")";
@@ -122,10 +128,16 @@ int main(int argc, const char *argv[])
 	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player",
 							sf::Style::Close | sf::Style::Resize);
 	movie.fit(0, 0, width, height);
-	
+    printMovieInfo(movie);
+    
+    // Allow stream selection
+    const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
+    const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
+    int selectedVideoStreamId = 0;
+    int selectedAudioStreamId = 0;
+    
 	// Scale movie to the window drawing area and enable VSync
 	window.setFramerateLimit(60);
-	movie.play();
 
 	while (window.isOpen())
 	{
@@ -159,7 +171,23 @@ int main(int argc, const char *argv[])
 					movie.fit(0, 0, window.getSize().x, window.getSize().y);
 				} else if (ev.key.code == sf::Keyboard::P) {
 					printMovieInfo(movie);
-				}
+				} else if (ev.key.code == sf::Keyboard::V) {
+                    if (videoStreams.size() > 1) {
+                        selectedVideoStreamId++;
+                        selectedVideoStreamId %= videoStreams.size();
+                        movie.selectStream(videoStreams[selectedVideoStreamId]);
+                        std::cout << "Selected video stream #" << videoStreams[selectedVideoStreamId].identifier
+                        << std::endl;
+                    }
+                } else if (ev.key.code == sf::Keyboard::A) {
+                    if (audioStreams.size() > 1) {
+                        selectedAudioStreamId++;
+                        selectedAudioStreamId %= audioStreams.size();
+                        movie.selectStream(audioStreams[selectedAudioStreamId]);
+                        std::cout << "Selected audio stream #" << audioStreams[selectedAudioStreamId].identifier
+                        << std::endl;
+                    }
+                }
 			} else if (ev.type == sf::Event::MouseWheelMoved) {
 				float volume = movie.getVolume() + 10 * ev.mouseWheel.delta;
 				volume = std::min(volume, 100.f);
@@ -167,7 +195,7 @@ int main(int argc, const char *argv[])
 				movie.setVolume(volume);
 			} else if (ev.type == sf::Event::Resized) {
 				movie.fit(0, 0, window.getSize().x, window.getSize().y);
-            window.setView(sf::View(sf::FloatRect(0, 0, window.getSize().x, window.getSize().y)));
+                window.setView(sf::View(sf::FloatRect(0, 0, window.getSize().x, window.getSize().y)));
 			}
 		}
 		
