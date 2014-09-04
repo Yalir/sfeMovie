@@ -43,10 +43,10 @@ namespace sfe {
 	/** Gives the string representing the given @a type
 	 *
 	 * Conversion is done as follow:
-	 * MediaTypeAudio		-> audio
-	 * MediaTypeSubtitle	-> subtitle
-	 * MediaTypeVideo		-> video
-	 * MediaTypeUnknown	-> unknown
+	 * Audio		-> audio
+	 * Subtitle	-> subtitle
+	 * Video		-> video
+	 * Unknown	-> unknown
 	 *
 	 * @param type the media type to stringify
 	 * @return the stringified media type

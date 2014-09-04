@@ -61,6 +61,11 @@ namespace sfe {
 		// Load the video codec
 		err = avcodec_open2(m_codecCtx, m_codec, NULL);
 		CHECK0(err, "Stream() - unable to load decoder for codec " + std::string(avcodec_get_name(m_codecCtx->codec_id)));
+		
+		AVDictionaryEntry* entry = av_dict_get(m_stream->metadata, "language", NULL, 0);
+		if (entry) {
+			m_language = entry->value;
+		}
 	}
 	
 	Stream::~Stream()
@@ -143,12 +148,17 @@ namespace sfe {
 	
 	MediaType Stream::getStreamKind() const
 	{
-		return MediaTypeUnknown;
+		return Unknown;
 	}
 	
 	Status Stream::getStatus() const
 	{
 		return m_status;
+	}
+	
+	std::string Stream::getLanguage() const
+	{
+		return m_language;
 	}
 	
 	sf::Time Stream::computePosition()

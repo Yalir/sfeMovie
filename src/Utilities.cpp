@@ -54,10 +54,10 @@ namespace sfe {
 	std::string MediaTypeToString(MediaType type)
 	{
 		switch (type) {
-			case MediaTypeAudio:		return "audio";
-			case MediaTypeSubtitle:	return "subtitle";
-			case MediaTypeVideo:		return "video";
-			case MediaTypeUnknown:	return "unknown";
+			case Audio:		return "audio";
+			case Subtitle:	return "subtitle";
+			case Video:		return "video";
+			case Unknown:	return "unknown";
 			default:
 				CHECK(0, "inconcistency");
 		}

@@ -53,10 +53,10 @@ namespace sfe {
 	static MediaType AVMediaTypeToMediaType(AVMediaType type)
 	{
 		switch (type) {
-			case AVMEDIA_TYPE_AUDIO:	return MediaTypeAudio;
-			case AVMEDIA_TYPE_SUBTITLE:	return MediaTypeSubtitle;
-			case AVMEDIA_TYPE_VIDEO:	return MediaTypeVideo;
-			default:					return MediaTypeUnknown;
+			case AVMEDIA_TYPE_AUDIO:	return Audio;
+			case AVMEDIA_TYPE_SUBTITLE:	return Subtitle;
+			case AVMEDIA_TYPE_VIDEO:	return Video;
+			default:					return Unknown;
 		}
 	}
 	
@@ -136,7 +136,7 @@ namespace sfe {
 		}
 		
 		// Find all interesting streams
-		for (int i = 0; i < m_formatCtx->nb_streams; i++) {
+		for (unsigned int i = 0; i < m_formatCtx->nb_streams; i++) {
 			AVStream* ffstream = m_formatCtx->streams[i];
 			
 			try {
@@ -162,13 +162,13 @@ namespace sfe {
 						break;
 						
 						/** TODO
-						 case AVMediaTypeSubtitle:
+						 case AVMEDIA_TYPE_SUBTITLE:
 						 m_streams.push_back(new SubtitleStream(ffstream));
 						 break;
 						 */
 						
 					default:
-						m_ignoredStreams[ffstream->index] = std::string(std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
+						m_ignoredStreams[ffstream->index] = std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
 						sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
 						break;
 				}
@@ -220,10 +220,31 @@ namespace sfe {
 		return streamSet;
 	}
 	
+	Streams Demuxer::computeStreamDescriptors(MediaType type) const
+	{
+		Streams entries;
+		std::set<Stream*> streamSet;
+		std::map<int, Stream*>::const_iterator it;
+		
+		for (it = m_streams.begin(); it != m_streams.end(); it++) {
+            if (it->second->getStreamKind() == type) {
+                StreamDescriptor entry;
+                entry.type = type;
+                entry.identifier = it->first;
+                entry.language = it->second->getLanguage();
+                entries.push_back(entry);
+            }
+		}
+		
+		return entries;
+	}
+	
 	void Demuxer::selectAudioStream(AudioStream* stream)
 	{
 		Status oldStatus = m_timer.getStatus();
-		
+		CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
+              "the movie playback isn't supported yet");
+        
 		if (oldStatus == Playing)
 			m_timer.pause();
 		
@@ -244,7 +265,7 @@ namespace sfe {
 	
 	void Demuxer::selectFirstAudioStream()
 	{
-		std::set<Stream*> audioStreams = getStreamsOfType(MediaTypeAudio);
+		std::set<Stream*> audioStreams = getStreamsOfType(Audio);
 		if (audioStreams.size())
 			selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
 	}
@@ -257,6 +278,8 @@ namespace sfe {
 	void Demuxer::selectVideoStream(VideoStream* stream)
 	{
 		Status oldStatus = m_timer.getStatus();
+        CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
+              "the movie playback isn't supported yet");
 		
 		if (oldStatus == Playing)
 			m_timer.pause();
@@ -278,7 +301,7 @@ namespace sfe {
 	
 	void Demuxer::selectFirstVideoStream()
 	{
-		std::set<Stream*> videoStreams = getStreamsOfType(MediaTypeVideo);
+		std::set<Stream*> videoStreams = getStreamsOfType(Video);
 		if (videoStreams.size())
 			selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
 	}
@@ -313,7 +336,6 @@ namespace sfe {
 		std::map<int, Stream*> streams = getStreams();
 		std::map<int, Stream*>::iterator it;
 		
-//		std::cout << "Timer: " << m_timer.getOffset().asMilliseconds() << " ms" << std::endl;
 		for (it = streams.begin();it != streams.end(); it++) {
 			it->second->update();
 		}

@@ -24,6 +24,7 @@
 
 #include "Timer.hpp"
 #include "Macros.hpp"
+#include "Log.hpp"
 
 namespace sfe {
 	Timer::Observer::Observer()
@@ -82,9 +83,12 @@ namespace sfe {
 	void Timer::removeObserver(Observer& anObserver)
 	{
 		std::set<Observer*>::iterator it = m_observers.find(&anObserver);
-		CHECK(it != m_observers.end(), "Timer::removeObserver() - cannot remove an unregistered observer");
 		
-		m_observers.erase(it);
+		if (it == m_observers.end()) {
+			sfeLogWarning("Timer::removeObserver() - removing an unregistered observer. Ignored.");
+		} else {
+			m_observers.erase(it);
+		}
 	}
 	
 	void Timer::play()

@@ -13,8 +13,9 @@
  *  - Escape key to exit
  *  - Space key to play/pause the movie playback
  *  - S key to stop and go back to the beginning of the movie
- *  - R key to restart playing from the beginning of the movie
  *  - F key to toggle between windowed and fullscreen mode
+ *  - A key to select the next audio stream
+ *  - V key to select the next video stream
  */
 
 void my_pause()
@@ -27,10 +28,21 @@ void my_pause()
 std::string StatusToString(sfe::Status status)
 {
 	switch (status) {
-		case sfe::Stopped: return "Stopped"; break;
-		case sfe::Paused: return "Paused"; break;
-		case sfe::Playing: return "Playing"; break;
-		default: return "unknown status"; break;
+		case sfe::Stopped:  return "Stopped";
+		case sfe::Paused:   return "Paused";
+		case sfe::Playing:  return "Playing";
+		default:            return "unknown status";
+	}
+}
+
+std::string MediaTypeToString(sfe::MediaType type)
+{
+	switch (type) {
+		case sfe::Audio:    return "audio";
+		case sfe::Subtitle:	return "subtitle";
+		case sfe::Video:	return "video";
+		case sfe::Unknown:	return "unknown";
+		default:			return "(null)";
 	}
 }
 
@@ -61,6 +73,35 @@ void drawControls(sf::RenderWindow& window, const sfe::Movie& movie)
 	window.draw(progress);
 }
 
+void printMovieInfo(const sfe::Movie& movie)
+{
+	std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
+	std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
+	std::cout << "Duration: " << movie.getDuration().asSeconds() << "s" << std::endl;
+	std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
+	std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
+	std::cout << "Volume: " << movie.getVolume() << std::endl;
+	std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
+	std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
+	
+	const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
+    const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
+    
+	std::cout << videoStreams.size() + audioStreams.size() << " streams found in the media" << std::endl;
+	
+    for (sfe::Streams::const_iterator it = videoStreams.begin(); it != videoStreams.end(); ++it) {
+        std::cout << " #" << it->identifier << " : " << MediaTypeToString(it->type) << std::endl;
+    }
+    
+    for (sfe::Streams::const_iterator it = audioStreams.begin(); it != audioStreams.end(); ++it) {
+		std::cout << " #" << it->identifier << " : " << MediaTypeToString(it->type);
+		
+		if (!it->language.empty())
+			std::cout << " (language: " << it->language << ")";
+		std::cout << std::endl;
+	}
+}
+
 int main(int argc, const char *argv[])
 {
 	if (argc < 2)
@@ -80,16 +121,25 @@ int main(int argc, const char *argv[])
 	}
 	
 	bool fullscreen = false;
-	sf::VideoMode mode = sf::VideoMode::getDesktopMode();
-	int width = std::min((int)mode.width, movie.getSize().x);
-	int height = std::min((int)mode.height, movie.getSize().y);
+	sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+	int width = std::min((int)desktopMode.width, movie.getSize().x);
+	int height = std::min((int)desktopMode.height, movie.getSize().y);
 	
 	// Create window
-	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player",
+							sf::Style::Close | sf::Style::Resize);
 	movie.fit(0, 0, width, height);
-	
+    printMovieInfo(movie);
+    
+    // Allow stream selection
+    const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
+    const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
+    int selectedVideoStreamId = 0;
+    int selectedAudioStreamId = 0;
+    
 	// Scale movie to the window drawing area and enable VSync
 	window.setFramerateLimit(60);
+	window.setVerticalSyncEnabled(true);
 	movie.play();
 
 	while (window.isOpen())
@@ -112,25 +162,45 @@ int main(int argc, const char *argv[])
 					} else {
 						movie.play();
 					}
+				} else if (ev.key.code == sf::Keyboard::S) {
+					movie.stop();
 				} else if (ev.key.code == sf::Keyboard::F) {
 					fullscreen = !fullscreen;
-					window.create(sf::VideoMode(width, height), "sfeMovie Player", fullscreen ? sf::Style::Fullscreen : sf::Style::Close);
+					
+					if (fullscreen)
+						window.create(desktopMode, "sfeMovie Player", sf::Style::Fullscreen);
+					else
+						window.create(sf::VideoMode(width, height), "sfeMovie Player",
+									  sf::Style::Close | sf::Style::Resize);
+					
 					movie.fit(0, 0, window.getSize().x, window.getSize().y);
 				} else if (ev.key.code == sf::Keyboard::P) {
-					std::cout << "Status: " << StatusToString(movie.getStatus()) << std::endl;
-					std::cout << "Position: " << movie.getPlayingOffset().asSeconds() << "s" << std::endl;
-					std::cout << "Duration: " << movie.getDuration().asSeconds() << "s" << std::endl;
-					std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
-					std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
-					std::cout << "Volume: " << movie.getVolume() << std::endl;
-					std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
-					std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
-				}
+					printMovieInfo(movie);
+				} else if (ev.key.code == sf::Keyboard::V) {
+                    if (videoStreams.size() > 1) {
+                        selectedVideoStreamId++;
+                        selectedVideoStreamId %= videoStreams.size();
+                        movie.selectStream(videoStreams[selectedVideoStreamId]);
+                        std::cout << "Selected video stream #" << videoStreams[selectedVideoStreamId].identifier
+                        << std::endl;
+                    }
+                } else if (ev.key.code == sf::Keyboard::A) {
+                    if (audioStreams.size() > 1) {
+                        selectedAudioStreamId++;
+                        selectedAudioStreamId %= audioStreams.size();
+                        movie.selectStream(audioStreams[selectedAudioStreamId]);
+                        std::cout << "Selected audio stream #" << audioStreams[selectedAudioStreamId].identifier
+                        << std::endl;
+                    }
+                }
 			} else if (ev.type == sf::Event::MouseWheelMoved) {
 				float volume = movie.getVolume() + 10 * ev.mouseWheel.delta;
 				volume = std::min(volume, 100.f);
 				volume = std::max(volume, 0.f);
 				movie.setVolume(volume);
+			} else if (ev.type == sf::Event::Resized) {
+				movie.fit(0, 0, window.getSize().x, window.getSize().y);
+                window.setView(sf::View(sf::FloatRect(0, 0, window.getSize().x, window.getSize().y)));
 			}
 		}
 		

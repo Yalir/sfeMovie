@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 		sfe::Stream* stream = it->second;
 		
 		switch (stream->getStreamKind()) {
-			case sfe::MediaTypeVideo:
+			case sfe::Video:
 				videoStreamCount++;
 				break;
-			case sfe::MediaTypeAudio:
+			case sfe::Audio:
 				audioStreamCount++;
 				break;
 			default:
@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* videoStream = *demuxer->getStreamsOfType(sfe::MediaTypeVideo).begin();
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MediaTypeAudio).begin();
+	sfe::Stream* videoStream = *demuxer->getStreamsOfType(sfe::Video).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(videoStream->getStatus() == sfe::Stopped);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MediaTypeAudio).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MediaTypeAudio).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(DemuxerShortFLACTest)
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MediaTypeAudio).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
