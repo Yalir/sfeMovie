@@ -46,7 +46,7 @@ else:
 command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders]
 
 if platform.system() == 'Windows':
-	command += {r'-DSFML_ROOT="C:\Program Files (x86)\SFML-vs12"'}
+	os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
 
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
