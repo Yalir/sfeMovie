@@ -24,7 +24,7 @@ print 'Platform is: {}'.format(platform.system())
 print 'Working directory is: {}'.format(os.getcwd())
 
 # Check environment
-if platform.system() != "Windows":
+if platform.system() != 'Windows':
 	cmakePath = subprocess.check_output(["which", "cmake"])
 	if not cmakePath:
 		raise Exception('CMake not found')
@@ -44,6 +44,10 @@ else:
 
 # Configure
 command = ["cmake", args.sources, "-DENABLED_DECODERS=" + decoders]
+
+if platform.system() == 'Windows':
+	command += {'-DSFML_ROOT="C:\Program Files (x86)\SFML-vs12"'}
+
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
 
