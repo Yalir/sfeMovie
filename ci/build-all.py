@@ -2,18 +2,33 @@
 # -*- coding: utf-8 -*-
 
 import os
+import platform
 import subprocess
 import argparse
 
+# Read arguments
 parser = argparse.ArgumentParser(description='Run this script to launch the build process')
 parser.add_argument('--sources', help='Full path to the project sources', required=True)
 parser.add_argument('--config', choices={'Debug', 'Release'}, required=True)
 parser.add_argument('--decoders', choices={'Free', 'All'}, default='Free')
 args = parser.parse_args()
 
-print 'Launching build with PATH: {}'.format(os.environ['PATH'])
-print 'Parameters are: {}'.format(args)
+# Setup environment
+if platform.system() == "Darwin":
+	os.environ['PATH'] += ":/usr/local/bin"
 
+# Display environment
+print 'PATH is: {}'.format(os.environ['PATH'])
+print 'Parameters are: {}'.format(args)
+print 'Platform is: {}'.format(platform.system())
+
+# Check environment
+if platform.system() != "Windows":
+	cmakePath = subprocess.check_output(["which", "cmake"])
+	if not cmakePath:
+		raise Exception('CMake not found')
+
+# Make build directory
 buildDirectory = os.path.join(args.sources, "ci-output")
 if not os.path.exists(buildDirectory):
     os.makedirs(buildDirectory)
