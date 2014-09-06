@@ -21,6 +21,7 @@ if platform.system() == "Darwin":
 print 'PATH is: {}'.format(os.environ['PATH'])
 print 'Parameters are: {}'.format(args)
 print 'Platform is: {}'.format(platform.system())
+print 'Working directory is: {}'.format(os.getcwd())
 
 # Check environment
 if platform.system() != "Windows":
