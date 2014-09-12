@@ -40,6 +40,8 @@ extern "C" {
 
 
 namespace sfe {
+	const int RGBASize = 4;
+
 	SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer,Delegate& delegate) :
 		Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
 	{
@@ -67,34 +69,33 @@ namespace sfe {
 			}
 		}
 
-		for (uint32_t i = 0; i < m_inactive.size(); ++i)
+		if(m_inactive.size() > 0)
 		{
 			//activate subtitle
-			if (m_inactive[i].pts + m_inactive[i].sub.start_display_time < m_timer.getOffset().asMilliseconds())
+			if (m_inactive.front()->start < m_timer.getOffset())
 			{
-				SubImage& c = m_inactive[i];	
-				c.out = SubtitleToSprites(&c.sub);
-				m_delegate.didUpdateSubtitle(*this, c.out);
-				m_active.push_back(c);
-				m_inactive.erase(m_inactive.begin() + i);
-				
-				
+				Subtitle* iter = m_inactive.front();
+				m_delegate.didUpdateSubtitle(*this, iter->sprites);
+				m_active.push_back(iter);
+				m_inactive.pop_front();
 			}
 		}
+					
 
-		for (uint32_t i = 0; i < m_active.size(); ++i)
+		if (m_active.size()>0)
 		{
-			if (m_active[i].pts + m_active[i].sub.end_display_time < m_timer.getOffset().asMilliseconds())
+			//remove subtitle
+			if (m_active.front()->end < m_timer.getOffset())
 			{
-				m_active.erase(m_active.begin() + i);
+				m_active.pop_front();
+				//m_active.erase(m_active.begin() + i);
 				if (m_active.size() == 0)
 				{
 					std::vector<sf::Sprite> empty;
 					m_delegate.didUpdateSubtitle(*this, empty);
-					m_textures.clear();
 				}
 			}
-		}
+		}			
 	}
 
 	bool SubtitleStream::onGetData()
@@ -119,11 +120,8 @@ namespace sfe {
 					pts =  packet->pts;
 
 				if (gotSub && pts) {
-					SubImage subimg;
-					subimg.sub = sub;
-					subimg.pts = pts;
-					
-					m_inactive.push_back(subimg);
+					Subtitle* sfeSub = new Subtitle(&sub);
+					m_inactive.push_back(sfeSub);
 				}
 
 				if (needsMoreDecoding) {
@@ -144,25 +142,27 @@ namespace sfe {
 		return static_cast<bool>(goOn);
 	}
 
-	std::vector<sf::Sprite> SubtitleStream::SubtitleToSprites(AVSubtitle* sub)
+
+	SubtitleStream::Subtitle::Subtitle(AVSubtitle* sub)
 	{
-		std::vector<sf::Sprite> sprites;
+		start = sf::Time(sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts));
+		end = sf::Time(sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts));
 
 		for (int i = 0; i < sub->num_rects; ++i)
 		{
-			sf::Sprite sprite;
+			sprites.push_back(sf::Sprite());
+			sf::Sprite& sprite = sprites.back();
 			AVSubtitleRect* cRect = sub->rects[i];
 			sprite.setOrigin(sf::Vector2f(cRect->x, cRect->y));
 			sprite.setPosition(sf::Vector2f(cRect->x * 2, cRect->y * 1.75f));
 			uint32_t* palette = new uint32_t[cRect->nb_colors];
 			for (int j = 0; j < cRect->nb_colors; j++)
 			{
-				palette[j] = *(uint32_t*)&cRect->pict.data[1][j * kRgbaSize];
+				palette[j] = *(uint32_t*)&cRect->pict.data[1][j * RGBASize];
 			}
-			
 
-			m_textures.push_back(sf::Texture());
-			sf::Texture& tex = m_textures.back();
+			textures.push_back(sf::Texture());
+			sf::Texture& tex = textures.back();
 			tex.create(cRect->w, cRect->h);
 
 			uint32_t* data = new uint32_t[cRect->w* sub->rects[i]->h];
@@ -172,11 +172,9 @@ namespace sfe {
 			}
 			tex.update((uint8_t*)data);
 			sprite.setTexture(tex);
-			sprites.push_back(sprite);
+			
 			delete[] data;
 			delete[] palette;
 		}
-
-		return sprites;
 	}
 }

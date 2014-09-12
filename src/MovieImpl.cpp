@@ -344,6 +344,5 @@ namespace sfe {
 	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subs)
 	{
 		m_subtitles = subs;
-		int a = 0;
 	}
 }

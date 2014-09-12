@@ -35,9 +35,6 @@
 
 namespace sfe
 {
-	namespace{
-		const int kRgbaSize = 4;
-	}
 
 	class SubtitleStream : public Stream{
 	public:
@@ -67,18 +64,19 @@ namespace sfe
 	private:
 		/** The struct we use to store our subtitles
 		*/
-		struct SubImage
+		struct Subtitle
 		{
-			std::vector<sf::Sprite> out;
-			int64_t pts;	
-			AVSubtitle sub;
+			std::vector<sf::Sprite> sprites;
+			std::list<sf::Texture> textures;
+			//when will it appear (absolut)
+			sf::Time start;
+			//when will it disappear (absolut)
+			sf::Time end;
+			//Create our subtitle from an AVSubtitle
+			Subtitle(AVSubtitle* sub);
 		};
 
-		/**Convert an AVSubtitle to an RGBA image and set the position of the subtitle in the sprite
-		*
-		* @return A vector of sprites which will be rendered as the subtitles
-		*/
-		std::vector<sf::Sprite>  SubtitleToSprites(AVSubtitle* sub);
+
 
 		/** Decode the packages that were send to the stream by the demuxer
 		*
@@ -87,10 +85,9 @@ namespace sfe
 		bool onGetData();
 
 		Delegate& m_delegate;
-		std::list<sf::Texture> m_textures;
-		sf::Text m_subtext;
-		std::vector<SubImage> m_inactive;
-		std::vector<SubImage> m_active;
+		
+		std::list<Subtitle*> m_inactive;
+		std::list<Subtitle*> m_active;
 	};
 
 };
