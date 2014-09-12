@@ -16,7 +16,7 @@ args = parser.parse_args()
 
 # Setup environment
 if platform.system() == "Darwin":
-	os.environ['PATH'] += ":/usr/local/bin"
+    os.environ['PATH'] += ":/usr/local/bin"
 
 # Display environment
 print 'PATH is: {}'.format(os.environ['PATH'])
@@ -26,9 +26,9 @@ print 'Working directory is: {}'.format(os.getcwd())
 
 # Check environment
 if platform.system() != 'Windows':
-	cmakePath = subprocess.check_output(["which", "cmake"])
-	if not cmakePath:
-		raise Exception('CMake not found')
+    cmakePath = subprocess.check_output(["which", "cmake"])
+    if not cmakePath:
+        raise Exception('CMake not found')
 
 # Make build directory
 buildDirectory = os.path.join(args.sources, "ci-output")
@@ -48,13 +48,13 @@ command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders]
 generatorArg = ''
 
 if platform.system() == 'Windows':
-	os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
+    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
 
     if args.compiler != 'Auto':
-    	if args.compiler == 'MinGW':
-    		generatorArg = '-G "MSYS Makefiles"'
-    	elif args.compiler == 'MSVC12':
-    		generatorArg = '-G "Visual Studio 12"'
+        if args.compiler == 'MinGW':
+            generatorArg = '-G "MSYS Makefiles"'
+        elif args.compiler == 'MSVC12':
+            generatorArg = '-G "Visual Studio 12"'
         
 
 print 'Execute: {}'.format(command)
