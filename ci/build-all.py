@@ -51,9 +51,9 @@ if platform.system() == 'Windows':
 
     if args.compiler != 'Auto':
         if args.compiler == 'MinGW':
-            generatorArg = '-G "MSYS Makefiles"'
+            generatorArg = "-GMSYS Makefiles"
         elif args.compiler == 'MSVC12':
-            generatorArg = '-G "Visual Studio 12"'
+            generatorArg = "-GVisual Studio 12"
 
 # Configure
 command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, generatorArg]
