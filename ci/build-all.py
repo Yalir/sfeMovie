@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser(description='Run this script to launch the buil
 parser.add_argument('--sources', help='Full path to the project sources', required=True)
 parser.add_argument('--config', choices={'Debug', 'Release'}, required=True)
 parser.add_argument('--decoders', choices={'Free', 'All'}, default='Free')
+parser.add_argument('--compiler', choices={'Auto', 'MinGW', 'MSVC12'}, default='Auto')
 args = parser.parse_args()
 
 # Setup environment
@@ -44,14 +45,22 @@ else:
 
 # Configure
 command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders]
+generatorArg = ''
 
 if platform.system() == 'Windows':
 	os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
+
+    if args.compiler != 'Auto':
+    	if args.compiler == 'MinGW':
+    		generatorArg = '-G "MSYS Makefiles"'
+    	elif args.compiler == 'MSVC12':
+    		generatorArg = '-G "Visual Studio 12"'
+        
 
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
 
 # Build
-command = ["cmake", "--build", ".", "--config", args.config]
+command = ["cmake", "--build", ".", "--config", args.config, generatorArg]
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
