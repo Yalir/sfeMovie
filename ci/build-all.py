@@ -56,7 +56,10 @@ if platform.system() == 'Windows':
             generatorArg = "-GVisual Studio 12"
 
 # Configure
-command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, generatorArg]
+command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders]
+
+if generatorArg != '':
+	command += {generatorArg}
 
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
