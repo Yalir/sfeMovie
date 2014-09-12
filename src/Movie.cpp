@@ -27,6 +27,14 @@
 
 
 namespace sfe {
+    StreamDescriptor StreamDescriptor::NoSelection(sfe::MediaType type)
+    {
+        StreamDescriptor descriptor;
+        descriptor.type = type;
+        descriptor.identifier = -1;
+        return descriptor;
+    }
+    
 	Movie::Movie() :
 	m_impl(new MovieImpl(*this))
 	{
@@ -43,6 +51,15 @@ namespace sfe {
 		return m_impl->openFromFile(filename);
 	}
 	
+	const Streams& Movie::getStreams(MediaType type) const
+	{
+		return m_impl->getStreams(type);
+	}
+	
+	void Movie::selectStream(const StreamDescriptor& streamDescriptor)
+	{
+		return m_impl->selectStream(streamDescriptor);
+	}
 	
 	void Movie::play()
 	{

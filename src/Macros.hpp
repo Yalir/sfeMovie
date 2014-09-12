@@ -34,6 +34,10 @@ extern "C" {
 #ifndef SFEMOVIE_MACROS_HPP
 #define SFEMOVIE_MACROS_HPP
 
+#ifndef NDEBUG
+#define DEBUG 1
+#endif
+
 #define CHECK(value, message) if (!(value)) throw std::runtime_error(message);
 #define CHECK0(value, message) CHECK(value == 0, message)
 #define ONCE(sequence)\
