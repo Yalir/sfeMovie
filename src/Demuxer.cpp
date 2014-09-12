@@ -333,7 +333,7 @@ namespace sfe {
 
 	void Demuxer::selectFirstSubtitleStream()
 	{
-		std::set<Stream*> videoStreams = getStreamsOfType(MEDIA_TYPE_SUBTITLE);
+		std::set<Stream*> videoStreams = getStreamsOfType(Subtitle);
 		if (videoStreams.size())
 			selectSubtitleStream(dynamic_cast<SubtitleStream*>(*videoStreams.begin()));
 	}

@@ -50,6 +50,24 @@ namespace sfe {
 		bool openFromFile(const std::string& filename);
 		
 		
+		/** Return a description of all the streams of the given type contained in the opened media
+		*
+		* @param type the stream type (audio, video...) to return
+		*/
+		const Streams& getStreams(MediaType type) const;
+
+		/** Request activation of the given stream. In case another stream of the same kind is already active,
+		* it is deactivated.
+		*
+		* @note When opening a new media file, the default behaviour is to automatically activate the first
+		* found audio and video streams
+		*
+		* @warning This method can only be used when the movie is stopped
+		*
+		* @param streamDescriptor the descriptor of the stream to activate
+		*/
+		void selectStream(const StreamDescriptor& streamDescriptor);
+
 		/** Start or resume playing the media playback
 		 *
 		 * This function starts the stream if it was stopped, resumes it if it was paused,
@@ -186,6 +204,9 @@ namespace sfe {
 		Timer* m_timer;
 		sf::Sprite m_sprite;
 		std::vector<sf::Sprite> m_subtitles;
+		Streams m_audioStreamsDesc;
+		Streams m_videoStreamsDesc;
+		Streams m_subtitleStreamsDesc;
 	};
 	
 }

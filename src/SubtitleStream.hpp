@@ -64,7 +64,7 @@ namespace sfe
 	private:
 		/** The struct we use to store our subtitles
 		*/
-		struct Subtitle
+		struct SubtitleData
 		{
 			std::vector<sf::Sprite> sprites;
 			std::list<sf::Texture> textures;
@@ -73,7 +73,7 @@ namespace sfe
 			//when will it disappear (absolut)
 			sf::Time end;
 			//Create our subtitle from an AVSubtitle
-			Subtitle(AVSubtitle* sub);
+			SubtitleData(AVSubtitle* sub);
 		};
 
 
@@ -86,8 +86,8 @@ namespace sfe
 
 		Delegate& m_delegate;
 		
-		std::list<Subtitle*> m_inactive;
-		std::list<Subtitle*> m_active;
+		std::list<SubtitleData*> m_inactive;
+		std::list<SubtitleData*> m_active;
 	};
 
 };

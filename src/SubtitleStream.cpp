@@ -56,7 +56,7 @@ namespace sfe {
 
 	MediaType SubtitleStream::getStreamKind() const
 	{
-		return MEDIA_TYPE_SUBTITLE;
+		return Subtitle;
 	}
 
 	void SubtitleStream::update()
@@ -74,7 +74,7 @@ namespace sfe {
 			//activate subtitle
 			if (m_inactive.front()->start < m_timer.getOffset())
 			{
-				Subtitle* iter = m_inactive.front();
+				SubtitleData* iter = m_inactive.front();
 				m_delegate.didUpdateSubtitle(*this, iter->sprites);
 				m_active.push_back(iter);
 				m_inactive.pop_front();
@@ -120,7 +120,7 @@ namespace sfe {
 					pts =  packet->pts;
 
 				if (gotSub && pts) {
-					Subtitle* sfeSub = new Subtitle(&sub);
+					SubtitleData* sfeSub = new SubtitleData(&sub);
 					m_inactive.push_back(sfeSub);
 				}
 
@@ -143,7 +143,7 @@ namespace sfe {
 	}
 
 
-	SubtitleStream::Subtitle::Subtitle(AVSubtitle* sub)
+	SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub)
 	{
 		start = sf::Time(sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts));
 		end = sf::Time(sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts));
