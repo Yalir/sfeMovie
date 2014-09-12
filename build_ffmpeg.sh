@@ -170,7 +170,14 @@ function build_ffmpeg()
 		  then
 		    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		else
-			find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -vR '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+			if [ "${os}" == "windows" ] ; then
+				find "${ffmpeg_objects_dir}" -name "*.dll.a" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+				check_err
+				find "${ffmpeg_objects_dir}" -name "*.dll" -exec cp -v '{}' "${ffmpeg_binaries_dir}/bin" ';'
+				check_err
+			else
+				find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -vR '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+			fi
 		fi
 		check_err
 
