@@ -87,7 +87,7 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 	else()
 		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
-		find_library(LIBZ z PATHS "${CMAKE_SOURCE_DIR}/deps/windows-binaries/gcc")
+		find_library(LIBZ z PATHS "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
 
 		if (NOT LIBZ)
 			message(FATAL_ERROR "Could not find required library libz")
