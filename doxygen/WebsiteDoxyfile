@@ -897,7 +897,7 @@ HTML_STYLESHEET        = "@DOXYGEN_INPUT_DIR@/doxygen/doxygen.css"
 # files. In the HTML_STYLESHEET file, use the file name only. Also note that 
 # the files will be copied as-is; there are no commands or markers available.
 
-HTML_EXTRA_FILES       = 
+HTML_EXTRA_FILES       = "@DOXYGEN_INPUT_DIR@/doxygen/footer_helper.css" "@DOXYGEN_INPUT_DIR@/doxygen/main.css" "@DOXYGEN_INPUT_DIR@/doxygen/main_additions.css"
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. 
 # Doxygen will adjust the colors in the stylesheet and background images 
