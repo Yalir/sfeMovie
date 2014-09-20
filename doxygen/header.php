@@ -4,12 +4,12 @@
    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" >
-	<?php include("../html_head.php"); ?>
+	<?php include("../../html_head.php"); ?>
 	<head><link rel="stylesheet" href="doxygen.css" /></head>
 	<body>
 		<div class="wrapper">
 			<?php
-			include("../head.php");
+			include("../../head.php");
 			display_head("documentation", "..");
 			?>
 	       	
