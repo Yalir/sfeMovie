@@ -24,6 +24,8 @@ if(BUILD_DOC)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/main.css ${DOXYGEN_OUTPUT_DIR}/main.css COPYONLY)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.php ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.php ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
+	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.html ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
+	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.html ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
 
 	# target setup
 	add_custom_target(Doxygen-local ALL
@@ -35,11 +37,6 @@ if(BUILD_DOC)
 	# configure the source LocalDoxyfile by copying it and replacing all @variables@
 	set(DOXYGEN_CONFIGURED_INPUT ${DOXYGEN_OUTPUT_DIR}/WebsiteDoxyfile)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/WebsiteDoxyfile ${DOXYGEN_CONFIGURED_INPUT} @ONLY)
-
-	# copy the files needed by the documentation
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/doxygen.css ${DOXYGEN_OUTPUT_DIR}/doxygen.css COPYONLY)
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.php ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.php ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
 
 	# target setup
 	add_custom_target(Doxygen-website ALL

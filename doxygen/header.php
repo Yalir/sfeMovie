@@ -4,8 +4,14 @@
    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" >
-	<?php include("../html_head.php"); ?>
-	<head><link rel="stylesheet" href="doxygen.css" /></head>
+	<head>
+		<title>sfeMovie</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" href="$relpath$main.css" />
+		<link rel="stylesheet" href="$relpath$footer_helper.css" />
+		<link rel="stylesheet" href="$relpath$main_additions.css" />
+		<link rel="stylesheet" href="doxygen.css" />
+	</head>
 	<body>
 		<div class="wrapper">
 			<?php
