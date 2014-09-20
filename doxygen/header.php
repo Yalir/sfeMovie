@@ -7,10 +7,10 @@
 	<head>
 		<title>sfeMovie</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<link rel="stylesheet" href="doxygen.css" />
 		<link rel="stylesheet" href="$relpath$main.css" />
 		<link rel="stylesheet" href="$relpath$footer_helper.css" />
 		<link rel="stylesheet" href="$relpath$main_additions.css" />
+		<link rel="stylesheet" href="doxygen.css" />
 	</head>
 	<body>
 		<div class="wrapper">
