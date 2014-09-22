@@ -58,7 +58,7 @@ if platform.system() == 'Windows':
             os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
 
 # Configure
-command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, "-DBUILD_PACKAGE=TRUE"]
+command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, "-DBUILD_PACKAGE=TRUE", "-DCMAKE_BUILD_TYPE=" + args.config]
 
 if generatorArg != '':
 	command += {generatorArg}

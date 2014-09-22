@@ -163,37 +163,24 @@ else()
 	# ============== Install rules =============
 
 	if (NOT MACOSX)
-		if (MSVC)
+		if (WINDOWS)
 			install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/bin"
-					DESTINATION "${CMAKE_INSTALL_PREFIX}"
+					DESTINATION .
 					COMPONENT binaries
-					FILES_MATCHING PATTERN "*-*")
+					FILES_MATCHING PATTERN "*-*.dll")
 		else()
 			install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/bin"
-					DESTINATION "${CMAKE_INSTALL_PREFIX}"
+					DESTINATION .
 					COMPONENT binaries)
 		endif()
 	endif()
 
-	if (LINUX OR (WINDOWS AND NOT MSVC))
+	if (LINUX)
 		install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/lib"
-				DESTINATION "${CMAKE_INSTALL_PREFIX}"
+				DESTINATION .
 				COMPONENT binaries)
 	endif()
 	# For OS X, the FFmpeg libs are bundled in the sfeMovie framework
-
-	# Linux and MSVC use FFmpeg's dynamic library (instead of static FFmpeg libraries)
-	# if (MSVC OR LINUX)
-	# 	if (MSVC)
-	# 		set (FFMPEG_INSTALL_DIR "bin")
-	# 	else ()
-	# 		set (FFMPEG_INSTALL_DIR "lib")
-	# 	endif()
-
-	#     install(FILES ${FFMPEG_LIBRARIES}
-	#             DESTINATION ${CMAKE_INSTALL_PREFIX}/${FFMPEG_INSTALL_DIR}
-	#             COMPONENT devel)
-	# endif()
 endif()
 
 message(STATUS "Using these FFmpeg libraries:")
