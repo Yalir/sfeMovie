@@ -153,3 +153,8 @@ set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")
 if(BUILD_DOC)
     add_subdirectory(doxygen)
 endif()
+
+set(BUILD_PACKAGE FALSE CACHE BOOL "Set to true to generate a zip file containing all the files required for development with sfeMovie")
+if (BUILD_PACKAGE)
+	include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
+endif()
