@@ -158,8 +158,6 @@ else()
 			OUTPUT ${FFMPEG_LIBRARIES}
 			DEPENDS "${CMAKE_BINARY_DIR}/CMakeCache.txt"
 			COMMAND ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${JOBS} ${ENABLED_DECODERS})
-
-		add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 	endif()
 
 	# ============== Install rules =============

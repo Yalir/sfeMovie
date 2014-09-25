@@ -107,6 +107,7 @@ message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PR
 
 # Define the source files sfe should compile
 add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
+add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 # Define the libraries sfe should link against
 target_link_libraries (${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
