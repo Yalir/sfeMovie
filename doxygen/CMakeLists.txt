@@ -2,13 +2,6 @@
 if(BUILD_DOC)
 	find_package(Doxygen REQUIRED)
 
-	# define the install directory for miscellaneous files
-	if(WINDOWS)
-		set(INSTALL_MISC_DIR .)
-	else()
-		set(INSTALL_MISC_DIR share/sfeMovie)
-	endif()
-
 	# set the input and output documentation paths
 	set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR})
 	set(DOXYGEN_OUTPUT_DIR ${PROJECT_BINARY_DIR}/doxygen)
@@ -47,6 +40,6 @@ if(BUILD_DOC)
 
 	# setup install rules
 	install(DIRECTORY ${DOXYGEN_OUTPUT_DIR}/LocalDocumentation
-		    DESTINATION ${INSTALL_MISC_DIR}/doxygen
+		    DESTINATION ${INSTALL_MISC_DIR}
 		    COMPONENT doxygen)
 endif()
