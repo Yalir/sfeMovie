@@ -2,24 +2,9 @@
 # Setup the paths that will be used for linking against FFmpeg and eventually building it
 if (NOT LINK_AGAINST_INTERNAL_FFMPEG)
 	# Use user's FFmpeg libraries
-	set (FFMPEG_INCLUDE_DIR "" CACHE PATH "Path to the directory containing the FFmpeg headers directories (libavcodec, libavformat, etc ; leave empty to let CMake find them)" CACHE PATH "FFmpeg headers path")
-	set (FFMPEG_LIBRARY_DIR "" CACHE PATH "Path to the directory containing the FFmpeg libraries (leave empty to let CMake find them)")
-	
-	if ("${FFMPEG_INCLUDE_DIR}" STREQUAL "" OR "${FFMPEG_LIBRARY_DIR}" STREQUAL "")
-		find_package (FFMPEG REQUIRED)
-		set(FFMPEG_INCLUDE_DIR "${FFMPEG_LIBAVCODEC_INCLUDE_DIRS}" CACHE PATH "Path to the directory containing the FFmpeg headers directories (libavcodec, libavformat, etc ; leave empty to let CMake find them)" FORCE)
-
-		if ("${FFMPEG_FOUND}" STREQUAL "NO")
-			message(FATAL_ERROR "Could not find a full FFmpeg installation")
-		endif()
-	else()
-		ffmpeg_paths("${FFMPEG_LIBRARY_DIR}")
-		check_ffmpeg_headers(foundHeaders TRUE)
-		check_ffmpeg_libraries(foundLibraries TRUE)
-
-		if (NOT ${foundHeaders} OR NOT ${foundLibraries})
-			message(FATAL_ERROR "Stopping due to previous warnings")
-		endif()
+	find_package(FFMPEG REQUIRED)
+	if ("${FFMPEG_FOUND}" STREQUAL "NO")
+		message(FATAL_ERROR "Could not find a full FFmpeg installation")
 	endif()
 else()
 	# These variables will be used by build_ffmpeg.sh. We don't give them
@@ -41,8 +26,7 @@ else()
 
 	# Use our own FFmpeg libraries
 	set (BUILTIN_FFMPEG_BUILD_DIR "${CMAKE_BINARY_DIR}/FFmpeg-binaries")
-	set (FFMPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/FFmpeg/include" CACHE PATH "FFmpeg headers path")
-	set (FFMPEG_LIBRARY_DIR "${BUILTIN_FFMPEG_BUILD_DIR}")
+	set (FFMPEG_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/FFmpeg/include" CACHE PATH "FFmpeg headers path")
 	ffmpeg_paths("${BUILTIN_FFMPEG_BUILD_DIR}")
 	check_ffmpeg_headers(foundHeaders TRUE)
 	if (NOT ${foundHeaders})
@@ -114,7 +98,7 @@ else()
 
 		if ("${CachedSelectedDecoders}" STREQUAL "${ENABLED_DECODERS}")
 			# Check for FFmpeg files
-			ffmpeg_paths("${FFMPEG_LIBRARY_DIR}")
+			ffmpeg_paths("${BUILTIN_FFMPEG_BUILD_DIR}")
 			check_ffmpeg_headers(foundHeaders FALSE)
 			check_ffmpeg_libraries(foundLibraries FALSE)
 
@@ -161,7 +145,6 @@ else()
 	endif()
 
 	# ============== Install rules =============
-
 	if (NOT MACOSX)
 		if (WINDOWS)
 			install(DIRECTORY "${BUILTIN_FFMPEG_BUILD_DIR}/bin"
