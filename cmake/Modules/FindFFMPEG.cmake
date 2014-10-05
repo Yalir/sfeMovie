@@ -71,8 +71,10 @@ MACRO(FFMPEG_FIND varname shortname headername)
         /Library/Frameworks
         /usr/local/lib
         /usr/local/lib64
+	/usr/local/lib/${CMAKE_LIBRARY_ARCHITECTURE}
         /usr/lib
         /usr/lib64
+	/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
         /sw/lib
         /opt/local/lib
         /opt/csw/lib
