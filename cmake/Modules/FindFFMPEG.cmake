@@ -44,7 +44,6 @@ MACRO(FFMPEG_FIND varname shortname headername)
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG Headers"
     )
-
     FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS ${headername}
         PATHS
         ${FFMPEG_ROOT}/include
@@ -61,7 +60,6 @@ MACRO(FFMPEG_FIND varname shortname headername)
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG Headers"
     )
-
     FIND_LIBRARY(FFMPEG_${varname}_LIBRARIES
         NAMES ${shortname}
         PATHS
@@ -107,6 +105,7 @@ IF(WIN32)
         /opt/csw/include # Blastwave
         /opt/include
         /usr/freeware/include
+        ${CMAKE_SOURCE_DIR}/deps/headers/msvc
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG stdint.h Header"
     )
