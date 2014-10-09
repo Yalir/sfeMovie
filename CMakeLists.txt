@@ -102,7 +102,8 @@ endif()
 source_group(Sources FILES ${SOURCE_FILES})
 
 # Set the search directories for compiling and link editing
-include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS})
+set(SFEMOVIE_INCLUDE_DIRS "${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
+include_directories (${SFEMOVIE_INCLUDE_DIRS})
 message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
 
 # Define the source files sfe should compile
