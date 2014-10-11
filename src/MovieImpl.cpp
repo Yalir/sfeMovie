@@ -56,6 +56,7 @@ namespace sfe {
 
 			std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(Audio);
 			std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(Video);
+			std::set<Stream*> subtitleStreams = m_demuxer->getStreamsOfType(Subtitle);
 
 			m_demuxer->selectFirstAudioStream();
 			m_demuxer->selectFirstVideoStream();
@@ -82,6 +83,7 @@ namespace sfe {
 		switch (type) {
 		case Audio: return m_audioStreamsDesc;
 		case Video: return m_videoStreamsDesc;
+		case Subtitle: return m_videoStreamsDesc;
 		default: CHECK(false, "Movie::getStreams() - Unknown stream type:" + MediaTypeToString(type));
 		}
 	}

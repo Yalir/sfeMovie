@@ -177,4 +177,11 @@ namespace sfe {
 			delete[] palette;
 		}
 	}
+
+	void SubtitleStream::willPlay(const Timer& timer)
+	{
+		Stream::willPlay(timer); 
+	}
+
+	
 }

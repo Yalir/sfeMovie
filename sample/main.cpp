@@ -134,8 +134,10 @@ int main(int argc, const char *argv[])
     // Allow stream selection
     const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
     const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
+	const sfe::Streams& subtitleStreams = movie.getStreams(sfe::Video);
     int selectedVideoStreamId = 0;
     int selectedAudioStreamId = 0;
+	int selectedSubtitleStreamId = 0;
     
 	// Scale movie to the window drawing area and enable VSync
 	window.setFramerateLimit(60);
@@ -162,7 +164,7 @@ int main(int argc, const char *argv[])
 					} else {
 						movie.play();
 					}
-				} else if (ev.key.code == sf::Keyboard::S) {
+				} else if (ev.key.code == sf::Keyboard::P) {
 					movie.stop();
 				} else if (ev.key.code == sf::Keyboard::F) {
 					fullscreen = !fullscreen;

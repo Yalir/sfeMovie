@@ -61,6 +61,12 @@ namespace sfe
 		/** Update the stream's status
 		*/
 		virtual void update();
+
+		// Timer::Observer interface
+		void willPlay(const Timer &timer);
+		void didPlay(const Timer& timer, sfe::Status previousStatus);
+		void didPause(const Timer& timer, sfe::Status previousStatus);
+		void didStop(const Timer& timer, sfe::Status previousStatus);
 	private:
 		/** The struct we use to store our subtitles
 		*/
@@ -85,6 +91,7 @@ namespace sfe
 		bool onGetData();
 
 		Delegate& m_delegate;
+		
 		
 		std::list<SubtitleData*> m_inactive;
 		std::list<SubtitleData*> m_active;
