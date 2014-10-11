@@ -31,6 +31,7 @@
 #include <SFML/Graphics.hpp>
 #include <stdint.h>
 #include <list>
+#include <vector>
 
 
 namespace sfe
@@ -39,7 +40,9 @@ namespace sfe
 	class SubtitleStream : public Stream{
 	public:
 		struct Delegate {
-			virtual void didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subimages) = 0;
+			virtual void didUpdateSubtitle(const SubtitleStream& sender,
+                                           const std::vector<sf::Sprite>& subimages,
+                                           const std::vector<sf::Vector2u>& subSizes) = 0;
 		};
 		/** Create a subtitle stream from the given FFmpeg stream
 		*

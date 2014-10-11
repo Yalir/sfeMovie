@@ -34,7 +34,7 @@ namespace sfe {
 		m_movieView(movieView),
 		m_demuxer(NULL),
 		m_timer(NULL),
-		m_sprite(),
+		m_videoSprite(),
 		m_scaleX(1.0f),
 		m_scaleY(1.0f)
 	{
@@ -188,7 +188,7 @@ namespace sfe {
 			sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
 			if (vStream) {
 				sf::Vector2f movieScale = m_movieView.getScale();
-				sf::Vector2f subviewScale = m_sprite.getScale();
+				sf::Vector2f subviewScale = m_videoSprite.getScale();
 
 				if (std::fabs(movieScale.x - 1.f) < 0.00001 &&
 					std::fabs(movieScale.y - 1.f) < 0.00001 &&
@@ -302,16 +302,17 @@ namespace sfe {
 			new_size = wanted_size;
 		}
 
-		m_sprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
+		m_videoSprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
 			frame.top + (wanted_size.y - new_size.y) / 2);
 		m_movieView.setPosition(frame.left, frame.top);
 		m_scaleX = (float)new_size.x / movie_size.x;
 		m_scaleY = (float)new_size.y / movie_size.y;
-		m_sprite.setScale(m_scaleX, m_scaleY);
+		m_videoSprite.setScale(m_scaleX, m_scaleY);
+        m_displayFrame = frame;
 
-		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
+		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{
-			m_subtitles[i].setScale(m_scaleX, m_scaleY);
+			m_subtitleSprites[i].setScale(m_scaleX, m_scaleY);
 		}
 	}
 
@@ -391,8 +392,8 @@ namespace sfe {
 	{
 		static sf::Texture emptyTexture;
 
-		if (m_sprite.getTexture()) {
-			return *m_sprite.getTexture();
+		if (m_videoSprite.getTexture()) {
+			return *m_videoSprite.getTexture();
 		}
 		else {
 			return emptyTexture;
@@ -412,27 +413,34 @@ namespace sfe {
 	void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		
-		target.draw(m_sprite, states);
-		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
+		target.draw(m_videoSprite, states);
+		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{
-			target.draw(m_subtitles[i], states);
+			target.draw(m_subtitleSprites[i], states);
+            sfeLogWarning("draw sub");
 		}
 	}
 	
 	void MovieImpl::didUpdateVideo(const VideoStream& sender, const sf::Texture& image)
 	{
-		if (m_sprite.getTexture() != &image) {
-			m_sprite.setTexture(image);
+		if (m_videoSprite.getTexture() != &image) {
+			m_videoSprite.setTexture(image);
 		}
 	}
 
-	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subs)
+	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subs,
+                                      const std::vector<sf::Vector2u>& subSizes)
 	{
-		m_subtitles = subs;
+		m_subtitleSprites = subs;
 
-		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
+        sf::Vector2f subtitlesCenter(m_displayFrame.width / 2, m_displayFrame.height * 0.9);
+        
+		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{
-			m_subtitles[i].setScale(m_scaleX, m_scaleY);
+            sf::Sprite& subtitleSprite = m_subtitleSprites[i];
+            subtitleSprite.setPosition(subtitlesCenter.x - (subSizes[i].x / 2),
+                                       subtitlesCenter.y - (subSizes[i].y / 2));
+            subtitleSprite.setScale(m_scaleX, m_scaleY);
 		}
 	}
 }

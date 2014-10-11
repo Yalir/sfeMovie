@@ -197,17 +197,20 @@ namespace sfe {
 		void cleanResources();
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 		void didUpdateVideo(const VideoStream& sender, const sf::Texture& image);
-		void didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& sprites);
+		void didUpdateSubtitle(const SubtitleStream& sender,
+                               const std::vector<sf::Sprite>& sprites,
+                               const std::vector<sf::Vector2u>& subSizes);
 		
 		sf::Transformable& m_movieView;
 		Demuxer* m_demuxer;
 		Timer* m_timer;
-		sf::Sprite m_sprite;
-		std::vector<sf::Sprite> m_subtitles;
+		sf::Sprite m_videoSprite;
+		std::vector<sf::Sprite> m_subtitleSprites;
 		Streams m_audioStreamsDesc;
 		Streams m_videoStreamsDesc;
 		Streams m_subtitleStreamsDesc;
 		float m_scaleX, m_scaleY;
+        sf::IntRect m_displayFrame;
 	};
 	
 }

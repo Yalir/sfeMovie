@@ -351,7 +351,6 @@ namespace sfe {
 	void Demuxer::feedStream(Stream& stream)
 	{
 		sf::Lock l(m_synchronized);
-		sfeLogDebug("Feed " + MediaTypeToString(stream.getStreamKind()) + " stream");
 		
 		while (!didReachEndOfFile() && stream.needsMoreData()) {
 			AVPacket* pkt = readPacket();

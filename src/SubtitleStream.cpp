@@ -74,7 +74,11 @@ namespace sfe {
 			if (m_inactive.front()->start < m_timer.getOffset())
 			{
 				SubtitleData* iter = m_inactive.front();
-				m_delegate.didUpdateSubtitle(*this, iter->sprites);
+                std::vector<sf::Vector2u> sizes;
+                for (std::list<sf::Texture>::iterator it = iter->textures.begin(); it != iter->textures.end(); ++it)
+                    sizes.push_back(it->getSize());
+                
+				m_delegate.didUpdateSubtitle(*this, iter->sprites, sizes);
 				m_active.push_back(iter);
 				m_inactive.pop_front();
 			}
@@ -91,7 +95,7 @@ namespace sfe {
 				if (m_active.size() == 0)
 				{
 					std::vector<sf::Sprite> empty;
-					m_delegate.didUpdateSubtitle(*this, empty);
+					m_delegate.didUpdateSubtitle(*this, empty, std::vector<sf::Vector2u>());
 				}
 			}
 		}			
@@ -153,7 +157,6 @@ namespace sfe {
 			sf::Sprite& sprite = sprites.back();
 			AVSubtitleRect* cRect = sub->rects[i];
 			//sprite.setOrigin(sf::Vector2f(cRect->x, cRect->y));
-			sprite.setPosition(sf::Vector2f(cRect->x , cRect->y ));
 			uint32_t* palette = new uint32_t[cRect->nb_colors];
 			for (int j = 0; j < cRect->nb_colors; j++)
 			{
