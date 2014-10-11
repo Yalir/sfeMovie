@@ -86,7 +86,6 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
 	if (MSVC)
 		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
 	else()
-		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
 		find_library(LIBZ z PATHS "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
 
 		if (NOT LIBZ)
@@ -102,14 +101,16 @@ endif()
 source_group(Sources FILES ${SOURCE_FILES})
 
 # Set the search directories for compiling and link editing
-include_directories (${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR})
-message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIR}")
+set(SFEMOVIE_INCLUDE_DIRS "${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
+include_directories (${SFEMOVIE_INCLUDE_DIRS})
+message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
 
 # Define the source files sfe should compile
 add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
 add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 # Define the libraries sfe should link against
+message(STATUS "Link sfeMovie against: ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
 target_link_libraries (${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
@@ -152,4 +153,9 @@ endif ()
 set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")
 if(BUILD_DOC)
     add_subdirectory(doxygen)
+endif()
+
+set(BUILD_PACKAGE FALSE CACHE BOOL "Set to true to generate a zip file containing all the files required for development with sfeMovie")
+if (BUILD_PACKAGE)
+	include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
 endif()
