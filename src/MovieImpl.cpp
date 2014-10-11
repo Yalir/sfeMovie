@@ -70,6 +70,11 @@ namespace sfe {
 				return false;
 			}
 			else {
+                if (videoStreams.size()) {
+                    sf::Vector2i size = getSize();
+                    m_displayFrame = sf::IntRect(0, 0, size.x, size.y);
+                }
+                
 				return true;
 			}
 		}
