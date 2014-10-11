@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 
+
 /*
  * Here is a little use sample for sfeMovie.
  * It'll open and display the movie specified by MOVIE_FILE above.
@@ -110,7 +111,7 @@ int main(int argc, const char *argv[])
 		my_pause();
 		return 1;
 	}
-	
+
 	std::string mediaFile = std::string(argv[1]);
 	std::cout << "Going to open movie file \"" << mediaFile << "\"" << std::endl;
 
@@ -134,7 +135,7 @@ int main(int argc, const char *argv[])
     // Allow stream selection
     const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
     const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
-	const sfe::Streams& subtitleStreams = movie.getStreams(sfe::Video);
+	const sfe::Streams& subtitleStreams = movie.getStreams(sfe::Subtitle);
     int selectedVideoStreamId = 0;
     int selectedAudioStreamId = 0;
 	int selectedSubtitleStreamId = 0;

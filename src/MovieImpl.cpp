@@ -34,7 +34,9 @@ namespace sfe {
 		m_movieView(movieView),
 		m_demuxer(NULL),
 		m_timer(NULL),
-		m_sprite()
+		m_sprite(),
+		m_scaleX(1.0f),
+		m_scaleY(1.0f)
 	{
 	}
 
@@ -83,7 +85,7 @@ namespace sfe {
 		switch (type) {
 		case Audio: return m_audioStreamsDesc;
 		case Video: return m_videoStreamsDesc;
-		case Subtitle: return m_videoStreamsDesc;
+		case Subtitle: return m_subtitleStreamsDesc;
 		default: CHECK(false, "Movie::getStreams() - Unknown stream type:" + MediaTypeToString(type));
 		}
 	}
@@ -114,6 +116,9 @@ namespace sfe {
 			break;
 		case Video:
 			m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(streamToSelect));
+			break;
+		case Subtitle:
+			m_demuxer->selectSubtitleStream(dynamic_cast<SubtitleStream*>(streamToSelect));
 			break;
 		default:
 			sfeLogWarning("Movie::selectStream() - stream activation for stream of kind "
@@ -300,7 +305,14 @@ namespace sfe {
 		m_sprite.setPosition(frame.left + (wanted_size.x - new_size.x) / 2,
 			frame.top + (wanted_size.y - new_size.y) / 2);
 		m_movieView.setPosition(frame.left, frame.top);
-		m_sprite.setScale((float)new_size.x / movie_size.x, (float)new_size.y / movie_size.y);
+		m_scaleX = (float)new_size.x / movie_size.x;
+		m_scaleY = (float)new_size.y / movie_size.y;
+		m_sprite.setScale(m_scaleX, m_scaleY);
+
+		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
+		{
+			m_subtitles[i].setScale(m_scaleX, m_scaleY);
+		}
 	}
 
 	float MovieImpl::getFramerate() const
@@ -348,15 +360,18 @@ namespace sfe {
 		if (m_demuxer) {
 			VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
 			AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+			SubtitleStream* subtitleStream = m_demuxer->getSelectedSubtitleStream();
 			Status vStatus = videoStream ? videoStream->getStatus() : Stopped;
 			Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stopped;
+			Status sStatus = subtitleStream ? subtitleStream->getStatus() : Stopped;
 
-			if (vStatus == Playing || aStatus == Playing) {
+			if (vStatus == Playing || aStatus == Playing || sStatus == Playing) {
 				st = Playing;
 			}
-			else if (vStatus == Paused || aStatus == Paused) {
+			else if (vStatus == Paused || aStatus == Paused || sStatus == Paused) {
 				st = Paused;
 			}
+
 		}
 
 		return st;
@@ -414,5 +429,10 @@ namespace sfe {
 	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subs)
 	{
 		m_subtitles = subs;
+
+		for (uint32_t i = 0; i < m_subtitles.size(); ++i)
+		{
+			m_subtitles[i].setScale(m_scaleX, m_scaleY);
+		}
 	}
 }

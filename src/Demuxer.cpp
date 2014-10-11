@@ -163,6 +163,11 @@ namespace sfe {
 						break;			
 					case AVMEDIA_TYPE_SUBTITLE:
 						m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
+
+						if (m_duration == sf::Time::Zero) {
+							extractDurationFromStream(ffstream);
+						}
+
 						sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
 						 break;				
 					default:
@@ -333,9 +338,9 @@ namespace sfe {
 
 	void Demuxer::selectFirstSubtitleStream()
 	{
-		std::set<Stream*> videoStreams = getStreamsOfType(Subtitle);
-		if (videoStreams.size())
-			selectSubtitleStream(dynamic_cast<SubtitleStream*>(*videoStreams.begin()));
+		std::set<Stream*> subtitleStreams = getStreamsOfType(Subtitle);
+		if (subtitleStreams.size())
+			selectSubtitleStream(dynamic_cast<SubtitleStream*>(*subtitleStreams.begin()));
 	}
 	
 	SubtitleStream* Demuxer::getSelectedSubtitleStream() const

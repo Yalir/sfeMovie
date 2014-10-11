@@ -64,9 +64,10 @@ namespace sfe
 
 		// Timer::Observer interface
 		void willPlay(const Timer &timer);
-		void didPlay(const Timer& timer, sfe::Status previousStatus);
+		void didPlay(const Timer& timer, sfe::Status pcreviousStatus);
 		void didPause(const Timer& timer, sfe::Status previousStatus);
 		void didStop(const Timer& timer, sfe::Status previousStatus);
+
 	private:
 		/** The struct we use to store our subtitles
 		*/

@@ -207,6 +207,7 @@ namespace sfe {
 		Streams m_audioStreamsDesc;
 		Streams m_videoStreamsDesc;
 		Streams m_subtitleStreamsDesc;
+		float m_scaleX, m_scaleY;
 	};
 	
 }

@@ -1,4 +1,3 @@
-
 /*
 *  SubtitleStream.cpp
 *  sfeMovie project
@@ -88,7 +87,7 @@ namespace sfe {
 			if (m_active.front()->end < m_timer.getOffset())
 			{
 				m_active.pop_front();
-				//m_active.erase(m_active.begin() + i);
+			
 				if (m_active.size() == 0)
 				{
 					std::vector<sf::Sprite> empty;
@@ -153,8 +152,8 @@ namespace sfe {
 			sprites.push_back(sf::Sprite());
 			sf::Sprite& sprite = sprites.back();
 			AVSubtitleRect* cRect = sub->rects[i];
-			sprite.setOrigin(sf::Vector2f(cRect->x, cRect->y));
-			sprite.setPosition(sf::Vector2f(cRect->x * 2, cRect->y * 1.75f));
+			//sprite.setOrigin(sf::Vector2f(cRect->x, cRect->y));
+			sprite.setPosition(sf::Vector2f(cRect->x , cRect->y ));
 			uint32_t* palette = new uint32_t[cRect->nb_colors];
 			for (int j = 0; j < cRect->nb_colors; j++)
 			{
@@ -181,6 +180,23 @@ namespace sfe {
 	void SubtitleStream::willPlay(const Timer& timer)
 	{
 		Stream::willPlay(timer); 
+	}
+
+	void SubtitleStream::didPlay(const Timer& timer, sfe::Status previousStatus)
+	{
+		Stream::didPlay(timer, previousStatus);
+	}
+
+	void SubtitleStream::didPause(const Timer& timer, sfe::Status previousStatus)
+	{
+		Stream::didPause(timer, previousStatus);
+	}
+
+	void SubtitleStream::didStop(const Timer& timer, sfe::Status previousStatus)
+	{
+		m_active.clear();
+		m_inactive.clear();
+		Stream::didStop(timer, previousStatus);
 	}
 
 	
