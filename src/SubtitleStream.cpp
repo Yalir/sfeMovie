@@ -74,11 +74,8 @@ namespace sfe {
 			if (m_inactive.front()->start < m_timer.getOffset())
 			{
 				SubtitleData* iter = m_inactive.front();
-                std::vector<sf::Vector2u> sizes;
-                for (std::list<sf::Texture>::iterator it = iter->textures.begin(); it != iter->textures.end(); ++it)
-                    sizes.push_back(it->getSize());
                 
-				m_delegate.didUpdateSubtitle(*this, iter->sprites, sizes);
+				m_delegate.didUpdateSubtitle(*this, iter->sprites);
 				m_active.push_back(iter);
 				m_inactive.pop_front();
 			}
@@ -95,7 +92,7 @@ namespace sfe {
 				if (m_active.size() == 0)
 				{
 					std::vector<sf::Sprite> empty;
-					m_delegate.didUpdateSubtitle(*this, empty, std::vector<sf::Vector2u>());
+					m_delegate.didUpdateSubtitle(*this, empty);
 				}
 			}
 		}			
