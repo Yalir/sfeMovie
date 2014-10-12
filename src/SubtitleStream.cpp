@@ -163,6 +163,7 @@ namespace sfe {
 			textures.push_back(sf::Texture());
 			sf::Texture& tex = textures.back();
 			tex.create(cRect->w, cRect->h);
+            tex.setSmooth(true);
 
 			uint32_t* data = new uint32_t[cRect->w* sub->rects[i]->h];
 			for (int j = 0; j <cRect->w* cRect->h; ++j)

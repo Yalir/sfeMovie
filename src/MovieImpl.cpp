@@ -29,6 +29,8 @@
 #include <cmath>
 #include <iostream>
 
+#define LAYOUT_DEBUGGER_ENABLED 0
+
 namespace sfe {
 	MovieImpl::MovieImpl(sf::Transformable& movieView) :
 		m_movieView(movieView),
@@ -423,13 +425,15 @@ namespace sfe {
 	
 	void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
-		
 		target.draw(m_videoSprite, states);
 		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{
 			target.draw(m_subtitleSprites[i], states);
-            sfeLogWarning("draw sub");
 		}
+        
+#if LAYOUT_DEBUGGER_ENABLED
+        target.draw(m_debugger, states);
+#endif
 	}
 	
 	void MovieImpl::didUpdateVideo(const VideoStream& sender, const sf::Texture& image)
@@ -452,6 +456,7 @@ namespace sfe {
             subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
                                        subtitlesCenter.y - (subSize.y * m_scaleY / 2));
             subtitleSprite.setScale(m_scaleX, m_scaleY);
+            m_debugger.bind(&subtitleSprite);
 		}
 	}
 }

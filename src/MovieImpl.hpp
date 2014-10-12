@@ -22,15 +22,16 @@
  *
  */
 
+#ifndef SFEMOVIE_MOVIEIMPL_HPP
+#define SFEMOVIE_MOVIEIMPL_HPP
+
 #include <cstring>
 #include <string>
 #include <stdexcept>
 #include <SFML/Config.hpp>
 #include "VideoStream.hpp"
 #include "Demuxer.hpp"
-
-#ifndef SFEMOVIE_MOVIEIMPL_HPP
-#define SFEMOVIE_MOVIEIMPL_HPP
+#include "DebugTools/LayoutDebugger.hpp"
 
 namespace sfe {
 	class MovieImpl : public VideoStream::Delegate, public SubtitleStream::Delegate, public sf::Drawable {
@@ -210,6 +211,7 @@ namespace sfe {
 		Streams m_subtitleStreamsDesc;
 		float m_scaleX, m_scaleY;
         sf::IntRect m_displayFrame;
+        LayoutDebugger<sf::Sprite> m_debugger;
 	};
 	
 }
