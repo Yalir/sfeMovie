@@ -443,8 +443,8 @@ namespace sfe {
 		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{
             sf::Sprite& subtitleSprite = m_subtitleSprites[i];
-            subtitleSprite.setPosition(subtitlesCenter.x - (subSizes[i].x / 2),
-                                       subtitlesCenter.y - (subSizes[i].y / 2));
+            subtitleSprite.setPosition(subtitlesCenter.x - (subSizes[i].x * m_scaleX / 2),
+                                       subtitlesCenter.y - (subSizes[i].y * m_scaleY / 2));
             subtitleSprite.setScale(m_scaleX, m_scaleY);
 		}
 	}
