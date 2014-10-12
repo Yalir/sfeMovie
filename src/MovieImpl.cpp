@@ -320,7 +320,7 @@ namespace sfe {
 		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{
 			sf::Sprite& subtitleSprite = m_subtitleSprites[i];
-			sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
+			const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
 			subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
 				subtitlesCenter.y - (subSize.y * m_scaleY / 2));
 			subtitleSprite.setScale(m_scaleX, m_scaleY);
@@ -448,7 +448,7 @@ namespace sfe {
 		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
 		{			
             sf::Sprite& subtitleSprite = m_subtitleSprites[i];
-			sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
+			const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
                                        subtitlesCenter.y - (subSize.y * m_scaleY / 2));
             subtitleSprite.setScale(m_scaleX, m_scaleY);
