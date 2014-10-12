@@ -29,9 +29,8 @@
 #include "Macros.hpp"
 #include "Stream.hpp"
 #include <SFML/Graphics.hpp>
-#include <stdint.h>
 #include <list>
-#include <vector>
+#include <utility>
 
 
 namespace sfe
@@ -41,7 +40,7 @@ namespace sfe
 	public:
 		struct Delegate {
 			virtual void didUpdateSubtitle(const SubtitleStream& sender,
-                                           const std::vector<sf::Sprite>& subimages) = 0;
+                                           const std::list<sf::Sprite>& subimages) = 0;
 		};
 		/** Create a subtitle stream from the given FFmpeg stream
 		*
@@ -63,11 +62,8 @@ namespace sfe
 		/** Update the stream's status
 		*/
 		virtual void update();
-
+        
 		// Timer::Observer interface
-		void willPlay(const Timer &timer);
-		void didPlay(const Timer& timer, sfe::Status pcreviousStatus);
-		void didPause(const Timer& timer, sfe::Status previousStatus);
 		void didStop(const Timer& timer, sfe::Status previousStatus);
 
 	private:
@@ -75,18 +71,16 @@ namespace sfe
 		*/
 		struct SubtitleData
 		{
-			std::vector<sf::Sprite> sprites;
 			std::list<sf::Texture> textures;
-			//when will it appear (absolut)
+            std::list<sf::Sprite> sprites;
+			//when will it appear (absolute)
 			sf::Time start;
-			//when will it disappear (absolut)
+			//when will it disappear (absolute)
 			sf::Time end;
 			//Create our subtitle from an AVSubtitle
 			SubtitleData(AVSubtitle* sub);
 		};
-
-
-
+        
 		/** Decode the packages that were send to the stream by the demuxer
 		*
 		* @return if the stream is finished or not
@@ -95,9 +89,8 @@ namespace sfe
 
 		Delegate& m_delegate;
 		
-		
-		std::list<SubtitleData*> m_inactive;
-		std::list<SubtitleData*> m_active;
+		std::list<SubtitleData*> m_pendingSubtitles;
+		std::list<SubtitleData*> m_visibleSubtitles;
 	};
 
 };

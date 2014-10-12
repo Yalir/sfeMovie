@@ -24,18 +24,15 @@
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/opt.h>
-#include <libavutil/channel_layout.h>
-#include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
 }
 
-#include <cstring>
-#include <iostream>
+#include <sfeMovie/Movie.hpp>
 #include "SubtitleStream.hpp"
 #include "Log.hpp"
-#include <sfeMovie/Movie.hpp>
+
+#include <iostream>
+#include <cassert>
+#include <stdint.h>
 
 
 namespace sfe {
@@ -68,31 +65,32 @@ namespace sfe {
 			}
 		}
 
-		if(m_inactive.size() > 0)
+		if(m_pendingSubtitles.size() > 0)
 		{
 			//activate subtitle
-			if (m_inactive.front()->start < m_timer.getOffset())
+			if (m_pendingSubtitles.front()->start < m_timer.getOffset())
 			{
-				SubtitleData* iter = m_inactive.front();
+				SubtitleData* iter = m_pendingSubtitles.front();
                 
 				m_delegate.didUpdateSubtitle(*this, iter->sprites);
-				m_active.push_back(iter);
-				m_inactive.pop_front();
+				m_visibleSubtitles.push_back(iter);
+				m_pendingSubtitles.pop_front();
 			}
 		}
 					
 
-		if (m_active.size()>0)
+		if (m_visibleSubtitles.size()>0)
 		{
 			//remove subtitle
-			if (m_active.front()->end < m_timer.getOffset())
+			if (m_visibleSubtitles.front()->end < m_timer.getOffset())
 			{
-				m_active.pop_front();
+                SubtitleData* subtitle = m_visibleSubtitles.front();
+				m_visibleSubtitles.pop_front();
 			
-				if (m_active.size() == 0)
+				if (m_visibleSubtitles.size() == 0)
 				{
-					std::vector<sf::Sprite> empty;
-					m_delegate.didUpdateSubtitle(*this, empty);
+					m_delegate.didUpdateSubtitle(*this, std::list<sf::Sprite>());
+                    delete subtitle;
 				}
 			}
 		}			
@@ -121,7 +119,7 @@ namespace sfe {
 
 				if (gotSub && pts) {
 					SubtitleData* sfeSub = new SubtitleData(&sub);
-					m_inactive.push_back(sfeSub);
+					m_pendingSubtitles.push_back(sfeSub);
 				}
 
 				if (needsMoreDecoding) {
@@ -145,58 +143,51 @@ namespace sfe {
 
 	SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub)
 	{
-		start = sf::Time(sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts));
-		end = sf::Time(sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts));
+        assert(sub != NULL);
+        
+		start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
+		end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
 
 		for (int i = 0; i < sub->num_rects; ++i)
 		{
 			sprites.push_back(sf::Sprite());
+            textures.push_back(sf::Texture());
+            
 			sf::Sprite& sprite = sprites.back();
-			AVSubtitleRect* cRect = sub->rects[i];
-			//sprite.setOrigin(sf::Vector2f(cRect->x, cRect->y));
-			uint32_t* palette = new uint32_t[cRect->nb_colors];
-			for (int j = 0; j < cRect->nb_colors; j++)
-			{
-				palette[j] = *(uint32_t*)&cRect->pict.data[1][j * RGBASize];
-			}
+			sf::Texture& texture = textures.back();
+			AVSubtitleRect* subItem = sub->rects[i];
+            
+			uint32_t* palette = new uint32_t[subItem->nb_colors];
+			for (int j = 0; j < subItem->nb_colors; j++)
+				palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];
 
-			textures.push_back(sf::Texture());
-			sf::Texture& tex = textures.back();
-			tex.create(cRect->w, cRect->h);
-            tex.setSmooth(true);
+			texture.create(subItem->w, subItem->h);
+            texture.setSmooth(true);
 
-			uint32_t* data = new uint32_t[cRect->w* sub->rects[i]->h];
-			for (int j = 0; j <cRect->w* cRect->h; ++j)
-			{
-				data[j] = palette[cRect->pict.data[0][j]];
-			}
-			tex.update((uint8_t*)data);
-			sprite.setTexture(tex);
+			uint32_t* data = new uint32_t[subItem->w* sub->rects[i]->h];
+			for (int j = 0; j < subItem->w * subItem->h; ++j)
+				data[j] = palette[subItem->pict.data[0][j]];
+			
+			texture.update((uint8_t*)data);
+			sprite.setTexture(texture);
 			
 			delete[] data;
 			delete[] palette;
 		}
 	}
 
-	void SubtitleStream::willPlay(const Timer& timer)
-	{
-		Stream::willPlay(timer); 
-	}
-
-	void SubtitleStream::didPlay(const Timer& timer, sfe::Status previousStatus)
-	{
-		Stream::didPlay(timer, previousStatus);
-	}
-
-	void SubtitleStream::didPause(const Timer& timer, sfe::Status previousStatus)
-	{
-		Stream::didPause(timer, previousStatus);
-	}
-
 	void SubtitleStream::didStop(const Timer& timer, sfe::Status previousStatus)
 	{
-		m_active.clear();
-		m_inactive.clear();
+        while (m_visibleSubtitles.size()) {
+            delete m_visibleSubtitles.back();
+            m_visibleSubtitles.pop_back();
+        }
+        
+        while (m_pendingSubtitles.size()) {
+            delete m_pendingSubtitles.back();
+            m_pendingSubtitles.pop_back();
+        }
+        
 		Stream::didStop(timer, previousStatus);
 	}
 

@@ -318,10 +318,11 @@ namespace sfe {
         m_displayFrame = frame;
 
 		sf::Vector2f subtitlesCenter(m_displayFrame.width / 2, m_displayFrame.height * 0.9);
-
-		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
+        
+		for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin();
+             it != m_subtitleSprites.end(); ++it)
 		{
-			sf::Sprite& subtitleSprite = m_subtitleSprites[i];
+			sf::Sprite& subtitleSprite = *it;
 			const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
 			subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
 				subtitlesCenter.y - (subSize.y * m_scaleY / 2));
@@ -426,9 +427,10 @@ namespace sfe {
 	void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		target.draw(m_videoSprite, states);
-		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
+        for (std::list<sf::Sprite>::const_iterator it = m_subtitleSprites.begin();
+             it != m_subtitleSprites.end(); ++it)
 		{
-			target.draw(m_subtitleSprites[i], states);
+			target.draw(*it, states);
 		}
         
 #if LAYOUT_DEBUGGER_ENABLED
@@ -443,20 +445,24 @@ namespace sfe {
 		}
 	}
 
-	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::vector<sf::Sprite>& subs)
+	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::list<sf::Sprite>& subs)
 	{
 		m_subtitleSprites = subs;
 
         sf::Vector2f subtitlesCenter(m_displayFrame.width / 2, m_displayFrame.height * 0.9);
         
-		for (uint32_t i = 0; i < m_subtitleSprites.size(); ++i)
+		for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin();
+             it != m_subtitleSprites.end(); ++it)
 		{			
-            sf::Sprite& subtitleSprite = m_subtitleSprites[i];
+            sf::Sprite& subtitleSprite = *it;
 			const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
                                        subtitlesCenter.y - (subSize.y * m_scaleY / 2));
             subtitleSprite.setScale(m_scaleX, m_scaleY);
             m_debugger.bind(&subtitleSprite);
 		}
+        
+        if (m_subtitleSprites.size() == 0)
+            m_debugger.bind(NULL);
 	}
 }
