@@ -147,32 +147,42 @@ namespace sfe {
         
 		start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
 		end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
-
+		
 		for (int i = 0; i < sub->num_rects; ++i)
 		{
+			
 			sprites.push_back(sf::Sprite());
             textures.push_back(sf::Texture());
             
 			sf::Sprite& sprite = sprites.back();
 			sf::Texture& texture = textures.back();
 			AVSubtitleRect* subItem = sub->rects[i];
+
+			AVSubtitleType type = subItem->type;
             
-			uint32_t* palette = new uint32_t[subItem->nb_colors];
-			for (int j = 0; j < subItem->nb_colors; j++)
-				palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];
+			if (type == SUBTITLE_BITMAP)
+			{
+				uint32_t* palette = new uint32_t[subItem->nb_colors];
+				for (int j = 0; j < subItem->nb_colors; j++)
+					palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];
 
-			texture.create(subItem->w, subItem->h);
-            texture.setSmooth(true);
+				texture.create(subItem->w, subItem->h);
+				texture.setSmooth(true);
 
-			uint32_t* data = new uint32_t[subItem->w* sub->rects[i]->h];
-			for (int j = 0; j < subItem->w * subItem->h; ++j)
-				data[j] = palette[subItem->pict.data[0][j]];
-			
-			texture.update((uint8_t*)data);
-			sprite.setTexture(texture);
-			
-			delete[] data;
-			delete[] palette;
+				uint32_t* data = new uint32_t[subItem->w* sub->rects[i]->h];
+				for (int j = 0; j < subItem->w * subItem->h; ++j)
+					data[j] = palette[subItem->pict.data[0][j]];
+
+				texture.update((uint8_t*)data);
+				sprite.setTexture(texture);
+
+				delete[] data;
+				delete[] palette;
+			}
+			else
+			{
+				//TODO: add libass code
+			}
 		}
 	}
 
