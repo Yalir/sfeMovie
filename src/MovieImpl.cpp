@@ -327,6 +327,13 @@ namespace sfe {
 			subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
 				subtitlesCenter.y - (subSize.y * m_scaleY / 2));
 			subtitleSprite.setScale(m_scaleX, m_scaleY);
+
+			const sf::Uint32 bottom = subtitleSprite.getPosition().y + subtitleSprite.getLocalBounds().height*m_scaleX;
+			if (bottom > m_displayFrame.height)
+			{
+				subtitleSprite.setPosition(subtitleSprite.getPosition().x,
+					m_displayFrame.height - subtitleSprite.getLocalBounds().height*m_scaleX -10);
+			}
 		}
 	}
 
@@ -459,6 +466,14 @@ namespace sfe {
             subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
                                        subtitlesCenter.y - (subSize.y * m_scaleY / 2));
             subtitleSprite.setScale(m_scaleX, m_scaleY);
+
+			const sf::Uint32 bottom = subtitleSprite.getPosition().y + subtitleSprite.getLocalBounds().height*m_scaleX;
+			if (bottom > m_displayFrame.height)
+			{
+				subtitleSprite.setPosition(subtitleSprite.getPosition().x,
+					m_displayFrame.height - subtitleSprite.getLocalBounds().height*m_scaleX - 10);
+			}
+
             m_debugger.bind(&subtitleSprite);
 		}
         
