@@ -14,7 +14,7 @@
     <module name="TreeWalker">
 	    <module name="LeftCurly">
 		    <property name="option" value="nl"/>
-		    <property name="tokens" value="CLASS_DEF,CTOR_DEF,LITERAL_DO,LITERAL_ELSE,LITERAL_FORLITERAL_IF,LITERAL_SWITCH,LITERAL_WHILE,METHOD_DEF"/>
+		    <property name="tokens" value="CLASS_DEF,CTOR_DEF,LITERAL_DO,LITERAL_ELSE,LITERAL_FOR,LITERAL_IF,LITERAL_SWITCH,LITERAL_WHILE,METHOD_DEF"/>
 		</module>
 
 		<module name="RightCurly">
