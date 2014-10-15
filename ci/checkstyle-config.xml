@@ -6,16 +6,20 @@
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="warning"/>
     
+
     <!-- Checks for whitespace                               -->
     <!-- See http://checkstyle.sf.net/config_whitespace.html -->
     <module name="FileTabCharacter" />
-    <module name="LeftCurly">
-	    <property name="option" value="nl"/>
-	    <property name="tokens" value="CLASS_DEF,CTOR_DEF,LITERAL_DO,LITERAL_ELSE,LITERAL_FORLITERAL_IF,LITERAL_SWITCH,LITERAL_WHILE,METHOD_DEF"/>
-	</module>
+    
+    <module name="TreeWalker">
+	    <module name="LeftCurly">
+		    <property name="option" value="nl"/>
+		    <property name="tokens" value="CLASS_DEF,CTOR_DEF,LITERAL_DO,LITERAL_ELSE,LITERAL_FORLITERAL_IF,LITERAL_SWITCH,LITERAL_WHILE,METHOD_DEF"/>
+		</module>
 
-	<module name="RightCurly">
-		<property name="option" value="alone"/>
-		<property name="tokens" value="LITERAL_IF,LITERAL_ELSE,CLASS_DEF,METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO" />
+		<module name="RightCurly">
+			<property name="option" value="alone"/>
+			<property name="tokens" value="LITERAL_IF,LITERAL_ELSE,CLASS_DEF,METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO" />
+		</module>
 	</module>
 </module>
