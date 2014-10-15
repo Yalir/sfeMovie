@@ -199,7 +199,8 @@ namespace sfe {
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 		void didUpdateVideo(const VideoStream& sender, const sf::Texture& image);
 		void didUpdateSubtitle(const SubtitleStream& sender,
-								const std::list<sf::Sprite>& sprites);
+								const std::list<sf::Sprite>& sprites,
+								const std::list<sf::Vector2i>& positions);
 		
 		sf::Transformable& m_movieView;
 		Demuxer* m_demuxer;

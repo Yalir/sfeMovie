@@ -40,7 +40,8 @@ namespace sfe
 	public:
 		struct Delegate {
 			virtual void didUpdateSubtitle(const SubtitleStream& sender,
-                                           const std::list<sf::Sprite>& subimages) = 0;
+                                           const std::list<sf::Sprite>& subimages,
+										   const std::list<sf::Vector2i>& positions) = 0;
 		};
 		/** Create a subtitle stream from the given FFmpeg stream
 		*
@@ -73,6 +74,7 @@ namespace sfe
 		{
 			std::list<sf::Texture> textures;
             std::list<sf::Sprite> sprites;
+			std::list<sf::Vector2i> positions;
 			//when will it appear (absolute)
 			sf::Time start;
 			//when will it disappear (absolute)

@@ -72,7 +72,7 @@ namespace sfe {
 			{
 				SubtitleData* iter = m_pendingSubtitles.front();
                 
-				m_delegate.didUpdateSubtitle(*this, iter->sprites);
+				m_delegate.didUpdateSubtitle(*this, iter->sprites,iter->positions);
 				m_visibleSubtitles.push_back(iter);
 				m_pendingSubtitles.pop_front();
 			}
@@ -89,7 +89,7 @@ namespace sfe {
 			
 				if (m_visibleSubtitles.size() == 0)
 				{
-					m_delegate.didUpdateSubtitle(*this, std::list<sf::Sprite>());
+					m_delegate.didUpdateSubtitle(*this, std::list<sf::Sprite>(), std::list<sf::Vector2i>());
                     delete subtitle;
 				}
 			}
@@ -162,6 +162,7 @@ namespace sfe {
             
 			if (type == SUBTITLE_BITMAP)
 			{
+				positions.push_back(sf::Vector2i(subItem->x, subItem->y));
 				uint32_t* palette = new uint32_t[subItem->nb_colors];
 				for (int j = 0; j < subItem->nb_colors; j++)
 					palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];

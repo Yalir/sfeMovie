@@ -452,19 +452,30 @@ namespace sfe {
 		}
 	}
 
-	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::list<sf::Sprite>& subs)
+	void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::list<sf::Sprite>& subs, const std::list<sf::Vector2i>& positions)
 	{
 		m_subtitleSprites = subs;
-
+		bool use_position = positions.size() > 0;
         sf::Vector2f subtitlesCenter(m_displayFrame.width / 2, m_displayFrame.height * 0.9);
-        
+		std::list<sf::Vector2i>::const_iterator pos_it = positions.begin();
+
 		for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin();
              it != m_subtitleSprites.end(); ++it)
 		{			
             sf::Sprite& subtitleSprite = *it;
-			const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
-            subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
-                                       subtitlesCenter.y - (subSize.y * m_scaleY / 2));
+			if (use_position)
+			{
+				sf::Vector2i pos = *pos_it;
+				subtitleSprite.setPosition(pos.x*m_scaleX,pos.y*m_scaleY);
+				++pos_it;
+			}
+			else
+			{
+				const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
+				subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_scaleX / 2),
+					subtitlesCenter.y - (subSize.y * m_scaleY / 2));
+			}
+			
             subtitleSprite.setScale(m_scaleX, m_scaleY);
 
 			const sf::Uint32 bottom = subtitleSprite.getPosition().y + subtitleSprite.getLocalBounds().height*m_scaleX;
