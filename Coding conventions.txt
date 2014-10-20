@@ -1,0 +1,18 @@
+Coding conventions
+==================
+
+sfeMovie coding conventions globally follow SFML's ones, which are:
+- all { and } are on their own line
+- all blocks contents are indented (including switch blocks)
+- indent with spaces by 4 spaces, no tabs
+- class names are CamelCase
+- method names are camelCase
+- structure and class members are m_camelCase
+- constants are CamelCase
+
+A few additions / differences are:
+- /** Doc
+   * 
+   * @param aParam explanation
+   */
+   Doxygen comment style
