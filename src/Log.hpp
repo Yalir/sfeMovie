@@ -38,53 +38,56 @@
 #define sfeLogWarning(message) sfe::Log::warning(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(FUNC_NAME) + "()" + " - " + message)
 #define sfeLogError(message) sfe::Log::error(__FILE__, std::string(":") + sfe::s(__LINE__) + ": " + std::string(FUNC_NAME) + "()" + " - " + message)
 
-namespace sfe {
-	namespace Log {
-		enum LogLevel {
-			QuietLogLevel = 0,
-			ErrorLogLevel = 1,
-			WarningLogLevel = 2,
-			DebugLogLevel = 3
-		};
-		
-		/** Set the initial log level
-		 */
-		void initialize();
-		
-		/** Set the log filter to the given @a level
-		 *
-		 * @param level the kind of messages that can be logged
-		 */
-		void setLogLevel(LogLevel level);
-		
-		/** Log a debug @a message if the currently set mask allows it
-		 *
-		 * @param message the debug message to log
-		 */
-		void debug(const std::string& file, const std::string& message);
-		
-		/** Log a warning @a message if the currently set mask allows it
-		 *
-		 * @param message the warning message to log
-		 */
-		void warning(const std::string& file, const std::string& message);
-		
-		/** Log an error @a message if the currently set mask allows it
-		 *
-		 * @param message the error message to log
-		 */
-		void error(const std::string& file, const std::string& message);
-	}
-	
-	/** Stringify any type of object supported by ostringstream
-	 */
-	template <typename T>
-	std::string s(const T& obj)
-	{
-		std::ostringstream ss;
-		ss << obj;
-		return ss.str();
-	}
+namespace sfe
+{
+    namespace Log
+    {
+        enum LogLevel
+        {
+            QuietLogLevel = 0,
+            ErrorLogLevel = 1,
+            WarningLogLevel = 2,
+            DebugLogLevel = 3
+        };
+        
+        /** Set the initial log level
+         */
+        void initialize();
+        
+        /** Set the log filter to the given @a level
+         *
+         * @param level the kind of messages that can be logged
+         */
+        void setLogLevel(LogLevel level);
+        
+        /** Log a debug @a message if the currently set mask allows it
+         *
+         * @param message the debug message to log
+         */
+        void debug(const std::string& file, const std::string& message);
+        
+        /** Log a warning @a message if the currently set mask allows it
+         *
+         * @param message the warning message to log
+         */
+        void warning(const std::string& file, const std::string& message);
+        
+        /** Log an error @a message if the currently set mask allows it
+         *
+         * @param message the error message to log
+         */
+        void error(const std::string& file, const std::string& message);
+    }
+    
+    /** Stringify any type of object supported by ostringstream
+     */
+    template <typename T>
+    std::string s(const T& obj)
+    {
+        std::ostringstream ss;
+        ss << obj;
+        return ss.str();
+    }
 };
 
 #endif

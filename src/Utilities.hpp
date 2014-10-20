@@ -29,29 +29,30 @@
 #include "Log.hpp"
 #include <string>
 
-namespace sfe {
-	/** Display a list of all the available demuxers as follow:
-	 * - decoder_type: decoder_name
-	 */
-	void dumpAvailableDemuxers();
-	
-	/** Display a list of all the available decoders as follow:
-	 * - decoder_type: decoder_name
-	 */
-	void dumpAvailableDecoders();
-	
-	/** Gives the string representing the given @a type
-	 *
-	 * Conversion is done as follow:
-	 * Audio		-> audio
-	 * Subtitle	-> subtitle
-	 * Video		-> video
-	 * Unknown	-> unknown
-	 *
-	 * @param type the media type to stringify
-	 * @return the stringified media type
-	 */
-	std::string MediaTypeToString(MediaType type);
+namespace sfe
+{
+    /** Display a list of all the available demuxers as follow:
+     * - decoder_type: decoder_name
+     */
+    void dumpAvailableDemuxers();
+    
+    /** Display a list of all the available decoders as follow:
+     * - decoder_type: decoder_name
+     */
+    void dumpAvailableDecoders();
+    
+    /** Gives the string representing the given @a type
+     *
+     * Conversion is done as follow:
+     * Audio        -> audio
+     * Subtitle    -> subtitle
+     * Video        -> video
+     * Unknown    -> unknown
+     *
+     * @param type the media type to stringify
+     * @return the stringified media type
+     */
+    std::string mediaTypeToString(MediaType type);
 }
 
 #endif

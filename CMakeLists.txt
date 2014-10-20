@@ -76,27 +76,27 @@ add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 if (MACOSX) # ========================================== MACOSX ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
-	
-	# find only "root" headers
+    
+    # find only "root" headers
     file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
     
     # Make sure sfeMovie headers get imported in the framework
     set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 elseif (WINDOWS) # ========================================== WINDOWS ==========================================
-	if (MSVC)
-		set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
-	else()
-		set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
-		find_library(LIBZ z PATHS "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
+    if (MSVC)
+        set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
+    else()
+        set (LINKER_FLAGS ${LINKER_FLAGS} "-static-libgcc")
+        find_library(LIBZ z PATHS "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
 
-		if (NOT LIBZ)
-			message(FATAL_ERROR "Could not find required library libz")
-		else()
-			set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "${LIBZ}")
-		endif()
-	endif()
-	
-	set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
+        if (NOT LIBZ)
+            message(FATAL_ERROR "Could not find required library libz")
+        else()
+            set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "${LIBZ}")
+        endif()
+    endif()
+    
+    set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 endif()
 
 source_group(Sources FILES ${SOURCE_FILES})
@@ -113,24 +113,24 @@ add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 target_link_libraries (${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
-	if (LINUX)
-		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
-			COMMAND cp -R
-				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
-				"$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
-	elseif(MACOSX)
-		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
-			COMMAND mkdir -p "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
-		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
-			COMMAND cp -R
-				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
-				"$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
-	elseif(WINDOWS)
-		add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-				"${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
-				"$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
-	endif()
+    if (LINUX)
+        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+            COMMAND cp -R
+                "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
+                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
+    elseif(MACOSX)
+        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+            COMMAND mkdir -p "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
+        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+            COMMAND cp -R
+                "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
+                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
+    elseif(WINDOWS)
+        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
+                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
+    endif()
 endif()
 
 include (${CMAKE_SOURCE_DIR}/cmake/Properties.cmake)
@@ -139,7 +139,7 @@ include (${CMAKE_SOURCE_DIR}/cmake/Install.cmake)
 # Unit tests
 set (BUILD_UNIT_TESTS FALSE CACHE BOOL "TRUE to build the unit test system")
 if (BUILD_UNIT_TESTS)
-	add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()
 
 # Sample building

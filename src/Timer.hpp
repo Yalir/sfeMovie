@@ -29,154 +29,157 @@
 #include <SFML/System.hpp>
 #include <sfeMovie/Movie.hpp>
 
-namespace sfe {
-	class Timer {
-	public:
-		class Observer {
-		public:
-			/** Default constructor
-			 */
-			Observer();
-			
-			/** Default destructor
-			 */
-			virtual ~Observer();
-			
-			/** Called by @a timer before playing if this Observer is registered for notifications
-			 *
-			 * Playing won't start until all Observers are done executing willPlay()
-			 *
-			 * @param timer the timer that generated the notification
-			 */
-			virtual void willPlay(const Timer& timer);
-			
-			/** Called by @a timer when playing if this Observer is registered for notifications
-			 *
-			 * @param timer the timer that generated the notification
-			 * @param previousStatus the timer's status before playing
-			 */
-			virtual void didPlay(const Timer& timer, Status previousStatus);
-			
-			/** Called by @a timer when pausing if this Observer is registered for notifications
-			 *
-			 * @param timer the timer that generated the notification
-			 * @param previousStatus the timer's status before playing
-			 */
-			virtual void didPause(const Timer& timer, Status previousStatus);
-			
-			/** Called by @a timer when stopping if this Observer is registered for notifications
-			 *
-			 * @param timer the timer that generated the notification
-			 * @param previousStatus the timer's status before playing
-			 */
-			virtual void didStop(const Timer& timer, Status previousStatus);
-			
-			/** Called by @a timer right before seeking if this Observer is registered for notifications
-			 *
-			 * When this method is called, the timer is guaranteed to be paused or stopped
-			 *
-			 * @param timer the timer that generated the notification
-			 * @param newPosition the wished position for seeking
-			 */
-			virtual void willSeek(const Timer& timer, sf::Time newPosition);
-			
-			/** Called by @a timer right after seeking if this Observer is registered for notifications
-			 *
-			 * When this method is called, the timer is guaranteed to be paused or stopped
-			 *
-			 * @param timer the timer that generated the notification
-			 * @param position the position before seeking
-			 */
-			virtual void didSeek(const Timer& timer, sf::Time oldPosition);
-		};
-		
-		/** Default constructor
-		 */
-		Timer();
-		
-		/** Default destructor
-		 *
-		 * Before destruction, the timer is stopped
-		 */
-		~Timer();
-		
-		/** Register an observer that should be notified when this timer is
-		 * played, paused or stopped
-		 *
-		 * @param anObserver the observer that should receive notifications
-		 */
-		void addObserver(Observer& anObserver);
-		
-		/** Stop sending notifications to this observer
-		 *
-		 * @param anObserver the observer that must receive no more notification
-		 */
-		void removeObserver(Observer& anObserver);
-		
-		/** Start this timer and notify all observers
-		 */
-		void play();
-		
-		/** Pause this timer (but do not reset it) and notify all observers
-		 */
-		void pause();
-		
-		/** Stop this timer and reset it and notify all observers
-		 */
-		void stop();
-		
-		/** Seek to the given position, the timer's offset is updated accordingly
-		 *
-		 * If the timer was playing, it is paused, seeking occurs, then it is resumed
-		 *
-		 * @param position the new wished timer position
-		 */
-		void seek(sf::Time position);
-		
-		/** Return this timer status
-		 *
-		 * @return Playing, Paused or Stopped
-		 */
-		Status getStatus() const;
-		
-		/** Return the timer's time
-		 *
-		 * @return the timer's time
-		 */
-		sf::Time getOffset() const;
-		
-	private:
-		/** Notify all observers that the timer's status is about to change to @a futureStatus
-		 *
-		 * The status change won't occur before all observers have received the noficiation
-		 *
-		 * @param futureStatus the status to which this timer is about to change
-		 */
-		void notifyObservers(Status futureStatus);
-		
-		/** Notify all observers that the timer's status changed from @a oldStatus to @a newStatus
-		 *
-		 * @param oldStatus the timer's status before the state change
-		 * @param newStatus the timer's status after the state change
-		 */
-		void notifyObservers(Status oldStatus, Status newStatus);
-		
-		/** Notify all observers that the timer is seeking to a new position
-		 *
-		 * When the observer receives the notification, the timer is guaranteed to be paused or stopped
-		 *
-		 * @param oldPosition the timer position before seeking
-		 * @param newPosition the timer position after seeking
-		 * @param alreadySeeked false if willSeek notification should be sent, true if didSeek should be sent
-		 * instead
-		 */
-		void notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked);
-		
-		sf::Time m_pausedTime;
-		Status m_status;
-		sf::Clock m_timer;
-		std::set<Observer*> m_observers;
-	};
+namespace sfe
+{
+    class Timer
+    {
+    public:
+        class Observer
+        {
+        public:
+            /** Default constructor
+             */
+            Observer();
+            
+            /** Default destructor
+             */
+            virtual ~Observer();
+            
+            /** Called by @a timer before playing if this Observer is registered for notifications
+             *
+             * Playing won't start until all Observers are done executing willPlay()
+             *
+             * @param timer the timer that generated the notification
+             */
+            virtual void willPlay(const Timer& timer);
+            
+            /** Called by @a timer when playing if this Observer is registered for notifications
+             *
+             * @param timer the timer that generated the notification
+             * @param previousStatus the timer's status before playing
+             */
+            virtual void didPlay(const Timer& timer, Status previousStatus);
+            
+            /** Called by @a timer when pausing if this Observer is registered for notifications
+             *
+             * @param timer the timer that generated the notification
+             * @param previousStatus the timer's status before playing
+             */
+            virtual void didPause(const Timer& timer, Status previousStatus);
+            
+            /** Called by @a timer when stopping if this Observer is registered for notifications
+             *
+             * @param timer the timer that generated the notification
+             * @param previousStatus the timer's status before playing
+             */
+            virtual void didStop(const Timer& timer, Status previousStatus);
+            
+            /** Called by @a timer right before seeking if this Observer is registered for notifications
+             *
+             * When this method is called, the timer is guaranteed to be paused or stopped
+             *
+             * @param timer the timer that generated the notification
+             * @param newPosition the wished position for seeking
+             */
+            virtual void willSeek(const Timer& timer, sf::Time newPosition);
+            
+            /** Called by @a timer right after seeking if this Observer is registered for notifications
+             *
+             * When this method is called, the timer is guaranteed to be paused or stopped
+             *
+             * @param timer the timer that generated the notification
+             * @param position the position before seeking
+             */
+            virtual void didSeek(const Timer& timer, sf::Time oldPosition);
+        };
+        
+        /** Default constructor
+         */
+        Timer();
+        
+        /** Default destructor
+         *
+         * Before destruction, the timer is stopped
+         */
+        ~Timer();
+        
+        /** Register an observer that should be notified when this timer is
+         * played, paused or stopped
+         *
+         * @param anObserver the observer that should receive notifications
+         */
+        void addObserver(Observer& anObserver);
+        
+        /** Stop sending notifications to this observer
+         *
+         * @param anObserver the observer that must receive no more notification
+         */
+        void removeObserver(Observer& anObserver);
+        
+        /** Start this timer and notify all observers
+         */
+        void play();
+        
+        /** Pause this timer (but do not reset it) and notify all observers
+         */
+        void pause();
+        
+        /** Stop this timer and reset it and notify all observers
+         */
+        void stop();
+        
+        /** Seek to the given position, the timer's offset is updated accordingly
+         *
+         * If the timer was playing, it is paused, seeking occurs, then it is resumed
+         *
+         * @param position the new wished timer position
+         */
+        void seek(sf::Time position);
+        
+        /** Return this timer status
+         *
+         * @return Playing, Paused or Stopped
+         */
+        Status getStatus() const;
+        
+        /** Return the timer's time
+         *
+         * @return the timer's time
+         */
+        sf::Time getOffset() const;
+        
+    private:
+        /** Notify all observers that the timer's status is about to change to @a futureStatus
+         *
+         * The status change won't occur before all observers have received the noficiation
+         *
+         * @param futureStatus the status to which this timer is about to change
+         */
+        void notifyObservers(Status futureStatus);
+        
+        /** Notify all observers that the timer's status changed from @a oldStatus to @a newStatus
+         *
+         * @param oldStatus the timer's status before the state change
+         * @param newStatus the timer's status after the state change
+         */
+        void notifyObservers(Status oldStatus, Status newStatus);
+        
+        /** Notify all observers that the timer is seeking to a new position
+         *
+         * When the observer receives the notification, the timer is guaranteed to be paused or stopped
+         *
+         * @param oldPosition the timer position before seeking
+         * @param newPosition the timer position after seeking
+         * @param alreadySeeked false if willSeek notification should be sent, true if didSeek should be sent
+         * instead
+         */
+        void notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked);
+        
+        sf::Time m_pausedTime;
+        Status m_status;
+        sf::Clock m_timer;
+        std::set<Observer*> m_observers;
+    };
 }
 
 #endif

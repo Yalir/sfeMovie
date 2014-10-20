@@ -2,7 +2,7 @@ Coding conventions
 ==================
 
 sfeMovie coding conventions globally follow SFML's ones, which are:
-- { and } on their own line
+- all { and } are on their own line
 - all blocks contents are indented (including switch blocks)
 - indent with spaces by 4 spaces, no tabs
 - class names are CamelCase

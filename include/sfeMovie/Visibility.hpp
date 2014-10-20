@@ -29,25 +29,25 @@
 /** Define portable import / export macros
  */
 #if defined(SFML_SYSTEM_WINDOWS) && defined(_MSC_VER)
-	#ifdef SFE_EXPORTS
-		/** From DLL side, we must export
-		 */
-		#define SFE_API __declspec(dllexport)
-	#else
-		/** From client application side, we must import
-		 */
-		#define SFE_API __declspec(dllimport)
-	#endif
+    #ifdef SFE_EXPORTS
+        /** From DLL side, we must export
+         */
+        #define SFE_API __declspec(dllexport)
+    #else
+        /** From client application side, we must import
+         */
+        #define SFE_API __declspec(dllimport)
+    #endif
 
-	/** For Visual C++ compilers, we also need to turn off this annoying C4251 warning.
-	 * You can read lots ot different things about it, but the point is the code will
-	 * just work fine, and so the simplest way to get rid of this warning is to disable it
-	 */
-	#ifdef _MSC_VER
-		#pragma warning(disable : 4251)
-	#endif
+    /** For Visual C++ compilers, we also need to turn off this annoying C4251 warning.
+     * You can read lots ot different things about it, but the point is the code will
+     * just work fine, and so the simplest way to get rid of this warning is to disable it
+     */
+    #ifdef _MSC_VER
+        #pragma warning(disable : 4251)
+    #endif
 #else
-	#define SFE_API
+    #define SFE_API
 #endif
 
 #endif
