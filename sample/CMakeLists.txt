@@ -13,7 +13,7 @@ target_link_libraries(
 )
 
 if (MACOSX)
-	set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES 
-	                      BUILD_WITH_INSTALL_RPATH 1 
-	                      INSTALL_RPATH "@executable_path/")
+    set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES 
+                          BUILD_WITH_INSTALL_RPATH 1 
+                          INSTALL_RPATH "@executable_path/")
 endif()
