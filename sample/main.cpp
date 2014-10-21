@@ -89,8 +89,9 @@ void printMovieInfo(const sfe::Movie& movie)
     
     const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);
     const sfe::Streams& audioStreams = movie.getStreams(sfe::Audio);
+    const sfe::Streams& subtitleStreams = movie.getStreams(sfe::Subtitle);
     
-    std::cout << videoStreams.size() + audioStreams.size() << " streams found in the media" << std::endl;
+    std::cout << videoStreams.size() + audioStreams.size() + subtitleStreams.size() << " streams found in the media" << std::endl;
     
     for (sfe::Streams::const_iterator it = videoStreams.begin(); it != videoStreams.end(); ++it)
     {
@@ -98,6 +99,15 @@ void printMovieInfo(const sfe::Movie& movie)
     }
     
     for (sfe::Streams::const_iterator it = audioStreams.begin(); it != audioStreams.end(); ++it)
+    {
+        std::cout << " #" << it->identifier << " : " << mediaTypeToString(it->type);
+        
+        if (!it->language.empty())
+            std::cout << " (language: " << it->language << ")";
+        std::cout << std::endl;
+    }
+    
+    for (sfe::Streams::const_iterator it = subtitleStreams.begin(); it != subtitleStreams.end(); ++it)
     {
         std::cout << " #" << it->identifier << " : " << mediaTypeToString(it->type);
         
@@ -192,7 +202,7 @@ int main(int argc, const char *argv[])
                     
                     movie.fit(0, 0, window.getSize().x, window.getSize().y);
                 }
-                else if (ev.key.code == sf::Keyboard::P)
+                else if (ev.key.code == sf::Keyboard::I)
                 {
                     printMovieInfo(movie);
                 }
@@ -220,13 +230,22 @@ int main(int argc, const char *argv[])
                 }
                 else if (ev.key.code == sf::Keyboard::S)
                 {
-                    if (subtitleStreams.size() > 1)
+                    if (subtitleStreams.size() > 0)
                     {
                         selectedSubtitleStreamId++;
-                        selectedSubtitleStreamId %= subtitleStreams.size();
-                        movie.selectStream(subtitleStreams[selectedSubtitleStreamId]);
-                        std::cout << "Selected subtitle stream #" << subtitleStreams[selectedSubtitleStreamId].identifier
+                        selectedSubtitleStreamId %= subtitleStreams.size() + 1;
+                        
+                        if (selectedSubtitleStreamId == subtitleStreams.size())
+                        {
+                            movie.selectStream(sfe::StreamDescriptor::NoSelection(sfe::Subtitle));
+                            std::cout << "Unselected subtitle stream" << std::endl;
+                        }
+                        else
+                        {
+                            movie.selectStream(subtitleStreams[selectedSubtitleStreamId]);
+                            std::cout << "Selected subtitle stream #" << subtitleStreams[selectedSubtitleStreamId].identifier
                             << std::endl;
+                        }
                     }
                 }
             }
