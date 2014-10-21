@@ -166,7 +166,7 @@ namespace sfe
             
             AVSubtitleType type = subItem->type;
             
-            if (type == SUBTITLE_BITMAP)
+            if (type == SUBTITLE_BITMAP || subItem->w * subItem->h > 0)
             {
                 positions.push_back(sf::Vector2i(subItem->x, subItem->y));
                 uint32_t* palette = new uint32_t[subItem->nb_colors];
@@ -189,6 +189,20 @@ namespace sfe
             else
             {
                 //TODO: add libass code
+                if (subItem->text != NULL)
+                {
+                    if (subItem->type == SUBTITLE_TEXT)
+                        sfeLogError("Unsupported subtitle type: it would require text support");
+                    else
+                        sfeLogError("Unsupported subtitle type: it can be approximated with text");
+                }
+                else if (subItem->ass != NULL)
+                {
+                    if (subItem->type == SUBTITLE_ASS)
+                        sfeLogError("Unsupported subtitle type: it would require ASS support");
+                    else
+                        sfeLogError("Unsupported subtitle type: it could be rendered with ASS support");
+                }
             }
         }
     }
