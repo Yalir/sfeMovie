@@ -116,6 +116,7 @@ namespace sfe
     m_timer(timer),
     m_connectedAudioStream(NULL),
     m_connectedVideoStream(NULL),
+    m_connectedSubtitleStream(NULL),
     m_duration(sf::Time::Zero)
     {
         CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
