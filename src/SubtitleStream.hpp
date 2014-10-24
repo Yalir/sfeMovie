@@ -81,8 +81,13 @@ namespace sfe
             sf::Time start;
             //when will it disappear (absolute)
             sf::Time end;
-            //Create our subtitle from an AVSubtitle
-            SubtitleData(AVSubtitle* sub);
+            
+            /** Create our subtitle from an AVSubtitle
+             *
+             * @param succeeded Whether this structure contains valid decoded subtitles
+             * after construction time
+             */
+            SubtitleData(AVSubtitle* sub, bool& succeeded);
         };
         
         /** Decode the packages that were send to the stream by the demuxer

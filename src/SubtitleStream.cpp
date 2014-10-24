@@ -122,8 +122,13 @@ namespace sfe
                 
                 if (gotSub && pts)
                 {
-                    SubtitleData* sfeSub = new SubtitleData(&sub);
-                    m_pendingSubtitles.push_back(sfeSub);
+                    bool succeeded = false;
+                    SubtitleData* sfeSub = new SubtitleData(&sub, succeeded);
+                    
+                    if (succeeded)
+                        m_pendingSubtitles.push_back(sfeSub);
+                    else
+                        delete sfeSub;
                 }
                 
                 if (needsMoreDecoding)
@@ -147,10 +152,11 @@ namespace sfe
     }
     
     
-    SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub)
+    SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded)
     {
         assert(sub != NULL);
         
+        succeeded = false;
         start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
         end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
         
@@ -185,6 +191,8 @@ namespace sfe
                 
                 delete[] data;
                 delete[] palette;
+                
+                succeeded = true;
             }
             else
             {
