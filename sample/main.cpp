@@ -153,7 +153,7 @@ int main(int argc, const char *argv[])
     const sfe::Streams& subtitleStreams = movie.getStreams(sfe::Subtitle);
     int selectedVideoStreamId = 0;
     int selectedAudioStreamId = 0;
-    int selectedSubtitleStreamId = 0;
+    int selectedSubtitleStreamId = -1; // No selected subtitle by default
     
     // Scale movie to the window drawing area and enable VSync
     window.setFramerateLimit(60);
