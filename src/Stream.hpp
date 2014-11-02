@@ -139,6 +139,8 @@ namespace sfe
         void willSeek(const Timer& timer, sf::Time position);
         void didSeek(const Timer& timer, sf::Time position);
         
+        bool hasPackets();
+        
         void setStatus(Status status);
         virtual void discardAllEncodedData();
         

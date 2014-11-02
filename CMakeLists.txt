@@ -70,7 +70,7 @@ message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 # ============================================== sfeMovie SETUP =============================================== #
 #################################################################################################################
 
-file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]*)
+file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]* ${SOURCES_DIR}/DebugTools/[a-z,A-Z]*.[c,h]*)
 
 add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 if (MACOSX) # ========================================== MACOSX ========================================== #
@@ -157,5 +157,5 @@ endif()
 
 set(BUILD_PACKAGE FALSE CACHE BOOL "Set to true to generate a zip file containing all the files required for development with sfeMovie")
 if (BUILD_PACKAGE)
-	include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
+    include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
 endif()

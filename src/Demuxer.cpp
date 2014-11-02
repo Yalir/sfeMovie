@@ -1,6 +1,6 @@
 
 /*
- *  Stream.cpp
+ *  Demuxer.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -106,7 +106,7 @@ namespace sfe
         return g_availableDecoders;
     }
     
-    Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate) :
+    Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
     m_formatCtx(NULL),
     m_eofReached(false),
     m_streams(),
@@ -115,6 +115,7 @@ namespace sfe
     m_timer(timer),
     m_connectedAudioStream(NULL),
     m_connectedVideoStream(NULL),
+    m_connectedSubtitleStream(NULL),
     m_duration(sf::Time::Zero)
     {
         CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
@@ -147,7 +148,8 @@ namespace sfe
         {
             AVStream* ffstream = m_formatCtx->streams[i];
             
-            try {
+            try
+            {
                 switch (ffstream->codec->codec_type)
                 {
                     case AVMEDIA_TYPE_VIDEO:
@@ -171,13 +173,16 @@ namespace sfe
                         
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
                         break;
+                    case AVMEDIA_TYPE_SUBTITLE:
+                        m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
                         
-                        /** TODO
-                         case AVMEDIA_TYPE_SUBTITLE:
-                         m_streams.push_back(new SubtitleStream(ffstream));
-                         break;
-                         */
+                        if (m_duration == sf::Time::Zero)
+                        {
+                            extractDurationFromStream(ffstream);
+                        }
                         
+                        sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
+                        break;
                     default:
                         m_ignoredStreams[ffstream->index] = std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
                         sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
@@ -331,6 +336,40 @@ namespace sfe
     VideoStream* Demuxer::getSelectedVideoStream() const
     {
         return dynamic_cast<VideoStream*>(m_connectedVideoStream);
+    }
+    
+    void Demuxer::selectSubtitleStream(SubtitleStream* stream)
+    {
+        Status oldStatus = m_timer.getStatus();
+        
+        if (oldStatus == Playing)
+            m_timer.pause();
+        
+        if (stream != m_connectedSubtitleStream)
+        {
+            if (m_connectedSubtitleStream)
+                m_connectedSubtitleStream->disconnect();
+            
+            if (stream)
+                stream->connect();
+            
+            m_connectedSubtitleStream = stream;
+        }
+        
+        if (oldStatus == Playing)
+            m_timer.play();
+    }
+    
+    void Demuxer::selectFirstSubtitleStream()
+    {
+        std::set<Stream*> subtitleStreams = getStreamsOfType(Subtitle);
+        if (subtitleStreams.size())
+            selectSubtitleStream(dynamic_cast<SubtitleStream*>(*subtitleStreams.begin()));
+    }
+    
+    SubtitleStream* Demuxer::getSelectedSubtitleStream() const
+    {
+        return dynamic_cast<SubtitleStream*>(m_connectedSubtitleStream);
     }
     
     void Demuxer::feedStream(Stream& stream)

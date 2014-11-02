@@ -243,4 +243,9 @@ namespace sfe
     {
         flushBuffers();
     }
+    
+    bool Stream::hasPackets()
+    {
+        return m_packetList.size() > 0;
+    }
 }
