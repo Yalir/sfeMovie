@@ -68,8 +68,9 @@ namespace sfe
          * @warning This method can only be used when the movie is stopped
          *
          * @param streamDescriptor the descriptor of the stream to activate
+         * @return true if the stream could be selected (ie. valid stream and movie is stopped)
          */
-        void selectStream(const StreamDescriptor& streamDescriptor);
+        bool selectStream(const StreamDescriptor& streamDescriptor);
         
         /** Start or resume playing the media playback
          *

@@ -53,6 +53,20 @@ void my_pause()
 #endif
 }
 
+void displayShortcuts()
+{
+    std::cout << "Shortcuts:\n"
+    << "- Play / pause: space\n"
+    << "- Stop: S\n"
+    << "- Hide / show user controls: H\n"
+    << "- Toggle fullscreen: F\n"
+    << "- Log media info and current state: I\n"
+    << "- Select next video stream: Alt+V\n"
+    << "- Select next audio stream: Alt+A\n"
+    << "- Select next subtitle stream: Alt+V"
+    << std::endl;
+}
+
 int main(int argc, const char *argv[])
 {
     if (argc < 2)
@@ -80,15 +94,16 @@ int main(int argc, const char *argv[])
     // Create window
     sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player",
                             sf::Style::Close | sf::Style::Resize);
-    movie.fit(0, 0, width, height);
-    displayMediaInfo(movie);
-    
-    UserInterface ui(window, movie);
-    StreamSelector selector(movie);
     
     // Scale movie to the window drawing area and enable VSync
     window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
+    movie.fit(0, 0, width, height);
+    
+    UserInterface ui(window, movie);
+    StreamSelector selector(movie);
+    displayShortcuts();
+
     movie.play();
     
     while (window.isOpen())
@@ -106,44 +121,54 @@ int main(int argc, const char *argv[])
             
             if (ev.type == sf::Event::KeyPressed)
             {
-                if (ev.key.code == sf::Keyboard::Space)
+                switch (ev.key.code)
                 {
-                    if (movie.getStatus() == sfe::Playing)
-                        movie.pause();
-                    else
-                        movie.play();
-                }
-                else if (ev.key.code == sf::Keyboard::P)
-                {
-                    movie.stop();
-                }
-                else if (ev.key.code == sf::Keyboard::F)
-                {
-                    fullscreen = !fullscreen;
-                    
-                    if (fullscreen)
-                        window.create(desktopMode, "sfeMovie Player", sf::Style::Fullscreen);
-                    else
-                        window.create(sf::VideoMode(width, height), "sfeMovie Player",
-                                      sf::Style::Close | sf::Style::Resize);
-                    
-                    movie.fit(0, 0, window.getSize().x, window.getSize().y);
-                }
-                else if (ev.key.code == sf::Keyboard::I)
-                {
-                    displayMediaInfo(movie);
-                }
-                else if (ev.key.code == sf::Keyboard::V)
-                {
-                    selector.selectNextStream(sfe::Video);
-                }
-                else if (ev.key.code == sf::Keyboard::A)
-                {
-                    selector.selectNextStream(sfe::Audio);
-                }
-                else if (ev.key.code == sf::Keyboard::S)
-                {
-                    selector.selectNextStream(sfe::Subtitle);
+                    case sf::Keyboard::Space:
+                        if (movie.getStatus() == sfe::Playing)
+                            movie.pause();
+                        else
+                            movie.play();
+                        break;
+                        
+                    case sf::Keyboard::A:
+                        if (ev.key.alt)
+                            selector.selectNextStream(sfe::Audio);
+                        break;
+                        
+                    case sf::Keyboard::F:
+                        fullscreen = !fullscreen;
+                        
+                        if (fullscreen)
+                            window.create(desktopMode, "sfeMovie Player", sf::Style::Fullscreen);
+                        else
+                            window.create(sf::VideoMode(width, height), "sfeMovie Player",
+                                          sf::Style::Close | sf::Style::Resize);
+                        
+                        window.setFramerateLimit(60);
+                        window.setVerticalSyncEnabled(true);
+                        movie.fit(0, 0, window.getSize().x, window.getSize().y);
+                        break;
+                        
+                    case sf::Keyboard::H:
+                        ui.toggleVisible();
+                        break;
+                        
+                    case sf::Keyboard::I:
+                        displayMediaInfo(movie);;
+                        break;
+                        
+                    case sf::Keyboard::S:
+                        if (ev.key.alt)
+                            selector.selectNextStream(sfe::Subtitle);
+                        else
+                            movie.stop();
+                        break;
+                        
+                    case sf::Keyboard::V:
+                        if (ev.key.alt)
+                            selector.selectNextStream(sfe::Video);
+                    default:
+                        break;
                 }
             }
             else if (ev.type == sf::Event::MouseWheelMoved)
@@ -152,6 +177,7 @@ int main(int argc, const char *argv[])
                 volume = std::min(volume, 100.f);
                 volume = std::max(volume, 0.f);
                 movie.setVolume(volume);
+                std::cout << "Volume changed to " << int(volume) << "%" << std::endl;
             }
             else if (ev.type == sf::Event::Resized)
             {
@@ -171,4 +197,3 @@ int main(int argc, const char *argv[])
     
     return 0;
 }
-

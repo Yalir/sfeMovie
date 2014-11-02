@@ -104,18 +104,18 @@ namespace sfe
         }
     }
     
-    void MovieImpl::selectStream(const StreamDescriptor& streamDescriptor)
+    bool MovieImpl::selectStream(const StreamDescriptor& streamDescriptor)
     {
         if (!m_demuxer || !m_timer)
         {
             sfeLogError("Movie::selectStream() - cannot select a stream with no opened media");
-            return;
+            return false;
         }
         
         if (m_timer->getStatus() != Stopped)
         {
             sfeLogError("Movie::selectStream() - cannot select a stream while media is not stopped");
-            return;
+            return false;
         }
         
         std::map<int, Stream*> streams = m_demuxer->getStreams();
@@ -131,17 +131,17 @@ namespace sfe
         {
             case Audio:
                 m_demuxer->selectAudioStream(dynamic_cast<AudioStream*>(streamToSelect));
-                break;
+                return true;
             case Video:
                 m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(streamToSelect));
-                break;
+                return true;
             case Subtitle:
                 m_demuxer->selectSubtitleStream(dynamic_cast<SubtitleStream*>(streamToSelect));
-                break;
+                return true;
             default:
                 sfeLogWarning("Movie::selectStream() - stream activation for stream of kind "
                               + mediaTypeToString(it->second->getStreamKind()) + " is not supported");
-                break;
+                return false;
         }
     }
     

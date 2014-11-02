@@ -39,9 +39,9 @@ UserInterface::UserInterface(sf::RenderWindow& window, const sfe::Movie& movie)
 {
 }
 
-void UserInterface::setVisible(bool flag)
+void UserInterface::toggleVisible()
 {
-    m_visible = flag;
+    m_visible = !m_visible;
 }
 
 void UserInterface::draw() const

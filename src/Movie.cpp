@@ -57,7 +57,7 @@ namespace sfe
         return m_impl->getStreams(type);
     }
     
-    void Movie::selectStream(const StreamDescriptor& streamDescriptor)
+    bool Movie::selectStream(const StreamDescriptor& streamDescriptor)
     {
         return m_impl->selectStream(streamDescriptor);
     }

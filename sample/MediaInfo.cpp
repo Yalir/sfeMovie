@@ -38,17 +38,17 @@ namespace
             default:            return "unknown status";
         }
     }
-    
-    std::string mediaTypeToString(sfe::MediaType type)
+}
+
+std::string mediaTypeToString(sfe::MediaType type)
+{
+    switch (type)
     {
-        switch (type)
-        {
-            case sfe::Audio:    return "audio";
-            case sfe::Subtitle: return "subtitle";
-            case sfe::Video:    return "video";
-            case sfe::Unknown:  return "unknown";
-            default:            return "(null)";
-        }
+        case sfe::Audio:    return "audio";
+        case sfe::Subtitle: return "subtitle";
+        case sfe::Video:    return "video";
+        case sfe::Unknown:  return "unknown";
+        default:            return "(null)";
     }
 }
 

@@ -27,6 +27,7 @@
 
 #include <sfeMovie/Movie.hpp>
 
+std::string mediaTypeToString(sfe::MediaType type);
 void displayMediaInfo(const sfe::Movie& movie);
 
 #endif

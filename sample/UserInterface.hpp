@@ -36,7 +36,7 @@ public:
     
     /** @param flag true to enable drawing of the user interface
      */
-    void setVisible(bool flag);
+    void toggleVisible();
     
     /** Draw the user interface on the window and from the movie
      * given at construction time
