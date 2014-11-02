@@ -1,6 +1,6 @@
 
 /*
- *  Stream.cpp
+ *  Log.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
