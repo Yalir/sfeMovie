@@ -33,7 +33,6 @@ extern "C"
 #include "Demuxer.hpp"
 #include "VideoStream.hpp"
 #include "AudioStream.hpp"
-#include "SubtitleStream.hpp"
 #include "Log.hpp"
 #include "Utilities.hpp"
 #include <iostream>
@@ -459,6 +458,9 @@ namespace sfe
             
             int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
             sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+            
+            if (err < 0)
+                sfeLogError("Error while seeking at time " + s(position.asMilliseconds()) + "ms");
         }
         else
         {
@@ -467,6 +469,9 @@ namespace sfe
             
             //            int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
             sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
+            
+            if (err < 0)
+                sfeLogError("Error while seeking at time " + s(position.asMilliseconds()) + "ms");
         }
     }
 }

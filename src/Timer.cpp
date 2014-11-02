@@ -99,9 +99,6 @@ namespace sfe
     {
         CHECK(getStatus() != Playing, "Timer::play() - timer playing twice");
         
-        if (getStatus() == Stopped)
-            seek(sf::Time::Zero);
-        
         notifyObservers(Playing);
         
         Status oldStatus = getStatus();
