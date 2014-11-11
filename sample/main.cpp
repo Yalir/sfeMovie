@@ -56,14 +56,14 @@ void my_pause()
 void displayShortcuts()
 {
     std::cout << "Shortcuts:\n"
-    << "- Play / pause: space\n"
-    << "- Stop: S\n"
-    << "- Hide / show user controls: H\n"
-    << "- Toggle fullscreen: F\n"
-    << "- Log media info and current state: I\n"
-    << "- Select next video stream: Alt+V\n"
-    << "- Select next audio stream: Alt+A\n"
-    << "- Select next subtitle stream: Alt+V"
+    << "\tSpace - Play / pause\n"
+    << "\tS - Stop\n"
+    << "\tH - Hide / show user controls and mouse cursor\n"
+    << "\tF - Toggle fullscreen\n"
+    << "\tI - Log media info and current state\n"
+    << "\tAlt + V - Select next video stream\n"
+    << "\tAlt + A - Select next audio stream\n"
+    << "\tAlt + S - Select next subtitle stream"
     << std::endl;
 }
 
@@ -147,6 +147,7 @@ int main(int argc, const char *argv[])
                         window.setFramerateLimit(60);
                         window.setVerticalSyncEnabled(true);
                         movie.fit(0, 0, window.getSize().x, window.getSize().y);
+                        ui.applyProperties();
                         break;
                         
                     case sf::Keyboard::H:

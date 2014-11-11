@@ -38,6 +38,10 @@ public:
      */
     void toggleVisible();
     
+    /** Explicitely re-apply visiblity properties to the window and movie
+     */
+    void applyProperties();
+    
     /** Draw the user interface on the window and from the movie
      * given at construction time
      */

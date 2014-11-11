@@ -42,6 +42,13 @@ UserInterface::UserInterface(sf::RenderWindow& window, const sfe::Movie& movie)
 void UserInterface::toggleVisible()
 {
     m_visible = !m_visible;
+    
+    applyProperties();
+}
+
+void UserInterface::applyProperties()
+{
+    m_window.setMouseCursorVisible(m_visible);
 }
 
 void UserInterface::draw() const
