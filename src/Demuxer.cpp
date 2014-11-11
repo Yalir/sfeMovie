@@ -456,7 +456,8 @@ namespace sfe
             // We don't want to store the packets for inactive streams,
             // let them be freed
             if (targetStream == getSelectedVideoStream() ||
-                targetStream == getSelectedAudioStream())
+                targetStream == getSelectedAudioStream() ||
+                targetStream == getSelectedSubtitleStream())
             {
                 targetStream->pushEncodedData(packet);
                 result = true;
