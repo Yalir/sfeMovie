@@ -188,9 +188,14 @@ namespace sfe
                         sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
                         break;
                 }
-            } catch (std::runtime_error& e)
+            }
+            catch (std::runtime_error& e)
             {
-                std::cerr << "Demuxer::Demuxer() - " << e.what() << std::endl;
+                std::string streamId =
+                    std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type))
+                                + "/" + avcodec_get_name(ffstream->codec->codec_id)) + "'";
+                
+                sfeLogError("error while loading " + streamId + " stream: " + e.what());
             }
         }
         

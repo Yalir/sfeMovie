@@ -55,11 +55,11 @@ namespace sfe
         m_streamID = stream->index;
         m_codecCtx = stream->codec;
         
-        // Get the video decoder
+        // Get the decoder
         m_codec = avcodec_find_decoder(m_codecCtx->codec_id);
         CHECK(m_codec, "Stream() - no decoder for " + std::string(avcodec_get_name(m_codecCtx->codec_id)) + " codec");
         
-        // Load the video codec
+        // Load the codec
         err = avcodec_open2(m_codecCtx, m_codec, NULL);
         CHECK0(err, "Stream() - unable to load decoder for codec " + std::string(avcodec_get_name(m_codecCtx->codec_id)));
         

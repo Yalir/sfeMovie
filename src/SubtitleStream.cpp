@@ -44,6 +44,9 @@ namespace sfe
     SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
     Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
     {
+        CHECK((m_codecCtx->codec_descriptor->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
+              "Subtitle stream doesn't provide bitmap subtitles, this is not supported yet!"
+              "\nSee https://github.com/Yalir/sfeMovie/issues/7");
     }
     
     /** Default destructor
