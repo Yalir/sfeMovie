@@ -451,8 +451,16 @@ namespace sfe
         
         if (it != m_streams.end())
         {
-            it->second->pushEncodedData(packet);
-            result = true;
+            Stream* targetStream = it->second;
+            
+            // We don't want to store the packets for inactive streams,
+            // let them be freed
+            if (targetStream == getSelectedVideoStream() ||
+                targetStream == getSelectedAudioStream())
+            {
+                targetStream->pushEncodedData(packet);
+                result = true;
+            }
         }
         
         return result;
