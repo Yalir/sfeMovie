@@ -219,7 +219,7 @@ namespace sfe
         }
     }
     
-    void SubtitleStream::didStop(const Timer& timer, sfe::Status previousStatus)
+    void SubtitleStream::flushBuffers()
     {
         while (m_visibleSubtitles.size())
         {
@@ -233,6 +233,8 @@ namespace sfe
             m_pendingSubtitles.pop_back();
         }
         
-        Stream::didStop(timer, previousStatus);
+        m_delegate.didWipeOutSubtitles(*this);
+        
+        Stream::flushBuffers();
     }
 }

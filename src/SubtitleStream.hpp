@@ -41,10 +41,18 @@ namespace sfe
     public:
         struct Delegate
         {
+            /** Triggered by the subtitle stream when a new subtitle is available and should be displayed
+             */
             virtual void didUpdateSubtitle(const SubtitleStream& sender,
                                            const std::list<sf::Sprite>& subimages,
                                            const std::list<sf::Vector2i>& positions) = 0;
+            
+            /** Triggered by the subtitle stream when buffers are flushed and the subtitles previously
+             * sent for display are no more available
+             */
+            virtual void didWipeOutSubtitles(const SubtitleStream& sender) = 0;
         };
+        
         /** Create a subtitle stream from the given FFmpeg stream
          *
          * At the end of the constructor, the stream is guaranteed
@@ -65,9 +73,6 @@ namespace sfe
         /** Update the stream's status
          */
         virtual void update();
-        
-        // Timer::Observer interface
-        void didStop(const Timer& timer, sfe::Status previousStatus);
         
     private:
         /** The struct we use to store our subtitles
@@ -95,6 +100,7 @@ namespace sfe
          * @return if the stream is finished or not
          */
         bool onGetData();
+        virtual void flushBuffers();
         
         Delegate& m_delegate;
         

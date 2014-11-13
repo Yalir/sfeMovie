@@ -96,7 +96,7 @@ namespace sfe
         
         /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
          */
-        void flushBuffers();
+        virtual void flushBuffers();
         
         /** Used by the demuxer to know if this stream should be fed with more data
          *
@@ -142,7 +142,6 @@ namespace sfe
         bool hasPackets();
         
         void setStatus(Status status);
-        virtual void discardAllEncodedData();
         
         AVFormatContext* m_formatCtx;
         AVStream* m_stream;

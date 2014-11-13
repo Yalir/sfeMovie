@@ -144,7 +144,17 @@ namespace sfe
         }
         
         avcodec_flush_buffers(m_codecCtx);
-        discardAllEncodedData();
+        
+        AVPacket* pkt = NULL;
+        
+        while (m_packetList.size())
+        {
+            pkt = m_packetList.front();
+            m_packetList.pop_front();
+            
+            av_free_packet(pkt);
+            av_free(pkt);
+        }
         
         sfeLogDebug("Flushed " + mediaTypeToString(getStreamKind()) + " stream!");
     }
@@ -204,20 +214,6 @@ namespace sfe
     void Stream::setStatus(Status status)
     {
         m_status = status;
-    }
-    
-    void Stream::discardAllEncodedData()
-    {
-        AVPacket* pkt = NULL;
-        
-        while (m_packetList.size())
-        {
-            pkt = m_packetList.front();
-            m_packetList.pop_front();
-            
-            av_free_packet(pkt);
-            av_free(pkt);
-        }
     }
     
     void Stream::didPlay(const Timer& timer, Status previousStatus)

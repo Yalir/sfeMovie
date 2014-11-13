@@ -60,7 +60,7 @@ void displayMediaInfo(const sfe::Movie& movie)
     std::cout << "Size: " << movie.getSize().x << "x" << movie.getSize().y << std::endl;
     std::cout << "Framerate: " << movie.getFramerate() << " FPS (average)" << std::endl;
     std::cout << "Volume: " << movie.getVolume() << std::endl;
-    std::cout << "Sample rate: " << movie.getSampleRate() << std::endl;
+    std::cout << "Sample rate: " << movie.getSampleRate() << " Hz" << std::endl;
     std::cout << "Channel count: " << movie.getChannelCount() << std::endl;
     
     const sfe::Streams& videoStreams = movie.getStreams(sfe::Video);

@@ -204,6 +204,7 @@ namespace sfe
         void didUpdateSubtitle(const SubtitleStream& sender,
                                const std::list<sf::Sprite>& sprites,
                                const std::list<sf::Vector2i>& positions);
+        void didWipeOutSubtitles(const SubtitleStream& sender);
         
     private:
         sf::Transformable& m_movieView;
@@ -214,7 +215,6 @@ namespace sfe
         Streams m_audioStreamsDesc;
         Streams m_videoStreamsDesc;
         Streams m_subtitleStreamsDesc;
-        float m_scaleX, m_scaleY;
         sf::IntRect m_displayFrame;
         LayoutDebugger<sf::Sprite> m_debugger;
     };
