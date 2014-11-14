@@ -509,7 +509,6 @@ namespace sfe
                 subtitleSprite.setPosition(m_videoSprite.getPosition().x + pos.x * m_videoSprite.getScale().x,
                                            m_videoSprite.getPosition().y - (pos.y + subSize.y) * m_videoSprite.getScale().y);
                 ++pos_it;
-                m_subDot.setPosition(subtitleSprite.getPosition());
             }
             else
             {
