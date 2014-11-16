@@ -139,6 +139,8 @@ namespace sfe
         void willSeek(const Timer& timer, sf::Time position);
         void didSeek(const Timer& timer, sf::Time position);
         
+        /** @return true if any raw packet for the current stream is queued
+         */
         bool hasPackets();
         
         void setStatus(Status status);
