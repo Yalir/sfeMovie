@@ -380,7 +380,6 @@ namespace sfe
     void Demuxer::feedStream(Stream& stream)
     {
         sf::Lock l(m_synchronized);
-        sfeLogDebug("Feed " + mediaTypeToString(stream.getStreamKind()) + " stream");
         
         while (!didReachEndOfFile() && stream.needsMoreData())
         {
@@ -394,7 +393,7 @@ namespace sfe
             {
                 if (!distributePacket(pkt))
                 {
-                    sfeLogWarning(m_ignoredStreams[pkt->stream_index] + " packet not handled and dropped");
+                    sfeLogDebug(m_ignoredStreams[pkt->stream_index] + " packet not handled and dropped");
                     av_free_packet(pkt);
                     av_free(pkt);
                 }
