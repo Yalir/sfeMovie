@@ -30,7 +30,7 @@
 #include <cmath>
 #include <iostream>
 
-#define LAYOUT_DEBUGGER_ENABLED 1
+#define LAYOUT_DEBUGGER_ENABLED 0
 
 namespace sfe
 {

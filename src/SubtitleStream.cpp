@@ -176,9 +176,13 @@ namespace sfe
             
             AVSubtitleType type = subItem->type;
             
-            if (type == SUBTITLE_BITMAP || subItem->w * subItem->h > 0)
+            if (type == SUBTITLE_BITMAP)
             {
+                CHECK(subItem->pict.data != NULL, "FFmpeg inconcistency error");
+                CHECK(subItem->w * subItem->h > 0, "FFmpeg inconcistency error");
+                
                 positions.push_back(sf::Vector2i(subItem->x, subItem->y));
+                
                 uint32_t* palette = new uint32_t[subItem->nb_colors];
                 for (int j = 0; j < subItem->nb_colors; j++)
                     palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];
