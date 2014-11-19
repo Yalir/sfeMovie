@@ -88,7 +88,7 @@ else()
 	  pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s24le_planar pcm_s32be pcm_s32le pcm_s32le_planar
 	  pcm_s8 pcm_s8_planar pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork roq_dpcm
 	  sol_dpcm xan_dpcm)
-	set (ENABLED_DECODERS theora flac vorbis vp8 ${PCM_DECODERS} CACHE STRING "Enabled audio and video decoders")
+	set (ENABLED_DECODERS theora flac vorbis vp8 vp9 libopus ${PCM_DECODERS} CACHE STRING "Enabled audio and video decoders")
 
 	set (CachedSelectedDecoders "")
 	set (NeedsFFmpegCompilation TRUE)
