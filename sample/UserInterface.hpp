@@ -1,6 +1,6 @@
 
 /*
- *  Macros.cpp
+ *  UI.hpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -22,16 +22,35 @@
  *
  */
 
-#include "Macros.hpp"
 
-namespace sfe
+#ifndef SFEMOVIE_SAMPLE_UI_HPP
+#define SFEMOVIE_SAMPLE_UI_HPP
+
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <sfeMovie/Movie.hpp>
+
+class UserInterface
 {
-    std::string ff_err2str(int code)
-    {
-        char buf[AV_ERROR_MAX_STRING_SIZE];
-        memset(buf, 0, AV_ERROR_MAX_STRING_SIZE);
-        
-        av_make_error_string(buf, AV_ERROR_MAX_STRING_SIZE, code);
-        return std::string(buf);
-    }
-}
+public:
+    UserInterface(sf::RenderWindow& window, const sfe::Movie& movie);
+    
+    /** @param flag true to enable drawing of the user interface
+     */
+    void toggleVisible();
+    
+    /** Explicitely re-apply visiblity properties to the window and movie
+     */
+    void applyProperties();
+    
+    /** Draw the user interface on the window and from the movie
+     * given at construction time
+     */
+    void draw() const;
+    
+private:
+    sf::RenderWindow& m_window;
+    const sfe::Movie& m_movie;
+    bool m_visible;
+};
+
+#endif

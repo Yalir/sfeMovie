@@ -52,6 +52,9 @@ namespace sfe
         Unknown
     };
     
+    /** Structure that allows both knowing metadata about each stream, and identifying streams
+     * for selection through Movie::selectStream()
+     */
     struct SFE_API StreamDescriptor
     {
         /** Return a stream descriptor that identifies no stream. This allows disabling a specific stream kind
@@ -62,19 +65,21 @@ namespace sfe
         static StreamDescriptor NoSelection(MediaType type);
         
         MediaType type;            //!< Stream kind: video, audio or subtitle
-        int identifier;            //!< Stream identifier in the media, used for choosing which stream to enable
+        int identifier;            //!< Internal stream identifier in the media, used for choosing which stream to enable
         std::string language;    //!< Language code defined by ISO 639-2, if set by the media
     };
     
     typedef std::vector<StreamDescriptor> Streams;
     
+    /** Main class of the sfeMovie API. It is used to open media files, provide playback and basic controls
+     */
     class SFE_API Movie : public sf::Drawable, public sf::Transformable
     {
     public:
         Movie();
         ~Movie();
         
-        /** Attemps to open a media file (movie or audio)
+        /** @brief Attemps to open a media file (movie or audio)
          *
          * Opening can fails either because of a wrong filename,
          * or because you tried to open a media file that has no supported
@@ -85,13 +90,15 @@ namespace sfe
          */
         bool openFromFile(const std::string& filename);
         
-        /** Return a description of all the streams of the given type contained in the opened media
+        /** @brief Return a description of all the streams of the given type contained in the opened media
          *
          * @param type the stream type (audio, video...) to return
          */
         const Streams& getStreams(MediaType type) const;
         
-        /** Request activation of the given stream. In case another stream of the same kind is already active,
+        /** @brief Request activation of the given stream.
+         *
+         * In case another stream of the same kind is already active,
          * it is deactivated.
          *
          * @note When opening a new media file, the default behaviour is to automatically activate the first
@@ -100,10 +107,11 @@ namespace sfe
          * @warning This method can only be used when the movie is stopped
          *
          * @param streamDescriptor the descriptor of the stream to activate
+         * @return true if the stream could be selected (ie. valid stream and movie is stopped)
          */
-        void selectStream(const StreamDescriptor& streamDescriptor);
+        bool selectStream(const StreamDescriptor& streamDescriptor);
         
-        /** Start or resume playing the media playback
+        /** @brief Start or resume playing the media playback
          *
          * This function starts the stream if it was stopped, resumes it if it was paused,
          * and restarts it from beginning if it was already playing. This function is non blocking
@@ -112,54 +120,54 @@ namespace sfe
          */
         void play();
         
-        /** Pauses the media playback
+        /** @brief Pauses the media playback
          *
          * If the media playback is already paused,
          * this does nothing, otherwise the playback is paused.
          */
         void pause();
         
-        /** Stops the media playback. The playing offset is reset to the beginning.
+        /** @brief Stops the media playback. The playing offset is reset to the beginning.
          *
          * This function stops the stream if it was playing or paused, and does nothing
          * if it was already stopped. It also resets the playing position (unlike pause()).
          */
         void stop();
         
-        /** Update the media status and eventually decode frames
+        /** @brief Update the media status and eventually decode frames
          */
         void update();
         
-        /** Sets the sound's volume (default is 100)
+        /** @brief Sets the sound's volume (default is 100)
          *
          * @param volume the volume in range [0, 100]
          */
         void setVolume(float volume);
         
-        /** Returns the current sound's volume
+        /** @brief Returns the current sound's volume
          *
          * @return the sound's volume, in range [0, 100]
          */
         float getVolume() const;
         
-        /** Returns the duration of the movie
+        /** @brief Returns the duration of the movie
          *
          * @return the duration as sf::Time
          */
         sf::Time getDuration() const;
         
-        /** Returns the size (width, height) of the currently active video stream
+        /** @brief Returns the size (width, height) of the currently active video stream
          *
          * @return the size of the currently active video stream, or (0, 0) is there is none
          */
         sf::Vector2i getSize() const;
         
-        /** See fitFrame(sf::IntRect, bool)
+        /** @brief See fitFrame(sf::IntRect, bool)
          * @see fitFrame(sf::IntRect, bool)
          */
         void fit(int x, int y, int width, int height, bool preserveRatio = true);
         
-        /** Scales the movie to fit the requested frame.
+        /** @brief Scales the movie to fit the requested frame.
          *
          * If the ratio is preserved, the movie may be centered
          * in the given frame, thus the movie position may be different from
@@ -172,37 +180,39 @@ namespace sfe
          */
         void fit(sf::IntRect frame, bool preserveRatio = true);
         
-        /** Returns the average amount of video frames per second
+        /** @brief Returns the average amount of video frames per second
+         *
+         * In case of media that use Variable Frame Rate, this value is approximative
          *
          * @return the average video frame rate
          */
         float getFramerate() const;
         
-        /** Returns the amount of audio samples per second
+        /** @brief Returns the amount of audio samples per second
          *
          * @return the audio sample rate
          */
         unsigned int getSampleRate() const;
         
-        /** Returns the count of audio channels
+        /** @brief Returns the count of audio channels
          *
          * @return the channels' count
          */
         unsigned int getChannelCount() const;
         
-        /** Returns the current status of the movie
+        /** @brief Returns the current status of the movie
          *
          * @return See enum Status
          */
         Status getStatus() const;
         
-        /** Returns the current playing position in the movie
+        /** @brief Returns the current playing position in the movie
          *
          * @return the playing position
          */
         sf::Time getPlayingOffset() const;
         
-        /** Returns the latest movie image
+        /** @brief Returns the latest movie image
          *
          * The returned image is a texture in VRAM.
          * If the movie has no video stream, this returns an empty texture.

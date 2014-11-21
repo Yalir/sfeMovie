@@ -1,9 +1,20 @@
 set(SFEMOVIE_SAMPLE "sfeMovieSample")
 
+set(SFEMOVIE_SAMPLE_SRC
+    main.cpp
+    MediaInfo.cpp
+    MediaInfo.hpp
+    StreamSelector.cpp
+    StreamSelector.hpp
+    UserInterface.cpp
+    UserInterface.hpp
+)
+
 add_executable(
     ${SFEMOVIE_SAMPLE}
-    main.cpp
+    ${SFEMOVIE_SAMPLE_SRC}
 )
+source_group("Sources" FILES ${SFEMOVIE_SAMPLE_SRC})
 
 target_link_libraries(
     ${SFEMOVIE_SAMPLE}

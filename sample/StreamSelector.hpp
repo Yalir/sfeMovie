@@ -1,6 +1,6 @@
 
 /*
- *  Macros.cpp
+ *  Streams.hpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -22,16 +22,30 @@
  *
  */
 
-#include "Macros.hpp"
+#ifndef SFEMOVIE_SAMPLE_STREAM_SELECTOR_HPP
+#define SFEMOVIE_SAMPLE_STREAM_SELECTOR_HPP
 
-namespace sfe
+#include <sfeMovie/Movie.hpp>
+#include <map>
+
+class StreamSelector
 {
-    std::string ff_err2str(int code)
-    {
-        char buf[AV_ERROR_MAX_STRING_SIZE];
-        memset(buf, 0, AV_ERROR_MAX_STRING_SIZE);
-        
-        av_make_error_string(buf, AV_ERROR_MAX_STRING_SIZE, code);
-        return std::string(buf);
-    }
-}
+public:
+    /** Initial setup is to select the first video and audio stream, and no subtitle stream
+     */
+    StreamSelector(sfe::Movie& movie);
+    
+    /** Select the next found stream of the given type from the movie given at construction
+     *
+     * Once all of the streams of a specific kind have been iterated,
+     * next call to this method unselect the current stream of the given type
+     */
+    void selectNextStream(sfe::MediaType type);
+    
+private:
+    sfe::Movie& m_movie;
+    std::map<sfe::MediaType, int> m_selectedStreamIndexes;
+    std::map<sfe::MediaType, const sfe::Streams*> m_streams;
+};
+
+#endif

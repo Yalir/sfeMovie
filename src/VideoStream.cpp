@@ -120,7 +120,7 @@ namespace sfe
                 }
                 else
                 {
-                    m_delegate.didUpdateImage(*this, m_texture);
+                    m_delegate.didUpdateVideo(*this, m_texture);
                 }
             }
         }

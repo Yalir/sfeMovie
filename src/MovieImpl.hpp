@@ -22,20 +22,20 @@
  *
  */
 
+#ifndef SFEMOVIE_MOVIEIMPL_HPP
+#define SFEMOVIE_MOVIEIMPL_HPP
+
 #include <cstring>
 #include <string>
 #include <stdexcept>
 #include <SFML/Config.hpp>
 #include "VideoStream.hpp"
 #include "Demuxer.hpp"
-#include <sfeMovie/Movie.hpp>
-
-#ifndef SFEMOVIE_MOVIEIMPL_HPP
-#define SFEMOVIE_MOVIEIMPL_HPP
+#include "DebugTools/LayoutDebugger.hpp"
 
 namespace sfe
 {
-    class MovieImpl : public VideoStream::Delegate, public sf::Drawable
+    class MovieImpl : public VideoStream::Delegate, public SubtitleStream::Delegate, public sf::Drawable
     {
     public:
         MovieImpl(sf::Transformable& movieView);
@@ -68,8 +68,9 @@ namespace sfe
          * @warning This method can only be used when the movie is stopped
          *
          * @param streamDescriptor the descriptor of the stream to activate
+         * @return true if the stream could be selected (ie. valid stream and movie is stopped)
          */
-        void selectStream(const StreamDescriptor& streamDescriptor);
+        bool selectStream(const StreamDescriptor& streamDescriptor);
         
         /** Start or resume playing the media playback
          *
@@ -199,15 +200,23 @@ namespace sfe
         
         void cleanResources();
         void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        void didUpdateImage(const VideoStream& sender, const sf::Texture& image);
+        void didUpdateVideo(const VideoStream& sender, const sf::Texture& image);
+        void didUpdateSubtitle(const SubtitleStream& sender,
+                               const std::list<sf::Sprite>& sprites,
+                               const std::list<sf::Vector2i>& positions);
+        void didWipeOutSubtitles(const SubtitleStream& sender);
         
     private:
         sf::Transformable& m_movieView;
         Demuxer* m_demuxer;
         Timer* m_timer;
-        sf::Sprite m_sprite;
+        sf::Sprite m_videoSprite;
+        std::list<sf::Sprite> m_subtitleSprites;
         Streams m_audioStreamsDesc;
         Streams m_videoStreamsDesc;
+        Streams m_subtitleStreamsDesc;
+        sf::IntRect m_displayFrame;
+        LayoutDebugger<sf::Sprite> m_debugger;
     };
     
 }
