@@ -8,10 +8,21 @@
 #include "Utilities.hpp"
 #include <SFML/Audio.hpp>
 
-class DummyDelegate : public sfe::VideoStream::Delegate {
-	void didUpdateImage(const sfe::VideoStream& sender, const sf::Texture& image)
+class DummyDelegate : public sfe::VideoStream::Delegate, public sfe::SubtitleStream::Delegate {
+	void didUpdateVideo(const sfe::VideoStream& sender, const sf::Texture& image)
 	{
 	}
+    
+    void didUpdateSubtitle(const sfe::SubtitleStream& sender,
+                           const std::list<sf::Sprite>& subimages,
+                           const std::list<sf::Vector2i>& positions)
+    {
+    }
+    
+    void didWipeOutSubtitles(const sfe::SubtitleStream& sender)
+    {
+    }
+    
 };
 
 static DummyDelegate delegate;
@@ -26,8 +37,8 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
-	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("non-existing-file.ogv", timer, delegate), std::runtime_error);
-	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small_1.ogv", timer, delegate));
+	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("non-existing-file.ogv", timer, delegate, delegate), std::runtime_error);
+	BOOST_CHECK_NO_THROW(demuxer = new sfe::Demuxer("small_1.ogv", timer, delegate, delegate));
 	BOOST_REQUIRE(demuxer != NULL);
 	
 	const std::map<int, sfe::Stream*>& streams = demuxer->getStreams();
@@ -44,10 +55,10 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 		sfe::Stream* stream = it->second;
 		
 		switch (stream->getStreamKind()) {
-			case sfe::MEDIA_TYPE_VIDEO:
+			case sfe::Video:
 				videoStreamCount++;
 				break;
-			case sfe::MEDIA_TYPE_AUDIO:
+			case sfe::Audio:
 				audioStreamCount++;
 				break;
 			default:
@@ -73,12 +84,12 @@ BOOST_AUTO_TEST_CASE(DemuxerShortOGVTest)
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
 	sf::Clock clock;
-	demuxer = new sfe::Demuxer("small_1.ogv", timer, delegate);
+	demuxer = new sfe::Demuxer("small_1.ogv", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* videoStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_VIDEO).begin();
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	sfe::Stream* videoStream = *demuxer->getStreamsOfType(sfe::Video).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(videoStream->getStatus() == sfe::Stopped);
@@ -104,11 +115,11 @@ BOOST_AUTO_TEST_CASE(DemuxerShortWAVTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
-	demuxer = new sfe::Demuxer("small_4.wav", timer, delegate);
+	demuxer = new sfe::Demuxer("small_4.wav", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
@@ -126,11 +137,11 @@ BOOST_AUTO_TEST_CASE(DemuxerLongWAVTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
-	demuxer = new sfe::Demuxer("long_1.wav", timer, delegate);
+	demuxer = new sfe::Demuxer("long_1.wav", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);
@@ -151,18 +162,18 @@ BOOST_AUTO_TEST_CASE(DemuxerShortMP3Test)
 	sfe::Timer timer;
 	// With free codecs only, the demuxer is not supposed to be able to load MP3 medias
 	
-	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("small_2.mp3", timer, delegate), std::runtime_error);
+	BOOST_CHECK_THROW(demuxer = new sfe::Demuxer("small_2.mp3", timer, delegate, delegate), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(DemuxerShortFLACTest)
 {
 	sfe::Demuxer *demuxer = NULL;
 	sfe::Timer timer;
-	demuxer = new sfe::Demuxer("small_3.flac", timer, delegate);
+	demuxer = new sfe::Demuxer("small_3.flac", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
-	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::MEDIA_TYPE_AUDIO).begin();
+	sfe::Stream* audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
 	
 	BOOST_CHECK(demuxer->didReachEndOfFile() == false);
 	BOOST_CHECK(audioStream->getStatus() == sfe::Stopped);

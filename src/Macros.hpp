@@ -27,12 +27,17 @@
 #include <stdexcept>
 #include <SFML/Config.hpp>
 
-extern "C" {
-	#include <libavutil/error.h>
+extern "C"
+{
+    #include <libavutil/error.h>
 }
 
 #ifndef SFEMOVIE_MACROS_HPP
 #define SFEMOVIE_MACROS_HPP
+
+#ifndef NDEBUG
+#define DEBUG 1
+#endif
 
 #define CHECK(value, message) if (!(value)) throw std::runtime_error(message);
 #define CHECK0(value, message) CHECK(value == 0, message)
@@ -48,15 +53,16 @@ sfeLogDebug(std::string(title) + " took " + s(__bench.getElapsedTime().asMillise
 }
 
 #if defined(SFML_SYSTEM_WINDOWS)
-	#ifdef av_err2str
-	#undef av_err2str
-	#endif
+    #ifdef av_err2str
+    #undef av_err2str
+    #endif
 
-	namespace sfe {
-		std::string ff_err2str(int code);
-	}
+    namespace sfe
+    {
+        std::string ff_err2str(int code);
+    }
 
-	#define av_err2str sfe::ff_err2str
+    #define av_err2str sfe::ff_err2str
 #endif
 
 #endif

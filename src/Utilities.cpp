@@ -28,38 +28,42 @@
 #include <utility>
 #include <iostream>
 
-namespace sfe {
-	void dumpAvailableDemuxers()
-	{
-		const std::list<Demuxer::DemuxerInfo>& demuxers = sfe::Demuxer::getAvailableDemuxers();
-		std::list<Demuxer::DemuxerInfo>::const_iterator it;
-		
-		std::cout << demuxers.size() << " demuxers available:" << std::endl;
-		for (it = demuxers.begin(); it != demuxers.end();it++) {
-			std::cout << "- " << it->name << " (" << it->description << ")" << std::endl;
-		}
-	}
-	
-	void dumpAvailableDecoders()
-	{
-		const std::list<Demuxer::DecoderInfo>& decoders = sfe::Demuxer::getAvailableDecoders();
-		std::list<Demuxer::DecoderInfo>::const_iterator it;
-		
-		std::cout << decoders.size() << " decoders available:" << std::endl;
-		for (it = decoders.begin(); it != decoders.end();it++) {
-			std::cout << "- " << sfe::MediaTypeToString(it->type) << ": " << it->name << " (" << it->description << ")" << std::endl;
-		}
-	}
-	
-	std::string MediaTypeToString(MediaType type)
-	{
-		switch (type) {
-			case MEDIA_TYPE_AUDIO:		return "audio";
-			case MEDIA_TYPE_SUBTITLE:	return "subtitle";
-			case MEDIA_TYPE_VIDEO:		return "video";
-			case MEDIA_TYPE_UNKNOWN:	return "unknown";
-			default:
-				CHECK(0, "inconcistency");
-		}
-	}
+namespace sfe
+{
+    void dumpAvailableDemuxers()
+    {
+        const std::list<Demuxer::DemuxerInfo>& demuxers = sfe::Demuxer::getAvailableDemuxers();
+        std::list<Demuxer::DemuxerInfo>::const_iterator it;
+        
+        std::cout << demuxers.size() << " demuxers available:" << std::endl;
+        for (it = demuxers.begin(); it != demuxers.end();it++)
+        {
+            std::cout << "- " << it->name << " (" << it->description << ")" << std::endl;
+        }
+    }
+    
+    void dumpAvailableDecoders()
+    {
+        const std::list<Demuxer::DecoderInfo>& decoders = sfe::Demuxer::getAvailableDecoders();
+        std::list<Demuxer::DecoderInfo>::const_iterator it;
+        
+        std::cout << decoders.size() << " decoders available:" << std::endl;
+        for (it = decoders.begin(); it != decoders.end();it++)
+        {
+            std::cout << "- " << sfe::mediaTypeToString(it->type) << ": " << it->name << " (" << it->description << ")" << std::endl;
+        }
+    }
+    
+    std::string mediaTypeToString(MediaType type)
+    {
+        switch (type)
+        {
+            case Audio:        return "audio";
+            case Subtitle:    return "subtitle";
+            case Video:        return "video";
+            case Unknown:    return "unknown";
+            default:
+                CHECK(0, "inconcistency");
+        }
+    }
 }

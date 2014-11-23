@@ -1,6 +1,6 @@
 
 /*
- *  Macros.cpp
+ *  MediaInfo.hpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -22,16 +22,12 @@
  *
  */
 
-#include "Macros.hpp"
+#ifndef SFEMOVIE_SAMPLE_MEDIA_INFO_HPP
+#define SFEMOVIE_SAMPLE_MEDIA_INFO_HPP
 
-namespace sfe
-{
-    std::string ff_err2str(int code)
-    {
-        char buf[AV_ERROR_MAX_STRING_SIZE];
-        memset(buf, 0, AV_ERROR_MAX_STRING_SIZE);
-        
-        av_make_error_string(buf, AV_ERROR_MAX_STRING_SIZE, code);
-        return std::string(buf);
-    }
-}
+#include <sfeMovie/Movie.hpp>
+
+std::string mediaTypeToString(sfe::MediaType type);
+void displayMediaInfo(const sfe::Movie& movie);
+
+#endif

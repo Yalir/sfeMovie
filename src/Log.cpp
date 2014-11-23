@@ -1,6 +1,6 @@
 
 /*
- *  Stream.cpp
+ *  Log.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -26,69 +26,80 @@
 #include "Macros.hpp"
 #include <iostream>
 #include <SFML/System.hpp>
-extern "C" {
+extern "C"
+{
 #include <libavutil/avutil.h>
 }
 
-namespace sfe {
-	namespace Log {
-		static int g_logLevel = ErrorLogLevel;
-		static sf::Mutex g_synchronized;
-		
-		void initialize()
-		{
-			setLogLevel(ErrorLogLevel);
-		}
-		
-		void setLogLevel(LogLevel level)
-		{
-			sf::Lock l(g_synchronized);
-			g_logLevel = level;
-			
-			switch (level) {
-				case DebugLogLevel:		av_log_set_level(AV_LOG_INFO); break;
-				case WarningLogLevel:	av_log_set_level(AV_LOG_WARNING); break;
-				case ErrorLogLevel:		av_log_set_level(AV_LOG_ERROR); break;
-				case QuietLogLevel:		av_log_set_level(AV_LOG_QUIET); break;
-				default: CHECK(false, "inconcistency");
-			}
-		}
-		
-		static std::string filename(const std::string& filepath)
-		{
-			size_t pos = filepath.find_last_of("/");
-			
-			if (pos != std::string::npos && pos+1 != filepath.size())
-				return filepath.substr(pos+1);
-			else
-				return filepath;
-		}
-		
-		void debug(const std::string& file, const std::string& message)
-		{
-			sf::Lock l(g_synchronized);
-			
-			if (g_logLevel >= DebugLogLevel) {
-				std::cerr << "Debug: " << filename(file) << message << std::endl;
-			}
-		}
-		
-		void warning(const std::string& file, const std::string& message)
-		{
-			sf::Lock l(g_synchronized);
-			
-			if (g_logLevel >= WarningLogLevel) {
-				std::cerr << "Warning: " << filename(file) << message << std::endl;
-			}
-		}
-		
-		void error(const std::string& file, const std::string& message)
-		{
-			sf::Lock l(g_synchronized);
-			
-			if (g_logLevel >= ErrorLogLevel) {
-				std::cerr << "Error: " << filename(file) << message << std::endl;
-			}
-		}
-	}
+namespace sfe
+{
+    namespace Log
+    {
+        static int g_logLevel = ErrorLogLevel;
+        static sf::Mutex g_synchronized;
+        
+        void initialize()
+        {
+#if DEBUG
+            setLogLevel(DebugLogLevel);
+#else
+            setLogLevel(ErrorLogLevel);
+#endif
+        }
+        
+        void setLogLevel(LogLevel level)
+        {
+            sf::Lock l(g_synchronized);
+            g_logLevel = level;
+            
+            switch (level)
+            {
+                case DebugLogLevel:        av_log_set_level(AV_LOG_INFO); break;
+                case WarningLogLevel:    av_log_set_level(AV_LOG_WARNING); break;
+                case ErrorLogLevel:        av_log_set_level(AV_LOG_ERROR); break;
+                case QuietLogLevel:        av_log_set_level(AV_LOG_QUIET); break;
+                default: CHECK(false, "inconcistency");
+            }
+        }
+        
+        static std::string filename(const std::string& filepath)
+        {
+            size_t pos = filepath.find_last_of("/");
+            
+            if (pos != std::string::npos && pos+1 != filepath.size())
+                return filepath.substr(pos+1);
+            else
+                return filepath;
+        }
+        
+        void debug(const std::string& file, const std::string& message)
+        {
+            sf::Lock l(g_synchronized);
+            
+            if (g_logLevel >= DebugLogLevel)
+            {
+                std::cerr << "Debug: " << filename(file) << message << std::endl;
+            }
+        }
+        
+        void warning(const std::string& file, const std::string& message)
+        {
+            sf::Lock l(g_synchronized);
+            
+            if (g_logLevel >= WarningLogLevel)
+            {
+                std::cerr << "Warning: " << filename(file) << message << std::endl;
+            }
+        }
+        
+        void error(const std::string& file, const std::string& message)
+        {
+            sf::Lock l(g_synchronized);
+            
+            if (g_logLevel >= ErrorLogLevel)
+            {
+                std::cerr << "Error: " << filename(file) << message << std::endl;
+            }
+        }
+    }
 }
