@@ -51,6 +51,8 @@
         #define SFE_API
     #endif
 #else
+    /** Static library doesn't need DLL import/export
+     */
     #define SFE_API
 #endif
 
