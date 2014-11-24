@@ -66,7 +66,7 @@ else()
 	  mmvideo motionpixels movtext mp1 mp1float mp2 mp2float mp3 mp3adu mp3adufloat mp3float mp3on4 mp3on4float
 	  mpc7 mpc8 mpeg1_vdpau mpeg1video mpeg2_crystalhd mpeg2video mpeg4 mpeg4_crystalhd mpeg4_vdpau mpeg_vdpau
 	  mpeg_xvmc mpegvideo mpl2 msa1 msmpeg4_crystalhd msmpeg4v1 msmpeg4v2 msmpeg4v3 msrle mss1 mss2 msvideo1 mszh
-	  mts2 mvc1 mvc2 mxpeg nellymoser nuv paf_audio paf_video pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be
+	  mts2 mvc1 mvc2 mxpeg nellymoser nuv on2avc opus paf_audio paf_video pam pbm pcm_alaw pcm_bluray pcm_dvd pcm_f32be
 	  pcm_f32le pcm_f64be pcm_f64le pcm_lxf pcm_mulaw pcm_s16be pcm_s16be_planar pcm_s16le pcm_s16le_planar
 	  pcm_s24be pcm_s24daud pcm_s24le pcm_s24le_planar pcm_s32be pcm_s32le pcm_s32le_planar pcm_s8 pcm_s8_planar
 	  pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork pcx pgm pgmyuv pgssub pictor
@@ -75,7 +75,7 @@ else()
 	  smc smvjpeg snow sol_dpcm sonic sp5x srt ssa subrip subviewer subviewer1 sunrast svq1 svq3 tak targa
 	  targa_y216 text theora thp tiertexseqvideo tiff tmv truehd truemotion1 truemotion2 truespeech tscc tscc2
 	  tta twinvq txd ulti utvideo v210 v210x v308 v408 v410 vb vble vc1 vc1_crystalhd vc1_vdpau vc1image vcr1
-	  vima vmdaudio vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vp8 vp9 vplayer vqa wavpack webp webvtt
+	  vima vmdaudio vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vp7 vp8 vp9 vplayer vqa wavpack webp webvtt
 	  wmalossless wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wmv3image wnv1 ws_snd1
 	  xan_dpcm xan_wc3 xan_wc4 xbin xbm xface xl xsub xwd y41p yop yuv4 zero12v zerocodec zlib zmbv
 	  CACHE STRING "Available decoders" FORCE)
@@ -88,7 +88,7 @@ else()
 	  pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s24le_planar pcm_s32be pcm_s32le pcm_s32le_planar
 	  pcm_s8 pcm_s8_planar pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork roq_dpcm
 	  sol_dpcm xan_dpcm)
-	set (ENABLED_DECODERS theora flac vorbis vp8 vp9 libopus ${PCM_DECODERS} CACHE STRING "Enabled audio and video decoders")
+	set (ENABLED_DECODERS theora flac vorbis vp8 vp9 opus ${PCM_DECODERS} CACHE STRING "Enabled audio and video decoders")
 
 	set (CachedSelectedDecoders "")
 	set (NeedsFFmpegCompilation TRUE)
