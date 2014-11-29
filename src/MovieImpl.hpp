@@ -128,13 +128,12 @@ namespace sfe
          *
          * @return the size of the currently active video stream, or (0, 0) is there is none
          */
-        sf::Vector2i getSize() const;
+        sf::Vector2f getSize() const;
         
         
-        /** See fitFrame(sf::IntRect, bool)
-         * @see fitFrame(sf::IntRect, bool)
+        /** @see fitFrame(sf::IntRect, bool)
          */
-        void fit(int x, int y, int width, int height, bool preserveRatio = true);
+        void fit(float x, float y, float width, float height, bool preserveRatio = true);
         
         
         /** Scales the movie to fit the requested frame.
@@ -148,7 +147,7 @@ namespace sfe
          * @param frame the target frame in which you want to display the movie
          * @param preserveRatio true to keep the original movie ratio, false otherwise
          */
-        void fit(sf::IntRect frame, bool preserveRatio = true);
+        void fit(sf::FloatRect frame, bool preserveRatio = true);
         
         
         /** Returns the average amount of video frames per second
@@ -215,7 +214,7 @@ namespace sfe
         Streams m_audioStreamsDesc;
         Streams m_videoStreamsDesc;
         Streams m_subtitleStreamsDesc;
-        sf::IntRect m_displayFrame;
+        sf::FloatRect m_displayFrame;
         LayoutDebugger<sf::Sprite> m_debugger;
     };
     

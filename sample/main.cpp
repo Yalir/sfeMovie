@@ -88,8 +88,8 @@ int main(int argc, const char *argv[])
     
     bool fullscreen = false;
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
-    int width = std::min((int)desktopMode.width, movie.getSize().x);
-    int height = std::min((int)desktopMode.height, movie.getSize().y);
+    float width = std::min(static_cast<float>(desktopMode.width), movie.getSize().x);
+    float height = std::min(static_cast<float>(desktopMode.height), movie.getSize().y);
     
     // Create window
     sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player",
@@ -146,7 +146,7 @@ int main(int argc, const char *argv[])
                         
                         window.setFramerateLimit(60);
                         window.setVerticalSyncEnabled(true);
-                        movie.fit(0, 0, window.getSize().x, window.getSize().y);
+                        movie.fit(0, 0, (float)window.getSize().x, (float)window.getSize().y);
                         ui.applyProperties();
                         break;
                         
@@ -183,7 +183,7 @@ int main(int argc, const char *argv[])
             else if (ev.type == sf::Event::Resized)
             {
                 movie.fit(0, 0, window.getSize().x, window.getSize().y);
-                window.setView(sf::View(sf::FloatRect(0, 0, window.getSize().x, window.getSize().y)));
+                window.setView(sf::View(sf::FloatRect(0, 0, (float)window.getSize().x, (float)window.getSize().y)));
             }
         }
         
