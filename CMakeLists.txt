@@ -66,11 +66,13 @@ if (WINDOWS)
     set (SFEMOVIE_BUILD_STATIC FALSE CACHE BOOL "TRUE to build static version of sfeMovie")
 endif()
 
-if (NOT SFEMOVIE_BUILD_STATIC)
-    find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
-    message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
-    message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
+if (SFEMOVIE_BUILD_STATIC)
+    set (SFML_STATIC_LIBRARIES TRUE)
 endif()
+
+find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
+message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
+message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
 #################################################################################################################
 # ============================================== sfeMovie SETUP =============================================== #
@@ -123,7 +125,7 @@ add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 if (SFEMOVIE_BUILD_STATIC)
     set_target_properties(${SFEMOVIE_LIB} PROPERTIES
         COMPILE_DEFINITIONS SFEMOVIE_STATIC
-		COMPILE_DEFINITIONS SFML_STATIC)
+        COMPILE_DEFINITIONS SFML_STATIC)
     message(WARNING "You chose to build a static library of sfeMovie, this assumes that you will also statically link your software against SFML."
             "sfeMovie will be built with SFML_STATIC defined.")
 else()
