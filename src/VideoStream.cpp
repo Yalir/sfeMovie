@@ -100,7 +100,7 @@ namespace sfe
     
     float VideoStream::getFrameRate() const
     {
-        return av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, NULL));
+        return static_cast<float>(av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, NULL)));
     }
     
     sf::Texture& VideoStream::getVideoTexture()
@@ -120,7 +120,7 @@ namespace sfe
                 }
                 else
                 {
-                    m_delegate.didUpdateImage(*this, m_texture);
+                    m_delegate.didUpdateVideo(*this, m_texture);
                 }
             }
         }

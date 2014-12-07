@@ -2,13 +2,6 @@
 if(BUILD_DOC)
 	find_package(Doxygen REQUIRED)
 
-	# define the install directory for miscellaneous files
-	if(WINDOWS)
-		set(INSTALL_MISC_DIR .)
-	else()
-		set(INSTALL_MISC_DIR share/sfeMovie)
-	endif()
-
 	# set the input and output documentation paths
 	set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR})
 	set(DOXYGEN_OUTPUT_DIR ${PROJECT_BINARY_DIR}/doxygen)
@@ -24,6 +17,8 @@ if(BUILD_DOC)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/main.css ${DOXYGEN_OUTPUT_DIR}/main.css COPYONLY)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.php ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.php ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
+	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.html ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
+	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.html ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
 
 	# target setup
 	add_custom_target(Doxygen-local ALL
@@ -36,11 +31,6 @@ if(BUILD_DOC)
 	set(DOXYGEN_CONFIGURED_INPUT ${DOXYGEN_OUTPUT_DIR}/WebsiteDoxyfile)
 	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/WebsiteDoxyfile ${DOXYGEN_CONFIGURED_INPUT} @ONLY)
 
-	# copy the files needed by the documentation
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/doxygen.css ${DOXYGEN_OUTPUT_DIR}/doxygen.css COPYONLY)
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/footer.php ${DOXYGEN_OUTPUT_DIR}/footer.php COPYONLY)
-	configure_file(${DOXYGEN_INPUT_DIR}/doxygen/header.php ${DOXYGEN_OUTPUT_DIR}/header.php COPYONLY)
-
 	# target setup
 	add_custom_target(Doxygen-website ALL
 		              COMMAND ${CMAKE_COMMAND} -E echo_append "Building Documentation..."
@@ -50,6 +40,6 @@ if(BUILD_DOC)
 
 	# setup install rules
 	install(DIRECTORY ${DOXYGEN_OUTPUT_DIR}/LocalDocumentation
-		    DESTINATION ${INSTALL_MISC_DIR}/doxygen
+		    DESTINATION ${INSTALL_MISC_DIR}
 		    COMPONENT doxygen)
 endif()

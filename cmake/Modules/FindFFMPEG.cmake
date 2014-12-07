@@ -2,10 +2,10 @@
 # This module defines
 # FFMPEG_LIBRARIES
 # FFMPEG_FOUND, if false, do not try to link to ffmpeg
-# FFMPEG_INCLUDE_DIR, where to find the headers
+# FFMPEG_INCLUDE_DIRS, where to find the headers
 #
-# $FFMPEG_DIR is an environment variable that would
-# correspond to the ./configure --prefix=$FFMPEG_DIR
+# $FFMPEG_ROOT is an environment variable that would
+# correspond to the ./configure --prefix=$FFMPEG_ROOT
 #
 # Created by Robert Osfield.
 
@@ -31,7 +31,7 @@ MACRO(FFMPEG_FIND varname shortname headername)
     FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS lib${shortname}/${headername}
         PATHS
         ${FFMPEG_ROOT}/include
-        $ENV{FFMPEG_DIR}/include
+        $ENV{FFMPEG_ROOT}/include
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local/include
@@ -44,11 +44,10 @@ MACRO(FFMPEG_FIND varname shortname headername)
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG Headers"
     )
-
     FIND_PATH(FFMPEG_${varname}_INCLUDE_DIRS ${headername}
         PATHS
         ${FFMPEG_ROOT}/include
-        $ENV{FFMPEG_DIR}/include
+        $ENV{FFMPEG_ROOT}/include
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local/include
@@ -61,18 +60,19 @@ MACRO(FFMPEG_FIND varname shortname headername)
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG Headers"
     )
-
     FIND_LIBRARY(FFMPEG_${varname}_LIBRARIES
         NAMES ${shortname}
         PATHS
         ${FFMPEG_ROOT}/lib
-        $ENV{FFMPEG_DIR}/lib
+        $ENV{FFMPEG_ROOT}/lib
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local/lib
         /usr/local/lib64
+	/usr/local/lib/${CMAKE_LIBRARY_ARCHITECTURE}
         /usr/lib
         /usr/lib64
+	/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
         /sw/lib
         /opt/local/lib
         /opt/csw/lib
@@ -87,15 +87,15 @@ MACRO(FFMPEG_FIND varname shortname headername)
 
 ENDMACRO(FFMPEG_FIND)
 
-SET(FFMPEG_ROOT "$ENV{FFMPEG_DIR}" CACHE PATH "Location of FFMPEG")
+SET(FFMPEG_ROOT "$ENV{FFMPEG_ROOT}" CACHE PATH "Location of FFmpeg")
 
 # find stdint.h
-IF(WIN32)
+IF(MSVC)
 
     FIND_PATH(FFMPEG_STDINT_INCLUDE_DIR stdint.h
         PATHS
         ${FFMPEG_ROOT}/include
-        $ENV{FFMPEG_DIR}/include
+        $ENV{FFMPEG_ROOT}/include
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local/include
@@ -105,6 +105,7 @@ IF(WIN32)
         /opt/csw/include # Blastwave
         /opt/include
         /usr/freeware/include
+        ${CMAKE_SOURCE_DIR}/deps/headers/msvc
         PATH_SUFFIXES ffmpeg
         DOC "Location of FFMPEG stdint.h Header"
     )
@@ -123,12 +124,13 @@ FFMPEG_FIND(LIBAVFORMAT avformat avformat.h)
 FFMPEG_FIND(LIBAVDEVICE avdevice avdevice.h)
 FFMPEG_FIND(LIBAVCODEC  avcodec  avcodec.h)
 FFMPEG_FIND(LIBAVUTIL   avutil   avutil.h)
-FFMPEG_FIND(LIBSWSCALE  swscale  swscale.h)  # not sure about the header to look for here.
+FFMPEG_FIND(LIBSWSCALE  swscale  swscale.h)
+FFMPEG_FIND(LIBSWRESAMPLE swresample swresample.h)
 
-SET(FFMPEG_FOUND "NO")
-IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODEC_FOUND AND FFMPEG_LIBAVUTIL_FOUND AND FFMPEG_LIBSWSCALE_FOUND AND STDINT_OK)
+SET(FFMPEG_FOUND "NO" CACHE STRING "FFmpeg found status" FORCE)
+IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODEC_FOUND AND FFMPEG_LIBAVUTIL_FOUND AND FFMPEG_LIBSWSCALE_FOUND AND FFMPEG_LIBSWRESAMPLE_FOUND AND STDINT_OK)
 
-    SET(FFMPEG_FOUND "YES")
+    SET(FFMPEG_FOUND "YES" CACHE STRING "FFmpeg found status" FORCE)
 
     SET(FFMPEG_INCLUDE_DIRS
         ${FFMPEG_LIBAVFORMAT_INCLUDE_DIRS}
@@ -136,6 +138,8 @@ IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODE
         ${FFMPEG_LIBAVCODEC_INCLUDE_DIRS}
         ${FFMPEG_LIBAVUTIL_INCLUDE_DIRS}
         ${FFMPEG_LIBSWSCALE_INCLUDE_DIRS}
+        ${FFMPEG_LIBSWRESAMPLE_INCLUDE_DIRS}
+        CACHE STRING "FFmpeg include paths" FORCE
     )
 
 # Using the new include style for FFmpeg prevents issues with #include <time.h>
@@ -143,19 +147,20 @@ IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODE
         SET(FFMPEG_INCLUDE_DIRS
             ${FFMPEG_INCLUDE_DIRS}
             ${FFMPEG_STDINT_INCLUDE_DIR}
+            CACHE STRING "FFmpeg include paths" FORCE
         )
     ENDIF()
 
 
-    SET(FFMPEG_LIBRARY_DIRS ${FFMPEG_LIBAVFORMAT_LIBRARY_DIRS})
-
-    # Note we don't add FFMPEG_LIBSWSCALE_LIBRARIES here, it will be added if found later.
+    SET(FFMPEG_LIBRARY_DIRS ${FFMPEG_LIBAVFORMAT_LIBRARY_DIRS} PARENT_SCOPE)
     SET(FFMPEG_LIBRARIES
         ${FFMPEG_LIBAVFORMAT_LIBRARIES}
         ${FFMPEG_LIBAVDEVICE_LIBRARIES}
         ${FFMPEG_LIBAVCODEC_LIBRARIES}
         ${FFMPEG_LIBAVUTIL_LIBRARIES}
-        ${FFMPEG_LIBSWSCALE_LIBRARIES})
+        ${FFMPEG_LIBSWSCALE_LIBRARIES}
+        ${FFMPEG_LIBSWRESAMPLE_LIBRARIES}
+        CACHE STRING "FFmpeg libraries paths" FORCE)
 ELSE ()
 
 #    MESSAGE(STATUS "Could not find FFMPEG")

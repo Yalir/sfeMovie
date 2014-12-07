@@ -1,6 +1,6 @@
 
 /*
- *  Stream.hpp
+ *  Demuxer.hpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -29,6 +29,7 @@
 #include "Stream.hpp"
 #include "AudioStream.hpp"
 #include "VideoStream.hpp"
+#include "SubtitleStream.hpp"
 #include "Timer.hpp"
 #include <map>
 #include <string>
@@ -38,13 +39,15 @@
 
 namespace sfe
 {
-    class Demuxer : public Stream::DataSource, public Timer::Observer {
+    class Demuxer : public Stream::DataSource, public Timer::Observer
+    {
     public:
         /** Describes a demuxer
          *
          * Ie. an audio/video container format parser such as avi, mov, mkv, ogv... parsers
          */
-        struct DemuxerInfo {
+        struct DemuxerInfo
+        {
             std::string name;
             std::string description;
         };
@@ -53,7 +56,8 @@ namespace sfe
          *
          * Ie. an audio/video/subtitle stream decoder for h.264, theora, vp9, mp3, pcm, srt... streams
          */
-        struct DecoderInfo {
+        struct DecoderInfo
+        {
             std::string name;
             std::string description;
             MediaType type;
@@ -77,7 +81,7 @@ namespace sfe
          * @param timer the timer with which the media streams will be synchronized
          * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
          */
-        Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate);
+        Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
         
         /** Default destructor
          */
@@ -146,6 +150,27 @@ namespace sfe
          */
         VideoStream* getSelectedVideoStream() const;
         
+        /** Enable the given subtitle stream and connect it to the reference timer
+         *
+         * If another stream of the same kind is already enabled, it is first disabled and disconnected
+         * so that only one stream of the same kind can be enabled at the same time.
+         *
+         * @param stream the video stream to enable and connect for playing, or NULL to disable video
+         */
+        void selectSubtitleStream(SubtitleStream* stream);
+        
+        /** Enable the first found video stream, if it exists
+         *
+         * @see selectAudioStream
+         */
+        void selectFirstSubtitleStream();
+        
+        /** Get the currently selected subtitle stream, if there's one
+         *
+         * @return the currently selected subtitle stream, or NULL if there's none
+         */
+        SubtitleStream* getSelectedSubtitleStream() const;
+        
         /** Read encoded data from the media and makes sure that the given stream
          * has enough data
          *
@@ -206,6 +231,7 @@ namespace sfe
         Timer& m_timer;
         Stream* m_connectedAudioStream;
         Stream* m_connectedVideoStream;
+        Stream* m_connectedSubtitleStream;
         sf::Time m_duration;
         
         static std::list<DemuxerInfo> g_availableDemuxers;

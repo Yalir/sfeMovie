@@ -57,7 +57,7 @@ namespace sfe
         return m_impl->getStreams(type);
     }
     
-    void Movie::selectStream(const StreamDescriptor& streamDescriptor)
+    bool Movie::selectStream(const StreamDescriptor& streamDescriptor)
     {
         return m_impl->selectStream(streamDescriptor);
     }
@@ -104,19 +104,19 @@ namespace sfe
     }
     
     
-    sf::Vector2i Movie::getSize() const
+    sf::Vector2f Movie::getSize() const
     {
         return m_impl->getSize();
     }
     
     
-    void Movie::fit(int x, int y, int width, int height, bool preserveRatio)
+    void Movie::fit(float x, float y, float width, float height, bool preserveRatio)
     {
         m_impl->fit(x, y, width, height, preserveRatio);
     }
     
     
-    void Movie::fit(sf::IntRect frame, bool preserveRatio)
+    void Movie::fit(sf::FloatRect frame, bool preserveRatio)
     {
         m_impl->fit(frame, preserveRatio);
     }

@@ -58,7 +58,7 @@ if platform.system() == 'Windows':
             os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
 
 # Configure
-command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders]
+command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, "-DBUILD_PACKAGE=TRUE", "-DCMAKE_BUILD_TYPE=" + args.config]
 
 if generatorArg != '':
 	command += {generatorArg}
@@ -68,5 +68,10 @@ subprocess.check_call(command)
 
 # Build
 command = ["cmake", "--build", ".", "--config", args.config]
+print 'Execute: {}'.format(command)
+subprocess.check_call(command)
+
+# Create distributable archive
+command = ["cmake", "--build", ".", "--config", args.config, "--target", "package"]
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)

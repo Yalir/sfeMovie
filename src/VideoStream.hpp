@@ -37,7 +37,7 @@ namespace sfe
     public:
         struct Delegate
         {
-            virtual void didUpdateImage(const VideoStream& sender, const sf::Texture& image) = 0;
+            virtual void didUpdateVideo(const VideoStream& sender, const sf::Texture& image) = 0;
         };
         
         /** Create a video stream from the given FFmpeg stream

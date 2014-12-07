@@ -1,6 +1,6 @@
 
 /*
- *  Stream.cpp
+ *  Log.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2014 Lucas Soltic
@@ -26,13 +26,15 @@
 #include "Macros.hpp"
 #include <iostream>
 #include <SFML/System.hpp>
-extern "C" {
+extern "C"
+{
 #include <libavutil/avutil.h>
 }
 
 namespace sfe
 {
-    namespace Log {
+    namespace Log
+    {
         static int g_logLevel = ErrorLogLevel;
         static sf::Mutex g_synchronized;
         

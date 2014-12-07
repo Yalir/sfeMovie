@@ -5,4 +5,4 @@ sfeMovie has been written by Lucas Soltic (ie. Ceylo) with help from:
 - Loïc Siquet as Windows developer
 - Alexandre Janniaux as Linux developer
 - Martin Bohme as author of the FFmpeg tutorial at http://dranger.com/ffmpeg/
-- Xorlium and timidouveg who worked on their own video integration packages from which was partly inspired sfeMovie (see http://www.sfml-dev.org/wiki/en/sources/video_integration and http://www.sfml-dev.org/wiki/fr/tutoriels/integrervideo)
+- Xorlium and timidouveg who worked on their own video integration packages from which was partly inspired sfeMovie (their project page does no more exist)
