@@ -45,7 +45,7 @@ namespace sfe
     Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
     {
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_codecCtx);
-        CHECK(desc != NULL, "Could get the codec descriptor!");
+        CHECK(desc != NULL, "Could not get the codec descriptor!");
         CHECK((desc->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
               "Subtitle stream doesn't provide bitmap subtitles, this is not supported yet!"
               "\nSee https://github.com/Yalir/sfeMovie/issues/7");
