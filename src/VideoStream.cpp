@@ -39,18 +39,18 @@ namespace sfe
     VideoStream::VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
     Stream(formatCtx ,stream, dataSource, timer),
     m_texture(),
-    m_rawVideoFrame(NULL),
+    m_rawVideoFrame(nullptr),
     m_rgbaVideoBuffer(),
     m_rgbaVideoLinesize(),
     m_delegate(delegate),
-    m_swsCtx(NULL),
+    m_swsCtx(nullptr),
     m_lastDecodedTimestamp(sf::Time::Zero)
     {
         int err;
         
         for (int i = 0; i < 4;i++)
         {
-            m_rgbaVideoBuffer[i] = NULL;
+            m_rgbaVideoBuffer[i] = nullptr;
             m_rgbaVideoLinesize[i] = 0;
         }
         
@@ -100,7 +100,7 @@ namespace sfe
     
     float VideoStream::getFrameRate() const
     {
-        return static_cast<float>(av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, NULL)));
+        return static_cast<float>(av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, nullptr)));
     }
     
     sf::Texture& VideoStream::getVideoTexture()
@@ -140,7 +140,7 @@ namespace sfe
             {
                 bool needsMoreDecoding = false;
                 
-                CHECK(packet != NULL, "inconsistency error");
+                CHECK(packet != nullptr, "inconsistency error");
                 goOn = decodePacket(packet, m_rawVideoFrame, gotFrame, needsMoreDecoding);
                 
                 if (gotFrame)
@@ -218,9 +218,9 @@ namespace sfe
             algorithm |= SWS_ACCURATE_RND;
         }
         
-        m_swsCtx = sws_getCachedContext(NULL, m_codecCtx->width, m_codecCtx->height, m_codecCtx->pix_fmt,
+        m_swsCtx = sws_getCachedContext(nullptr, m_codecCtx->width, m_codecCtx->height, m_codecCtx->pix_fmt,
                                         m_codecCtx->width, m_codecCtx->height, PIX_FMT_RGBA,
-                                        algorithm, NULL, NULL, NULL);
+                                        algorithm, nullptr, nullptr, nullptr);
         CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
     }
     

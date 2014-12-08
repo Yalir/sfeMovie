@@ -90,7 +90,7 @@ namespace sfe
          * If no packet is stored when this method is called, it will ask the
          * data source to feed this stream first
          *
-         * @return the oldest encoded data, or null if no data could be read from the media
+         * @return the oldest encoded data, or nullptr if no data could be read from the media
          */
         virtual AVPacket* popEncodedData();
         

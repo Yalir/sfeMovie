@@ -55,7 +55,7 @@ namespace sfe
         switch (type)
         {
             case AVMEDIA_TYPE_AUDIO:    return Audio;
-            case AVMEDIA_TYPE_SUBTITLE:    return Subtitle;
+            case AVMEDIA_TYPE_SUBTITLE:     return Subtitle;
             case AVMEDIA_TYPE_VIDEO:    return Video;
             default:                    return Unknown;
         }
@@ -63,12 +63,12 @@ namespace sfe
     
     const std::list<Demuxer::DemuxerInfo>& Demuxer::getAvailableDemuxers()
     {
-        AVInputFormat* demuxer = NULL;
+        AVInputFormat* demuxer = nullptr;
         loadFFmpeg();
         
         if (g_availableDemuxers.empty())
         {
-            while (NULL != (demuxer = av_iformat_next(demuxer)))
+            while (nullptr != (demuxer = av_iformat_next(demuxer)))
             {
                 DemuxerInfo info =
                 {
@@ -85,12 +85,12 @@ namespace sfe
     
     const std::list<Demuxer::DecoderInfo>& Demuxer::getAvailableDecoders()
     {
-        AVCodec* codec = NULL;
+        AVCodec* codec = nullptr;
         loadFFmpeg();
         
         if (g_availableDecoders.empty())
         {
-            while (NULL != (codec = av_codec_next(codec)))
+            while (nullptr != (codec = av_codec_next(codec)))
             {
                 DecoderInfo info =
                 {
@@ -107,15 +107,15 @@ namespace sfe
     }
     
     Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
-    m_formatCtx(NULL),
+    m_formatCtx(nullptr),
     m_eofReached(false),
     m_streams(),
     m_ignoredStreams(),
     m_synchronized(),
     m_timer(timer),
-    m_connectedAudioStream(NULL),
-    m_connectedVideoStream(NULL),
-    m_connectedSubtitleStream(NULL),
+    m_connectedAudioStream(nullptr),
+    m_connectedVideoStream(nullptr),
+    m_connectedSubtitleStream(nullptr),
     m_duration(sf::Time::Zero)
     {
         CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
@@ -126,12 +126,12 @@ namespace sfe
         loadFFmpeg();
         
         // Open the movie file
-        err = avformat_open_input(&m_formatCtx, sourceFile.c_str(), NULL, NULL);
+        err = avformat_open_input(&m_formatCtx, sourceFile.c_str(), nullptr, nullptr);
         CHECK0(err, "Demuxer::Demuxer() - error while opening media: " + sourceFile);
-        CHECK(m_formatCtx, "Demuxer() - inconsistency: media context cannot be null");
+        CHECK(m_formatCtx, "Demuxer() - inconsistency: media context cannot be nullptr");
         
         // Read the general movie informations
-        err = avformat_find_stream_info(m_formatCtx, NULL);
+        err = avformat_find_stream_info(m_formatCtx, nullptr);
         CHECK0(err, "Demuxer::Demuxer() - error while retreiving media information");
         
         // Get the media duration if possible (otherwise rely on the streams)
@@ -235,12 +235,11 @@ namespace sfe
     std::set<Stream*> Demuxer::getStreamsOfType(MediaType type) const
     {
         std::set<Stream*> streamSet;
-        std::map<int, Stream*>::const_iterator it;
         
-        for (it = m_streams.begin(); it != m_streams.end(); it++)
+        for (const std::pair<int, Stream*>& pair : m_streams)
         {
-            if (it->second->getStreamKind() == type)
-                streamSet.insert(it->second);
+            if (pair.second->getStreamKind() == type)
+                streamSet.insert(pair.second);
         }
         
         return streamSet;
@@ -250,16 +249,15 @@ namespace sfe
     {
         Streams entries;
         std::set<Stream*> streamSet;
-        std::map<int, Stream*>::const_iterator it;
-        
-        for (it = m_streams.begin(); it != m_streams.end(); it++)
+
+        for (const std::pair<int, Stream*>& pair : m_streams)
         {
-            if (it->second->getStreamKind() == type)
+            if (pair.second->getStreamKind() == type)
             {
                 StreamDescriptor entry;
                 entry.type = type;
-                entry.identifier = it->first;
-                entry.language = it->second->getLanguage();
+                entry.identifier = pair.first;
+                entry.language = pair.second->getLanguage();
                 entries.push_back(entry);
             }
         }
@@ -426,7 +424,7 @@ namespace sfe
     {
         sf::Lock l(m_synchronized);
         
-        AVPacket *pkt = NULL;
+        AVPacket *pkt = nullptr;
         int err = 0;
         
         pkt = (AVPacket *)av_malloc(sizeof(*pkt));
@@ -439,7 +437,7 @@ namespace sfe
         {
             av_free_packet(pkt);
             av_free(pkt);
-            pkt = NULL;
+            pkt = nullptr;
         }
         
         return pkt;

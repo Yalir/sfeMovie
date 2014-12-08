@@ -38,11 +38,11 @@ namespace sfe
 {
     Stream::Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer) :
     m_formatCtx(formatCtx),
-    m_stream(NULL),
+    m_stream(nullptr),
     m_dataSource(dataSource),
     m_timer(timer),
-    m_codecCtx(NULL),
-    m_codec(NULL),
+    m_codecCtx(nullptr),
+    m_codec(nullptr),
     m_streamID(-1),
     m_packetList(),
     m_status(Stopped),
@@ -60,10 +60,10 @@ namespace sfe
         CHECK(m_codec, "Stream() - no decoder for " + std::string(avcodec_get_name(m_codecCtx->codec_id)) + " codec");
         
         // Load the codec
-        err = avcodec_open2(m_codecCtx, m_codec, NULL);
+        err = avcodec_open2(m_codecCtx, m_codec, nullptr);
         CHECK0(err, "Stream() - unable to load decoder for codec " + std::string(avcodec_get_name(m_codecCtx->codec_id)));
         
-        AVDictionaryEntry* entry = av_dict_get(m_stream->metadata, "language", NULL, 0);
+        AVDictionaryEntry* entry = av_dict_get(m_stream->metadata, "language", nullptr, 0);
         if (entry)
         {
             m_language = entry->value;
@@ -105,7 +105,7 @@ namespace sfe
     
     AVPacket* Stream::popEncodedData()
     {
-        AVPacket* result = NULL;
+        AVPacket* result = nullptr;
         sf::Lock l(m_readerMutex);
         
         if (!m_packetList.size())
@@ -124,7 +124,7 @@ namespace sfe
             {
                 AVPacket* flushPacket = (AVPacket*)av_malloc(sizeof(*flushPacket));
                 av_init_packet(flushPacket);
-                flushPacket->data = NULL;
+                flushPacket->data = nullptr;
                 flushPacket->size = 0;
                 result = flushPacket;
                 
@@ -145,7 +145,7 @@ namespace sfe
         
         avcodec_flush_buffers(m_codecCtx);
         
-        AVPacket* pkt = NULL;
+        AVPacket* pkt = nullptr;
         
         while (m_packetList.size())
         {

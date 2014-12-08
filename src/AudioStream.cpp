@@ -47,16 +47,16 @@ namespace sfe
     m_sampleRate(0),
     
     // Private data
-    m_samplesBuffer(NULL),
-    m_audioFrame(NULL),
+    m_samplesBuffer(nullptr),
+    m_audioFrame(nullptr),
     
     // Resampling
-    m_swrCtx(NULL),
+    m_swrCtx(nullptr),
     m_dstNbSamples(0),
     m_maxDstNbSamples(0),
     m_dstNbChannels(0),
     m_dstLinesize(0),
-    m_dstData(NULL)
+    m_dstData(nullptr)
     {
         m_audioFrame = av_frame_alloc();
         CHECK(m_audioFrame, "AudioStream::AudioStream() - out of memory");
@@ -129,11 +129,11 @@ namespace sfe
     
     bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
     {
-        AVPacket* packet = NULL;
+        AVPacket* packet = nullptr;
         data.samples = m_samplesBuffer;
         
         while (data.sampleCount < av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate &&
-               (NULL != (packet = popEncodedData())))
+               (nullptr != (packet = popEncodedData())))
         {
             bool needsMoreDecoding = false;
             bool gotFrame = false;
@@ -144,7 +144,7 @@ namespace sfe
                 
                 if (gotFrame)
                 {
-                    uint8_t* samples = NULL;
+                    uint8_t* samples = nullptr;
                     int nbSamples = 0;
                     int samplesLength = 0;
                     
@@ -169,7 +169,7 @@ namespace sfe
         {
             sfeLogDebug("No more audio packets, do not go further");
         }
-        return (packet != NULL);
+        return (packet != nullptr);
     }
     
     void AudioStream::onSeek(sf::Time timeOffset)

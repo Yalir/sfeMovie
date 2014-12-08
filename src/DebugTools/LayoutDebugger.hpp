@@ -48,7 +48,7 @@ public:
      * No ownership is taken on the drawable
      */
     LayoutDebugger(const sf::Color& color = sf::Color::Red,
-                   const T* drawable = NULL);
+                   const T* drawable = nullptr);
     
     /** Bind this debugger to an object to show its borders and center
      *
