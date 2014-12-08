@@ -56,7 +56,7 @@ else()
 	  amrwb amv anm ansi ape ass asv1 asv2 atrac1 atrac3 atrac3p aura aura2 avrn avrp avs avui ayuv bethsoftvid
 	  bfi bink binkaudio_dct binkaudio_rdft bintext bmp bmv_audio bmv_video brender_pix c93 cavs cdgraphics cdxl cine
 	  cinepak cljr cllc comfortnoise cook cpia cscd cyuv dca dfa dirac dnxhd dpx dsd_lsbf dsd_lsbf_planar dsd_msbf 
-	  dsd_msbf_planardsicinaudio dsicinvideo dvbsub dvdsub dvvideo dxa dxtory eac3 eacmv eamad eatgq eatgv eatqi eightbps 
+	  dsd_msbf_planar dsicinaudio dsicinvideo dvbsub dvdsub dvvideo dxa dxtory eac3 eacmv eamad eatgq eatgv eatqi eightbps 
 	  eightsvx_exp eightsvx_fib escape124 escape130 evrc exr ffv1 ffvhuff ffwavesynth fic flac flashsv flashsv2 flic flv 
 	  fourxm fraps frwu g2m g723_1 g729 gif gsm gsm_ms h261 h263 h263i h263p h264 h264_crystalhd h264_vda h264_vdpau hevc 
 	  hnm4_video huffyuv iac idcin idf iff_byterun1 iff_ilbm imc indeo2 indeo3 indeo4 indeo5 interplay_dpcm interplay_video 
