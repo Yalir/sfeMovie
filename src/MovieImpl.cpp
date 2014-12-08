@@ -76,8 +76,8 @@ namespace sfe
             {
                 if (videoStreams.size())
                 {
-                    sf::Vector2i size = getSize();
-                    m_displayFrame = sf::IntRect(0, 0, size.x, size.y);
+                    sf::Vector2f size = getSize();
+                    m_displayFrame = sf::FloatRect(0, 0, size.x, size.y);
                 }
                 
                 return true;
@@ -281,7 +281,7 @@ namespace sfe
         return sf::Time::Zero;
     }
     
-    sf::Vector2i MovieImpl::getSize() const
+    sf::Vector2f MovieImpl::getSize() const
     {
         if (m_demuxer && m_timer)
         {
@@ -289,21 +289,21 @@ namespace sfe
             
             if (videoStream)
             {
-                return videoStream->getFrameSize();
+				return sf::Vector2f(videoStream->getFrameSize());
             }
         }
         sfeLogError("Movie::getSize() called but there is no active video stream");
-        return sf::Vector2i(0, 0);
+        return sf::Vector2f(0, 0);
     }
     
-    void MovieImpl::fit(int x, int y, int width, int height, bool preserveRatio)
+    void MovieImpl::fit(float x, float y, float width, float height, bool preserveRatio)
     {
-        fit(sf::IntRect(x, y, width, height), preserveRatio);
+        fit(sf::FloatRect(x, y, width, height), preserveRatio);
     }
     
-    void MovieImpl::fit(sf::IntRect frame, bool preserveRatio)
+    void MovieImpl::fit(sf::FloatRect frame, bool preserveRatio)
     {
-        sf::Vector2i movie_size = getSize();
+        sf::Vector2f movie_size = getSize();
         
         if (movie_size.x == 0 || movie_size.y == 0)
         {
@@ -311,25 +311,25 @@ namespace sfe
             return;
         }
         
-        sf::Vector2i wanted_size = sf::Vector2i(frame.width, frame.height);
-        sf::Vector2i new_size;
+        sf::Vector2f wanted_size = sf::Vector2f(frame.width, frame.height);
+        sf::Vector2f new_size;
         
         if (preserveRatio)
         {
-            sf::Vector2i target_size = movie_size;
+            sf::Vector2f target_size = movie_size;
             
-            float source_ratio = (float)movie_size.x / movie_size.y;
-            float target_ratio = (float)wanted_size.x / wanted_size.y;
+            float source_ratio = movie_size.x / movie_size.y;
+            float target_ratio = wanted_size.x / wanted_size.y;
             
             if (source_ratio > target_ratio)
             {
-                target_size.x = movie_size.x * ((float)wanted_size.x / movie_size.x);
-                target_size.y = movie_size.y * ((float)wanted_size.x / movie_size.x);
+                target_size.x = movie_size.x * (static_cast<float>(wanted_size.x) / movie_size.x);
+                target_size.y = movie_size.y * (static_cast<float>(wanted_size.x) / movie_size.x);
             }
             else
             {
-                target_size.x = movie_size.x * ((float)wanted_size.y / movie_size.y);
-                target_size.y = movie_size.y * ((float)wanted_size.y / movie_size.y);
+                target_size.x = movie_size.x * (static_cast<float>(wanted_size.y) / movie_size.y);
+                target_size.y = movie_size.y * (static_cast<float>(wanted_size.y) / movie_size.y);
             }
             
             new_size = target_size;
@@ -339,14 +339,14 @@ namespace sfe
             new_size = wanted_size;
         }
         
-        m_videoSprite.setPosition((wanted_size.x - new_size.x) / 2,
-                                  (wanted_size.y - new_size.y) / 2);
+        m_videoSprite.setPosition(static_cast<float>((wanted_size.x - new_size.x) / 2),
+                                  static_cast<float>((wanted_size.y - new_size.y) / 2));
         m_movieView.setPosition(frame.left, frame.top);
         m_videoSprite.setScale((float)new_size.x / movie_size.x, (float)new_size.y / movie_size.y);
         m_displayFrame = frame;
         
         sf::Vector2f subtitlesCenter(m_displayFrame.left + m_displayFrame.width / 2,
-                                     m_displayFrame.top + m_displayFrame.height * 0.9);
+                                     m_displayFrame.top + m_displayFrame.height * 0.9f);
         
         for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin();
              it != m_subtitleSprites.end(); ++it)
@@ -357,7 +357,7 @@ namespace sfe
                                        subtitlesCenter.y - (subSize.y * m_videoSprite.getScale().y / 2));
             subtitleSprite.setScale(m_videoSprite.getScale().x, m_videoSprite.getScale().y);
             
-            const sf::Uint32 bottom = subtitleSprite.getPosition().y +
+            const float bottom = subtitleSprite.getPosition().y +
                 subtitleSprite.getLocalBounds().height * m_videoSprite.getScale().x;
             if (bottom > m_displayFrame.height)
             {
@@ -495,7 +495,7 @@ namespace sfe
         m_subtitleSprites = subs;
         bool use_position = positions.size() > 0;
         sf::Vector2f subtitlesCenter(m_displayFrame.left + m_displayFrame.width / 2,
-                                     m_displayFrame.top + m_displayFrame.height * 0.9);
+                                     m_displayFrame.top + m_displayFrame.height * 0.9f);
         std::list<sf::Vector2i>::const_iterator pos_it = positions.begin();
         
         for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin(); it != m_subtitleSprites.end(); ++it)
@@ -518,7 +518,7 @@ namespace sfe
             
             subtitleSprite.setScale(m_videoSprite.getScale().x, m_videoSprite.getScale().y);
             
-            const sf::Uint32 bottom = subtitleSprite.getPosition().y +
+            const float bottom = subtitleSprite.getPosition().y +
                 subtitleSprite.getLocalBounds().height * m_videoSprite.getScale().y;
             if (bottom > m_displayFrame.height)
             {

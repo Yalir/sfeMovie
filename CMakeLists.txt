@@ -61,7 +61,15 @@ add_subdirectory(FFmpeg)
 # ================================================ SFML SETUP ================================================= #
 #################################################################################################################
 
-set (SFML_STATIC_LIBRARIES FALSE CACHE BOOL "TRUE to link sfeMovie against static SFML libraries instead of dynamic ones")
+# Static sfeMovie lib has no interest on Linux or OS X
+if (WINDOWS)
+    set (SFEMOVIE_BUILD_STATIC FALSE CACHE BOOL "TRUE to build static version of sfeMovie")
+endif()
+
+if (SFEMOVIE_BUILD_STATIC)
+    set (SFML_STATIC_LIBRARIES TRUE)
+endif()
+
 find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
 message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
 message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
@@ -106,12 +114,24 @@ include_directories (${SFEMOVIE_INCLUDE_DIRS})
 message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
 
 # Define the source files sfe should compile
-add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
+if (SFEMOVIE_BUILD_STATIC)
+    add_library(${SFEMOVIE_LIB} STATIC ${SOURCE_FILES})
+else()
+    add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
+endif()
 add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 
 # Define the libraries sfe should link against
-message(STATUS "Link sfeMovie against: ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
-target_link_libraries (${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
+if (SFEMOVIE_BUILD_STATIC)
+    set_target_properties(${SFEMOVIE_LIB} PROPERTIES
+        COMPILE_DEFINITIONS SFEMOVIE_STATIC
+        COMPILE_DEFINITIONS SFML_STATIC)
+    message(WARNING "You chose to build a static library of sfeMovie, this assumes that you will also statically link your software against SFML."
+            "sfeMovie will be built with SFML_STATIC defined.")
+else()
+    message(STATUS "Link sfeMovie against: ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
+    target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
+endif()
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
     if (LINUX)

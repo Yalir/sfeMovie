@@ -55,7 +55,7 @@ if platform.system() == 'Windows':
             os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-MinGW"
         elif args.compiler == 'MSVC12':
             generatorArg = "-GVisual Studio 12"
-            os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
+            os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs2013"
 
 # Configure
 command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, "-DBUILD_PACKAGE=TRUE", "-DCMAKE_BUILD_TYPE=" + args.config]
