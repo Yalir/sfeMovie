@@ -51,6 +51,8 @@ endmacro()
 
 add_full_test(TimerTest)
 add_full_test(DemuxerTest)
+add_full_test(RangBasedLoop)
+add_full_test(Nullptr)
 configure_file("small_1.ogv" "small_1.ogv" COPYONLY)
 configure_file("long_1.wav" "long_1.wav" COPYONLY)
 configure_file("left-right.wav" "left-right.wav" COPYONLY)
