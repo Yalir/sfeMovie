@@ -113,7 +113,7 @@ namespace sfe
          * If another stream of the same kind is already enabled, it is first disabled and disconnected
          * so that only one stream of the same kind can be enabled at the same time.
          *
-         * @param stream the audio stream to enable and connect for playing, or NULL to disable audio
+         * @param stream the audio stream to enable and connect for playing, or nullptr to disable audio
          */
         void selectAudioStream(AudioStream* stream);
         
@@ -125,7 +125,7 @@ namespace sfe
         
         /** Get the currently selected audio stream, if there's one
          *
-         * @return the currently selected audio stream, or NULL if there's none
+         * @return the currently selected audio stream, or nullptr if there's none
          */
         AudioStream* getSelectedAudioStream() const;
         
@@ -134,7 +134,7 @@ namespace sfe
          * If another stream of the same kind is already enabled, it is first disabled and disconnected
          * so that only one stream of the same kind can be enabled at the same time.
          *
-         * @param stream the video stream to enable and connect for playing, or NULL to disable video
+         * @param stream the video stream to enable and connect for playing, or nullptr to disable video
          */
         void selectVideoStream(VideoStream* stream);
         
@@ -146,7 +146,7 @@ namespace sfe
         
         /** Get the currently selected video stream, if there's one
          *
-         * @return the currently selected video stream, or NULL if there's none
+         * @return the currently selected video stream, or nullptr if there's none
          */
         VideoStream* getSelectedVideoStream() const;
         
@@ -155,7 +155,7 @@ namespace sfe
          * If another stream of the same kind is already enabled, it is first disabled and disconnected
          * so that only one stream of the same kind can be enabled at the same time.
          *
-         * @param stream the video stream to enable and connect for playing, or NULL to disable video
+         * @param stream the video stream to enable and connect for playing, or nullptr to disable video
          */
         void selectSubtitleStream(SubtitleStream* stream);
         
@@ -167,7 +167,7 @@ namespace sfe
         
         /** Get the currently selected subtitle stream, if there's one
          *
-         * @return the currently selected subtitle stream, or NULL if there's none
+         * @return the currently selected subtitle stream, or nullptr if there's none
          */
         SubtitleStream* getSelectedSubtitleStream() const;
         
@@ -199,7 +199,7 @@ namespace sfe
          *
          * You're responsible for freeing the returned packet
          *
-         * @return the read packet, or NULL if the end of file has been reached
+         * @return the read packet, or nullptr if the end of file has been reached
          */
         AVPacket* readPacket();
         

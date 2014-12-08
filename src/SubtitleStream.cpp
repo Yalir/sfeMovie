@@ -117,7 +117,7 @@ namespace sfe
             {
                 bool needsMoreDecoding = false;
                 
-                CHECK(packet != NULL, "inconsistency error");
+                CHECK(packet != nullptr, "inconsistency error");
                 goOn = avcodec_decode_subtitle2(m_codecCtx, &sub, &gotSub, packet);
                 
                 pts = 0;
@@ -158,7 +158,7 @@ namespace sfe
     
     SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded)
     {
-        assert(sub != NULL);
+        assert(sub != nullptr);
         
         succeeded = false;
         start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
@@ -178,7 +178,7 @@ namespace sfe
             
             if (type == SUBTITLE_BITMAP)
             {
-                CHECK(subItem->pict.data != NULL, "FFmpeg inconcistency error");
+                CHECK(subItem->pict.data != nullptr, "FFmpeg inconcistency error");
                 CHECK(subItem->w * subItem->h > 0, "FFmpeg inconcistency error");
                 
                 positions.push_back(sf::Vector2i(subItem->x, subItem->y));
@@ -205,14 +205,14 @@ namespace sfe
             else
             {
                 //TODO: add libass code
-                if (subItem->text != NULL)
+                if (subItem->text != nullptr)
                 {
                     if (subItem->type == SUBTITLE_TEXT)
                         sfeLogError("Unsupported subtitle type: it would require text support");
                     else
                         sfeLogError("Unsupported subtitle type: it can be approximated with text");
                 }
-                else if (subItem->ass != NULL)
+                else if (subItem->ass != nullptr)
                 {
                     if (subItem->type == SUBTITLE_ASS)
                         sfeLogError("Unsupported subtitle type: it would require ASS support");

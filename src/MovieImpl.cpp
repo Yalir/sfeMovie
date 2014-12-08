@@ -36,8 +36,8 @@ namespace sfe
 {
     MovieImpl::MovieImpl(sf::Transformable& movieView) :
     m_movieView(movieView),
-    m_demuxer(NULL),
-    m_timer(NULL),
+    m_demuxer(nullptr),
+    m_timer(nullptr),
     m_videoSprite()
     {
     }
@@ -118,7 +118,7 @@ namespace sfe
         
         std::map<int, Stream*> streams = m_demuxer->getStreams();
         std::map<int, Stream*>::iterator it = streams.find(streamDescriptor.identifier);
-        Stream* streamToSelect = NULL;
+        Stream* streamToSelect = nullptr;
         
         if (it != streams.end())
         {
@@ -464,10 +464,10 @@ namespace sfe
     void MovieImpl::cleanResources()
     {
         if (m_demuxer)
-            delete m_demuxer, m_demuxer = NULL;
+            delete m_demuxer, m_demuxer = nullptr;
         
         if (m_timer)
-            delete m_timer, m_timer = NULL;
+            delete m_timer, m_timer = nullptr;
     }
     
     void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -531,7 +531,7 @@ namespace sfe
         }
         
         if (m_subtitleSprites.size() == 0)
-            m_debugger.bind(NULL);
+            m_debugger.bind(nullptr);
     }
     
     void MovieImpl::didWipeOutSubtitles(const SubtitleStream& sender)
