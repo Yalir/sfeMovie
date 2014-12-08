@@ -154,7 +154,7 @@ namespace sfe
                 }
             }
         }
-        return static_cast<bool>(goOn);
+        return (goOn != 0);
     }
     
     
@@ -166,7 +166,7 @@ namespace sfe
         start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
         end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
         
-        for (int i = 0; i < sub->num_rects; ++i)
+        for (unsigned int i = 0; i < sub->num_rects; ++i)
         {
             
             sprites.push_back(sf::Sprite());

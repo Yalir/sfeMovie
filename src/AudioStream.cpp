@@ -129,7 +129,7 @@ namespace sfe
     
     bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
     {
-        AVPacket* packet;
+        AVPacket* packet = NULL;
         data.samples = m_samplesBuffer;
         
         while (data.sampleCount < av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate &&

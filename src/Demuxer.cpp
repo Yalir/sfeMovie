@@ -137,7 +137,7 @@ namespace sfe
         // Get the media duration if possible (otherwise rely on the streams)
         if (m_formatCtx->duration != AV_NOPTS_VALUE)
         {
-            long secs, us;
+            int64_t secs, us;
             secs = m_formatCtx->duration / AV_TIME_BASE;
             us = m_formatCtx->duration % AV_TIME_BASE;
             m_duration = sf::seconds(secs + (float)us / AV_TIME_BASE);
@@ -478,7 +478,7 @@ namespace sfe
         
         if (stream->duration != AV_NOPTS_VALUE)
         {
-            long secs, us;
+            int64_t secs, us;
             secs = stream->duration / AV_TIME_BASE;
             us = stream->duration % AV_TIME_BASE;
             m_duration = sf::seconds(secs + (float)us / AV_TIME_BASE);

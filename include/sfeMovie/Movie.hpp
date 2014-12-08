@@ -160,12 +160,11 @@ namespace sfe
          *
          * @return the size of the currently active video stream, or (0, 0) is there is none
          */
-        sf::Vector2i getSize() const;
+        sf::Vector2f getSize() const;
         
-        /** @brief See fitFrame(sf::IntRect, bool)
-         * @see fitFrame(sf::IntRect, bool)
+        /** @see fitFrame(sf::FloatRect, bool)
          */
-        void fit(int x, int y, int width, int height, bool preserveRatio = true);
+        void fit(float x, float y, float width, float height, bool preserveRatio = true);
         
         /** @brief Scales the movie to fit the requested frame.
          *
@@ -178,7 +177,7 @@ namespace sfe
          * @param frame the target frame in which you want to display the movie
          * @param preserveRatio true to keep the original movie ratio, false otherwise
          */
-        void fit(sf::IntRect frame, bool preserveRatio = true);
+        void fit(sf::FloatRect frame, bool preserveRatio = true);
         
         /** @brief Returns the average amount of video frames per second
          *
