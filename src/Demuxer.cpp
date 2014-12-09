@@ -404,10 +404,10 @@ namespace sfe
         std::map<int, Stream*> streams = getStreams();
         std::map<int, Stream*>::iterator it;
         
-        for (it = streams.begin();it != streams.end(); it++)
+        for(std::pair<int,Stream*> pair : streams)
         {
-            it->second->update();
-        }
+			pair.second->update();
+		}
     }
     
     bool Demuxer::didReachEndOfFile() const
