@@ -46,6 +46,8 @@ macro(add_full_test testname)
 	elseif(LINUX)
 		target_link_libraries(${testname} sfeMovie)
 	endif ()
+	set_target_properties(${testname} PROPERTIES FOLDER "Tests")
+	source_group("" FILES ${testname}.cpp)
 	add_test(NAME ${testname} COMMAND ${testname})
 endmacro()
 
