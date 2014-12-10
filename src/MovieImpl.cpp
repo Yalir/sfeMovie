@@ -44,17 +44,14 @@ namespace sfe
     
     MovieImpl::~MovieImpl()
     {
-        cleanResources();
     }
     
     bool MovieImpl::openFromFile(const std::string& filename)
     {
-        cleanResources();
-        
         try
         {
-            m_timer = new Timer;
-            m_demuxer = new Demuxer(filename, *m_timer, *this, *this);
+            m_timer = std::make_shared<Timer>();
+            m_demuxer = std::make_shared<Demuxer>(filename, *m_timer.get(), *this, *this);
             m_audioStreamsDesc = m_demuxer->computeStreamDescriptors(Audio);
             m_videoStreamsDesc = m_demuxer->computeStreamDescriptors(Video);
             m_subtitleStreamsDesc = m_demuxer->computeStreamDescriptors(Subtitle);
@@ -69,7 +66,6 @@ namespace sfe
             if (!audioStreams.size() && !videoStreams.size())
             {
                 sfeLogError("Movie::openFromFile() - No supported audio or video stream in this media");
-                cleanResources();
                 return false;
             }
             else
@@ -86,7 +82,6 @@ namespace sfe
         catch (std::runtime_error& e)
         {
             sfeLogError(e.what());
-            cleanResources();
             return false;
         }
     }
@@ -458,16 +453,6 @@ namespace sfe
         {
             return emptyTexture;
         }
-    }
-    
-    
-    void MovieImpl::cleanResources()
-    {
-        if (m_demuxer)
-            delete m_demuxer, m_demuxer = nullptr;
-        
-        if (m_timer)
-            delete m_timer, m_timer = nullptr;
     }
     
     void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
