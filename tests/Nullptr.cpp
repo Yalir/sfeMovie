@@ -5,5 +5,6 @@
 BOOST_AUTO_TEST_CASE(Nullptr)
 {
 	int* ptr = nullptr;
+    BOOST_CHECK(ptr == nullptr);
 }
 
