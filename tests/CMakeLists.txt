@@ -51,11 +51,9 @@ macro(add_full_test testname)
 	add_test(NAME ${testname} COMMAND ${testname})
 endmacro()
 
+# sfeMovie tests
 add_full_test(TimerTest)
 add_full_test(DemuxerTest)
-add_full_test(RangeBasedLoop)
-add_full_test(Nullptr)
-add_full_test(Atomic)
 configure_file("small_1.ogv" "small_1.ogv" COPYONLY)
 configure_file("long_1.wav" "long_1.wav" COPYONLY)
 configure_file("left-right.wav" "left-right.wav" COPYONLY)
@@ -64,3 +62,9 @@ configure_file("voice_1.mp3" "voice_1.mp3" COPYONLY)
 configure_file("small_2.mp3" "small_2.mp3" COPYONLY)
 configure_file("small_3.flac" "small_3.flac" COPYONLY)
 configure_file("small_4.wav" "small_4.wav" COPYONLY)
+
+# C++11 tests
+add_full_test(RangeBasedLoop)
+add_full_test(Nullptr)
+add_full_test(Atomic)
+add_full_test(SharedPtr)
