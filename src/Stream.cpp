@@ -36,7 +36,7 @@ extern "C"
 
 namespace sfe
 {
-    Stream::Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer) :
+    Stream::Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer) :
     m_formatCtx(formatCtx),
     m_stream(nullptr),
     m_dataSource(dataSource),
@@ -49,6 +49,7 @@ namespace sfe
     m_readerMutex()
     {
         CHECK(stream, "Stream::Stream() - invalid stream argument");
+        CHECK(timer, "Inconcistency error: null timer");
         int err = 0;
         
         m_stream = stream;
@@ -81,12 +82,12 @@ namespace sfe
     
     void Stream::connect()
     {
-        m_timer.addObserver(*this);
+        m_timer->addObserver(*this);
     }
     
     void Stream::disconnect()
     {
-        m_timer.removeObserver(*this);
+        m_timer->removeObserver(*this);
     }
     
     void Stream::pushEncodedData(AVPacket* packet)

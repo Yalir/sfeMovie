@@ -40,7 +40,7 @@ extern "C"
 
 namespace sfe
 {
-    AudioStream::AudioStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer) :
+    AudioStream::AudioStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer) :
     Stream(formatCtx, stream, dataSource, timer),
     
     // Public properties

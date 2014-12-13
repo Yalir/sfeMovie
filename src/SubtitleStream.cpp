@@ -41,7 +41,7 @@ namespace sfe
 {
     const int RGBASize = 4;
     
-    SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+    SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
     Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
     {
         CHECK((m_codecCtx->codec_descriptor->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
@@ -73,7 +73,7 @@ namespace sfe
         if (m_pendingSubtitles.size() > 0)
         {
             //activate subtitle
-            if (m_pendingSubtitles.front()->start < m_timer.getOffset())
+            if (m_pendingSubtitles.front()->start < m_timer->getOffset())
             {
                 SubtitleData* iter = m_pendingSubtitles.front();
                 
@@ -87,7 +87,7 @@ namespace sfe
         if (m_visibleSubtitles.size()>0)
         {
             //remove subtitle
-            if (m_visibleSubtitles.front()->end < m_timer.getOffset())
+            if (m_visibleSubtitles.front()->end < m_timer->getOffset())
             {
                 SubtitleData* subtitle = m_visibleSubtitles.front();
                 m_visibleSubtitles.pop_front();

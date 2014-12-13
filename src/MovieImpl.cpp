@@ -51,7 +51,7 @@ namespace sfe
         try
         {
             m_timer = std::make_shared<Timer>();
-            m_demuxer = std::make_shared<Demuxer>(filename, *m_timer.get(), *this, *this);
+            m_demuxer = std::make_shared<Demuxer>(filename, m_timer, *this, *this);
             m_audioStreamsDesc = m_demuxer->computeStreamDescriptors(Audio);
             m_videoStreamsDesc = m_demuxer->computeStreamDescriptors(Video);
             m_subtitleStreamsDesc = m_demuxer->computeStreamDescriptors(Subtitle);

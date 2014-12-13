@@ -36,7 +36,7 @@ extern "C"
 
 namespace sfe
 {
-    VideoStream::VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+    VideoStream::VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
     Stream(formatCtx ,stream, dataSource, timer),
     m_texture(),
     m_rawVideoFrame(nullptr),
@@ -172,7 +172,7 @@ namespace sfe
     
     sf::Time VideoStream::getSynchronizationGap()
     {
-        return  m_lastDecodedTimestamp - m_timer.getOffset();
+        return  m_lastDecodedTimestamp - m_timer->getOffset();
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)

@@ -45,7 +45,7 @@ namespace sfe
          * At the end of the constructor, the stream is guaranteed
          * to have all of its fields set and the decoder loaded
          */
-        VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate);
+        VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate);
         
         /** Default destructor
          */

@@ -81,7 +81,7 @@ namespace sfe
          * @param timer the timer with which the media streams will be synchronized
          * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
          */
-        Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
+        Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
         
         /** Default destructor
          */
@@ -228,7 +228,7 @@ namespace sfe
         std::map<int, Stream*> m_streams;
         std::map<int, std::string> m_ignoredStreams;
         sf::Mutex m_synchronized;
-        Timer& m_timer;
+        std::shared_ptr<Timer> m_timer;
         Stream* m_connectedAudioStream;
         Stream* m_connectedVideoStream;
         Stream* m_connectedSubtitleStream;

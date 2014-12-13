@@ -106,7 +106,7 @@ namespace sfe
         return g_availableDecoders;
     }
     
-    Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
+    Demuxer::Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
     m_formatCtx(nullptr),
     m_eofReached(false),
     m_streams(),
@@ -119,6 +119,7 @@ namespace sfe
     m_duration(sf::Time::Zero)
     {
         CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
+        CHECK(timer, "Inconsistency error: null timer");
         
         int err = 0;
         
@@ -204,15 +205,15 @@ namespace sfe
             sfeLogWarning("The media duration could not be retreived");
         }
         
-        m_timer.addObserver(*this);
+        m_timer->addObserver(*this);
     }
     
     Demuxer::~Demuxer()
     {
-        if (m_timer.getStatus() != Stopped)
-            m_timer.stop();
+        if (m_timer->getStatus() != Stopped)
+            m_timer->stop();
         
-        m_timer.removeObserver(*this);
+        m_timer->removeObserver(*this);
         
         while (m_streams.size())
         {
@@ -267,12 +268,12 @@ namespace sfe
     
     void Demuxer::selectAudioStream(AudioStream* stream)
     {
-        Status oldStatus = m_timer.getStatus();
+        Status oldStatus = m_timer->getStatus();
         CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
               "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
-            m_timer.pause();
+            m_timer->pause();
         
         if (stream != m_connectedAudioStream)
         {
@@ -288,7 +289,7 @@ namespace sfe
         }
         
         if (oldStatus == Playing)
-            m_timer.play();
+            m_timer->play();
     }
     
     void Demuxer::selectFirstAudioStream()
@@ -305,12 +306,12 @@ namespace sfe
     
     void Demuxer::selectVideoStream(VideoStream* stream)
     {
-        Status oldStatus = m_timer.getStatus();
+        Status oldStatus = m_timer->getStatus();
         CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
               "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
-            m_timer.pause();
+            m_timer->pause();
         
         if (stream != m_connectedVideoStream)
         {
@@ -326,7 +327,7 @@ namespace sfe
         }
         
         if (oldStatus == Playing)
-            m_timer.play();
+            m_timer->play();
     }
     
     void Demuxer::selectFirstVideoStream()
@@ -343,10 +344,10 @@ namespace sfe
     
     void Demuxer::selectSubtitleStream(SubtitleStream* stream)
     {
-        Status oldStatus = m_timer.getStatus();
+        Status oldStatus = m_timer->getStatus();
         
         if (oldStatus == Playing)
-            m_timer.pause();
+            m_timer->pause();
         
         if (stream != m_connectedSubtitleStream)
         {
@@ -360,7 +361,7 @@ namespace sfe
         }
         
         if (oldStatus == Playing)
-            m_timer.play();
+            m_timer->play();
     }
     
     void Demuxer::selectFirstSubtitleStream()
