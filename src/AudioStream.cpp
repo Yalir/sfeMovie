@@ -40,7 +40,8 @@ extern "C"
 
 namespace sfe
 {
-    AudioStream::AudioStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer) :
+    AudioStream::AudioStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource,
+                             std::shared_ptr<Timer> timer) :
     Stream(formatCtx, stream, dataSource, timer),
     
     // Public properties
@@ -213,12 +214,12 @@ namespace sfe
         }
         
         /* set options */
-        av_opt_set_int(m_swrCtx, "in_channel_layout",    m_stream->codec->channel_layout, 0);
-        av_opt_set_int(m_swrCtx, "in_sample_rate",       m_stream->codec->sample_rate, 0);
-        av_opt_set_sample_fmt(m_swrCtx, "in_sample_fmt", m_stream->codec->sample_fmt, 0);
-        av_opt_set_int(m_swrCtx, "out_channel_layout",    AV_CH_LAYOUT_STEREO, 0);
-        av_opt_set_int(m_swrCtx, "out_sample_rate",       m_stream->codec->sample_rate, 0);
-        av_opt_set_sample_fmt(m_swrCtx, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
+        av_opt_set_int        (m_swrCtx, "in_channel_layout",  m_stream->codec->channel_layout, 0);
+        av_opt_set_int        (m_swrCtx, "in_sample_rate",     m_stream->codec->sample_rate,    0);
+        av_opt_set_sample_fmt (m_swrCtx, "in_sample_fmt",      m_stream->codec->sample_fmt,     0);
+        av_opt_set_int        (m_swrCtx, "out_channel_layout", AV_CH_LAYOUT_STEREO,             0);
+        av_opt_set_int        (m_swrCtx, "out_sample_rate",    m_stream->codec->sample_rate,    0);
+        av_opt_set_sample_fmt (m_swrCtx, "out_sample_fmt",     AV_SAMPLE_FMT_S16,               0);
         
         /* initialize the resampling context */
         err = swr_init(m_swrCtx);

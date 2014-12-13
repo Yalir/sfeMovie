@@ -111,9 +111,9 @@ namespace sfe
             return false;
         }
         
-        std::map<int,  std::shared_ptr<Stream> > streams = m_demuxer->getStreams();
-        std::map<int,  std::shared_ptr<Stream> >::iterator it = streams.find(streamDescriptor.identifier);
-         std::shared_ptr<Stream>  streamToSelect = nullptr;
+        std::map<int, std::shared_ptr<Stream> > streams = m_demuxer->getStreams();
+        std::map<int, std::shared_ptr<Stream> >::iterator it = streams.find(streamDescriptor.identifier);
+        std::shared_ptr<Stream>  streamToSelect = nullptr;
         
         if (it != streams.end())
         {

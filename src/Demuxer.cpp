@@ -106,7 +106,8 @@ namespace sfe
         return g_availableDecoders;
     }
     
-    Demuxer::Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
+    Demuxer::Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer,
+                     VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
     m_formatCtx(nullptr),
     m_eofReached(false),
     m_streams(),
@@ -397,8 +398,8 @@ namespace sfe
     
     void Demuxer::update()
     {
-        std::map<int,  std::shared_ptr<Stream> > streams = getStreams();
-        std::map<int,  std::shared_ptr<Stream> >::iterator it;
+        std::map<int, std::shared_ptr<Stream> > streams = getStreams();
+        std::map<int, std::shared_ptr<Stream> >::iterator it;
         
         for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
         {
@@ -445,7 +446,7 @@ namespace sfe
         CHECK(packet, "Demuxer::distributePacket() - invalid argument");
         
         bool result = false;
-        std::map<int,  std::shared_ptr<Stream> >::iterator it = m_streams.find(packet->stream_index);
+        std::map<int, std::shared_ptr<Stream> >::iterator it = m_streams.find(packet->stream_index);
         
         if (it != m_streams.end())
         {
