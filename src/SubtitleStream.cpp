@@ -74,7 +74,7 @@ namespace sfe
             //activate subtitle
             if (m_pendingSubtitles.front()->start < m_timer->getOffset())
             {
-                SubtitleData* iter = m_pendingSubtitles.front();
+                std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
                 
                 m_delegate.didUpdateSubtitle(*this, iter->sprites, iter->positions);
                 m_visibleSubtitles.push_back(iter);
@@ -88,13 +88,12 @@ namespace sfe
             //remove subtitle
             if (m_visibleSubtitles.front()->end < m_timer->getOffset())
             {
-                SubtitleData* subtitle = m_visibleSubtitles.front();
+                std::shared_ptr<SubtitleData> subtitle = m_visibleSubtitles.front();
                 m_visibleSubtitles.pop_front();
                 
                 if (m_visibleSubtitles.size() == 0)
                 {
-                    m_delegate.didUpdateSubtitle(*this, std::list<sf::Sprite>(), std::list<sf::Vector2i>());
-                    delete subtitle;
+                    m_delegate.didWipeOutSubtitles(*this);
                 }
             }
         }
@@ -126,12 +125,10 @@ namespace sfe
                 if (gotSub && pts)
                 {
                     bool succeeded = false;
-                    SubtitleData* sfeSub = new SubtitleData(&sub, succeeded);
+                    std::shared_ptr<SubtitleData> sfeSub = std::make_shared<SubtitleData>(&sub, succeeded);
                     
                     if (succeeded)
                         m_pendingSubtitles.push_back(sfeSub);
-                    else
-                        delete sfeSub;
                 }
                 
                 if (needsMoreDecoding)
@@ -182,22 +179,19 @@ namespace sfe
                 
                 positions.push_back(sf::Vector2i(subItem->x, subItem->y));
                 
-                uint32_t* palette = new uint32_t[subItem->nb_colors];
+                std::unique_ptr<uint32_t[]> palette(new uint32_t[subItem->nb_colors]);
                 for (int j = 0; j < subItem->nb_colors; j++)
                     palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];
                 
                 texture.create(subItem->w, subItem->h);
                 texture.setSmooth(true);
                 
-                uint32_t* data = new uint32_t[subItem->w* sub->rects[i]->h];
+                std::unique_ptr<uint32_t[]> data(new uint32_t[subItem->w* sub->rects[i]->h]);
                 for (int j = 0; j < subItem->w * subItem->h; ++j)
                     data[j] = palette[subItem->pict.data[0][j]];
                 
-                texture.update((uint8_t*)data);
+                texture.update((uint8_t*)data.get());
                 sprite.setTexture(texture);
-                
-                delete[] data;
-                delete[] palette;
                 
                 succeeded = true;
             }
@@ -224,20 +218,7 @@ namespace sfe
     
     void SubtitleStream::flushBuffers()
     {
-        while (m_visibleSubtitles.size())
-        {
-            delete m_visibleSubtitles.back();
-            m_visibleSubtitles.pop_back();
-        }
-        
-        while (m_pendingSubtitles.size())
-        {
-            delete m_pendingSubtitles.back();
-            m_pendingSubtitles.pop_back();
-        }
-        
         m_delegate.didWipeOutSubtitles(*this);
-        
         Stream::flushBuffers();
     }
 }

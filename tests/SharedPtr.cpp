@@ -6,6 +6,6 @@
 
 BOOST_AUTO_TEST_CASE(SharedPtr)
 {
-    std::shared_ptr<int> ptr(new int);
+    std::shared_ptr<int> ptr(std::make_shared<int>());
     BOOST_CHECK(ptr);
 }

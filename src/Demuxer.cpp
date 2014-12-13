@@ -388,7 +388,10 @@ namespace sfe
             {
                 if (!distributePacket(pkt))
                 {
-                    sfeLogDebug(m_ignoredStreams[pkt->stream_index] + " packet not handled and dropped");
+                    AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
+                    std::string streamName = std::string("'") + av_get_media_type_string(ffstream->codec->codec_type) + "/" + avcodec_get_name(ffstream->codec->codec_id);
+                    
+                    sfeLogDebug(streamName + " packet dropped");
                     av_free_packet(pkt);
                     av_free(pkt);
                 }

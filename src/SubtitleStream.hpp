@@ -104,8 +104,8 @@ namespace sfe
         
         Delegate& m_delegate;
         
-        std::list<SubtitleData*> m_pendingSubtitles;
-        std::list<SubtitleData*> m_visibleSubtitles;
+        std::list< std::shared_ptr<SubtitleData> > m_pendingSubtitles;
+        std::list< std::shared_ptr<SubtitleData> > m_visibleSubtitles;
     };
     
 };
