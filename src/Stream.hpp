@@ -28,6 +28,7 @@
 #include "Macros.hpp"
 #include "Timer.hpp"
 #include <list>
+#include <memory>
 #include <SFML/System.hpp>
 #include <sfeMovie/Movie.hpp>
 

@@ -36,6 +36,7 @@
 #include <set>
 #include <list>
 #include <utility>
+#include <memory>
 
 namespace sfe
 {
