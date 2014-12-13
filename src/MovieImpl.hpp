@@ -31,11 +31,13 @@
 #include <stdexcept>
 #include <SFML/Config.hpp>
 #include "VideoStream.hpp"
-#include "Demuxer.hpp"
+#include "SubtitleStream.hpp"
 #include "DebugTools/LayoutDebugger.hpp"
 
 namespace sfe
 {
+    class Demuxer;
+    
     class MovieImpl : public VideoStream::Delegate, public SubtitleStream::Delegate, public sf::Drawable
     {
     public:
