@@ -56,9 +56,9 @@ namespace sfe
             m_videoStreamsDesc = m_demuxer->computeStreamDescriptors(Video);
             m_subtitleStreamsDesc = m_demuxer->computeStreamDescriptors(Subtitle);
             
-            std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(Audio);
-            std::set<Stream*> videoStreams = m_demuxer->getStreamsOfType(Video);
-            std::set<Stream*> subtitleStreams = m_demuxer->getStreamsOfType(Subtitle);
+            std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
+            std::set< std::shared_ptr<Stream> > videoStreams = m_demuxer->getStreamsOfType(Video);
+            std::set< std::shared_ptr<Stream> > subtitleStreams = m_demuxer->getStreamsOfType(Subtitle);
             
             m_demuxer->selectFirstAudioStream();
             m_demuxer->selectFirstVideoStream();
@@ -111,9 +111,9 @@ namespace sfe
             return false;
         }
         
-        std::map<int, Stream*> streams = m_demuxer->getStreams();
-        std::map<int, Stream*>::iterator it = streams.find(streamDescriptor.identifier);
-        Stream* streamToSelect = nullptr;
+        std::map<int,  std::shared_ptr<Stream> > streams = m_demuxer->getStreams();
+        std::map<int,  std::shared_ptr<Stream> >::iterator it = streams.find(streamDescriptor.identifier);
+         std::shared_ptr<Stream>  streamToSelect = nullptr;
         
         if (it != streams.end())
         {
@@ -123,13 +123,13 @@ namespace sfe
         switch (streamDescriptor.type)
         {
             case Audio:
-                m_demuxer->selectAudioStream(dynamic_cast<AudioStream*>(streamToSelect));
+                m_demuxer->selectAudioStream(std::dynamic_pointer_cast<AudioStream>(streamToSelect));
                 return true;
             case Video:
-                m_demuxer->selectVideoStream(dynamic_cast<VideoStream*>(streamToSelect));
+                m_demuxer->selectVideoStream(std::dynamic_pointer_cast<VideoStream>(streamToSelect));
                 return true;
             case Subtitle:
-                m_demuxer->selectSubtitleStream(dynamic_cast<SubtitleStream*>(streamToSelect));
+                m_demuxer->selectSubtitleStream(std::dynamic_pointer_cast<SubtitleStream>(streamToSelect));
                 return true;
             default:
                 sfeLogWarning("Movie::selectStream() - stream activation for stream of kind "
@@ -207,7 +207,7 @@ namespace sfe
             }
             
             // Enable smoothing when the video is scaled
-            sfe::VideoStream* vStream = m_demuxer->getSelectedVideoStream();
+            std::shared_ptr<VideoStream> vStream = m_demuxer->getSelectedVideoStream();
             if (vStream)
             {
                 sf::Vector2f movieScale = m_movieView.getScale();
@@ -236,12 +236,12 @@ namespace sfe
     {
         if (m_demuxer && m_timer)
         {
-            std::set<Stream*> audioStreams = m_demuxer->getStreamsOfType(Audio);
-            std::set<Stream*>::const_iterator it;
+            std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
+            std::set< std::shared_ptr<Stream> >::const_iterator it;
             
             for (it = audioStreams.begin(); it != audioStreams.end(); it++)
             {
-                AudioStream* audioStream = dynamic_cast<AudioStream*>(*it);
+                std::shared_ptr<AudioStream> audioStream = std::dynamic_pointer_cast<AudioStream>(*it);
                 audioStream->setVolume(volume);
             }
         }
@@ -255,7 +255,7 @@ namespace sfe
     {
         if (m_demuxer && m_timer)
         {
-            AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+            std::shared_ptr<AudioStream> audioStream = m_demuxer->getSelectedAudioStream();
             
             if (audioStream)
                 return audioStream->getVolume();
@@ -280,7 +280,7 @@ namespace sfe
     {
         if (m_demuxer && m_timer)
         {
-            VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
+            std::shared_ptr<VideoStream> videoStream = m_demuxer->getSelectedVideoStream();
             
             if (videoStream)
             {
@@ -367,7 +367,7 @@ namespace sfe
     {
         if (m_demuxer && m_timer)
         {
-            VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
+            std::shared_ptr<VideoStream> videoStream = m_demuxer->getSelectedVideoStream();
             
             if (videoStream)
                 return videoStream->getFrameRate();
@@ -381,7 +381,7 @@ namespace sfe
     {
         if (m_demuxer && m_timer)
         {
-            AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+            std::shared_ptr<AudioStream> audioStream = m_demuxer->getSelectedAudioStream();
             
             if (audioStream)
                 return audioStream->getSampleRate();
@@ -395,7 +395,7 @@ namespace sfe
     {
         if (m_demuxer && m_timer)
         {
-            AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
+            std::shared_ptr<AudioStream> audioStream = m_demuxer->getSelectedAudioStream();
             if (audioStream)
                 return audioStream->getChannelCount();
         }
@@ -410,9 +410,9 @@ namespace sfe
         
         if (m_demuxer)
         {
-            VideoStream* videoStream = m_demuxer->getSelectedVideoStream();
-            AudioStream* audioStream = m_demuxer->getSelectedAudioStream();
-            SubtitleStream* subtitleStream = m_demuxer->getSelectedSubtitleStream();
+            std::shared_ptr<VideoStream> videoStream = m_demuxer->getSelectedVideoStream();
+            std::shared_ptr<AudioStream> audioStream = m_demuxer->getSelectedAudioStream();
+            std::shared_ptr<SubtitleStream> subtitleStream = m_demuxer->getSelectedSubtitleStream();
             Status vStatus = videoStream ? videoStream->getStatus() : Stopped;
             Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stopped;
             Status sStatus = subtitleStream ? subtitleStream->getStatus() : Stopped;

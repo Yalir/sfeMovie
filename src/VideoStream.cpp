@@ -36,7 +36,8 @@ extern "C"
 
 namespace sfe
 {
-    VideoStream::VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
+    VideoStream::VideoStream(AVFormatContext*& formatCtx, AVStream*& stream,
+                             DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
     Stream(formatCtx ,stream, dataSource, timer),
     m_texture(),
     m_rawVideoFrame(nullptr),
@@ -59,12 +60,12 @@ namespace sfe
         
         // RGBA video buffer
         err = av_image_alloc(m_rgbaVideoBuffer, m_rgbaVideoLinesize,
-                             m_codecCtx->width, m_codecCtx->height,
+                             m_stream->codec->width, m_stream->codec->height,
                              PIX_FMT_RGBA, 1);
         CHECK(err >= 0, "VideoStream() - av_image_alloc() error");
         
         // SFML video frame
-        err = m_texture.create(m_codecCtx->width, m_codecCtx->height);
+        err = m_texture.create(m_stream->codec->width, m_stream->codec->height);
         CHECK(err, "VideoStream() - sf::Texture::create() error");
         
         initRescaler();
@@ -95,7 +96,7 @@ namespace sfe
     
     sf::Vector2i VideoStream::getFrameSize() const
     {
-        return sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
+        return sf::Vector2i(m_stream->codec->width, m_stream->codec->height);
     }
     
     float VideoStream::getFrameRate() const
@@ -180,7 +181,7 @@ namespace sfe
         int gotPicture = 0;
         needsMoreDecoding = false;
         
-        int decodedLength = avcodec_decode_video2(m_codecCtx, outputFrame, &gotPicture, packet);
+        int decodedLength = avcodec_decode_video2(m_stream->codec, outputFrame, &gotPicture, packet);
         gotFrame = (gotPicture != 0);
         
         if (decodedLength > 0 || gotFrame)
@@ -218,8 +219,8 @@ namespace sfe
             algorithm |= SWS_ACCURATE_RND;
         }
         
-        m_swsCtx = sws_getCachedContext(nullptr, m_codecCtx->width, m_codecCtx->height, m_codecCtx->pix_fmt,
-                                        m_codecCtx->width, m_codecCtx->height, PIX_FMT_RGBA,
+        m_swsCtx = sws_getCachedContext(nullptr, m_stream->codec->width, m_stream->codec->height, m_stream->codec->pix_fmt,
+                                        m_stream->codec->width, m_stream->codec->height, PIX_FMT_RGBA,
                                         algorithm, nullptr, nullptr, nullptr);
         CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
     }

@@ -55,7 +55,7 @@ namespace sfe
          * @param stream the FFmpeg stream
          * @param dataSource the encoded data provider for this stream
          */
-        Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer);
+        Stream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer);
         
         /** Default destructor
          */
@@ -145,11 +145,11 @@ namespace sfe
         
         void setStatus(Status status);
         
-        AVFormatContext* m_formatCtx;
-        AVStream* m_stream;
+        AVFormatContext* & m_formatCtx;
+        AVStream*& m_stream;
+        
         DataSource& m_dataSource;
         std::shared_ptr<Timer> m_timer;
-        AVCodecContext* m_codecCtx;
         AVCodec* m_codec;
         int m_streamID;
         std::string m_language;

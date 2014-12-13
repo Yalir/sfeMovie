@@ -41,10 +41,10 @@ namespace sfe
 {
     const int RGBASize = 4;
     
-    SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
+    SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
     Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
     {
-        CHECK((m_codecCtx->codec_descriptor->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
+        CHECK((m_stream->codec->codec_descriptor->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
               "Subtitle stream doesn't provide bitmap subtitles, this is not supported yet!"
               "\nSee https://github.com/Yalir/sfeMovie/issues/7");
     }
@@ -53,7 +53,6 @@ namespace sfe
      */
     SubtitleStream::~SubtitleStream()
     {
-        
     }
     
     MediaType SubtitleStream::getStreamKind() const
@@ -118,7 +117,7 @@ namespace sfe
                 bool needsMoreDecoding = false;
                 
                 CHECK(packet != nullptr, "inconsistency error");
-                goOn = avcodec_decode_subtitle2(m_codecCtx, &sub, &gotSub, packet);
+                goOn = avcodec_decode_subtitle2(m_stream->codec, &sub, &gotSub, packet);
                 
                 pts = 0;
                 if (packet->pts != AV_NOPTS_VALUE)

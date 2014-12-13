@@ -40,7 +40,7 @@ namespace sfe
          * At the end of the constructor, the stream is guaranteed
          * to have all of its fields set and the decoder loaded
          */
-        AudioStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, std::shared_ptr<Timer> timer);
+        AudioStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer);
         
         /** Default destructor
          */

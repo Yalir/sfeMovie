@@ -147,14 +147,14 @@ namespace sfe
         // Find all interesting streams
         for (unsigned int i = 0; i < m_formatCtx->nb_streams; i++)
         {
-            AVStream* ffstream = m_formatCtx->streams[i];
+            AVStream* & ffstream = m_formatCtx->streams[i];
             
             try
             {
                 switch (ffstream->codec->codec_type)
                 {
                     case AVMEDIA_TYPE_VIDEO:
-                        m_streams[ffstream->index] = new VideoStream(m_formatCtx, ffstream, *this, timer, videoDelegate);
+                        m_streams[ffstream->index] = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -165,7 +165,7 @@ namespace sfe
                         break;
                         
                     case AVMEDIA_TYPE_AUDIO:
-                        m_streams[ffstream->index] = new AudioStream(m_formatCtx, ffstream, *this, timer);
+                        m_streams[ffstream->index] = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -175,7 +175,7 @@ namespace sfe
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
                         break;
                     case AVMEDIA_TYPE_SUBTITLE:
-                        m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
+                        m_streams[ffstream->index] = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -215,29 +215,24 @@ namespace sfe
         
         m_timer->removeObserver(*this);
         
-        while (m_streams.size())
-        {
-            delete m_streams.begin()->second;
-            m_streams.erase(m_streams.begin());
-        }
-        
         if (m_formatCtx)
         {
+            // Be very careful with this call: it'll also destroy its codec contexts and streams
             avformat_close_input(&m_formatCtx);
         }
     }
     
-    const std::map<int, Stream*>& Demuxer::getStreams() const
+    const std::map<int, std::shared_ptr<Stream> >& Demuxer::getStreams() const
     {
         return m_streams;
     }
     
     
-    std::set<Stream*> Demuxer::getStreamsOfType(MediaType type) const
+    std::set< std::shared_ptr<Stream> > Demuxer::getStreamsOfType(MediaType type) const
     {
-        std::set<Stream*> streamSet;
+        std::set< std::shared_ptr<Stream> > streamSet;
         
-        for (const std::pair<int, Stream*>& pair : m_streams)
+        for (const std::pair<int, std::shared_ptr<Stream> >& pair : m_streams)
         {
             if (pair.second->getStreamKind() == type)
                 streamSet.insert(pair.second);
@@ -249,9 +244,9 @@ namespace sfe
     Streams Demuxer::computeStreamDescriptors(MediaType type) const
     {
         Streams entries;
-        std::set<Stream*> streamSet;
+        std::set< std::shared_ptr<Stream> > streamSet;
 
-        for (const std::pair<int, Stream*>& pair : m_streams)
+        for (const std::pair<int, std::shared_ptr<Stream> >& pair : m_streams)
         {
             if (pair.second->getStreamKind() == type)
             {
@@ -266,7 +261,7 @@ namespace sfe
         return entries;
     }
     
-    void Demuxer::selectAudioStream(AudioStream* stream)
+    void Demuxer::selectAudioStream(std::shared_ptr<AudioStream> stream)
     {
         Status oldStatus = m_timer->getStatus();
         CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
@@ -294,17 +289,17 @@ namespace sfe
     
     void Demuxer::selectFirstAudioStream()
     {
-        std::set<Stream*> audioStreams = getStreamsOfType(Audio);
+        std::set< std::shared_ptr<Stream> > audioStreams = getStreamsOfType(Audio);
         if (audioStreams.size())
-            selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
+            selectAudioStream(std::dynamic_pointer_cast<AudioStream>(*audioStreams.begin()));
     }
     
-    AudioStream* Demuxer::getSelectedAudioStream() const
+    std::shared_ptr<AudioStream> Demuxer::getSelectedAudioStream() const
     {
-        return dynamic_cast<AudioStream*>(m_connectedAudioStream);
+        return std::dynamic_pointer_cast<AudioStream>(m_connectedAudioStream);
     }
     
-    void Demuxer::selectVideoStream(VideoStream* stream)
+    void Demuxer::selectVideoStream(std::shared_ptr<VideoStream> stream)
     {
         Status oldStatus = m_timer->getStatus();
         CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
@@ -332,17 +327,17 @@ namespace sfe
     
     void Demuxer::selectFirstVideoStream()
     {
-        std::set<Stream*> videoStreams = getStreamsOfType(Video);
+        std::set< std::shared_ptr<Stream> > videoStreams = getStreamsOfType(Video);
         if (videoStreams.size())
-            selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
+            selectVideoStream(std::dynamic_pointer_cast<VideoStream>(*videoStreams.begin()));
     }
     
-    VideoStream* Demuxer::getSelectedVideoStream() const
+    std::shared_ptr<VideoStream> Demuxer::getSelectedVideoStream() const
     {
-        return dynamic_cast<VideoStream*>(m_connectedVideoStream);
+        return std::dynamic_pointer_cast<VideoStream>(m_connectedVideoStream);
     }
     
-    void Demuxer::selectSubtitleStream(SubtitleStream* stream)
+    void Demuxer::selectSubtitleStream(std::shared_ptr<SubtitleStream> stream)
     {
         Status oldStatus = m_timer->getStatus();
         
@@ -366,14 +361,14 @@ namespace sfe
     
     void Demuxer::selectFirstSubtitleStream()
     {
-        std::set<Stream*> subtitleStreams = getStreamsOfType(Subtitle);
+        std::set< std::shared_ptr<Stream> > subtitleStreams = getStreamsOfType(Subtitle);
         if (subtitleStreams.size())
-            selectSubtitleStream(dynamic_cast<SubtitleStream*>(*subtitleStreams.begin()));
+            selectSubtitleStream(std::dynamic_pointer_cast<SubtitleStream>(*subtitleStreams.begin()));
     }
     
-    SubtitleStream* Demuxer::getSelectedSubtitleStream() const
+    std::shared_ptr<SubtitleStream> Demuxer::getSelectedSubtitleStream() const
     {
-        return dynamic_cast<SubtitleStream*>(m_connectedSubtitleStream);
+        return std::dynamic_pointer_cast<SubtitleStream>(m_connectedSubtitleStream);
     }
     
     void Demuxer::feedStream(Stream& stream)
@@ -402,10 +397,10 @@ namespace sfe
     
     void Demuxer::update()
     {
-        std::map<int, Stream*> streams = getStreams();
-        std::map<int, Stream*>::iterator it;
+        std::map<int,  std::shared_ptr<Stream> > streams = getStreams();
+        std::map<int,  std::shared_ptr<Stream> >::iterator it;
         
-        for(std::pair<int,Stream*> pair : streams)
+        for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
         {
 			pair.second->update();
 		}
@@ -450,11 +445,11 @@ namespace sfe
         CHECK(packet, "Demuxer::distributePacket() - invalid argument");
         
         bool result = false;
-        std::map<int, Stream*>::iterator it = m_streams.find(packet->stream_index);
+        std::map<int,  std::shared_ptr<Stream> >::iterator it = m_streams.find(packet->stream_index);
         
         if (it != m_streams.end())
         {
-            Stream* targetStream = it->second;
+             std::shared_ptr<Stream>  targetStream = it->second;
             
             // We don't want to store the packets for inactive streams,
             // let them be freed
@@ -470,7 +465,7 @@ namespace sfe
         return result;
     }
     
-    void Demuxer::extractDurationFromStream(AVStream* stream)
+    void Demuxer::extractDurationFromStream(const AVStream* stream)
     {
         if (m_duration != sf::Time::Zero)
             return;
