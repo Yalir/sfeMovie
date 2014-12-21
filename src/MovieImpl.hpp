@@ -134,7 +134,7 @@ namespace sfe
         sf::Vector2f getSize() const;
         
         
-        /** @see fitFrame(sf::IntRect, bool)
+        /** @see fitFrame(sf::FloatRect, bool)
          */
         void fit(float x, float y, float width, float height, bool preserveRatio = true);
         
