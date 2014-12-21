@@ -323,13 +323,13 @@ namespace sfe
             
             if (source_ratio > target_ratio)
             {
-                target_size.x = movie_size.x * (static_cast<float>(wanted_size.x) / movie_size.x);
-                target_size.y = movie_size.y * (static_cast<float>(wanted_size.x) / movie_size.x);
+                target_size.x = movie_size.x * wanted_size.x / movie_size.x;
+                target_size.y = movie_size.y * wanted_size.x / movie_size.x;
             }
             else
             {
-                target_size.x = movie_size.x * (static_cast<float>(wanted_size.y) / movie_size.y);
-                target_size.y = movie_size.y * (static_cast<float>(wanted_size.y) / movie_size.y);
+                target_size.x = movie_size.x * wanted_size.y / movie_size.y;
+                target_size.y = movie_size.y * wanted_size.y / movie_size.y;
             }
             
             new_size = target_size;
@@ -339,8 +339,8 @@ namespace sfe
             new_size = wanted_size;
         }
         
-        m_videoSprite.setPosition(static_cast<float>((wanted_size.x - new_size.x) / 2),
-                                  static_cast<float>((wanted_size.y - new_size.y) / 2));
+        m_videoSprite.setPosition((wanted_size.x - new_size.x) / 2.,
+                                  (wanted_size.y - new_size.y) / 2.);
         m_movieView.setPosition(frame.left, frame.top);
         m_videoSprite.setScale((float)new_size.x / movie_size.x, (float)new_size.y / movie_size.y);
         m_displayFrame = frame;
@@ -507,7 +507,7 @@ namespace sfe
             {
                 sf::Vector2i pos = *pos_it;
                 subtitleSprite.setPosition(m_videoSprite.getPosition().x + pos.x * m_videoSprite.getScale().x,
-                                           m_videoSprite.getPosition().y - (pos.y + subSize.y) * m_videoSprite.getScale().y);
+                                           m_videoSprite.getPosition().y + pos.y * m_videoSprite.getScale().y);
                 ++pos_it;
             }
             else
