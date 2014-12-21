@@ -31,6 +31,7 @@
 #include <sfeMovie/Visibility.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace sfe
 {
