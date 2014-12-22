@@ -26,15 +26,18 @@
 #define SFEMOVIE_MOVIEIMPL_HPP
 
 #include <cstring>
+#include <memory>
 #include <string>
 #include <stdexcept>
 #include <SFML/Config.hpp>
 #include "VideoStream.hpp"
-#include "Demuxer.hpp"
+#include "SubtitleStream.hpp"
 #include "DebugTools/LayoutDebugger.hpp"
 
 namespace sfe
 {
+    class Demuxer;
+    
     class MovieImpl : public VideoStream::Delegate, public SubtitleStream::Delegate, public sf::Drawable
     {
     public:
@@ -197,7 +200,6 @@ namespace sfe
          */
         const sf::Texture& getCurrentImage() const;
         
-        void cleanResources();
         void draw(sf::RenderTarget& target, sf::RenderStates states) const;
         void didUpdateVideo(const VideoStream& sender, const sf::Texture& image);
         void didUpdateSubtitle(const SubtitleStream& sender,
@@ -207,8 +209,8 @@ namespace sfe
         
     private:
         sf::Transformable& m_movieView;
-        Demuxer* m_demuxer;
-        Timer* m_timer;
+        std::shared_ptr<Demuxer> m_demuxer;
+        std::shared_ptr<Timer> m_timer;
         sf::Sprite m_videoSprite;
         std::list<sf::Sprite> m_subtitleSprites;
         Streams m_audioStreamsDesc;

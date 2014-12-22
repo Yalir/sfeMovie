@@ -36,21 +36,22 @@ extern "C"
 
 namespace sfe
 {
-    VideoStream::VideoStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+    VideoStream::VideoStream(AVFormatContext*& formatCtx, AVStream*& stream,
+                             DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
     Stream(formatCtx ,stream, dataSource, timer),
     m_texture(),
-    m_rawVideoFrame(NULL),
+    m_rawVideoFrame(nullptr),
     m_rgbaVideoBuffer(),
     m_rgbaVideoLinesize(),
     m_delegate(delegate),
-    m_swsCtx(NULL),
+    m_swsCtx(nullptr),
     m_lastDecodedTimestamp(sf::Time::Zero)
     {
         int err;
         
         for (int i = 0; i < 4;i++)
         {
-            m_rgbaVideoBuffer[i] = NULL;
+            m_rgbaVideoBuffer[i] = nullptr;
             m_rgbaVideoLinesize[i] = 0;
         }
         
@@ -59,12 +60,12 @@ namespace sfe
         
         // RGBA video buffer
         err = av_image_alloc(m_rgbaVideoBuffer, m_rgbaVideoLinesize,
-                             m_codecCtx->width, m_codecCtx->height,
+                             m_stream->codec->width, m_stream->codec->height,
                              PIX_FMT_RGBA, 1);
         CHECK(err >= 0, "VideoStream() - av_image_alloc() error");
         
         // SFML video frame
-        err = m_texture.create(m_codecCtx->width, m_codecCtx->height);
+        err = m_texture.create(m_stream->codec->width, m_stream->codec->height);
         CHECK(err, "VideoStream() - sf::Texture::create() error");
         
         initRescaler();
@@ -95,12 +96,12 @@ namespace sfe
     
     sf::Vector2i VideoStream::getFrameSize() const
     {
-        return sf::Vector2i(m_codecCtx->width, m_codecCtx->height);
+        return sf::Vector2i(m_stream->codec->width, m_stream->codec->height);
     }
     
     float VideoStream::getFrameRate() const
     {
-        return static_cast<float>(av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, NULL)));
+        return static_cast<float>(av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, nullptr)));
     }
     
     sf::Texture& VideoStream::getVideoTexture()
@@ -140,7 +141,7 @@ namespace sfe
             {
                 bool needsMoreDecoding = false;
                 
-                CHECK(packet != NULL, "inconsistency error");
+                CHECK(packet != nullptr, "inconsistency error");
                 goOn = decodePacket(packet, m_rawVideoFrame, gotFrame, needsMoreDecoding);
                 
                 if (gotFrame)
@@ -172,7 +173,7 @@ namespace sfe
     
     sf::Time VideoStream::getSynchronizationGap()
     {
-        return  m_lastDecodedTimestamp - m_timer.getOffset();
+        return  m_lastDecodedTimestamp - m_timer->getOffset();
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)
@@ -180,7 +181,7 @@ namespace sfe
         int gotPicture = 0;
         needsMoreDecoding = false;
         
-        int decodedLength = avcodec_decode_video2(m_codecCtx, outputFrame, &gotPicture, packet);
+        int decodedLength = avcodec_decode_video2(m_stream->codec, outputFrame, &gotPicture, packet);
         gotFrame = (gotPicture != 0);
         
         if (decodedLength > 0 || gotFrame)
@@ -218,9 +219,9 @@ namespace sfe
             algorithm |= SWS_ACCURATE_RND;
         }
         
-        m_swsCtx = sws_getCachedContext(NULL, m_codecCtx->width, m_codecCtx->height, m_codecCtx->pix_fmt,
-                                        m_codecCtx->width, m_codecCtx->height, PIX_FMT_RGBA,
-                                        algorithm, NULL, NULL, NULL);
+        m_swsCtx = sws_getCachedContext(nullptr, m_stream->codec->width, m_stream->codec->height, m_stream->codec->pix_fmt,
+                                        m_stream->codec->width, m_stream->codec->height, PIX_FMT_RGBA,
+                                        algorithm, nullptr, nullptr, nullptr);
         CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
     }
     

@@ -184,10 +184,8 @@ namespace sfe
     {
         CHECK(oldStatus != newStatus, "Timer::notifyObservers() - inconsistency: no change happened");
         
-        std::set<Observer*>::iterator it;
-        for (it = m_observers.begin(); it != m_observers.end(); it++)
+        for (Observer* obs : m_observers)
         {
-            Observer* obs = *it;
             
             switch(newStatus)
             {
@@ -212,11 +210,8 @@ namespace sfe
     {
         CHECK(getStatus() != Playing, "inconsistency in timer");
         
-        std::set<Observer*>::iterator it;
-        for (it = m_observers.begin(); it != m_observers.end(); it++)
+		for (Observer* obs : m_observers)
         {
-            Observer* obs = *it;
-            
             if (alreadySeeked)
                 obs->didSeek(*this, oldPosition);
             else

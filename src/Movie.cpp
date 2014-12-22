@@ -43,7 +43,6 @@ namespace sfe
     
     Movie::~Movie()
     {
-        delete m_impl;
     }
     
     

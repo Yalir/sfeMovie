@@ -28,6 +28,7 @@
 #include "Macros.hpp"
 #include "Timer.hpp"
 #include <list>
+#include <memory>
 #include <SFML/System.hpp>
 #include <sfeMovie/Movie.hpp>
 
@@ -55,7 +56,7 @@ namespace sfe
          * @param stream the FFmpeg stream
          * @param dataSource the encoded data provider for this stream
          */
-        Stream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer);
+        Stream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer);
         
         /** Default destructor
          */
@@ -90,7 +91,7 @@ namespace sfe
          * If no packet is stored when this method is called, it will ask the
          * data source to feed this stream first
          *
-         * @return the oldest encoded data, or null if no data could be read from the media
+         * @return the oldest encoded data, or nullptr if no data could be read from the media
          */
         virtual AVPacket* popEncodedData();
         
@@ -145,11 +146,11 @@ namespace sfe
         
         void setStatus(Status status);
         
-        AVFormatContext* m_formatCtx;
-        AVStream* m_stream;
+        AVFormatContext* & m_formatCtx;
+        AVStream*& m_stream;
+        
         DataSource& m_dataSource;
-        Timer& m_timer;
-        AVCodecContext* m_codecCtx;
+        std::shared_ptr<Timer> m_timer;
         AVCodec* m_codec;
         int m_streamID;
         std::string m_language;

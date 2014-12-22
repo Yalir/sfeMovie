@@ -46,9 +46,12 @@ macro(add_full_test testname)
 	elseif(LINUX)
 		target_link_libraries(${testname} sfeMovie)
 	endif ()
+	set_target_properties(${testname} PROPERTIES FOLDER "Tests")
+	source_group("" FILES ${testname}.cpp)
 	add_test(NAME ${testname} COMMAND ${testname})
 endmacro()
 
+# sfeMovie tests
 add_full_test(TimerTest)
 add_full_test(DemuxerTest)
 configure_file("small_1.ogv" "small_1.ogv" COPYONLY)
@@ -59,3 +62,10 @@ configure_file("voice_1.mp3" "voice_1.mp3" COPYONLY)
 configure_file("small_2.mp3" "small_2.mp3" COPYONLY)
 configure_file("small_3.flac" "small_3.flac" COPYONLY)
 configure_file("small_4.wav" "small_4.wav" COPYONLY)
+
+# C++11 tests
+add_full_test(RangeBasedLoop)
+add_full_test(Nullptr)
+add_full_test(Atomic)
+add_full_test(SharedPtr)
+add_full_test(MoveSemantic)

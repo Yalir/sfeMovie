@@ -36,6 +36,7 @@
 #include <set>
 #include <list>
 #include <utility>
+#include <memory>
 
 namespace sfe
 {
@@ -81,7 +82,7 @@ namespace sfe
          * @param timer the timer with which the media streams will be synchronized
          * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
          */
-        Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
+        Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
         
         /** Default destructor
          */
@@ -92,14 +93,14 @@ namespace sfe
          *
          * @return the list of streams
          */
-        const std::map<int, Stream*>& getStreams() const;
+        const std::map<int, std::shared_ptr<Stream> >& getStreams() const;
         
         /** Return a set containing all the streams found in the media that match the given type
          *
          * @param the media type against which the returned streams should be filtered
          * @return the audio streams
          */
-        std::set<Stream*> getStreamsOfType(MediaType type) const;
+        std::set< std::shared_ptr<Stream> > getStreamsOfType(MediaType type) const;
         
         /** Gather the required stream metadata from each stream of the given type
          *
@@ -113,9 +114,9 @@ namespace sfe
          * If another stream of the same kind is already enabled, it is first disabled and disconnected
          * so that only one stream of the same kind can be enabled at the same time.
          *
-         * @param stream the audio stream to enable and connect for playing, or NULL to disable audio
+         * @param stream the audio stream to enable and connect for playing, or nullptr to disable audio
          */
-        void selectAudioStream(AudioStream* stream);
+        void selectAudioStream(std::shared_ptr<AudioStream> stream);
         
         /** Enable the first found audio stream, if it exists
          *
@@ -125,18 +126,18 @@ namespace sfe
         
         /** Get the currently selected audio stream, if there's one
          *
-         * @return the currently selected audio stream, or NULL if there's none
+         * @return the currently selected audio stream, or nullptr if there's none
          */
-        AudioStream* getSelectedAudioStream() const;
+        std::shared_ptr<AudioStream> getSelectedAudioStream() const;
         
         /** Enable the given video stream and connect it to the reference timer
          *
          * If another stream of the same kind is already enabled, it is first disabled and disconnected
          * so that only one stream of the same kind can be enabled at the same time.
          *
-         * @param stream the video stream to enable and connect for playing, or NULL to disable video
+         * @param stream the video stream to enable and connect for playing, or nullptr to disable video
          */
-        void selectVideoStream(VideoStream* stream);
+        void selectVideoStream(std::shared_ptr<VideoStream> stream);
         
         /** Enable the first found video stream, if it exists
          *
@@ -146,18 +147,18 @@ namespace sfe
         
         /** Get the currently selected video stream, if there's one
          *
-         * @return the currently selected video stream, or NULL if there's none
+         * @return the currently selected video stream, or nullptr if there's none
          */
-        VideoStream* getSelectedVideoStream() const;
+        std::shared_ptr<VideoStream> getSelectedVideoStream() const;
         
         /** Enable the given subtitle stream and connect it to the reference timer
          *
          * If another stream of the same kind is already enabled, it is first disabled and disconnected
          * so that only one stream of the same kind can be enabled at the same time.
          *
-         * @param stream the video stream to enable and connect for playing, or NULL to disable video
+         * @param stream the video stream to enable and connect for playing, or nullptr to disable video
          */
-        void selectSubtitleStream(SubtitleStream* stream);
+        void selectSubtitleStream(std::shared_ptr<SubtitleStream> stream);
         
         /** Enable the first found video stream, if it exists
          *
@@ -167,9 +168,9 @@ namespace sfe
         
         /** Get the currently selected subtitle stream, if there's one
          *
-         * @return the currently selected subtitle stream, or NULL if there's none
+         * @return the currently selected subtitle stream, or nullptr if there's none
          */
-        SubtitleStream* getSelectedSubtitleStream() const;
+        std::shared_ptr<SubtitleStream> getSelectedSubtitleStream() const;
         
         /** Read encoded data from the media and makes sure that the given stream
          * has enough data
@@ -199,7 +200,7 @@ namespace sfe
          *
          * You're responsible for freeing the returned packet
          *
-         * @return the read packet, or NULL if the end of file has been reached
+         * @return the read packet, or nullptr if the end of file has been reached
          */
         AVPacket* readPacket();
         
@@ -214,7 +215,7 @@ namespace sfe
         
         /** Try to extract the media duration from the given stream
          */
-        void extractDurationFromStream(AVStream* stream);
+        void extractDurationFromStream(const AVStream* stream);
         
         // Data source interface
         void requestMoreData(Stream& starvingStream);
@@ -225,13 +226,13 @@ namespace sfe
         
         AVFormatContext* m_formatCtx;
         bool m_eofReached;
-        std::map<int, Stream*> m_streams;
+        std::map<int, std::shared_ptr<Stream> > m_streams;
         std::map<int, std::string> m_ignoredStreams;
         sf::Mutex m_synchronized;
-        Timer& m_timer;
-        Stream* m_connectedAudioStream;
-        Stream* m_connectedVideoStream;
-        Stream* m_connectedSubtitleStream;
+        std::shared_ptr<Timer> m_timer;
+        std::shared_ptr<Stream> m_connectedAudioStream;
+        std::shared_ptr<Stream> m_connectedVideoStream;
+        std::shared_ptr<Stream> m_connectedSubtitleStream;
         sf::Time m_duration;
         
         static std::list<DemuxerInfo> g_availableDemuxers;
