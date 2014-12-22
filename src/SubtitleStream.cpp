@@ -41,10 +41,10 @@ namespace sfe
 {
     const int RGBASize = 4;
     
-    SubtitleStream::SubtitleStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer, Delegate& delegate) :
+    SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
     Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
     {
-        const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_codecCtx);
+        const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
         CHECK((desc->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
               "Subtitle stream doesn't provide bitmap subtitles, this is not supported yet!"
@@ -55,7 +55,6 @@ namespace sfe
      */
     SubtitleStream::~SubtitleStream()
     {
-        
     }
     
     MediaType SubtitleStream::getStreamKind() const
@@ -75,9 +74,9 @@ namespace sfe
         if (m_pendingSubtitles.size() > 0)
         {
             //activate subtitle
-            if (m_pendingSubtitles.front()->start < m_timer.getOffset())
+            if (m_pendingSubtitles.front()->start < m_timer->getOffset())
             {
-                SubtitleData* iter = m_pendingSubtitles.front();
+                std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
                 
                 m_delegate.didUpdateSubtitle(*this, iter->sprites, iter->positions);
                 m_visibleSubtitles.push_back(iter);
@@ -89,15 +88,14 @@ namespace sfe
         if (m_visibleSubtitles.size()>0)
         {
             //remove subtitle
-            if (m_visibleSubtitles.front()->end < m_timer.getOffset())
+            if (m_visibleSubtitles.front()->end < m_timer->getOffset())
             {
-                SubtitleData* subtitle = m_visibleSubtitles.front();
+                std::shared_ptr<SubtitleData> subtitle = m_visibleSubtitles.front();
                 m_visibleSubtitles.pop_front();
                 
                 if (m_visibleSubtitles.size() == 0)
                 {
-                    m_delegate.didUpdateSubtitle(*this, std::list<sf::Sprite>(), std::list<sf::Vector2i>());
-                    delete subtitle;
+                    m_delegate.didWipeOutSubtitles(*this);
                 }
             }
         }
@@ -119,8 +117,8 @@ namespace sfe
             {
                 bool needsMoreDecoding = false;
                 
-                CHECK(packet != NULL, "inconsistency error");
-                goOn = avcodec_decode_subtitle2(m_codecCtx, &sub, &gotSub, packet);
+                CHECK(packet != nullptr, "inconsistency error");
+                goOn = avcodec_decode_subtitle2(m_stream->codec, &sub, &gotSub, packet);
                 
                 pts = 0;
                 if (packet->pts != AV_NOPTS_VALUE)
@@ -129,12 +127,10 @@ namespace sfe
                 if (gotSub && pts)
                 {
                     bool succeeded = false;
-                    SubtitleData* sfeSub = new SubtitleData(&sub, succeeded);
+                    std::shared_ptr<SubtitleData> sfeSub = std::make_shared<SubtitleData>(&sub, succeeded);
                     
                     if (succeeded)
                         m_pendingSubtitles.push_back(sfeSub);
-                    else
-                        delete sfeSub;
                 }
                 
                 if (needsMoreDecoding)
@@ -160,7 +156,7 @@ namespace sfe
     
     SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded)
     {
-        assert(sub != NULL);
+        assert(sub != nullptr);
         
         succeeded = false;
         start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
@@ -180,41 +176,38 @@ namespace sfe
             
             if (type == SUBTITLE_BITMAP)
             {
-                CHECK(subItem->pict.data != NULL, "FFmpeg inconcistency error");
+                CHECK(subItem->pict.data != nullptr, "FFmpeg inconcistency error");
                 CHECK(subItem->w * subItem->h > 0, "FFmpeg inconcistency error");
                 
                 positions.push_back(sf::Vector2i(subItem->x, subItem->y));
                 
-                uint32_t* palette = new uint32_t[subItem->nb_colors];
+                std::unique_ptr<uint32_t[]> palette(new uint32_t[subItem->nb_colors]);
                 for (int j = 0; j < subItem->nb_colors; j++)
                     palette[j] = *(uint32_t*)&subItem->pict.data[1][j * RGBASize];
                 
                 texture.create(subItem->w, subItem->h);
                 texture.setSmooth(true);
                 
-                uint32_t* data = new uint32_t[subItem->w* sub->rects[i]->h];
+                std::unique_ptr<uint32_t[]> data(new uint32_t[subItem->w* sub->rects[i]->h]);
                 for (int j = 0; j < subItem->w * subItem->h; ++j)
                     data[j] = palette[subItem->pict.data[0][j]];
                 
-                texture.update((uint8_t*)data);
+                texture.update((uint8_t*)data.get());
                 sprite.setTexture(texture);
-                
-                delete[] data;
-                delete[] palette;
                 
                 succeeded = true;
             }
             else
             {
                 //TODO: add libass code
-                if (subItem->text != NULL)
+                if (subItem->text != nullptr)
                 {
                     if (subItem->type == SUBTITLE_TEXT)
                         sfeLogError("Unsupported subtitle type: it would require text support");
                     else
                         sfeLogError("Unsupported subtitle type: it can be approximated with text");
                 }
-                else if (subItem->ass != NULL)
+                else if (subItem->ass != nullptr)
                 {
                     if (subItem->type == SUBTITLE_ASS)
                         sfeLogError("Unsupported subtitle type: it would require ASS support");
@@ -227,20 +220,7 @@ namespace sfe
     
     void SubtitleStream::flushBuffers()
     {
-        while (m_visibleSubtitles.size())
-        {
-            delete m_visibleSubtitles.back();
-            m_visibleSubtitles.pop_back();
-        }
-        
-        while (m_pendingSubtitles.size())
-        {
-            delete m_pendingSubtitles.back();
-            m_pendingSubtitles.pop_back();
-        }
-        
         m_delegate.didWipeOutSubtitles(*this);
-        
         Stream::flushBuffers();
     }
 }

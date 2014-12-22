@@ -40,29 +40,30 @@ extern "C"
 
 namespace sfe
 {
-    AudioStream::AudioStream(AVFormatContext* formatCtx, AVStream* stream, DataSource& dataSource, Timer& timer) :
+    AudioStream::AudioStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource,
+                             std::shared_ptr<Timer> timer) :
     Stream(formatCtx, stream, dataSource, timer),
     
     // Public properties
     m_sampleRate(0),
     
     // Private data
-    m_samplesBuffer(NULL),
-    m_audioFrame(NULL),
+    m_samplesBuffer(nullptr),
+    m_audioFrame(nullptr),
     
     // Resampling
-    m_swrCtx(NULL),
+    m_swrCtx(nullptr),
     m_dstNbSamples(0),
     m_maxDstNbSamples(0),
     m_dstNbChannels(0),
     m_dstLinesize(0),
-    m_dstData(NULL)
+    m_dstData(nullptr)
     {
         m_audioFrame = av_frame_alloc();
         CHECK(m_audioFrame, "AudioStream::AudioStream() - out of memory");
         
         // Get some audio informations
-        m_sampleRate = m_codecCtx->sample_rate;
+        m_sampleRate = m_stream->codec->sample_rate;
         
         // Alloc a two seconds buffer
         m_samplesBuffer = (sf::Int16*)av_malloc(sizeof(sf::Int16) * av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate * 2);
@@ -129,11 +130,11 @@ namespace sfe
     
     bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
     {
-        AVPacket* packet = NULL;
+        AVPacket* packet = nullptr;
         data.samples = m_samplesBuffer;
         
         while (data.sampleCount < av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate &&
-               (NULL != (packet = popEncodedData())))
+               (nullptr != (packet = popEncodedData())))
         {
             bool needsMoreDecoding = false;
             bool gotFrame = false;
@@ -144,7 +145,7 @@ namespace sfe
                 
                 if (gotFrame)
                 {
-                    uint8_t* samples = NULL;
+                    uint8_t* samples = nullptr;
                     int nbSamples = 0;
                     int samplesLength = 0;
                     
@@ -169,7 +170,7 @@ namespace sfe
         {
             sfeLogDebug("No more audio packets, do not go further");
         }
-        return (packet != NULL);
+        return (packet != nullptr);
     }
     
     void AudioStream::onSeek(sf::Time timeOffset)
@@ -182,7 +183,7 @@ namespace sfe
         bool needsMoreDecoding = false;
         int igotFrame = 0;
         
-        int decodedLength = avcodec_decode_audio4(m_codecCtx, outputFrame, &igotFrame, packet);
+        int decodedLength = avcodec_decode_audio4(m_stream->codec, outputFrame, &igotFrame, packet);
         gotFrame = (igotFrame != 0);
         CHECK(decodedLength >= 0, "AudioStream::decodePacket() - error: decodedLength=" + s(decodedLength));
         
@@ -207,18 +208,18 @@ namespace sfe
         
         // Some media files don't define the channel layout, in this case take a default one
         // according to the channels' count
-        if (m_codecCtx->channel_layout == 0)
+        if (m_stream->codec->channel_layout == 0)
         {
-            m_codecCtx->channel_layout = av_get_default_channel_layout(m_codecCtx->channels);
+            m_stream->codec->channel_layout = av_get_default_channel_layout(m_stream->codec->channels);
         }
         
         /* set options */
-        av_opt_set_int(m_swrCtx, "in_channel_layout",    m_codecCtx->channel_layout, 0);
-        av_opt_set_int(m_swrCtx, "in_sample_rate",       m_codecCtx->sample_rate, 0);
-        av_opt_set_sample_fmt(m_swrCtx, "in_sample_fmt", m_codecCtx->sample_fmt, 0);
-        av_opt_set_int(m_swrCtx, "out_channel_layout",    AV_CH_LAYOUT_STEREO, 0);
-        av_opt_set_int(m_swrCtx, "out_sample_rate",       m_codecCtx->sample_rate, 0);
-        av_opt_set_sample_fmt(m_swrCtx, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
+        av_opt_set_int        (m_swrCtx, "in_channel_layout",  m_stream->codec->channel_layout, 0);
+        av_opt_set_int        (m_swrCtx, "in_sample_rate",     m_stream->codec->sample_rate,    0);
+        av_opt_set_sample_fmt (m_swrCtx, "in_sample_fmt",      m_stream->codec->sample_fmt,     0);
+        av_opt_set_int        (m_swrCtx, "out_channel_layout", AV_CH_LAYOUT_STEREO,             0);
+        av_opt_set_int        (m_swrCtx, "out_sample_rate",    m_stream->codec->sample_rate,    0);
+        av_opt_set_sample_fmt (m_swrCtx, "out_sample_fmt",     AV_SAMPLE_FMT_S16,               0);
         
         /* initialize the resampling context */
         err = swr_init(m_swrCtx);

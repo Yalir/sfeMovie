@@ -44,7 +44,7 @@ public:
     
 private:
     sfe::Movie& m_movie;
-    std::map<sfe::MediaType, unsigned int> m_selectedStreamIndexes;
+    std::map<sfe::MediaType, int> m_selectedStreamIndexes;
     std::map<sfe::MediaType, const sfe::Streams*> m_streams;
 };
 

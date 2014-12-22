@@ -31,6 +31,7 @@
 #include <sfeMovie/Visibility.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace sfe
 {
@@ -71,6 +72,7 @@ namespace sfe
     
     typedef std::vector<StreamDescriptor> Streams;
     
+    class MovieImpl;
     /** Main class of the sfeMovie API. It is used to open media files, provide playback and basic controls
      */
     class SFE_API Movie : public sf::Drawable, public sf::Transformable
@@ -230,8 +232,7 @@ namespace sfe
         const sf::Texture& getCurrentImage() const;
     private:
         void draw(sf::RenderTarget& Target, sf::RenderStates states) const;
-        
-        class MovieImpl* m_impl;
+        std::shared_ptr<MovieImpl> m_impl;
     };
 } // namespace sfe
 

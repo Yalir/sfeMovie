@@ -55,7 +55,7 @@ namespace sfe
         switch (type)
         {
             case AVMEDIA_TYPE_AUDIO:    return Audio;
-            case AVMEDIA_TYPE_SUBTITLE: return Subtitle;
+            case AVMEDIA_TYPE_SUBTITLE:     return Subtitle;
             case AVMEDIA_TYPE_VIDEO:    return Video;
             default:                    return Unknown;
         }
@@ -63,12 +63,12 @@ namespace sfe
     
     const std::list<Demuxer::DemuxerInfo>& Demuxer::getAvailableDemuxers()
     {
-        AVInputFormat* demuxer = NULL;
+        AVInputFormat* demuxer = nullptr;
         loadFFmpeg();
         
         if (g_availableDemuxers.empty())
         {
-            while (NULL != (demuxer = av_iformat_next(demuxer)))
+            while (nullptr != (demuxer = av_iformat_next(demuxer)))
             {
                 DemuxerInfo info =
                 {
@@ -85,12 +85,12 @@ namespace sfe
     
     const std::list<Demuxer::DecoderInfo>& Demuxer::getAvailableDecoders()
     {
-        AVCodec* codec = NULL;
+        AVCodec* codec = nullptr;
         loadFFmpeg();
         
         if (g_availableDecoders.empty())
         {
-            while (NULL != (codec = av_codec_next(codec)))
+            while (nullptr != (codec = av_codec_next(codec)))
             {
                 DecoderInfo info =
                 {
@@ -106,19 +106,21 @@ namespace sfe
         return g_availableDecoders;
     }
     
-    Demuxer::Demuxer(const std::string& sourceFile, Timer& timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
-    m_formatCtx(NULL),
+    Demuxer::Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer,
+                     VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
+    m_formatCtx(nullptr),
     m_eofReached(false),
     m_streams(),
     m_ignoredStreams(),
     m_synchronized(),
     m_timer(timer),
-    m_connectedAudioStream(NULL),
-    m_connectedVideoStream(NULL),
-    m_connectedSubtitleStream(NULL),
+    m_connectedAudioStream(nullptr),
+    m_connectedVideoStream(nullptr),
+    m_connectedSubtitleStream(nullptr),
     m_duration(sf::Time::Zero)
     {
         CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
+        CHECK(timer, "Inconsistency error: null timer");
         
         int err = 0;
         
@@ -126,12 +128,12 @@ namespace sfe
         loadFFmpeg();
         
         // Open the movie file
-        err = avformat_open_input(&m_formatCtx, sourceFile.c_str(), NULL, NULL);
+        err = avformat_open_input(&m_formatCtx, sourceFile.c_str(), nullptr, nullptr);
         CHECK0(err, "Demuxer::Demuxer() - error while opening media: " + sourceFile);
-        CHECK(m_formatCtx, "Demuxer() - inconsistency: media context cannot be null");
+        CHECK(m_formatCtx, "Demuxer() - inconsistency: media context cannot be nullptr");
         
         // Read the general movie informations
-        err = avformat_find_stream_info(m_formatCtx, NULL);
+        err = avformat_find_stream_info(m_formatCtx, nullptr);
         CHECK0(err, "Demuxer::Demuxer() - error while retreiving media information");
         
         // Get the media duration if possible (otherwise rely on the streams)
@@ -146,14 +148,14 @@ namespace sfe
         // Find all interesting streams
         for (unsigned int i = 0; i < m_formatCtx->nb_streams; i++)
         {
-            AVStream* ffstream = m_formatCtx->streams[i];
+            AVStream* & ffstream = m_formatCtx->streams[i];
             
             try
             {
                 switch (ffstream->codec->codec_type)
                 {
                     case AVMEDIA_TYPE_VIDEO:
-                        m_streams[ffstream->index] = new VideoStream(m_formatCtx, ffstream, *this, timer, videoDelegate);
+                        m_streams[ffstream->index] = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -164,7 +166,7 @@ namespace sfe
                         break;
                         
                     case AVMEDIA_TYPE_AUDIO:
-                        m_streams[ffstream->index] = new AudioStream(m_formatCtx, ffstream, *this, timer);
+                        m_streams[ffstream->index] = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -174,7 +176,7 @@ namespace sfe
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
                         break;
                     case AVMEDIA_TYPE_SUBTITLE:
-                        m_streams[ffstream->index] = new SubtitleStream(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
+                        m_streams[ffstream->index] = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
                         
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
                         break;
@@ -199,42 +201,36 @@ namespace sfe
             sfeLogWarning("The media duration could not be retreived");
         }
         
-        m_timer.addObserver(*this);
+        m_timer->addObserver(*this);
     }
     
     Demuxer::~Demuxer()
     {
-        if (m_timer.getStatus() != Stopped)
-            m_timer.stop();
+        if (m_timer->getStatus() != Stopped)
+            m_timer->stop();
         
-        m_timer.removeObserver(*this);
-        
-        while (m_streams.size())
-        {
-            delete m_streams.begin()->second;
-            m_streams.erase(m_streams.begin());
-        }
+        m_timer->removeObserver(*this);
         
         if (m_formatCtx)
         {
+            // Be very careful with this call: it'll also destroy its codec contexts and streams
             avformat_close_input(&m_formatCtx);
         }
     }
     
-    const std::map<int, Stream*>& Demuxer::getStreams() const
+    const std::map<int, std::shared_ptr<Stream> >& Demuxer::getStreams() const
     {
         return m_streams;
     }
     
-    std::set<Stream*> Demuxer::getStreamsOfType(MediaType type) const
+    std::set< std::shared_ptr<Stream> > Demuxer::getStreamsOfType(MediaType type) const
     {
-        std::set<Stream*> streamSet;
-        std::map<int, Stream*>::const_iterator it;
+        std::set< std::shared_ptr<Stream> > streamSet;
         
-        for (it = m_streams.begin(); it != m_streams.end(); it++)
+        for (const std::pair<int, std::shared_ptr<Stream> >& pair : m_streams)
         {
-            if (it->second->getStreamKind() == type)
-                streamSet.insert(it->second);
+            if (pair.second->getStreamKind() == type)
+                streamSet.insert(pair.second);
         }
         
         return streamSet;
@@ -243,17 +239,16 @@ namespace sfe
     Streams Demuxer::computeStreamDescriptors(MediaType type) const
     {
         Streams entries;
-        std::set<Stream*> streamSet;
-        std::map<int, Stream*>::const_iterator it;
-        
-        for (it = m_streams.begin(); it != m_streams.end(); it++)
+        std::set< std::shared_ptr<Stream> > streamSet;
+
+        for (const std::pair<int, std::shared_ptr<Stream> >& pair : m_streams)
         {
-            if (it->second->getStreamKind() == type)
+            if (pair.second->getStreamKind() == type)
             {
                 StreamDescriptor entry;
                 entry.type = type;
-                entry.identifier = it->first;
-                entry.language = it->second->getLanguage();
+                entry.identifier = pair.first;
+                entry.language = pair.second->getLanguage();
                 entries.push_back(entry);
             }
         }
@@ -261,14 +256,14 @@ namespace sfe
         return entries;
     }
     
-    void Demuxer::selectAudioStream(AudioStream* stream)
+    void Demuxer::selectAudioStream(std::shared_ptr<AudioStream> stream)
     {
-        Status oldStatus = m_timer.getStatus();
+        Status oldStatus = m_timer->getStatus();
         CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
               "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
-            m_timer.pause();
+            m_timer->pause();
         
         if (stream != m_connectedAudioStream)
         {
@@ -284,29 +279,29 @@ namespace sfe
         }
         
         if (oldStatus == Playing)
-            m_timer.play();
+            m_timer->play();
     }
     
     void Demuxer::selectFirstAudioStream()
     {
-        std::set<Stream*> audioStreams = getStreamsOfType(Audio);
+        std::set< std::shared_ptr<Stream> > audioStreams = getStreamsOfType(Audio);
         if (audioStreams.size())
-            selectAudioStream(dynamic_cast<AudioStream*>(*audioStreams.begin()));
+            selectAudioStream(std::dynamic_pointer_cast<AudioStream>(*audioStreams.begin()));
     }
     
-    AudioStream* Demuxer::getSelectedAudioStream() const
+    std::shared_ptr<AudioStream> Demuxer::getSelectedAudioStream() const
     {
-        return dynamic_cast<AudioStream*>(m_connectedAudioStream);
+        return std::dynamic_pointer_cast<AudioStream>(m_connectedAudioStream);
     }
     
-    void Demuxer::selectVideoStream(VideoStream* stream)
+    void Demuxer::selectVideoStream(std::shared_ptr<VideoStream> stream)
     {
-        Status oldStatus = m_timer.getStatus();
+        Status oldStatus = m_timer->getStatus();
         CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
               "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
-            m_timer.pause();
+            m_timer->pause();
         
         if (stream != m_connectedVideoStream)
         {
@@ -322,27 +317,27 @@ namespace sfe
         }
         
         if (oldStatus == Playing)
-            m_timer.play();
+            m_timer->play();
     }
     
     void Demuxer::selectFirstVideoStream()
     {
-        std::set<Stream*> videoStreams = getStreamsOfType(Video);
+        std::set< std::shared_ptr<Stream> > videoStreams = getStreamsOfType(Video);
         if (videoStreams.size())
-            selectVideoStream(dynamic_cast<VideoStream*>(*videoStreams.begin()));
+            selectVideoStream(std::dynamic_pointer_cast<VideoStream>(*videoStreams.begin()));
     }
     
-    VideoStream* Demuxer::getSelectedVideoStream() const
+    std::shared_ptr<VideoStream> Demuxer::getSelectedVideoStream() const
     {
-        return dynamic_cast<VideoStream*>(m_connectedVideoStream);
+        return std::dynamic_pointer_cast<VideoStream>(m_connectedVideoStream);
     }
     
-    void Demuxer::selectSubtitleStream(SubtitleStream* stream)
+    void Demuxer::selectSubtitleStream(std::shared_ptr<SubtitleStream> stream)
     {
-        Status oldStatus = m_timer.getStatus();
+        Status oldStatus = m_timer->getStatus();
         
         if (oldStatus == Playing)
-            m_timer.pause();
+            m_timer->pause();
         
         if (stream != m_connectedSubtitleStream)
         {
@@ -356,19 +351,19 @@ namespace sfe
         }
         
         if (oldStatus == Playing)
-            m_timer.play();
+            m_timer->play();
     }
     
     void Demuxer::selectFirstSubtitleStream()
     {
-        std::set<Stream*> subtitleStreams = getStreamsOfType(Subtitle);
+        std::set< std::shared_ptr<Stream> > subtitleStreams = getStreamsOfType(Subtitle);
         if (subtitleStreams.size())
-            selectSubtitleStream(dynamic_cast<SubtitleStream*>(*subtitleStreams.begin()));
+            selectSubtitleStream(std::dynamic_pointer_cast<SubtitleStream>(*subtitleStreams.begin()));
     }
     
-    SubtitleStream* Demuxer::getSelectedSubtitleStream() const
+    std::shared_ptr<SubtitleStream> Demuxer::getSelectedSubtitleStream() const
     {
-        return dynamic_cast<SubtitleStream*>(m_connectedSubtitleStream);
+        return std::dynamic_pointer_cast<SubtitleStream>(m_connectedSubtitleStream);
     }
     
     void Demuxer::feedStream(Stream& stream)
@@ -387,7 +382,10 @@ namespace sfe
             {
                 if (!distributePacket(pkt))
                 {
-                    sfeLogDebug(m_ignoredStreams[pkt->stream_index] + " packet not handled and dropped");
+                    AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
+                    std::string streamName = std::string("'") + av_get_media_type_string(ffstream->codec->codec_type) + "/" + avcodec_get_name(ffstream->codec->codec_id);
+                    
+                    sfeLogDebug(streamName + " packet dropped");
                     av_free_packet(pkt);
                     av_free(pkt);
                 }
@@ -397,13 +395,13 @@ namespace sfe
     
     void Demuxer::update()
     {
-        std::map<int, Stream*> streams = getStreams();
-        std::map<int, Stream*>::iterator it;
+        std::map<int, std::shared_ptr<Stream> > streams = getStreams();
+        std::map<int, std::shared_ptr<Stream> >::iterator it;
         
-        for (it = streams.begin();it != streams.end(); it++)
+        for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
         {
-            it->second->update();
-        }
+			pair.second->update();
+		}
     }
     
     bool Demuxer::didReachEndOfFile() const
@@ -420,7 +418,7 @@ namespace sfe
     {
         sf::Lock l(m_synchronized);
         
-        AVPacket *pkt = NULL;
+        AVPacket *pkt = nullptr;
         int err = 0;
         
         pkt = (AVPacket *)av_malloc(sizeof(*pkt));
@@ -433,7 +431,7 @@ namespace sfe
         {
             av_free_packet(pkt);
             av_free(pkt);
-            pkt = NULL;
+            pkt = nullptr;
         }
         
         return pkt;
@@ -445,11 +443,11 @@ namespace sfe
         CHECK(packet, "Demuxer::distributePacket() - invalid argument");
         
         bool distributed = false;
-        std::map<int, Stream*>::iterator it = m_streams.find(packet->stream_index);
+        std::map<int, std::shared_ptr<Stream> >::iterator it = m_streams.find(packet->stream_index);
         
         if (it != m_streams.end())
         {
-            Stream* targetStream = it->second;
+             std::shared_ptr<Stream>  targetStream = it->second;
             
             // We don't want to store the packets for inactive streams,
             // let them be freed
@@ -465,7 +463,7 @@ namespace sfe
         return distributed;
     }
     
-    void Demuxer::extractDurationFromStream(AVStream* stream)
+    void Demuxer::extractDurationFromStream(const AVStream* stream)
     {
         if (m_duration != sf::Time::Zero)
             return;
@@ -496,30 +494,30 @@ namespace sfe
         resetEndOfFileStatus();
         
         if (newPosition == sf::Time::Zero) {
-            if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS)
-            {
-                int64_t timestamp = 0;
-                
-                if (m_formatCtx->start_time != AV_NOPTS_VALUE)
-                    timestamp += m_formatCtx->start_time;
-                
-                int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-                sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
-                
-                if (err < 0)
+        if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS)
+        {
+            int64_t timestamp = 0;
+            
+            if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+                timestamp += m_formatCtx->start_time;
+            
+            int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
+            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+            
+            if (err < 0)
                     sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
-            }
-            else
-            {
-                int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-                //            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
-                
-                //            int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
-                sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
-                
-                if (err < 0)
+        }
+        else
+        {
+            int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
+            //            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+            
+            //            int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
+            sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
+            
+            if (err < 0)
                     sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
-            }
+        }
             
         } else {
             static const int kAudioIndex = 0;
@@ -543,7 +541,7 @@ namespace sfe
                 } else {
                     int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
                     CHECK0(err, "avformat_seek_file failure");
-                }
+    }
                 
                 CHECK(m_connectedAudioStream || m_connectedVideoStream, "seeking with no active stream");
                 
@@ -552,7 +550,7 @@ namespace sfe
                  flushBuffers();
                  sf::Time streamPos = computePosition();
                  return streamPos - targetTime;
-                 }
+}
                  */
                 if (m_connectedAudioStream) {
                     m_connectedAudioStream->flushBuffers();
