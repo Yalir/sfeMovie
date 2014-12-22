@@ -10,7 +10,7 @@ macosx_sdk=""
 vcpp=0
 jobsCount=1 # how many compilations at a time
 full_decoders_list=""
-ffmpeg_dir="ffmpeg-2.2.2"
+ffmpeg_dir="ffmpeg-2.4.3"
 ffmpeg_archive="${ffmpeg_dir}.tar.bz2"
 yasm_dir="yasm-1.2.0"
 yasm_archive="${yasm_dir}.tar.gz"
@@ -170,7 +170,14 @@ function build_ffmpeg()
 		  then
 		    find "${ffmpeg_objects_dir}" -name "*.so*" -exec cp -vfl '{}' "${ffmpeg_binaries_dir}/lib" ';' 
 		else
-			find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -vR '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+			if [ "${os}" == "windows" ] ; then
+				find "${ffmpeg_objects_dir}" -name "*.dll.a" -exec cp -v '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+				check_err
+				find "${ffmpeg_objects_dir}" -name "*.dll" -exec cp -v '{}' "${ffmpeg_binaries_dir}/bin" ';'
+				check_err
+			else
+				find "${ffmpeg_objects_dir}" -name "*.dylib" -exec cp -vR '{}' "${ffmpeg_binaries_dir}/lib" ';' 
+			fi
 		fi
 		check_err
 

@@ -18,35 +18,35 @@ find_package(Boost 1.46 COMPONENTS unit_test_framework REQUIRED)
 find_package (SFML 2 COMPONENTS system REQUIRED)
 
 macro(add_full_test testname)
-	include_directories(${Boost_INCLUDE_DIRS})
-	link_directories(${EXTERNAL_LIBRARIES_DIR})
-	add_executable(${testname} ${testname}.cpp)
-	target_link_libraries(${testname} ${Boost_LIBRARIES} ${SFML_SYSTEM_LIBRARY})
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${EXTERNAL_LIBRARIES_DIR})
+    add_executable(${testname} ${testname}.cpp)
+    target_link_libraries(${testname} ${Boost_LIBRARIES} ${SFML_SYSTEM_LIBRARY})
 
-	if (WINDOWS)
-		target_link_libraries(${testname} ${SFEMOVIE_LIB})
-		add_dependencies(${testname} ${SFEMOVIE_LIB})
+    if (WINDOWS)
+        target_link_libraries(${testname} ${SFEMOVIE_LIB})
+        add_dependencies(${testname} ${SFEMOVIE_LIB})
 
-		# Copy DLLs next to the test executables
-		add_custom_command(TARGET ${testname} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
-			$<TARGET_FILE_DIR:${testname}>)
-	elseif(MACOSX)
-		target_link_libraries(${testname} sfeMovie)
-		set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES 
-		                      BUILD_WITH_INSTALL_RPATH 1 
-		                      INSTALL_RPATH "@executable_path/")
+        # Copy DLLs next to the test executables
+        add_custom_command(TARGET ${testname} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
+            $<TARGET_FILE_DIR:${testname}>)
+    elseif(MACOSX)
+        target_link_libraries(${testname} sfeMovie)
+        set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES 
+                              BUILD_WITH_INSTALL_RPATH 1 
+                              INSTALL_RPATH "@executable_path/")
 
-		# Copy dylibs next to the test executables
-		add_custom_command(TARGET ${testname} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
-			$<TARGET_FILE_DIR:${testname}>)
-	elseif(LINUX)
-		target_link_libraries(${testname} sfeMovie)
-	endif ()
-	add_test(NAME ${testname} COMMAND ${testname})
+        # Copy dylibs next to the test executables
+        add_custom_command(TARGET ${testname} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
+            $<TARGET_FILE_DIR:${testname}>)
+    elseif(LINUX)
+        target_link_libraries(${testname} sfeMovie)
+    endif ()
+    add_test(NAME ${testname} COMMAND ${testname})
 endmacro()
 
 add_full_test(TimerTest)

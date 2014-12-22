@@ -8,7 +8,7 @@ function(add_shell_command customTargetName)
 	endif()
 
 
-	if (WINDOWS)
+	if (MSVC)
 		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 
 		add_custom_command(OUTPUT ${THIS_OUTPUT}
 					COMMAND BatchBridgeToShell ARGS ${MINGW_DIR} ${THIS_COMMAND}
