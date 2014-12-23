@@ -97,18 +97,14 @@ namespace sfe
          */
         Timer();
         
-        /** Default destructor
-         *
-         * Before destruction, the timer is stopped
-         */
-        ~Timer();
-        
         /** Register an observer that should be notified when this timer is
          * played, paused or stopped
          *
          * @param anObserver the observer that should receive notifications
+         * @param priority the priority that should be taken into account when distributing notifications,
+         * observers with the lowest priority value will be notified first
          */
-        void addObserver(Observer& anObserver);
+        void addObserver(Observer& anObserver, int priority = 0);
         
         /** Stop sending notifications to this observer
          *
@@ -155,7 +151,7 @@ namespace sfe
          *
          * @param futureStatus the status to which this timer is about to change
          */
-        void notifyObservers(Status futureStatus);
+        void notifyObservers(Status newStatus);
         
         /** Notify all observers that the timer's status changed from @a oldStatus to @a newStatus
          *
@@ -178,7 +174,8 @@ namespace sfe
         sf::Time m_pausedTime;
         Status m_status;
         sf::Clock m_timer;
-        std::set<Observer*> m_observers;
+        std::map<Observer*, int> m_observers;
+        std::map<int, std::set<Observer*> > m_observersByPriority;
     };
 }
 

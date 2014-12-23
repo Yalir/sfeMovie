@@ -68,22 +68,17 @@ namespace sfe
     {
     }
     
-    Timer::~Timer()
-    {
-        //        if (getStatus() != Stopped)
-        //            stop();
-    }
-    
-    void Timer::addObserver(Observer& anObserver)
+    void Timer::addObserver(Observer& anObserver, int priority)
     {
         CHECK(m_observers.find(&anObserver) == m_observers.end(), "Timer::addObserver() - cannot add the same observer twice");
         
-        m_observers.insert(&anObserver);
+        m_observers.insert(std::make_pair(&anObserver, priority));
+        m_observersByPriority[priority].insert(&anObserver);
     }
     
     void Timer::removeObserver(Observer& anObserver)
     {
-        std::set<Observer*>::iterator it = m_observers.find(&anObserver);
+        std::map<Observer*, int>::iterator it = m_observers.find(&anObserver);
         
         if (it == m_observers.end())
         {
@@ -91,6 +86,7 @@ namespace sfe
         }
         else
         {
+            m_observersByPriority[it->second].erase(&anObserver);
             m_observers.erase(it);
         }
     }
@@ -163,19 +159,19 @@ namespace sfe
     
     void Timer::notifyObservers(Status futureStatus)
     {
-        std::set<Observer*>::iterator it;
-        for (it = m_observers.begin(); it != m_observers.end(); it++)
+        for (std::pair<int, std::set<Observer*> >&& pairByPriority : m_observersByPriority)
         {
-            Observer* obs = *it;
-            
-            switch(futureStatus)
+            for (Observer* observer : pairByPriority.second)
             {
-                case Playing:
-                    obs->willPlay(*this);
-                    break;
-                    
-                default:
-                    CHECK(false, "Timer::notifyObservers() - unhandled case in switch");
+                switch(futureStatus)
+                {
+                    case Playing:
+                        observer->willPlay(*this);
+                        break;
+                        
+                    default:
+                        CHECK(false, "Timer::notifyObservers() - unhandled case in switch");
+                }
             }
         }
     }
@@ -184,24 +180,26 @@ namespace sfe
     {
         CHECK(oldStatus != newStatus, "Timer::notifyObservers() - inconsistency: no change happened");
         
-        for (Observer* obs : m_observers)
+        for (std::pair<int, std::set<Observer*> >&& pairByPriority : m_observersByPriority)
         {
-            
-            switch(newStatus)
+            for (Observer* observer : pairByPriority.second)
             {
-                case Playing:
-                    obs->didPlay(*this, oldStatus);
-                    break;
-                    
-                case Paused:
-                    obs->didPause(*this, oldStatus);
-                    break;
-                    
-                case Stopped:
-                    obs->didStop(*this, oldStatus);
-                    break;
-                default:
-                    break;
+                switch(newStatus)
+                {
+                    case Playing:
+                        observer->didPlay(*this, oldStatus);
+                        break;
+                        
+                    case Paused:
+                        observer->didPause(*this, oldStatus);
+                        break;
+                        
+                    case Stopped:
+                        observer->didStop(*this, oldStatus);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -210,12 +208,15 @@ namespace sfe
     {
         CHECK(getStatus() != Playing, "inconsistency in timer");
         
-		for (Observer* obs : m_observers)
+        for (std::pair<int, std::set<Observer*> >&& pairByPriority : m_observersByPriority)
         {
-            if (alreadySeeked)
-                obs->didSeek(*this, oldPosition);
-            else
-                obs->willSeek(*this, newPosition);
+            for (Observer* observer : pairByPriority.second)
+            {
+                if (alreadySeeked)
+                    observer->didSeek(*this, oldPosition);
+                else
+                    observer->willSeek(*this, newPosition);
+            }
         }
     }
     
