@@ -134,11 +134,10 @@ namespace sfe
         virtual void update() = 0;
     protected:
         // Timer::Observer interface
-        void didPlay(const Timer& timer, Status previousStatus);
-        void didPause(const Timer& timer, Status previousStatus);
-        void didStop(const Timer& timer, Status previousStatus);
-        void willSeek(const Timer& timer, sf::Time position);
-        void didSeek(const Timer& timer, sf::Time position);
+        void didPlay(const Timer& timer, Status previousStatus) override;
+        void didPause(const Timer& timer, Status previousStatus) override;
+        void didStop(const Timer& timer, Status previousStatus) override;
+        void didSeek(const Timer& timer, sf::Time position) override;
         
         /** @return true if any raw packet for the current stream is queued
          */

@@ -139,12 +139,12 @@ namespace sfe
          */
         const sf::Texture& getCurrentImage() const;
         
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        void didUpdateVideo(const VideoStream& sender, const sf::Texture& image);
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+        void didUpdateVideo(const VideoStream& sender, const sf::Texture& image) override;
         void didUpdateSubtitle(const SubtitleStream& sender,
                                const std::list<sf::Sprite>& sprites,
-                               const std::list<sf::Vector2i>& positions);
-        void didWipeOutSubtitles(const SubtitleStream& sender);
+                               const std::list<sf::Vector2i>& positions) override;
+        void didWipeOutSubtitles(const SubtitleStream& sender) override;
         
     private:
         sf::Transformable& m_movieView;

@@ -68,11 +68,11 @@ namespace sfe
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const;
+        virtual MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update();
+        virtual void update() override;
         
     private:
         /** The struct we use to store our subtitles
@@ -100,7 +100,7 @@ namespace sfe
          * @return if the stream is finished or not
          */
         bool onGetData();
-        virtual void flushBuffers();
+        virtual void flushBuffers() override;
         
         Delegate& m_delegate;
         

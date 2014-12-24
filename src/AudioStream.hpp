@@ -51,19 +51,19 @@ namespace sfe
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const;
+        virtual MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update();
+        virtual void update() override;
         
         using sf::SoundStream::setVolume;
         using sf::SoundStream::getVolume;
         using sf::SoundStream::getSampleRate;
         using sf::SoundStream::getChannelCount;
     private:
-        virtual bool onGetData(sf::SoundStream::Chunk& data);
-        virtual void onSeek(sf::Time timeOffset);
+        virtual bool onGetData(sf::SoundStream::Chunk& data) override;
+        virtual void onSeek(sf::Time timeOffset) override;
         
         /** Decode the encoded data @a packet into @a outputFrame
          *
@@ -94,10 +94,10 @@ namespace sfe
         void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
         
         // Timer::Observer interface
-        void willPlay(const Timer &timer);
-        void didPlay(const Timer& timer, sfe::Status previousStatus);
-        void didPause(const Timer& timer, sfe::Status previousStatus);
-        void didStop(const Timer& timer, sfe::Status previousStatus);
+        void willPlay(const Timer &timer) override;
+        void didPlay(const Timer& timer, sfe::Status previousStatus) override;
+        void didPause(const Timer& timer, sfe::Status previousStatus) override;
+        void didStop(const Timer& timer, sfe::Status previousStatus) override;
         
         // Public properties
         unsigned m_sampleRate;

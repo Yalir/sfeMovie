@@ -77,7 +77,7 @@ namespace sfe
         
         /** Update the video frame and the stream's status
          */
-        virtual void update();
+        virtual void update() override;
     private:
         bool onGetData(sf::Texture& texture);
         
@@ -122,7 +122,7 @@ namespace sfe
         void preload();
         
         // Timer::Observer interface
-        void willPlay(const Timer &timer);
+        void willPlay(const Timer &timer) override;
         
         // Private data
         sf::Texture m_texture;

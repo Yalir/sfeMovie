@@ -218,11 +218,11 @@ namespace sfe
         void extractDurationFromStream(const AVStream* stream);
         
         // Data source interface
-        void requestMoreData(Stream& starvingStream);
-        void resetEndOfFileStatus();
+        void requestMoreData(Stream& starvingStream) override;
+        void resetEndOfFileStatus() override;
         
         // Timer interface
-        void willSeek(const Timer& timer, sf::Time position);
+        void didSeek(const Timer& timer, sf::Time oldPosition) override;
         
         AVFormatContext* m_formatCtx;
         bool m_eofReached;
