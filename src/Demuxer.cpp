@@ -182,18 +182,16 @@ namespace sfe
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
                         break;
                     default:
-                        m_ignoredStreams[ffstream->index] = std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
-                        sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
+                        m_ignoredStreams[ffstream->index] = Stream::AVStreamDescription(ffstream);
+                        sfeLogDebug(m_ignoredStreams[ffstream->index] + " ignored");
                         break;
                 }
             }
             catch (std::runtime_error& e)
             {
-                std::string streamId =
-                    std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type))
-                                + "/" + avcodec_get_name(ffstream->codec->codec_id)) + "'";
+                std::string streamDesc = Stream::AVStreamDescription(ffstream);
                 
-                sfeLogError("error while loading " + streamId + " stream: " + e.what());
+                sfeLogError("error while loading " + streamDesc + ": " + e.what());
             }
         }
         
@@ -384,9 +382,9 @@ namespace sfe
                 if (!distributePacket(pkt))
                 {
                     AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
-                    std::string streamName = std::string("'") + av_get_media_type_string(ffstream->codec->codec_type) + "/" + avcodec_get_name(ffstream->codec->codec_id);
+                    std::string streamName = Stream::AVStreamDescription(ffstream);
                     
-                    sfeLogDebug(streamName + " packet dropped");
+                    sfeLogDebug(streamName + ": packet dropped");
                     av_free_packet(pkt);
                     av_free(pkt);
                 }

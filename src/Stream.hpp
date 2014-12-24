@@ -48,6 +48,10 @@ namespace sfe
             virtual void resetEndOfFileStatus() = 0;
         };
         
+        /** @return a textual description of the given FFmpeg stream
+         */
+        static std::string AVStreamDescription(AVStream* stream);
+        
         /** Create a stream from the given FFmpeg stream
          *
          * At the end of the constructor, the stream is guaranteed

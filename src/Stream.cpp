@@ -37,6 +37,12 @@ extern "C"
 
 namespace sfe
 {
+    std::string Stream::AVStreamDescription(AVStream* stream)
+    {
+        return std::string("'" + std::string(av_get_media_type_string(stream->codec->codec_type))
+                           + "/" + avcodec_get_name(stream->codec->codec_id) + "' stream @" + s(stream));
+    }
+    
     Stream::Stream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer) :
     m_formatCtx(formatCtx),
     m_stream(stream),
