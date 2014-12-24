@@ -133,6 +133,10 @@ namespace sfe
          */
         sf::Time computePosition();
         
+        /** @return a textual description of the current stream
+         */
+        std::string description() const;
+        
         /** Update the current stream's status and eventually decode frames
          */
         virtual void update() = 0;

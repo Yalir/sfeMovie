@@ -40,7 +40,7 @@ namespace sfe
     std::string Stream::AVStreamDescription(AVStream* stream)
     {
         return std::string("'" + std::string(av_get_media_type_string(stream->codec->codec_type))
-                           + "/" + avcodec_get_name(stream->codec->codec_id) + "' stream @" + s(stream));
+                           + "/" + avcodec_get_name(stream->codec->codec_id) + "' stream @ " + s(stream));
     }
     
     Stream::Stream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer) :
@@ -221,6 +221,11 @@ namespace sfe
             
             return sf::seconds(timestamp * av_q2d(m_stream->time_base));
         }
+    }
+    
+    std::string Stream::description() const
+    {
+        return AVStreamDescription(m_stream);
     }
     
     void Stream::setStatus(Status status)

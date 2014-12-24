@@ -493,97 +493,89 @@ namespace sfe
         resetEndOfFileStatus();
         sf::Time newPosition = timer.getOffset();
         
-        if (newPosition == sf::Time::Zero) {
-        if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS)
+        // Trivial seeking to beginning
+        if (newPosition == sf::Time::Zero)
         {
             int64_t timestamp = 0;
             
-            if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+            if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS && m_formatCtx->start_time != AV_NOPTS_VALUE)
                 timestamp += m_formatCtx->start_time;
             
             int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
-            
             if (err < 0)
-                    sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
+                sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
         }
-        else
+        else // Seeking to some other position
         {
-            int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-            //            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
-            
-            //            int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
-            sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
-            
-            if (err < 0)
-                    sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
-        }
-            
-        } else {
-            static const int kAudioIndex = 0;
-            static const int kVideoIndex = 1;
-            static const int kEndIndex = 2;
-            
+            // Initial target seek point
             int64_t timestamp = newPosition.asMilliseconds() * AV_TIME_BASE / 1000;
-            sf::Time seekingGaps[2]; // audio + video
+            
+            // < 0 = before seek point
+            // > 0 = after seek point
+            std::map< std::shared_ptr<Stream>, sf::Time> seekingGaps;
+            std::set< std::shared_ptr<Stream> > connectedStreams;
+            
+            if (m_connectedVideoStream)
+                connectedStreams.insert(m_connectedVideoStream);
+            if (m_connectedAudioStream)
+                connectedStreams.insert(m_connectedAudioStream);
+            if (m_connectedSubtitleStream)
+                connectedStreams.insert(m_connectedSubtitleStream);
+            
+            CHECK(connectedStreams.size() > 0, "Inconcistency error: seeking with no active stream");
+            
+            static const sf::Time tooEarlyThreshold(-sf::seconds(10));
+            static const sf::Time brokenSeekingThreshold((sf::Int64)2 * tooEarlyThreshold);
             bool didReseekBackward = false;
             bool didReseekForward = false;
             int tooEarlyCount = 0;
             int tooLateCount = 0;
+            int brokenSeekingCount = 0;
             
             do {
-                if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS) {
-                    if (m_formatCtx->start_time != AV_NOPTS_VALUE)
-                        timestamp += m_formatCtx->start_time;
-                    
-                    int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
-                    CHECK0(err, "avformat_seek_file failure");
-                } else {
-                    int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
-                    CHECK0(err, "avformat_seek_file failure");
-    }
+                // Seek to new estimated target
+                if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS && m_formatCtx->start_time != AV_NOPTS_VALUE)
+                    timestamp += m_formatCtx->start_time;
                 
-                CHECK(m_connectedAudioStream || m_connectedVideoStream, "seeking with no active stream");
+                int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, timestamp, AVSEEK_FLAG_BACKWARD);
+                CHECK0(err, "avformat_seek_file failure");
                 
-                /*
-                 {
-                 flushBuffers();
-                 sf::Time streamPos = computePosition();
-                 return streamPos - targetTime;
-}
-                 */
-                if (m_connectedAudioStream) {
-                    m_connectedAudioStream->flushBuffers();
-                    
-                    // < 0 = before seek point
-                    // > 0 = after seek point
-                    seekingGaps[kAudioIndex] = m_connectedAudioStream->computePosition() - newPosition;
+                // Flush all streams again and compute the new gap
+                for (std::shared_ptr<Stream> stream : connectedStreams)
+                {
+                    stream->flushBuffers();
+                    seekingGaps[stream] = stream->computePosition() - newPosition;
                 }
                 
-                if (m_connectedVideoStream) {
-                    m_connectedVideoStream->flushBuffers();
-                    seekingGaps[kVideoIndex] = m_connectedVideoStream->computePosition() - newPosition;
-                }
-                
-                sf::Time tooEarlyThreshold(-sf::seconds(10));
-                sf::Time brokenSeekingThreshold((sf::Int64)2 * tooEarlyThreshold);
                 tooEarlyCount = 0;
                 tooLateCount = 0;
-                int brokenSeekingCount = 0;
+                brokenSeekingCount = 0;
                 
-                for (int i = 0; i < kEndIndex; i++) {
-                    if (seekingGaps[i] < tooEarlyThreshold * -2.f)
+                // Check the current situation
+                for (std::pair< std::shared_ptr<Stream>, sf::Time> gapByStream : seekingGaps)
+                {
+                    const sf::Time& gap = gapByStream.second;
+                    
+                    if (gap < tooEarlyThreshold * -2.f)
                         brokenSeekingCount++;
-                    if (seekingGaps[i] < -tooEarlyThreshold)
+                    
+                    if (gap < -tooEarlyThreshold)
                         tooEarlyCount++;
                     
-                    if (seekingGaps[i] > sf::Time::Zero)
+                    if (gap > sf::Time::Zero)
                         tooLateCount++;
+                    
+                    if (gap > brokenSeekingThreshold)
+                    {
+                        sfeLogWarning("Seeking on " + gapByStream.first->description() + " is broken!");
+                        brokenSeekingCount++; // TODO: unhandled for now => should seek to non-key frame
+                    }
                 }
                 
-                CHECK(!(tooEarlyCount && tooLateCount), "Unhandled situation");
+                CHECK(false == (tooEarlyCount && tooLateCount),
+                      "Both too late and too early for different streams, unhandled situation!");
                 
-                
+                // Define what to do next
                 if (tooEarlyCount) {
                     // Go forward by 1 sec
                     timestamp += AV_TIME_BASE;
