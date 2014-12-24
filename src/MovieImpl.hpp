@@ -44,59 +44,30 @@ namespace sfe
         MovieImpl(sf::Transformable& movieView);
         virtual ~MovieImpl();
         
-        /** Attemps to open a media file (movie or audio)
-         *
-         * Opening can fails either because of a wrong filename,
-         * or because you tried to open a media file that has no supported
-         * video or audio stream.
-         *
-         * @param filename the path to the media file
-         * @return true on success, false otherwise
+        /** @see Movie::openFromFile()
          */
         bool openFromFile(const std::string& filename);
         
         
-        /** Return a description of all the streams of the given type contained in the opened media
-         *
-         * @param type the stream type (audio, video...) to return
+        /** @see Movie::getStreams()
          */
         const Streams& getStreams(MediaType type) const;
         
-        /** Request activation of the given stream. In case another stream of the same kind is already active,
-         * it is deactivated.
-         *
-         * @note When opening a new media file, the default behaviour is to automatically activate the first
-         * found audio and video streams
-         *
-         * @warning This method can only be used when the movie is stopped
-         *
-         * @param streamDescriptor the descriptor of the stream to activate
-         * @return true if the stream could be selected (ie. valid stream and movie is stopped)
+        /** @see Movie::selectStream()
          */
         bool selectStream(const StreamDescriptor& streamDescriptor);
         
-        /** Start or resume playing the media playback
-         *
-         * This function starts the stream if it was stopped, resumes it if it was paused,
-         * and restarts it from beginning if it was already playing. This function is non blocking
-         * and lets the audio playback happen in the background. The video playback must be updated
-         * with the update() method.
+        /** @see Movie::play()
          */
         void play();
         
         
-        /** Pauses the media playback
-         *
-         * If the media playback is already paused,
-         * this does nothing, otherwise the playback is paused.
+        /** @see Movie::pause()
          */
         void pause();
         
         
-        /** Stops the media playback. The playing offset is reset to the beginning.
-         *
-         * This function stops the stream if it was playing or paused, and does nothing
-         * if it was already stopped. It also resets the playing position (unlike pause()).
+        /** @see Movie::stop()
          */
         void stop();
         
@@ -106,102 +77,65 @@ namespace sfe
         void update();
         
         
-        /** Sets the sound's volume (default is 100)
-         *
-         * @param volume the volume in range [0, 100]
+        /** @see Movie::setVolume()
          */
         void setVolume(float volume);
         
         
-        /** Returns the current sound's volume
-         *
-         * @return the sound's volume, in range [0, 100]
+        /** @see Movie::getVolume()
          */
         float getVolume() const;
         
         
-        /** Returns the duration of the movie
-         *
-         * @return the duration as sf::Time
+        /** @see Movie::getDuration()
          */
         sf::Time getDuration() const;
         
         
-        /** Returns the size (width, height) of the currently active video stream
-         *
-         * @return the size of the currently active video stream, or (0, 0) is there is none
+        /** @see Movie::getSize()
          */
         sf::Vector2f getSize() const;
         
         
-        /** @see fitFrame(sf::FloatRect, bool)
+        /** @see fit(sf::FloatRect, bool)
          */
         void fit(float x, float y, float width, float height, bool preserveRatio = true);
         
         
-        /** Scales the movie to fit the requested frame.
-         *
-         * If the ratio is preserved, the movie may be centered
-         * in the given frame, thus the movie position may be different from
-         * the one you specified.
-         *
-         * @note This method will erase any previously set scale and position
-         *
-         * @param frame the target frame in which you want to display the movie
-         * @param preserveRatio true to keep the original movie ratio, false otherwise
+        /** @see Movie::fit()
          */
         void fit(sf::FloatRect frame, bool preserveRatio = true);
         
         
-        /** Returns the average amount of video frames per second
-         *
-         * @return the average video frame rate
+        /** @see Movie::getFramerate()
          */
         float getFramerate() const;
         
         
-        /** Returns the amount of audio samples per second
-         *
-         * @return the audio sample rate
+        /** @see Movie::getSampleRate()
          */
         unsigned int getSampleRate() const;
         
         
-        /** Returns the count of audio channels
-         *
-         * @return the channels' count
+        /** @see Movie::getChannelCount()
          */
         unsigned int getChannelCount() const;
         
         
-        /** Returns the current status of the movie
-         *
-         * @return See enum Status
+        /** @see Movie::getStatus()
          */
         Status getStatus() const;
         
         
-        /** Returns the current playing position in the movie
-         *
-         * @return the playing position
+        /** @see Movie::getPlayingOffset()
          */
         sf::Time getPlayingOffset() const;
         
-        /** Seek up to @a targetSeekTime
-         *
-         * @param targetSeekTime the new expected playing offset
+        /** @see Movie::setPlayingOffset()
          */
         void setPlayingOffset(const sf::Time& targetSeekTime);
         
-        /** Returns the latest movie image
-         *
-         * The returned image is a texture in VRAM.
-         * If the movie has no video stream, this returns an empty texture.
-         *
-         * @note As in the classic update()/draw() workflow, update() needs to be called
-         * before using this method if you want the image to be up to date
-         *
-         * @return the current image of the movie for the activated video stream
+        /** @see Movie::getCurrentImage()
          */
         const sf::Texture& getCurrentImage() const;
         
