@@ -30,6 +30,7 @@ extern "C"
 
 #include "Stream.hpp"
 #include "Utilities.hpp"
+#include "TimerPriorities.hpp"
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
@@ -84,7 +85,7 @@ namespace sfe
     
     void Stream::connect()
     {
-        m_timer->addObserver(*this);
+        m_timer->addObserver(*this, StreamTimerPriority);
     }
     
     void Stream::disconnect()

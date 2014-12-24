@@ -35,6 +35,7 @@ extern "C"
 #include "AudioStream.hpp"
 #include "Log.hpp"
 #include "Utilities.hpp"
+#include "TimerPriorities.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -201,7 +202,7 @@ namespace sfe
             sfeLogWarning("The media duration could not be retreived");
         }
         
-        m_timer->addObserver(*this);
+        m_timer->addObserver(*this, DemuxerTimerPriority);
     }
     
     Demuxer::~Demuxer()
