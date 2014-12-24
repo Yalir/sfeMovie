@@ -237,10 +237,6 @@ namespace sfe
         setStatus(Stopped);
     }
     
-    void Stream::willSeek(const Timer& timer, sf::Time position)
-    {
-    }
-    
     void Stream::didSeek(const Timer& timer, sf::Time position)
     {
         flushBuffers();

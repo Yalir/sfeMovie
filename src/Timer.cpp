@@ -52,10 +52,6 @@ namespace sfe
     {
     }
     
-    void Timer::Observer::willSeek(const Timer& timer, sf::Time posiiton)
-    {
-    }
-    
     void Timer::Observer::didSeek(const Timer& timer, sf::Time oldPosition)
     {
     }
@@ -136,9 +132,8 @@ namespace sfe
         if (oldStatus == Playing)
             pause();
         
-        notifyObservers(oldPosition, position, false);
         m_pausedTime = position;
-        notifyObservers(oldPosition, position, true);
+        notifyObservers(oldPosition);
         
         if (oldStatus == Playing)
             play();
@@ -204,7 +199,7 @@ namespace sfe
         }
     }
     
-    void Timer::notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked)
+    void Timer::notifyObservers(sf::Time oldPosition)
     {
         CHECK(getStatus() != Playing, "inconsistency in timer");
         
@@ -212,10 +207,7 @@ namespace sfe
         {
             for (Observer* observer : pairByPriority.second)
             {
-                if (alreadySeeked)
-                    observer->didSeek(*this, oldPosition);
-                else
-                    observer->willSeek(*this, newPosition);
+                observer->didSeek(*this, oldPosition);
             }
         }
     }

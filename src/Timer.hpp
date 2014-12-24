@@ -74,15 +74,6 @@ namespace sfe
              */
             virtual void didStop(const Timer& timer, Status previousStatus);
             
-            /** Called by @a timer right before seeking if this Observer is registered for notifications
-             *
-             * When this method is called, the timer is guaranteed to be paused or stopped
-             *
-             * @param timer the timer that generated the notification
-             * @param newPosition the wished position for seeking
-             */
-            virtual void willSeek(const Timer& timer, sf::Time newPosition);
-            
             /** Called by @a timer right after seeking if this Observer is registered for notifications
              *
              * When this method is called, the timer is guaranteed to be paused or stopped
@@ -165,11 +156,8 @@ namespace sfe
          * When the observer receives the notification, the timer is guaranteed to be paused or stopped
          *
          * @param oldPosition the timer position before seeking
-         * @param newPosition the timer position after seeking
-         * @param alreadySeeked false if willSeek notification should be sent, true if didSeek should be sent
-         * instead
          */
-        void notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked);
+        void notifyObservers(sf::Time oldPosition);
         
         sf::Time m_pausedTime;
         Status m_status;

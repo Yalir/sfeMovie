@@ -490,9 +490,10 @@ namespace sfe
         m_eofReached = false;
     }
     
-    void Demuxer::willSeek(const Timer &timer, sf::Time newPosition)
+    void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
     {
         resetEndOfFileStatus();
+        sf::Time newPosition = timer.getOffset();
         
         if (newPosition == sf::Time::Zero) {
         if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS)
