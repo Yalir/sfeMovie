@@ -539,6 +539,8 @@ namespace sfe
     void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
     {
         resetEndOfFileStatus();
+        sf::Time newPosition = timer.getOffset();
+        std::set< std::shared_ptr<Stream> > connectedStreams;
         
         if (m_connectedVideoStream)
             connectedStreams.insert(m_connectedVideoStream);
