@@ -594,7 +594,8 @@ namespace sfe
                     }
                     
                     if (brokenSeekingCount > 0)
-                        sfeLogWarning("Seeking on " + gapByStream.first->description() + " is broken!");
+                        sfeLogWarning("Seeking on " + gapByStream.first->description() + " is broken! Gap: "
+                                      + s(gap.asSeconds()) + "s");
                 }
                 
                 CHECK(false == (tooEarlyCount && tooLateCount),
