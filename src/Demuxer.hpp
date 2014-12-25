@@ -204,14 +204,34 @@ namespace sfe
          */
         AVPacket* readPacket();
         
+        /** Empty the temporarily encoded data queue
+         */
+        void flushBuffers();
+        
+        /** Queue a packet that has been read and is to be used by an active stream in near future
+         *
+         * @param packet the packet to temporarily store
+         */
+        void queueEncodedData(AVPacket* packet);
+        
+        /** Look for a queued packet for the given stream
+         *
+         * @param stream the stream for which to search a packet
+         * @return if a packet for the given stream has been found, it is dequeued and returned
+         * otherwise NULL is returned
+         */
+        AVPacket* gatherQueuedPacketForStream(Stream& stream);
+        
         /** Distribute the given packet to the correct stream
          *
          * If the packet doesn't match any known stream, nothing is done
          *
          * @param packet the packet to distribute
+         * @param stream the stream that requested data from the demuxer, if the packet is not for this stream
+         * it must be queued
          * @return true if the packet could be distributed, false otherwise
          */
-        bool distributePacket(AVPacket* packet);
+        bool distributePacket(AVPacket* packet, Stream& stream);
         
         /** Try to extract the media duration from the given stream
          */
@@ -234,6 +254,7 @@ namespace sfe
         std::shared_ptr<Stream> m_connectedVideoStream;
         std::shared_ptr<Stream> m_connectedSubtitleStream;
         sf::Time m_duration;
+        std::list <AVPacket*> m_pendingDataForActiveStreams;
         
         static std::list<DemuxerInfo> g_availableDemuxers;
         static std::list<DecoderInfo> g_availableDecoders;
