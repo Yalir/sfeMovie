@@ -204,7 +204,7 @@ namespace sfe
         else
         {
             sf::Lock l(m_readerMutex);
-            AVPacket* packet = *m_packetList.begin();
+            AVPacket* packet = m_packetList.front();
             CHECK(packet, "internal inconcistency");
             
             int64_t timestamp = -424242;
@@ -246,11 +246,6 @@ namespace sfe
     void Stream::didStop(const Timer& timer, Status previousStatus)
     {
         setStatus(Stopped);
-    }
-    
-    void Stream::didSeek(const Timer& timer, sf::Time position)
-    {
-        flushBuffers();
     }
     
     bool Stream::hasPackets()

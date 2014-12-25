@@ -145,7 +145,6 @@ namespace sfe
         void didPlay(const Timer& timer, Status previousStatus) override;
         void didPause(const Timer& timer, Status previousStatus) override;
         void didStop(const Timer& timer, Status previousStatus) override;
-        void didSeek(const Timer& timer, sf::Time position) override;
         
         /** @return true if any raw packet for the current stream is queued
          */
