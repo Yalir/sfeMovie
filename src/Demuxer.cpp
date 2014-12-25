@@ -378,7 +378,12 @@ namespace sfe
         
         while (!didReachEndOfFile() && stream.needsMoreData())
         {
-            AVPacket* pkt = readPacket();
+            AVPacket* pkt = NULL;
+            
+            pkt = gatherQueuedPacketForStream(stream);
+            
+            if (!pkt)
+                pkt = readPacket();
             
             if (!pkt)
             {
@@ -386,7 +391,7 @@ namespace sfe
             }
             else
             {
-                if (!distributePacket(pkt))
+                if (!distributePacket(pkt, stream))
                 {
                     AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
                     std::string streamName = std::string("'") + av_get_media_type_string(ffstream->codec->codec_type) + "/" + avcodec_get_name(ffstream->codec->codec_id);
@@ -443,7 +448,31 @@ namespace sfe
         return pkt;
     }
     
-    bool Demuxer::distributePacket(AVPacket* packet)
+    void Demuxer::queueEncodedData(AVPacket* packet)
+    {
+        sf::Lock l(m_synchronized);
+        m_pendingDataForActiveStreams.push_back(packet);
+    }
+    
+    AVPacket* Demuxer::gatherQueuedPacketForStream(Stream& stream)
+    {
+        sf::Lock l(m_synchronized);
+        for (std::list<AVPacket*>::iterator it = m_pendingDataForActiveStreams.begin();
+             it != m_pendingDataForActiveStreams.end(); ++it)
+        {
+            AVPacket* packet = *it;
+            
+            if (stream.canUsePacket(packet))
+            {
+                m_pendingDataForActiveStreams.erase(it);
+                return packet;
+            }
+        }
+        
+        return NULL;
+    }
+    
+    bool Demuxer::distributePacket(AVPacket* packet, Stream& stream)
     {
         sf::Lock l(m_synchronized);
         CHECK(packet, "Demuxer::distributePacket() - invalid argument");
@@ -461,7 +490,11 @@ namespace sfe
                 targetStream == getSelectedAudioStream() ||
                 targetStream == getSelectedSubtitleStream())
             {
+                if (targetStream.get() == &stream)
                 targetStream->pushEncodedData(packet);
+                else
+                    queueEncodedData(packet);
+                
                 result = true;
             }
         }

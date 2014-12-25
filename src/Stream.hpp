@@ -132,6 +132,10 @@ namespace sfe
         /** Update the current stream's status and eventually decode frames
          */
         virtual void update() = 0;
+        
+        /** @return true if the given packet is for the current stream
+         */
+        bool canUsePacket(AVPacket* packet) const;
     protected:
         // Timer::Observer interface
         void didPlay(const Timer& timer, Status previousStatus);
