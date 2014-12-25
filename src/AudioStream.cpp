@@ -100,6 +100,18 @@ namespace sfe
         swr_free(&m_swrCtx);
     }
     
+    void AudioStream::flushBuffers()
+    {
+        sf::SoundStream::Status sfStatus = sf::SoundStream::getStatus();
+        CHECK (sfStatus != sf::SoundStream::Playing, "Trying to flush while audio is playing, this will introduce an audio glitch!");
+        
+        // Flush audio driver/OpenAL/SFML buffer
+        if (sfStatus != sf::SoundStream::Stopped)
+            sf::SoundStream::stop();
+        
+        Stream::flushBuffers();
+    }
+    
     MediaType AudioStream::getStreamKind() const
     {
         return Audio;

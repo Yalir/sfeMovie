@@ -47,23 +47,27 @@ namespace sfe
          */
         virtual ~AudioStream();
         
+        /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
+         */
+        void flushBuffers() override;
+        
         /** Get the stream kind (either audio, video or subtitle stream)
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const override;
+        MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update() override;
+        void update() override;
         
         using sf::SoundStream::setVolume;
         using sf::SoundStream::getVolume;
         using sf::SoundStream::getSampleRate;
         using sf::SoundStream::getChannelCount;
     private:
-        virtual bool onGetData(sf::SoundStream::Chunk& data) override;
-        virtual void onSeek(sf::Time timeOffset) override;
+        bool onGetData(sf::SoundStream::Chunk& data) override;
+        void onSeek(sf::Time timeOffset) override;
         
         /** Decode the encoded data @a packet into @a outputFrame
          *
