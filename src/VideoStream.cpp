@@ -113,7 +113,7 @@ namespace sfe
     {
         if (getStatus() == Playing)
         {
-            if (getSynchronizationGap() < sf::Time::Zero)
+            while (getSynchronizationGap() < sf::Time::Zero)
             {
                 if (!onGetData(m_texture))
                 {
@@ -121,7 +121,9 @@ namespace sfe
                 }
                 else
                 {
-                    m_delegate.didUpdateVideo(*this, m_texture);
+                    static const sf::Time skipFrameThreshold(sf::milliseconds(50));
+                    if (getSynchronizationGap() + skipFrameThreshold >= sf::Time::Zero)
+                        m_delegate.didUpdateVideo(*this, m_texture);
                 }
             }
         }
