@@ -228,6 +228,13 @@ namespace sfe
         return AVStreamDescription(m_stream);
     }
     
+    bool Stream::canUsePacket(AVPacket* packet) const
+    {
+        CHECK(packet, "inconcistency error: null argument");
+        
+        return packet->stream_index == m_stream->index;
+    }
+    
     void Stream::setStatus(Status status)
     {
         m_status = status;
