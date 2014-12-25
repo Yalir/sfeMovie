@@ -221,6 +221,8 @@ namespace sfe
             // Be very careful with this call: it'll also destroy its codec contexts and streams
             avformat_close_input(&m_formatCtx);
         }
+        
+        flushBuffers();
     }
     
     const std::map<int, std::shared_ptr<Stream> >& Demuxer::getStreams() const
@@ -448,6 +450,19 @@ namespace sfe
         return pkt;
     }
     
+    void Demuxer::flushBuffers()
+    {
+        sf::Lock l(m_synchronized);
+        
+        for (AVPacket* packet : m_pendingDataForActiveStreams)
+        {
+            av_free_packet(packet);
+            av_free(packet);
+        }
+        
+        m_pendingDataForActiveStreams.clear();
+    }
+    
     void Demuxer::queueEncodedData(AVPacket* packet)
     {
         sf::Lock l(m_synchronized);
@@ -531,6 +546,7 @@ namespace sfe
     void Demuxer::willSeek(const Timer &timer, sf::Time position)
     {
         resetEndOfFileStatus();
+        flushBuffers();
         
         if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS)
         {

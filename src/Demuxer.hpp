@@ -204,6 +204,10 @@ namespace sfe
          */
         AVPacket* readPacket();
         
+        /** Empty the temporarily encoded data queue
+         */
+        void flushBuffers();
+        
         /** Queue a packet that has been read and is to be used by an active stream in near future
          *
          * @param packet the packet to temporarily store
