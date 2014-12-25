@@ -172,7 +172,7 @@ namespace sfe
     
     sf::Time VideoStream::getSynchronizationGap()
     {
-        return  m_lastDecodedTimestamp - m_timer->getOffset();
+        return computePosition() - m_timer->getOffset();
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)
