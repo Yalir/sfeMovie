@@ -111,20 +111,17 @@ namespace sfe
     
     void VideoStream::update()
     {
-        if (getStatus() == Playing)
+        while (getStatus() == Playing && getSynchronizationGap() < sf::Time::Zero)
         {
-            while (getSynchronizationGap() < sf::Time::Zero)
+            if (!onGetData(m_texture))
             {
-                if (!onGetData(m_texture))
-                {
-                    setStatus(Stopped);
-                }
-                else
-                {
-                    static const sf::Time skipFrameThreshold(sf::milliseconds(50));
-                    if (getSynchronizationGap() + skipFrameThreshold >= sf::Time::Zero)
-                        m_delegate.didUpdateVideo(*this, m_texture);
-                }
+                setStatus(Stopped);
+            }
+            else
+            {
+                static const sf::Time skipFrameThreshold(sf::milliseconds(50));
+                if (getSynchronizationGap() + skipFrameThreshold >= sf::Time::Zero)
+                    m_delegate.didUpdateVideo(*this, m_texture);
             }
         }
     }

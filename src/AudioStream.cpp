@@ -102,6 +102,13 @@ namespace sfe
     
     void AudioStream::flushBuffers()
     {
+        // To be removed once issue with sf::SoundStream::getStatus() is fixed:
+        // http://en.sfml-dev.org/forums/index.php?topic=17095.msg122898#msg122898
+        // This should never happen as this stream has already been notified to pause and
+        // sf::SoundStream::pause() has been called
+        while (sf::SoundStream::getStatus() == sf::SoundStream::Playing)
+            sf::sleep(sf::microseconds(1));
+        
         sf::SoundStream::Status sfStatus = sf::SoundStream::getStatus();
         CHECK (sfStatus != sf::SoundStream::Playing, "Trying to flush while audio is playing, this will introduce an audio glitch!");
         

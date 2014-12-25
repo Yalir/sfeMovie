@@ -215,6 +215,8 @@ namespace sfe
             // Be very careful with this call: it'll also destroy its codec contexts and streams
             avformat_close_input(&m_formatCtx);
         }
+        
+        flushBuffers();
     }
     
     const std::map<int, std::shared_ptr<Stream> >& Demuxer::getStreams() const
@@ -371,7 +373,12 @@ namespace sfe
         
         while (!didReachEndOfFile() && stream.needsMoreData())
         {
-            AVPacket* pkt = readPacket();
+            AVPacket* pkt = NULL;
+            
+            pkt = gatherQueuedPacketForStream(stream);
+            
+            if (!pkt)
+                pkt = readPacket();
             
             if (!pkt)
             {
@@ -379,7 +386,7 @@ namespace sfe
             }
             else
             {
-                if (!distributePacket(pkt))
+                if (!distributePacket(pkt, stream))
                 {
                     AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
                     std::string streamName = Stream::AVStreamDescription(ffstream);
@@ -436,7 +443,44 @@ namespace sfe
         return pkt;
     }
     
-    bool Demuxer::distributePacket(AVPacket* packet)
+    void Demuxer::flushBuffers()
+    {
+        sf::Lock l(m_synchronized);
+        
+        for (AVPacket* packet : m_pendingDataForActiveStreams)
+        {
+            av_free_packet(packet);
+            av_free(packet);
+        }
+        
+        m_pendingDataForActiveStreams.clear();
+    }
+    
+    void Demuxer::queueEncodedData(AVPacket* packet)
+    {
+        sf::Lock l(m_synchronized);
+        m_pendingDataForActiveStreams.push_back(packet);
+    }
+    
+    AVPacket* Demuxer::gatherQueuedPacketForStream(Stream& stream)
+    {
+        sf::Lock l(m_synchronized);
+        for (std::list<AVPacket*>::iterator it = m_pendingDataForActiveStreams.begin();
+             it != m_pendingDataForActiveStreams.end(); ++it)
+        {
+            AVPacket* packet = *it;
+            
+            if (stream.canUsePacket(packet))
+            {
+                m_pendingDataForActiveStreams.erase(it);
+                return packet;
+            }
+        }
+        
+        return NULL;
+    }
+    
+    bool Demuxer::distributePacket(AVPacket* packet, Stream& stream)
     {
         sf::Lock l(m_synchronized);
         CHECK(packet, "Demuxer::distributePacket() - invalid argument");
@@ -454,7 +498,11 @@ namespace sfe
                 targetStream == getSelectedAudioStream() ||
                 targetStream == getSelectedSubtitleStream())
             {
-                targetStream->pushEncodedData(packet);
+                if (targetStream.get() == &stream)
+                    targetStream->pushEncodedData(packet);
+                else
+                    queueEncodedData(packet);
+                
                 distributed = true;
             }
         }
@@ -515,6 +563,7 @@ namespace sfe
             // Flush all streams
             for (std::shared_ptr<Stream> stream : connectedStreams)
                 stream->flushBuffers();
+            flushBuffers();
             
             // Seek to beginning
             int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
@@ -543,6 +592,7 @@ namespace sfe
                 // Flush all streams
                 for (std::shared_ptr<Stream> stream : connectedStreams)
                     stream->flushBuffers();
+                flushBuffers();
                 
                 // Seek to new estimated target
                 if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS && m_formatCtx->start_time != AV_NOPTS_VALUE)
@@ -557,7 +607,7 @@ namespace sfe
                 {
                     sf::Time gap = stream->computePosition() - newPosition;
                     seekingGaps[stream] = gap;
-                }
+        }
                 
                 tooEarlyCount = 0;
                 tooLateCount = 0;
@@ -578,12 +628,12 @@ namespace sfe
                         {
                         brokenSeekingCount++;
                             tooEarlyCount++;
-                        }
+    }
                         else if (absoluteDiff > tooEarlyThreshold)
                         tooEarlyCount++;
                     
                         // else: a bit early but not too much, this is the final situation we want
-                    }
+}
                     // After seek point
                     else if (gap > sf::Time::Zero)
                     {
