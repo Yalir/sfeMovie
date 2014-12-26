@@ -111,7 +111,7 @@ namespace sfe
         AVPacket* result = nullptr;
         sf::Lock l(m_readerMutex);
         
-        if (!m_packetList.size())
+        if (!m_packetList.size() && !isPassive())
         {
             m_dataSource.requestMoreData(*this);
         }
@@ -220,6 +220,11 @@ namespace sfe
         CHECK(packet, "inconcistency error: null argument");
         
         return packet->stream_index == m_stream->index;
+    }
+    
+    bool Stream::isPassive() const
+    {
+        return false;
     }
     
     void Stream::setStatus(Status status)
