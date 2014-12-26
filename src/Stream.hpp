@@ -136,6 +136,12 @@ namespace sfe
         /** @return true if the given packet is for the current stream
          */
         bool canUsePacket(AVPacket* packet) const;
+        
+        /** @return true if this stream never requests packets and let
+         * itself be fed, false otherwise. Default implementation always
+         * returns false
+         */
+        virtual bool isPassive() const;
     protected:
         // Timer::Observer interface
         void didPlay(const Timer& timer, Status previousStatus);
