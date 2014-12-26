@@ -498,7 +498,7 @@ namespace sfe
                 targetStream == getSelectedAudioStream() ||
                 targetStream == getSelectedSubtitleStream())
             {
-                if (targetStream.get() == &stream)
+                if (targetStream.get() == &stream || targetStream->isPassive())
                     targetStream->pushEncodedData(packet);
                 else
                     queueEncodedData(packet);

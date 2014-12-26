@@ -136,7 +136,10 @@ if (SFEMOVIE_BUILD_STATIC)
 else()
     add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
 endif()
-add_dependencies(${SFEMOVIE_LIB} FFmpeg)
+
+if (${NeedsFFmpegCompilation})
+    add_dependencies(${SFEMOVIE_LIB} FFmpeg)
+endif()
 
 # Define the libraries sfe should link against
 if (SFEMOVIE_BUILD_STATIC)

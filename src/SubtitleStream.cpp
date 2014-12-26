@@ -101,6 +101,11 @@ namespace sfe
         }
     }
     
+    bool SubtitleStream::isPassive() const
+    {
+        return true;
+    }
+    
     bool SubtitleStream::onGetData()
     {
         AVPacket* packet = popEncodedData();

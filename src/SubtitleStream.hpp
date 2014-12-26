@@ -74,6 +74,9 @@ namespace sfe
          */
         virtual void update() override;
         
+        /** @see Stream::isPassive()
+         */
+        bool isPassive() const override;
     private:
         /** The struct we use to store our subtitles
          */
