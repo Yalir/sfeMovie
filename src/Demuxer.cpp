@@ -153,10 +153,12 @@ namespace sfe
             
             try
             {
+                std::shared_ptr<Stream> stream;
+                
                 switch (ffstream->codec->codec_type)
                 {
                     case AVMEDIA_TYPE_VIDEO:
-                        m_streams[ffstream->index] = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
+                        stream = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -167,7 +169,7 @@ namespace sfe
                         break;
                         
                     case AVMEDIA_TYPE_AUDIO:
-                        m_streams[ffstream->index] = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
+                        stream = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -177,7 +179,7 @@ namespace sfe
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
                         break;
                     case AVMEDIA_TYPE_SUBTITLE:
-                        m_streams[ffstream->index] = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
+                        stream = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
                         
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
                         break;
@@ -186,12 +188,18 @@ namespace sfe
                         sfeLogDebug(m_ignoredStreams[ffstream->index] + " ignored");
                         break;
                 }
+                
+                // Don't create an entry in the map unless everything went well and stream did not get ignored
+                if (stream)
+                    m_streams[ffstream->index] = stream;
             }
             catch (std::runtime_error& e)
             {
                 std::string streamDesc = Stream::AVStreamDescription(ffstream);
                 
                 sfeLogError("error while loading " + streamDesc + ": " + e.what());
+                CHECK(m_streams.find(ffstream->index) == m_streams.end(),
+                      "Internal inconcistency error: stream whose loading failed should not be stored");
             }
         }
         
