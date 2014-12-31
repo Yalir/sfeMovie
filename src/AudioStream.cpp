@@ -303,13 +303,19 @@ namespace sfe
             // To avoid desynchronization with the timer, we don't return
             // until the audio stream is actually started
             while (sf::SoundStream::getPlayingOffset() == initialTime && timeout.getElapsedTime() < sf::seconds(5))
-                sf::sleep(sf::milliseconds(10));
+                sf::sleep(sf::microseconds(10));
             
             CHECK(sf::SoundStream::getPlayingOffset() != initialTime, "is your audio device broken? Audio did not start within 5 seconds");
         }
         else
         {
             sf::SoundStream::play();
+            
+            sf::Clock timeout;
+            while (sf::SoundStream::getStatus() != sf::SoundStream::Playing && timeout.getElapsedTime() < sf::seconds(5))
+                sf::sleep(sf::microseconds(10));
+            
+            CHECK(timeout.getElapsedTime() < sf::seconds(5), "Audio did not start within 5 seconds");
         }
     }
     
