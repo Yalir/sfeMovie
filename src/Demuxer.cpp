@@ -587,8 +587,7 @@ namespace sfe
             // > 0 = after seek point
             std::map< std::shared_ptr<Stream>, sf::Time> seekingGaps;
             
-            static const float tooEarlyThreshold = 10.f; // seconds
-            static const float brokenSeekingThreshold = 2 * tooEarlyThreshold;
+            static const float brokenSeekingThreshold = 60.f; // seconds
             bool didReseekBackward = false;
             bool didReseekForward = false;
             int tooEarlyCount = 0;
@@ -615,7 +614,7 @@ namespace sfe
                 {
                     sf::Time gap = stream->computePosition() - newPosition;
                     seekingGaps[stream] = gap;
-        }
+                }
                 
                 tooEarlyCount = 0;
                 tooLateCount = 0;
@@ -634,21 +633,19 @@ namespace sfe
                     {
                         if (absoluteDiff > brokenSeekingThreshold)
                         {
-                        brokenSeekingCount++;
+                            brokenSeekingCount++;
                             tooEarlyCount++;
-    }
-                        else if (absoluteDiff > tooEarlyThreshold)
-                        tooEarlyCount++;
+                        }
                     
                         // else: a bit early but not too much, this is the final situation we want
-}
+                    }
                     // After seek point
                     else if (gap > sf::Time::Zero)
                     {
                         tooLateCount++;
                     
                         if (absoluteDiff > brokenSeekingThreshold)
-                        brokenSeekingCount++; // TODO: unhandled for now => should seek to non-key frame
+                            brokenSeekingCount++; // TODO: unhandled for now => should seek to non-key frame
                     }
                     
                     if (brokenSeekingCount > 0)
