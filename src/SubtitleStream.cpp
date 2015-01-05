@@ -227,5 +227,7 @@ namespace sfe
     {
         m_delegate.didWipeOutSubtitles(*this);
         Stream::flushBuffers();
+        m_pendingSubtitles.clear();
+        m_visibleSubtitles.clear();
     }
 }
