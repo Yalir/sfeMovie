@@ -593,6 +593,7 @@ namespace sfe
             int tooEarlyCount = 0;
             int tooLateCount = 0;
             int brokenSeekingCount = 0;
+            int ffmpegSeekFlags = AVSEEK_FLAG_BACKWARD;
             
             do
             {
@@ -605,8 +606,8 @@ namespace sfe
                 if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS && m_formatCtx->start_time != AV_NOPTS_VALUE)
                     timestamp += m_formatCtx->start_time;
                 
-                int err = avformat_seek_file(m_formatCtx, -1, timestamp - 10 * AV_TIME_BASE, timestamp, timestamp,
-                                             AVSEEK_FLAG_BACKWARD);
+                int err = avformat_seek_file(m_formatCtx, -1, timestamp - 10 * AV_TIME_BASE,
+                                             timestamp, timestamp, ffmpegSeekFlags);
                 CHECK0(err, "avformat_seek_file failure");
                 
                 // Compute the new gap
@@ -668,6 +669,22 @@ namespace sfe
                     // Go backward by 1 sec
                     timestamp -= AV_TIME_BASE;
                     didReseekBackward = true;
+                }
+                
+                if (brokenSeekingCount)
+                {
+                    if (ffmpegSeekFlags & AVSEEK_FLAG_ANY)
+                    {
+                        sfeLogError("Seeking is really broken in the media, giving up");
+                        return;
+                    }
+                    else
+                    {
+                        // Try to seek to non-key frame before giving up
+                        // Image may be wrong but it's better than nothing :)
+                        ffmpegSeekFlags |= AVSEEK_FLAG_ANY;
+                        sfeLogError("Media has broken seeking index, trying to seek to non-key frame");
+                    }
                 }
                 
                 CHECK(!(didReseekBackward && didReseekForward), "infinitely seeking backward and forward");
