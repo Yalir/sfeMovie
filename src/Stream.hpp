@@ -133,6 +133,15 @@ namespace sfe
          */
         sf::Time computePosition();
         
+        /** Discard the data not needed to start playback at the given position
+         *
+         * Every single bit of unneeded data must be discarded as streams synchronization accuracy will
+         * depend on this
+         *
+         * @param targetPosition the position for which the stream is expected to be ready to play
+         */
+        virtual void fastForward(sf::Time targetPosition) = 0;
+        
         /** @return a textual description of the current stream
          */
         std::string description() const;
