@@ -28,14 +28,6 @@
 
 namespace sfe
 {
-    StreamDescriptor StreamDescriptor::NoSelection(sfe::MediaType type)
-    {
-        StreamDescriptor descriptor;
-        descriptor.type = type;
-        descriptor.identifier = -1;
-        return descriptor;
-    }
-    
     Movie::Movie() :
     m_impl(new MovieImpl(*this))
     {
@@ -151,9 +143,9 @@ namespace sfe
     }
     
     
-    void Movie::setPlayingOffset(const sf::Time& targetSeekTime)
+    void Movie::setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod)
     {
-        m_impl->setPlayingOffset(targetSeekTime);
+        m_impl->setPlayingOffset(targetSeekTime, seekingMethod);
     }
     
     

@@ -133,7 +133,7 @@ namespace sfe
         
         /** @see Movie::setPlayingOffset()
          */
-        void setPlayingOffset(const sf::Time& targetSeekTime);
+        void setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod);
         
         /** @see Movie::getCurrentImage()
          */
@@ -157,6 +157,7 @@ namespace sfe
         Streams m_subtitleStreamsDesc;
         sf::FloatRect m_displayFrame;
         LayoutDebugger<sf::Sprite> m_debugger;
+        int m_seekingMethod;
     };
     
 }

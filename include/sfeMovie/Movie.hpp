@@ -29,6 +29,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <sfeMovie/Visibility.hpp>
+#include <sfeMovie/SeekingMethod.hpp>
+#include <sfeMovie/StreamSelection.hpp>
 #include <vector>
 #include <string>
 #include <memory>
@@ -44,33 +46,6 @@ namespace sfe
         Playing, //!< The playback is playing
         End
     };
-    
-    enum MediaType
-    {
-        Audio,
-        Subtitle,
-        Video,
-        Unknown
-    };
-    
-    /** Structure that allows both knowing metadata about each stream, and identifying streams
-     * for selection through Movie::selectStream()
-     */
-    struct SFE_API StreamDescriptor
-    {
-        /** Return a stream descriptor that identifies no stream. This allows disabling a specific stream kind
-         * 
-         * @param type the stream kind (audio, video...) to disable
-         * @return a StreamDescriptor that can be used to disable the given stream kind
-         */
-        static StreamDescriptor NoSelection(MediaType type);
-        
-        MediaType type;            //!< Stream kind: video, audio or subtitle
-        int identifier;            //!< Internal stream identifier in the media, used for choosing which stream to enable
-        std::string language;    //!< Language code defined by ISO 639-2, if set by the media
-    };
-    
-    typedef std::vector<StreamDescriptor> Streams;
     
     class MovieImpl;
     /** Main class of the sfeMovie API. It is used to open media files, provide playback and basic controls
@@ -216,8 +191,9 @@ namespace sfe
         /** Seek up to @a targetSeekTime
          *
          * @param targetSeekTime the new expected playing offset
+         * @param seekingMethod how to seek, @see SeekingMethod
          */
-        void setPlayingOffset(const sf::Time& targetSeekTime);
+        void setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod = SeekingMethod::Accurate);
         
         /** @brief Returns the latest movie image
          *

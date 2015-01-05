@@ -441,18 +441,22 @@ namespace sfe
         return sf::Time::Zero;
     }
     
-    void MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime)
+    void MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod)
     {
-        if (m_demuxer && m_timer) {
+        if (m_demuxer && m_timer)
+        {
             if (targetSeekTime < sf::Time::Zero || targetSeekTime >= getDuration())
             {
                 sfeLogError("Invalid seek position: out of range [0, duration[");
             }
             else
             {
+                m_seekingMethod = seekingMethod;
                 m_timer->seek(targetSeekTime);
             }
-        } else {
+        }
+        else
+        {
             sfeLogError("Movie - No media loaded, cannot seek");
         }
     }
