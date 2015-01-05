@@ -40,6 +40,18 @@ extern "C"
 
 namespace sfe
 {
+    namespace
+    {
+        void waitForStatusUpdate(const sf::SoundStream& stream, sf::SoundStream::Status expectedStatus)
+        {
+            // Wait for status to update
+            sf::Clock timeout;
+            while (stream.getStatus() != expectedStatus && timeout.getElapsedTime() < sf::seconds(5))
+                sf::sleep(sf::microseconds(10));
+            CHECK(timeout.getElapsedTime() < sf::seconds(5), "Audio did not reach state " + s(expectedStatus) + " within 5 seconds");
+        }
+    }
+
     AudioStream::AudioStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource,
                              std::shared_ptr<Timer> timer) :
     Stream(formatCtx, stream, dataSource, timer),
@@ -102,13 +114,6 @@ namespace sfe
     
     void AudioStream::flushBuffers()
     {
-        // To be removed once issue with sf::SoundStream::getStatus() is fixed:
-        // http://en.sfml-dev.org/forums/index.php?topic=17095.msg122898#msg122898
-        // This should never happen as this stream has already been notified to pause and
-        // sf::SoundStream::pause() has been called
-        while (sf::SoundStream::getStatus() == sf::SoundStream::Playing)
-            sf::sleep(sf::microseconds(1));
-        
         sf::SoundStream::Status sfStatus = sf::SoundStream::getStatus();
         CHECK (sfStatus != sf::SoundStream::Playing, "Trying to flush while audio is playing, this will introduce an audio glitch!");
         
@@ -310,12 +315,7 @@ namespace sfe
         else
         {
             sf::SoundStream::play();
-            
-            sf::Clock timeout;
-            while (sf::SoundStream::getStatus() != sf::SoundStream::Playing && timeout.getElapsedTime() < sf::seconds(5))
-                sf::sleep(sf::microseconds(10));
-            
-            CHECK(timeout.getElapsedTime() < sf::seconds(5), "Audio did not start within 5 seconds");
+            waitForStatusUpdate(*this, sf::SoundStream::Playing);
         }
     }
     
@@ -328,12 +328,16 @@ namespace sfe
     void AudioStream::didPause(const Timer& timer, sfe::Status previousStatus)
     {
         sf::SoundStream::pause();
+        waitForStatusUpdate(*this, sf::SoundStream::Paused);
+        
         Stream::didPause(timer, previousStatus);
     }
     
     void AudioStream::didStop(const Timer& timer, sfe::Status previousStatus)
     {
         sf::SoundStream::stop();
+        waitForStatusUpdate(*this, sf::SoundStream::Stopped);
+        
         Stream::didStop(timer, previousStatus);
     }
 }
