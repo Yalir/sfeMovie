@@ -595,6 +595,9 @@ namespace sfe
             int brokenSeekingCount = 0;
             int ffmpegSeekFlags = AVSEEK_FLAG_BACKWARD;
             
+            if (seekingMethod & SeekingMethod::Fast && seekingMethod & SeekingMethod::Accurate)
+                ffmpegSeekFlags |= AVSEEK_FLAG_ANY;
+            
             do
             {
                 // Flush all streams
