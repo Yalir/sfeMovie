@@ -131,6 +131,10 @@ namespace sfe
          */
         Status getStatus() const;
         
+        /** Overwrite the timer's time without notifying the observers
+         */
+        void setOffset(sf::Time offset);
+        
         /** Return the timer's time
          *
          * @return the timer's time

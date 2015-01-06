@@ -144,6 +144,12 @@ namespace sfe
         return m_status;
     }
     
+    void Timer::setOffset(sf::Time offset)
+    {
+        m_pausedTime = offset;
+        m_timer.restart();
+    }
+    
     sf::Time Timer::getOffset() const
     {
         if (Timer::getStatus() == Playing)

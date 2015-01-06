@@ -693,6 +693,27 @@ namespace sfe
                 CHECK(!(didReseekBackward && didReseekForward), "infinitely seeking backward and forward");
             }
             while (tooEarlyCount != 0 || tooLateCount != 0);
+            
+            if (! (seekingMethod & SeekingMethod::Fast) && seekingMethod & SeekingMethod::Accurate)
+            {
+                // Synchronize all streams
+                for (std::shared_ptr<Stream> stream : connectedStreams)
+                    stream->fastForward(newPosition);
+            }
+            else
+            {
+                // Compute most advanced position
+                sf::Time mostForwardPosition = sf::Time::Zero;
+                
+                for (const std::pair< std::shared_ptr<Stream>, sf::Time >& pair : seekingGaps)
+                    mostForwardPosition = std::max(mostForwardPosition, newPosition + pair.second);
+                
+                // Synchronize all streams
+                for (std::shared_ptr<Stream> stream : connectedStreams)
+                    stream->fastForward(mostForwardPosition);
+                
+                m_timer->setOffset(mostForwardPosition);
+            }
         }
     }
 }
