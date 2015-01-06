@@ -96,17 +96,12 @@ message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 #################################################################################################################
 
 file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]* ${SOURCES_DIR}/DebugTools/[a-z,A-Z]*.[c,h]*)
+file(GLOB HEADER_FILES RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
 
 add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 if (MACOSX) # ========================================== MACOSX ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
-    
-    # find only "root" headers
-    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
-    
-    # Make sure sfeMovie headers get imported in the framework
-    set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 elseif (WINDOWS) # ========================================== WINDOWS ==========================================
     if (MSVC)
         set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
@@ -123,18 +118,16 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
     set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 endif()
 
-source_group(Sources FILES ${SOURCE_FILES})
-
 # Set the search directories for compiling and link editing
 set(SFEMOVIE_INCLUDE_DIRS "${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
 include_directories (${SFEMOVIE_INCLUDE_DIRS})
 message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
 
-# Define the source files sfe should compile
+source_group("Public headers" FILES ${HEADER_FILES})
 if (SFEMOVIE_BUILD_STATIC)
-    add_library(${SFEMOVIE_LIB} STATIC ${SOURCE_FILES})
+    add_library(${SFEMOVIE_LIB} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 else()
-    add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
+    add_library(${SFEMOVIE_LIB} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
 if (${NeedsFFmpegCompilation})
