@@ -452,7 +452,7 @@ namespace sfe
             else
             {
                 m_seekingMethod = seekingMethod;
-                m_timer->seek(targetSeekTime);
+                m_timer->seek(targetSeekTime, seekingMethod);
             }
         }
         else

@@ -544,7 +544,7 @@ namespace sfe
         m_eofReached = false;
     }
     
-    void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
+    void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition, int seekingMethod)
     {
         resetEndOfFileStatus();
         sf::Time newPosition = timer.getOffset();
