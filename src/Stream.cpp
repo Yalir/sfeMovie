@@ -91,7 +91,10 @@ namespace sfe
     
     void Stream::connect()
     {
-        m_timer->addObserver(*this, StreamTimerPriority);
+        if (isPassive())
+            m_timer->addObserver(*this, PassiveStreamTimerPriority);
+        else
+            m_timer->addObserver(*this, ActiveStreamTimerPriority);
     }
     
     void Stream::disconnect()

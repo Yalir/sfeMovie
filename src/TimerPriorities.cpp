@@ -26,4 +26,5 @@
 
 const int DefaultTimerPriority = 0;
 const int DemuxerTimerPriority = -5; // Demuxer always notified first!
-const int StreamTimerPriority = 5;
+const int ActiveStreamTimerPriority = 5;
+const int PassiveStreamTimerPriority = 10; // Always last

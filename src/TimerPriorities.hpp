@@ -27,6 +27,7 @@
 
 extern const int DefaultTimerPriority;
 extern const int DemuxerTimerPriority;
-extern const int StreamTimerPriority;
+extern const int ActiveStreamTimerPriority;
+extern const int PassiveStreamTimerPriority;
 
 #endif
