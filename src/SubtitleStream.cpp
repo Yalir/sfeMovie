@@ -233,11 +233,10 @@ namespace sfe
     
     void SubtitleStream::fastForward(sf::Time targetPosition)
     {
-        if (hasPackets)
+        while(hasPackets())
         {
             onGetData();
         }
-
 
 		std::list< std::shared_ptr<SubtitleData>>::iterator it = m_visibleSubtitles.begin();
 		while (it != m_visibleSubtitles.end()) 
