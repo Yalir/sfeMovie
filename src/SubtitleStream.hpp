@@ -77,6 +77,20 @@ namespace sfe
         /** @see Stream::isPassive()
          */
         bool isPassive() const override;
+        
+         /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
+         */
+        void flushBuffers() override;
+        
+        /** Discard the data not needed to start playback at the given position
+         *
+         * Every single bit of unneeded data must be discarded as streams synchronization accuracy will
+         * depend on this
+         *
+         * @param targetPosition the position for which the stream is expected to be ready to play
+         */
+        void fastForward(sf::Time targetPosition);
+        
     private:
         /** The struct we use to store our subtitles
          */
@@ -103,7 +117,6 @@ namespace sfe
          * @return if the stream is finished or not
          */
         bool onGetData();
-        virtual void flushBuffers() override;
         
         Delegate& m_delegate;
         
