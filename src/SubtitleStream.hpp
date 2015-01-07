@@ -80,7 +80,7 @@ namespace sfe
         
          /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
          */
-        void flushBuffers() override;
+        virtual void flushBuffers() override;
         
         /** Discard the data not needed to start playback at the given position
          *
@@ -89,7 +89,7 @@ namespace sfe
          *
          * @param targetPosition the position for which the stream is expected to be ready to play
          */
-        void fastForward(sf::Time targetPosition);
+        virtual void fastForward(sf::Time targetPosition);
         
     private:
         /** The struct we use to store our subtitles

@@ -233,13 +233,18 @@ namespace sfe
     
     void SubtitleStream::fastForward(sf::Time targetPosition)
     {
-		//TODO load additional subs from the demuxer till the target position		
+        if (hasPackets)
+        {
+            onGetData();
+        }
+
+
 		std::list< std::shared_ptr<SubtitleData>>::iterator it = m_visibleSubtitles.begin();
 		while (it != m_visibleSubtitles.end()) 
 		{
 			//erase subs that are deleted before the targetPosition
-			if (it->end<targetPosition)
-				it = m_visibleSubtitles.erase(i);
+			if (it->get()->end<targetPosition)
+				it = m_visibleSubtitles.erase(it);
 			else
 				++it;
 		}
@@ -248,8 +253,8 @@ namespace sfe
 		while (it != m_pendingSubtitles.end()) 
 		{
 			//erase subs that are deleted before the targetPosition
-			if (it->end<targetPosition)
-				it = m_pendingSubtitles.erase(i);
+			if (it->get()->end<targetPosition)
+				it = m_pendingSubtitles.erase(it);
 			else
 				++it;
 		}
