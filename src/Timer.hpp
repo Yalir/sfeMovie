@@ -80,9 +80,8 @@ namespace sfe
              *
              * @param timer the timer that generated the notification
              * @param position the position before seeking
-             * @param seekingMethod how to seek, @see SeekingMethod
              */
-            virtual void didSeek(const Timer& timer, sf::Time oldPosition, int seekingMethod);
+            virtual void didSeek(const Timer& timer, sf::Time oldPosition);
         };
         
         /** Default constructor
@@ -121,9 +120,8 @@ namespace sfe
          * If the timer was playing, it is paused, seeking occurs, then it is resumed
          *
          * @param position the new wished timer position
-         * @param seekingMethod how fast and accurate to seek, @see SeekingMethod
          */
-        void seek(sf::Time position, int seekingMethod);
+        void seek(sf::Time position);
         
         /** Return this timer status
          *
@@ -163,7 +161,7 @@ namespace sfe
          *
          * @param oldPosition the timer position before seeking
          */
-        void notifyObservers(sf::Time oldPosition, int seekingMethod);
+        void notifyObservers(sf::Time oldPosition);
         
         sf::Time m_pausedTime;
         Status m_status;

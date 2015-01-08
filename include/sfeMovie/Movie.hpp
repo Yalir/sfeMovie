@@ -29,7 +29,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <sfeMovie/Visibility.hpp>
-#include <sfeMovie/SeekingMethod.hpp>
 #include <sfeMovie/StreamSelection.hpp>
 #include <vector>
 #include <string>
@@ -191,9 +190,8 @@ namespace sfe
         /** Seek up to @a targetSeekTime
          *
          * @param targetSeekTime the new expected playing offset
-         * @param seekingMethod how to seek, @see SeekingMethod
          */
-        void setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod = SeekingMethod::Accurate);
+        void setPlayingOffset(const sf::Time& targetSeekTime);
         
         /** @brief Returns the latest movie image
          *

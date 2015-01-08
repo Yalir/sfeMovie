@@ -544,7 +544,7 @@ namespace sfe
         m_eofReached = false;
     }
     
-    void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition, int seekingMethod)
+    void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
     {
         resetEndOfFileStatus();
         sf::Time newPosition = timer.getOffset();
@@ -594,9 +594,6 @@ namespace sfe
             int tooLateCount = 0;
             int brokenSeekingCount = 0;
             int ffmpegSeekFlags = AVSEEK_FLAG_BACKWARD;
-            
-            if (seekingMethod & SeekingMethod::Fast && seekingMethod & SeekingMethod::Accurate)
-                ffmpegSeekFlags |= AVSEEK_FLAG_ANY;
             
             do
             {
@@ -693,27 +690,6 @@ namespace sfe
                 CHECK(!(didReseekBackward && didReseekForward), "infinitely seeking backward and forward");
             }
             while (tooEarlyCount != 0 || tooLateCount != 0);
-            
-            if (! (seekingMethod & SeekingMethod::Fast) && seekingMethod & SeekingMethod::Accurate)
-            {
-                // Synchronize all streams
-                for (std::shared_ptr<Stream> stream : connectedStreams)
-                    stream->fastForward(newPosition);
-            }
-            else
-            {
-                // Compute most advanced position
-                sf::Time mostForwardPosition = sf::Time::Zero;
-                
-                for (const std::pair< std::shared_ptr<Stream>, sf::Time >& pair : seekingGaps)
-                    mostForwardPosition = std::max(mostForwardPosition, newPosition + pair.second);
-                
-                // Synchronize all streams
-                for (std::shared_ptr<Stream> stream : connectedStreams)
-                    stream->fastForward(mostForwardPosition);
-                
-                m_timer->setOffset(mostForwardPosition);
-            }
         }
     }
 }
