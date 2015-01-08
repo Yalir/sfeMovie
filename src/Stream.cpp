@@ -265,7 +265,8 @@ namespace sfe
     
     void Stream::didSeek(const Timer& timer, sf::Time oldPosition)
     {
-        fastForward(timer.getOffset());
+        if (timer.getOffset() != sf::Time::Zero)
+            fastForward(timer.getOffset());
     }
     
     bool Stream::hasPackets()

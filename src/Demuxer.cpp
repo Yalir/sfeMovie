@@ -396,10 +396,6 @@ namespace sfe
             {
                 if (!distributePacket(pkt, stream))
                 {
-                    AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
-                    std::string streamName = Stream::AVStreamDescription(ffstream);
-                    
-                    sfeLogDebug(streamName + ": packet dropped");
                     av_free_packet(pkt);
                     av_free(pkt);
                 }
