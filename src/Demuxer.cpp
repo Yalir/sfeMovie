@@ -268,12 +268,12 @@ namespace sfe
     void Demuxer::selectAudioStream(std::shared_ptr<AudioStream> stream)
     {
         Status oldStatus = m_timer->getStatus();
+        CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
+              "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
             m_timer->pause();
-
-        sf::Time time = m_timer->getOffset();
-
+        
         if (stream != m_connectedAudioStream)
         {
             if (m_connectedAudioStream)
@@ -286,9 +286,7 @@ namespace sfe
             
             m_connectedAudioStream = stream;
         }
-
-        m_timer->seek(time);
-
+        
         if (oldStatus == Playing)
             m_timer->play();
     }
@@ -308,12 +306,12 @@ namespace sfe
     void Demuxer::selectVideoStream(std::shared_ptr<VideoStream> stream)
     {
         Status oldStatus = m_timer->getStatus();
+        CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
+              "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
             m_timer->pause();
         
-        sf::Time time = m_timer->getOffset();
-
         if (stream != m_connectedVideoStream)
         {
             if (m_connectedVideoStream)
@@ -327,8 +325,6 @@ namespace sfe
             m_connectedVideoStream = stream;
         }
         
-        m_timer->seek(time);
-
         if (oldStatus == Playing)
             m_timer->play();
     }
@@ -352,8 +348,6 @@ namespace sfe
         if (oldStatus == Playing)
             m_timer->pause();
         
-        sf::Time time = m_timer->getOffset();
-
         if (stream != m_connectedSubtitleStream)
         {
             if (m_connectedSubtitleStream)
@@ -365,8 +359,6 @@ namespace sfe
             m_connectedSubtitleStream = stream;
         }
         
-        m_timer->seek(time);
-
         if (oldStatus == Playing)
             m_timer->play();
     }
