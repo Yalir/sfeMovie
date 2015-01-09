@@ -152,32 +152,6 @@ namespace sfe
         }
     }
     
-    void AudioStream::fastForward(sf::Time targetPosition)
-    {
-        sf::Time currentPosition;
-        sf::Time pktDuration;
-        
-        do
-        {
-            currentPosition = computePosition();
-            
-            AVPacket* packet = popEncodedData();
-            pktDuration = packetDuration(packet);
-            
-            if (currentPosition + pktDuration > targetPosition)
-            {
-                // Reinsert, we don't want to decode now
-                prependEncodedData(packet);
-            }
-            else
-            {
-                av_free_packet(packet);
-                av_free(packet);
-            }
-        }
-        while (currentPosition + pktDuration <= targetPosition);
-    }
-    
     bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
     {
         AVPacket* packet = nullptr;
@@ -318,15 +292,6 @@ namespace sfe
         outNbSamples = dst_bufsize / av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
         outSamplesLength = dst_bufsize;
         outSamples = m_dstData[0];
-    }
-    
-    sf::Time AudioStream::packetDuration(const AVPacket* packet) const
-    {
-        CHECK(packet, "inconcistency error: null packet");
-        CHECK(packet->stream_index == m_streamID, "Asking for audio duration of a packet for a different stream!");
-        CHECK(packet->duration != 0, "packet duration is unknown");
-        
-        return sf::seconds(packet->duration * av_q2d(m_stream->time_base));
     }
     
     void AudioStream::willPlay(const Timer &timer)

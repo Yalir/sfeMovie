@@ -56,7 +56,7 @@ namespace sfe
          *
          * @return the kind of stream represented by this stream
          */
-        MediaType getStreamKind() const override;
+        virtual MediaType getStreamKind() const;
         
         /** Get the video frame size (width, height)
          *
@@ -77,10 +77,7 @@ namespace sfe
         
         /** Update the video frame and the stream's status
          */
-        void update() override;
-        
-        
-        void fastForward(sf::Time targetPosition) override;
+        virtual void update() override;
     private:
         bool onGetData(sf::Texture& texture);
         

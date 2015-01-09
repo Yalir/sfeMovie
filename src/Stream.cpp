@@ -263,12 +263,6 @@ namespace sfe
         setStatus(Stopped);
     }
     
-    void Stream::didSeek(const Timer& timer, sf::Time oldPosition)
-    {
-        if (timer.getOffset() != sf::Time::Zero)
-            fastForward(timer.getOffset());
-    }
-    
     bool Stream::hasPackets()
     {
         return m_packetList.size() > 0;

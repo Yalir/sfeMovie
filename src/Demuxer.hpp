@@ -242,7 +242,7 @@ namespace sfe
         void resetEndOfFileStatus() override;
         
         // Timer interface
-        void didSeek(const Timer& timer, sf::Time oldPosition) override;
+        void didSeek(const Timer& timer, sf::Time oldPosition, int seekingMethod) override;
         
         AVFormatContext* m_formatCtx;
         bool m_eofReached;

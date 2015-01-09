@@ -441,7 +441,7 @@ namespace sfe
         return sf::Time::Zero;
     }
     
-    void MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime)
+    void MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod)
     {
         if (m_demuxer && m_timer)
         {
@@ -451,7 +451,8 @@ namespace sfe
             }
             else
             {
-                m_timer->seek(targetSeekTime);
+                m_seekingMethod = seekingMethod;
+                m_timer->seek(targetSeekTime, seekingMethod);
             }
         }
         else
