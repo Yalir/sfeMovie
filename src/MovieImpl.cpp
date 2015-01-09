@@ -540,6 +540,7 @@ namespace sfe
     
     void MovieImpl::didWipeOutSubtitles(const SubtitleStream& sender)
     {
-        m_subtitleSprites.clear();
+        if (m_subtitleSprites.size()>0)
+            m_subtitleSprites.clear();
     }
 }
