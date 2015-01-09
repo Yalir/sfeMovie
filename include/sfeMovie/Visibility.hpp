@@ -26,6 +26,8 @@
 #ifndef SFEMOVIE_VISIBILITY_HPP
 #define SFEMOVIE_VISIBILITY_HPP
 
+#include <SFML/System.hpp>
+
 /** Define portable import / export macros
  */
 #if !defined SFEMOVIE_STATIC
