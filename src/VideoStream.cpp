@@ -126,6 +126,20 @@ namespace sfe
         }
     }
     
+    void VideoStream::fastForward(sf::Time targetPosition)
+    {
+        while (computePosition() < targetPosition)
+        {
+            // We HAVE to decode the frames to get a full image when we reach the target position
+            if (! onGetData(m_texture))
+            {
+                sfeLogError("Error while fast forwarding video stream up to position " +
+                            s(targetPosition.asSeconds()) + "s");
+                return;
+            }
+        }
+    }
+    
     bool VideoStream::onGetData(sf::Texture& texture)
     {
         AVPacket* packet = popEncodedData();

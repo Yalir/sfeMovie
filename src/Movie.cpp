@@ -143,9 +143,9 @@ namespace sfe
     }
     
     
-    void Movie::setPlayingOffset(const sf::Time& targetSeekTime, int seekingMethod)
+    void Movie::setPlayingOffset(const sf::Time& targetSeekTime)
     {
-        m_impl->setPlayingOffset(targetSeekTime, seekingMethod);
+        m_impl->setPlayingOffset(targetSeekTime);
     }
     
     

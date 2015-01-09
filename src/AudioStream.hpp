@@ -61,6 +61,10 @@ namespace sfe
          */
         void update() override;
         
+        /** @see Stream::fastForward()
+         */
+        void fastForward(sf::Time targetPosition) override;
+        
         using sf::SoundStream::setVolume;
         using sf::SoundStream::getVolume;
         using sf::SoundStream::getSampleRate;
@@ -96,6 +100,10 @@ namespace sfe
          * @param outSamplesLength [out] the length of @a outSamples in bytes
          */
         void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
+        
+        /** Compute how much time would be covered by the audio samples in the given packet
+         */
+        sf::Time packetDuration(const AVPacket* packet) const;
         
         // Timer::Observer interface
         void willPlay(const Timer &timer) override;
