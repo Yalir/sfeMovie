@@ -103,13 +103,7 @@ namespace sfe
         {
             sfeLogError("Movie::selectStream() - cannot select a stream with no opened media");
             return false;
-        }
-        
-        if (m_timer->getStatus() != Stopped)
-        {
-            sfeLogError("Movie::selectStream() - cannot select a stream while media is not stopped");
-            return false;
-        }
+        }   
         
         std::map<int, std::shared_ptr<Stream> > streams = m_demuxer->getStreams();
         std::map<int, std::shared_ptr<Stream> >::iterator it = streams.find(streamDescriptor.identifier);

@@ -33,7 +33,7 @@ StreamSelector::StreamSelector(sfe::Movie& movie)
 {
     m_selectedStreamIndexes[sfe::Video] = 0;
     m_selectedStreamIndexes[sfe::Audio] = 0;
-    m_selectedStreamIndexes[sfe::Subtitle] = -1;
+    m_selectedStreamIndexes[sfe::Subtitle] = 0;
     
     m_streams[sfe::Video] = &movie.getStreams(sfe::Video);
     m_streams[sfe::Audio] = &movie.getStreams(sfe::Audio);
