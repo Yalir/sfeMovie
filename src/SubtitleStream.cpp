@@ -36,19 +36,21 @@ extern "C"
 #include <cassert>
 #include <stdint.h>
 
-
 namespace sfe
 {
     const int RGBASize = 4;
     
     SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
-    Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate)
+    Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate), m_library(nullptr) , m_renderer(nullptr)
     {
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
-        CHECK((desc->props & AV_CODEC_PROP_BITMAP_SUB) != 0,
-              "Subtitle stream doesn't provide bitmap subtitles, this is not supported yet!"
-              "\nSee https://github.com/Yalir/sfeMovie/issues/7");
+        
+        if((desc->props & AV_CODEC_PROP_BITMAP_SUB))
+        {
+			m_library  = ass_library_init();
+			m_renderer = ass_renderer_init(m_library);
+		}
     }
     
     /** Default destructor

@@ -32,6 +32,10 @@
 #include <list>
 #include <utility>
 
+extern "C"
+{
+#include <ass/ass.h>
+}
 
 namespace sfe
 {
@@ -109,6 +113,9 @@ namespace sfe
         
         std::list< std::shared_ptr<SubtitleData> > m_pendingSubtitles;
         std::list< std::shared_ptr<SubtitleData> > m_visibleSubtitles;
+        
+        ASS_Library    *m_library;
+		ASS_Renderer   *m_renderer;
     };
     
 };
