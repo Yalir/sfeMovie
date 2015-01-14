@@ -75,6 +75,13 @@ set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with t
 add_subdirectory(FFmpeg)
 
 #################################################################################################################
+# ============================================== LIBASS SETUP ================================================= #
+#################################################################################################################
+
+find_package (ASS REQUIRED)
+message(STATUS "LIBASS libraries: ${LIBASS_LIBRARY}")
+
+#################################################################################################################
 # ================================================ SFML SETUP ================================================= #
 #################################################################################################################
 
@@ -126,9 +133,9 @@ endif()
 source_group(Sources FILES ${SOURCE_FILES})
 
 # Set the search directories for compiling and link editing
-set(SFEMOVIE_INCLUDE_DIRS "${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
+set(SFEMOVIE_INCLUDE_DIRS "${LIBASS_INCLUDE_DIR};${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
 include_directories (${SFEMOVIE_INCLUDE_DIRS})
-message (STATUS "Headers directories: ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
+message (STATUS "Headers directories: ${LIBASS_INCLUDE_DIR} ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
 
 # Define the source files sfe should compile
 if (SFEMOVIE_BUILD_STATIC)
@@ -149,8 +156,8 @@ if (SFEMOVIE_BUILD_STATIC)
     message(WARNING "You chose to build a static library of sfeMovie, this assumes that you will also statically link your software against SFML."
             "sfeMovie will be built with SFML_STATIC defined.")
 else()
-    message(STATUS "Link sfeMovie against: ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
-    target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
+    message(STATUS "Link sfeMovie against: ${LIBASS_LIBRARY} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
+    target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${LIBASS_LIBRARY} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
 endif()
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
