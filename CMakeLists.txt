@@ -79,7 +79,7 @@ add_subdirectory(FFmpeg)
 #################################################################################################################
 
 find_package (ASS REQUIRED)
-message(STATUS "LIBASS libraries: ${LIBASS_LIBRARY}")
+message(STATUS "LIBASS libraries: ${LIBASS_LIBRARIES}")
 
 #################################################################################################################
 # ================================================ SFML SETUP ================================================= #
@@ -156,8 +156,8 @@ if (SFEMOVIE_BUILD_STATIC)
     message(WARNING "You chose to build a static library of sfeMovie, this assumes that you will also statically link your software against SFML."
             "sfeMovie will be built with SFML_STATIC defined.")
 else()
-    message(STATUS "Link sfeMovie against: ${LIBASS_LIBRARY} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
-    target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${LIBASS_LIBRARY} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
+    message(STATUS "Link sfeMovie against: ${LIBASS_LIBRARIES} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
+    target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${LIBASS_LIBRARIES} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
 endif()
 
 if (${LINK_AGAINST_INTERNAL_FFMPEG})
