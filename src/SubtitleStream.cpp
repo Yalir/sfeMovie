@@ -57,6 +57,18 @@ namespace sfe
      */
     SubtitleStream::~SubtitleStream()
     {
+		if(m_renderer)
+		{
+			ass_renderer_done(m_renderer);
+			m_renderer = nullptr;
+		}
+		
+		if(m_library)
+		{
+			ass_library_done(m_library);
+			m_library = nullptr;
+		}
+			
     }
     
     MediaType SubtitleStream::getStreamKind() const
