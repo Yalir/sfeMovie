@@ -160,8 +160,16 @@ namespace sfe
         do
         {
             currentPosition = computePosition();
-            
             AVPacket* packet = popEncodedData();
+            
+            if (! packet)
+            {
+                sfeLogError("Fast-forwarding failure in audio stream, " +
+                            "did reach end of stream (target position=" +
+                            s(targetPosition.asSeconds()) + "s)");
+                return;
+            }
+            
             pktDuration = packetDuration(packet);
             
             if (currentPosition + pktDuration > targetPosition)
@@ -362,8 +370,11 @@ namespace sfe
     
     void AudioStream::didPause(const Timer& timer, sfe::Status previousStatus)
     {
-        sf::SoundStream::pause();
-        waitForStatusUpdate(*this, sf::SoundStream::Paused);
+        if (sf::SoundStream::getStatus() == sf::SoundStream::Playing)
+        {
+            sf::SoundStream::pause();
+            waitForStatusUpdate(*this, sf::SoundStream::Paused);
+        }
         
         Stream::didPause(timer, previousStatus);
     }
