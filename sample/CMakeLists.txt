@@ -28,7 +28,6 @@ if (SFEMOVIE_BUILD_STATIC)
 	target_link_libraries(
 		${SFEMOVIE_SAMPLE}
 		${SFEMOVIE_LIB}
-		${LIBASS_LIBRARIES}
 		${FFMPEG_LIBRARIES}
 		${OTHER_LIBRARIES}
 		${SFML_LIBRARIES}
@@ -37,7 +36,6 @@ else()
 	target_link_libraries(
 	    ${SFEMOVIE_SAMPLE}
 	    ${SFEMOVIE_LIB}
-	    ${LIBASS_LIBRARIES}
 	    ${SFML_LIBRARIES}
 	    ${SFML_DEPENDENCIES}
 	)

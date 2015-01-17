@@ -46,7 +46,7 @@ namespace sfe
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
         
-        if((desc->props & AV_CODEC_PROP_BITMAP_SUB))
+        if((desc->props & AV_CODEC_PROP_BITMAP_SUB)==0)
         {
 			m_library  = ass_library_init();
 			m_renderer = ass_renderer_init(m_library);
