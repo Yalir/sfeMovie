@@ -187,8 +187,9 @@ namespace sfe
                                   + s((currentPosition - targetPosition).asMicroseconds()) + "us");
                 
                 m_extraAudioTime = sf::Time::Zero;
-                av_free_packet(packet);
-                av_free(packet);
+                
+                // Reinsert, we don't want to decode now
+                prependEncodedData(packet);
             }
             else if (currentPosition + pktDuration > targetPosition)
             {
