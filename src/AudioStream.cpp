@@ -260,7 +260,9 @@ namespace sfe
                         else
                         {
                             CHECK(((samplesToDiscard / std::min(samplesCount, samplesToDiscard))
-                                   - (m_extraAudioTime / samplesToTime(samplesCount))) < 0.01,
+                                   - (m_extraAudioTime.asMicroseconds()
+                                      / samplesToTime(samplesCount).asMicroseconds()))
+                                  < 0.1,
                                   "It looks like an invalid amount of audio samples was discarded, "
                                   "please report this bug");
                             
