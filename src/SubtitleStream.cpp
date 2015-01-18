@@ -125,7 +125,7 @@ namespace sfe
         AVPacket* packet = popEncodedData();
         AVSubtitle sub;
         int32_t gotSub = 0;
-        uint32_t goOn = 0;
+        int32_t goOn = 0;
         int64_t pts = 0;
         
         if (packet)
@@ -169,7 +169,7 @@ namespace sfe
                 }
             }
         }
-        return (goOn != 0);
+        return (goOn >= 0);
     }
     
     
