@@ -184,7 +184,7 @@ namespace sfe
     }
     
     
-    SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded)
+    SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded,ASS_Track* track)
     {
         assert(sub != nullptr);
         
@@ -229,21 +229,7 @@ namespace sfe
             }
             else
             {
-                //TODO: add libass code
-                if (subItem->text != nullptr)
-                {
-                    if (subItem->type == SUBTITLE_TEXT)
-                        sfeLogError("Unsupported subtitle type: it would require text support");
-                    else
-                        sfeLogError("Unsupported subtitle type: it can be approximated with text");
-                }
-                else if (subItem->ass != nullptr)
-                {
-                    if (subItem->type == SUBTITLE_ASS)
-                        sfeLogError("Unsupported subtitle type: it would require ASS support");
-                    else
-                        sfeLogError("Unsupported subtitle type: it could be rendered with ASS support");
-                }
+                ass_process_data(track, subItem->ass, strlen(subItem->ass));
             }
         }
     }

@@ -98,8 +98,9 @@ namespace sfe
              *
              * @param succeeded Whether this structure contains valid decoded subtitles
              * after construction time
+             * @param track The libass track we write our subtitle to
              */
-            SubtitleData(AVSubtitle* sub, bool& succeeded);
+            SubtitleData(AVSubtitle* sub, bool& succeeded,ASS_Track* track);
         };
         
         /** Decode the packages that were send to the stream by the demuxer
