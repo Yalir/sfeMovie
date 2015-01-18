@@ -96,14 +96,23 @@ namespace sfe
          *
          * @param frame the audio samples to convert
          * @param outSamples [out] the convertedSamples
-         * @param outNbSamples [out] the count of samples in @a outSamples
-         * @param outSamplesLength [out] the length of @a outSamples in bytes
+         * @param outNbSamples [out] the count of signed 16 bits samples in @a outSamples
          */
-        void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
+        void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples);
         
         /** Compute how much time would be covered by the audio samples in the given packet
          */
         sf::Time packetDuration(const AVPacket* packet) const;
+        
+        /** @return the amount of samples that would last the given time with the current audio stream
+         * properties
+         */
+        int timeToSamples(const sf::Time& time) const;
+        
+        /** @return the time that would last the given amount of samples with the current audio stream
+         * properties
+         */
+        sf::Time samplesToTime(int nbSamples) const;
         
         // Timer::Observer interface
         void willPlay(const Timer &timer) override;
@@ -112,11 +121,12 @@ namespace sfe
         void didStop(const Timer& timer, sfe::Status previousStatus) override;
         
         // Public properties
-        unsigned m_sampleRate;
+        unsigned m_sampleRatePerChannel;
         
         // Private data
         sf::Int16* m_samplesBuffer;
         AVFrame* m_audioFrame;
+        sf::Time m_extraAudioTime;
         
         // Resampling
         struct SwrContext* m_swrCtx;

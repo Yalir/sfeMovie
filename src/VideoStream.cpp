@@ -177,7 +177,6 @@ namespace sfe
                 
                 if (!gotFrame && goOn)
                 {
-                    sfeLogDebug("no image in this packet, reading further");
                     packet = popEncodedData();
                 }
             }

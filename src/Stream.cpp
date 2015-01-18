@@ -169,8 +169,6 @@ namespace sfe
             av_free_packet(pkt);
             av_free(pkt);
         }
-        
-        sfeLogDebug("Flushed " + mediaTypeToString(getStreamKind()) + " stream!");
     }
     
     bool Stream::needsMoreData() const
@@ -222,7 +220,8 @@ namespace sfe
                 timestamp = packet->pts - startTime;
             }
             
-            return sf::seconds(timestamp * av_q2d(m_stream->time_base));
+            AVRational seconds = av_mul_q(av_make_q(timestamp, 1), m_stream->time_base);
+            return sf::milliseconds(1000 * av_q2d(seconds));
         }
     }
     
