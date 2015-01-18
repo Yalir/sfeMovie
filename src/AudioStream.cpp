@@ -259,7 +259,7 @@ namespace sfe
                         }
                         else
                         {
-                            CHECK(((samplesToDiscard / std::min(samplesCount, samplesToDiscard))
+                            CHECK(((samplesToDiscard / std::max(samplesCount, samplesToDiscard))
                                    - (m_extraAudioTime.asMicroseconds()
                                       / samplesToTime(samplesCount).asMicroseconds()))
                                   < 0.1,
