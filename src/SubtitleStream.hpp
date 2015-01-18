@@ -107,15 +107,23 @@ namespace sfe
          * @return if the stream is finished or not
          */
         bool onGetData();
+
+        /** Flush buffers that aren't needed anymore on seeking
+        */
         virtual void flushBuffers();
         
+        /** Libass message callback
+        */
+        static void ass_log(int ass_level, const char *fmt, va_list args, void *data);
+
         Delegate& m_delegate;
         
         std::list< std::shared_ptr<SubtitleData> > m_pendingSubtitles;
         std::list< std::shared_ptr<SubtitleData> > m_visibleSubtitles;
         
-        ASS_Library    *m_library;
-		ASS_Renderer   *m_renderer;
+        ASS_Library*    m_library;
+		ASS_Renderer*   m_renderer;
+        ASS_Track*      m_track;
     };
     
 };

@@ -41,7 +41,7 @@ namespace sfe
     const int RGBASize = 4;
     
     SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
-    Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate), m_library(nullptr) , m_renderer(nullptr)
+        Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate), m_library(nullptr), m_renderer(nullptr), m_track(nullptr)
     {
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
@@ -49,7 +49,12 @@ namespace sfe
         if((desc->props & AV_CODEC_PROP_BITMAP_SUB)==0)
         {
 			m_library  = ass_library_init();
+            ass_set_message_cb(m_library, ass_log,nullptr);
+
 			m_renderer = ass_renderer_init(m_library);
+            m_track    = ass_new_track(m_library);
+
+           
 		}
     }
     
@@ -57,6 +62,12 @@ namespace sfe
      */
     SubtitleStream::~SubtitleStream()
     {
+        if (m_track)
+        {
+            ass_free_track(m_track);
+            m_track = nullptr;
+        }
+
 		if(m_renderer)
 		{
 			ass_renderer_done(m_renderer);
@@ -241,5 +252,12 @@ namespace sfe
     {
         m_delegate.didWipeOutSubtitles(*this);
         Stream::flushBuffers();
+    }
+
+    void SubtitleStream::ass_log(int ass_level, const char *fmt, va_list args, void *data)
+    {
+        char buffer[100];
+        sprintf(buffer, fmt, args);
+        sfeLogDebug(buffer);
     }
 }
