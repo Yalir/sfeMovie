@@ -79,8 +79,9 @@ namespace sfe
          */
         void update() override;
         
-        
-        void fastForward(sf::Time targetPosition) override;
+        /** @see Stream::fastForward()
+         */
+        bool fastForward(sf::Time targetPosition) override;
     private:
         bool onGetData(sf::Texture& texture);
         

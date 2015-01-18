@@ -126,7 +126,7 @@ namespace sfe
         }
     }
     
-    void VideoStream::fastForward(sf::Time targetPosition)
+    bool VideoStream::fastForward(sf::Time targetPosition)
     {
         while (computePosition() < targetPosition)
         {
@@ -135,9 +135,11 @@ namespace sfe
             {
                 sfeLogError("Error while fast forwarding video stream up to position " +
                             s(targetPosition.asSeconds()) + "s");
-                return;
+                return false;
             }
         }
+        
+        return true;
     }
     
     bool VideoStream::onGetData(sf::Texture& texture)

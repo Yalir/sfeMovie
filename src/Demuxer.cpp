@@ -540,7 +540,7 @@ namespace sfe
         m_eofReached = false;
     }
     
-    void Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
+    bool Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
     {
         resetEndOfFileStatus();
         sf::Time newPosition = timer.getOffset();
@@ -572,7 +572,10 @@ namespace sfe
             // Seek to beginning
             int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
             if (err < 0)
+            {
                 sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
+                return false;
+            }
         }
         else // Seeking to some other position
         {
@@ -672,7 +675,7 @@ namespace sfe
                     if (ffmpegSeekFlags & AVSEEK_FLAG_ANY)
                     {
                         sfeLogError("Seeking is really broken in the media, giving up");
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -687,5 +690,7 @@ namespace sfe
             }
             while (tooEarlyCount != 0 || tooLateCount != 0);
         }
+        
+        return true;
     }
 }

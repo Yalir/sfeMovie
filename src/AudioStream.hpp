@@ -63,7 +63,7 @@ namespace sfe
         
         /** @see Stream::fastForward()
          */
-        void fastForward(sf::Time targetPosition) override;
+        bool fastForward(sf::Time targetPosition) override;
         
         using sf::SoundStream::setVolume;
         using sf::SoundStream::getVolume;

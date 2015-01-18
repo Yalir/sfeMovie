@@ -231,7 +231,7 @@ namespace sfe
         m_visibleSubtitles.clear();
     }
     
-    void SubtitleStream::fastForward(sf::Time targetPosition)
+    bool SubtitleStream::fastForward(sf::Time targetPosition)
     {
         while(hasPackets())
         {
@@ -257,5 +257,7 @@ namespace sfe
 			else
 				++it;
 		}
+        
+        return true;
 	}
 }

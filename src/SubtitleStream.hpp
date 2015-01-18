@@ -82,14 +82,9 @@ namespace sfe
          */
         virtual void flushBuffers() override;
         
-        /** Discard the data not needed to start playback at the given position
-         *
-         * Every single bit of unneeded data must be discarded as streams synchronization accuracy will
-         * depend on this
-         *
-         * @param targetPosition the position for which the stream is expected to be ready to play
+        /** @see Stream::fastForward()
          */
-        virtual void fastForward(sf::Time targetPosition);
+        virtual bool fastForward(sf::Time targetPosition);
         
     private:
         /** The struct we use to store our subtitles

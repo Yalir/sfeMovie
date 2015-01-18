@@ -139,8 +139,9 @@ namespace sfe
          * depend on this
          *
          * @param targetPosition the position for which the stream is expected to be ready to play
+         * @return true is fast forwarding could be done successfully, false otherwise
          */
-        virtual void fastForward(sf::Time targetPosition) = 0;
+        virtual bool fastForward(sf::Time targetPosition) = 0;
         
         /** @return a textual description of the current stream
          */
@@ -164,7 +165,7 @@ namespace sfe
         void didPlay(const Timer& timer, Status previousStatus) override;
         void didPause(const Timer& timer, Status previousStatus) override;
         void didStop(const Timer& timer, Status previousStatus) override;
-        void didSeek(const Timer& timer, sf::Time oldPosition) override;
+        bool didSeek(const Timer& timer, sf::Time oldPosition) override;
         
         /** @return true if any raw packet for the current stream is queued
          */

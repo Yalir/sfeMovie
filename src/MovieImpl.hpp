@@ -133,7 +133,7 @@ namespace sfe
         
         /** @see Movie::setPlayingOffset()
          */
-        void setPlayingOffset(const sf::Time& targetSeekTime);
+        bool setPlayingOffset(const sf::Time& targetSeekTime);
         
         /** @see Movie::getCurrentImage()
          */

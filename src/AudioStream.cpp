@@ -152,7 +152,7 @@ namespace sfe
         }
     }
     
-    void AudioStream::fastForward(sf::Time targetPosition)
+    bool AudioStream::fastForward(sf::Time targetPosition)
     {
         sf::Time currentPosition;
         sf::Time pktDuration;
@@ -167,7 +167,7 @@ namespace sfe
                 sfeLogError("Fast-forwarding failure in audio stream, " +
                             "did reach end of stream (target position=" +
                             s(targetPosition.asSeconds()) + "s)");
-                return;
+                return false;
             }
             
             pktDuration = packetDuration(packet);
@@ -184,6 +184,8 @@ namespace sfe
             }
         }
         while (currentPosition + pktDuration <= targetPosition);
+        
+        return true;
     }
     
     bool AudioStream::onGetData(sf::SoundStream::Chunk& data)

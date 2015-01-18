@@ -80,8 +80,9 @@ namespace sfe
              *
              * @param timer the timer that generated the notification
              * @param position the position before seeking
+             * @return true if the observer successfully responded to the seeking event
              */
-            virtual void didSeek(const Timer& timer, sf::Time oldPosition);
+            virtual bool didSeek(const Timer& timer, sf::Time oldPosition);
         };
         
         /** Default constructor
@@ -117,11 +118,13 @@ namespace sfe
         
         /** Seek to the given position, the timer's offset is updated accordingly
          *
-         * If the timer was playing, it is paused, seeking occurs, then it is resumed
+         * If the timer was playing, it is paused, seeking occurs, then it is resumed.
+         * The timer offset is always updated, even if seeking fails
          *
          * @param position the new wished timer position
+         * @return true if seeking succeeded, false otherwise
          */
-        void seek(sf::Time position);
+        bool seek(sf::Time position);
         
         /** Return this timer status
          *
@@ -160,8 +163,9 @@ namespace sfe
          * When the observer receives the notification, the timer is guaranteed to be paused or stopped
          *
          * @param oldPosition the timer position before seeking
+         * @return true if all the observers successfully responsed to the seek event
          */
-        void notifyObservers(sf::Time oldPosition);
+        bool notifyObservers(sf::Time oldPosition);
         
         sf::Time m_pausedTime;
         Status m_status;

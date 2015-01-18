@@ -190,8 +190,10 @@ namespace sfe
         /** Seek up to @a targetSeekTime
          *
          * @param targetSeekTime the new expected playing offset
+         * @return true is seeking was successfull on all the streams, false otherwise
+         * If seeking failed, it is not guaranteed to still be playable and synchronized
          */
-        void setPlayingOffset(const sf::Time& targetSeekTime);
+        bool setPlayingOffset(const sf::Time& targetSeekTime);
         
         /** @brief Returns the latest movie image
          *

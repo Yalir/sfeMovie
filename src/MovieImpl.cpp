@@ -441,8 +441,10 @@ namespace sfe
         return sf::Time::Zero;
     }
     
-    void MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime)
+    bool MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime)
     {
+        bool seekingResult = false;
+        
         if (m_demuxer && m_timer)
         {
             if (targetSeekTime < sf::Time::Zero || targetSeekTime >= getDuration())
@@ -451,13 +453,15 @@ namespace sfe
             }
             else
             {
-                m_timer->seek(targetSeekTime);
+                seekingResult = m_timer->seek(targetSeekTime);
             }
         }
         else
         {
             sfeLogError("Movie - No media loaded, cannot seek");
         }
+        
+        return seekingResult;
     }
     
     const sf::Texture& MovieImpl::getCurrentImage() const
