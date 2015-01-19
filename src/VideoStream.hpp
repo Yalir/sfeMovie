@@ -79,6 +79,10 @@ namespace sfe
          */
         void update() override;
         
+        /** @see Stream::flushBuffers()
+         */
+        virtual void flushBuffers();
+        
         /** @see Stream::fastForward()
          */
         bool fastForward(sf::Time targetPosition) override;
@@ -133,6 +137,7 @@ namespace sfe
         AVFrame* m_rawVideoFrame;
         uint8_t *m_rgbaVideoBuffer[4];
         int m_rgbaVideoLinesize[4];
+        sf::Time m_codecBufferedTime;
         Delegate& m_delegate;
         
         // Rescaler data

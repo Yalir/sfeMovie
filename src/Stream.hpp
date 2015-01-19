@@ -133,6 +133,11 @@ namespace sfe
          */
         sf::Time computePosition();
         
+        /** Compute how much time would be covered by the given packet, it's the diff between
+         * the current packet pts, and the next packet pts
+         */
+        sf::Time packetDuration(const AVPacket* packet) const;
+        
         /** Discard the data not needed to start playback at the given position
          *
          * Every single bit of unneeded data must be discarded as streams synchronization accuracy will

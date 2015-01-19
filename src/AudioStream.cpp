@@ -386,16 +386,6 @@ namespace sfe
         outSamples = m_dstData[0];
     }
     
-    sf::Time AudioStream::packetDuration(const AVPacket* packet) const
-    {
-        CHECK(packet, "inconcistency error: null packet");
-        CHECK(packet->stream_index == m_streamID, "Asking for audio duration of a packet for a different stream!");
-        CHECK(packet->duration != 0, "packet duration is unknown");
-        
-        AVRational seconds = av_mul_q(av_make_q(packet->duration, 1), m_stream->time_base);
-        return sf::seconds(av_q2d(seconds));
-    }
-    
     int AudioStream::timeToSamples(const sf::Time& time) const
     {
         const int channelCount = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);

@@ -225,6 +225,22 @@ namespace sfe
         }
     }
     
+    sf::Time Stream::packetDuration(const AVPacket* packet) const
+    {
+        CHECK(packet, "inconcistency error: null packet");
+        CHECK(packet->stream_index == m_streamID, "Asking for duration of a packet for a different stream!");
+        
+        if (packet->duration != 0)
+        {
+            AVRational seconds = av_mul_q(av_make_q(packet->duration, 1), m_stream->time_base);
+            return sf::seconds(av_q2d(seconds));
+        }
+        else
+        {
+            return sf::seconds(1. / av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, nullptr)));
+        }
+    }
+    
     std::string Stream::description() const
     {
         return AVStreamDescription(m_stream);

@@ -100,10 +100,6 @@ namespace sfe
          */
         void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples);
         
-        /** Compute how much time would be covered by the audio samples in the given packet
-         */
-        sf::Time packetDuration(const AVPacket* packet) const;
-        
         /** @return the amount of samples that would last the given time with the current audio stream
          * properties
          */
