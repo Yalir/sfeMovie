@@ -54,7 +54,11 @@ namespace sfe
 			m_renderer = ass_renderer_init(m_library);
             m_track    = ass_new_track(m_library);
 
-           
+            ass_set_frame_size(m_renderer, m_stream->codec->width, m_stream->codec->height);
+            ass_set_fonts(m_renderer, NULL, NULL, 1, NULL , 1);
+            ass_set_font_scale(m_renderer, 5.0f);
+
+            ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header), m_stream->codec->subtitle_header_size);
 		}
     }
     
@@ -102,7 +106,8 @@ namespace sfe
             if (m_pendingSubtitles.front()->start < m_timer->getOffset())
             {
                 std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
-                
+
+                auto time = m_timer->getOffset().asMilliseconds();
                 //this is the case for ass subtitles
                 if (iter->sprites.size() < 1)
                 {
@@ -271,7 +276,7 @@ namespace sfe
 
     void SubtitleStream::ass_log(int ass_level, const char *fmt, va_list args, void *data)
     {
-        char buffer[100];
+        char buffer[512];
 
         vsprintf(buffer, fmt, args);
         sfeLogDebug(buffer);
