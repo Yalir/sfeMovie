@@ -163,7 +163,7 @@ namespace sfe
         
         do
         {
-            currentPosition = computePosition();
+            currentPosition = computeEncodedPosition();
             AVPacket* packet = popEncodedData();
             
             if (! packet)

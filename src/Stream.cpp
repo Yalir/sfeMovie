@@ -191,7 +191,7 @@ namespace sfe
         return m_language;
     }
     
-    sf::Time Stream::computePosition()
+    sf::Time Stream::computeEncodedPosition()
     {
         if (!m_packetList.size())
         {

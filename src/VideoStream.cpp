@@ -134,7 +134,7 @@ namespace sfe
     
     bool VideoStream::fastForward(sf::Time targetPosition)
     {
-        while (computePosition() < targetPosition)
+        while (computeEncodedPosition() < targetPosition)
         {
             // We HAVE to decode the frames to get a full image when we reach the target position
             if (! onGetData(m_texture))
@@ -203,7 +203,7 @@ namespace sfe
     
     sf::Time VideoStream::getSynchronizationGap()
     {
-        return (computePosition() - m_codecBufferedTime) - m_timer->getOffset();
+        return (computeEncodedPosition() - m_codecBufferedTime) - m_timer->getOffset();
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)

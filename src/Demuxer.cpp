@@ -612,7 +612,7 @@ namespace sfe
                 // Compute the new gap
                 for (std::shared_ptr<Stream> stream : connectedStreams)
                 {
-                    sf::Time gap = stream->computePosition() - newPosition;
+                    sf::Time gap = stream->computeEncodedPosition() - newPosition;
                     seekingGaps[stream] = gap;
                 }
                 

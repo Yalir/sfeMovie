@@ -131,7 +131,7 @@ namespace sfe
         
         /** Compute the stream position in the media, by possibly fetching a packet
          */
-        sf::Time computePosition();
+        sf::Time computeEncodedPosition();
         
         /** Compute how much time would be covered by the given packet, it's the diff between
          * the current packet pts, and the next packet pts
