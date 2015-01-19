@@ -103,6 +103,33 @@ namespace sfe
             {
                 std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
                 
+                //this is the case for ass subtitles
+                if (iter->sprites.size() < 1)
+                {
+                    int change = 0;
+                    ASS_Image* img = ass_render_frame(m_renderer, m_track, m_timer->getOffset().asMilliseconds(), &change);
+                    if (change)
+                    {
+                        while (img)
+                        {
+                            iter->sprites.push_back(sf::Sprite());
+                            iter->textures.push_back(sf::Texture());
+                            iter->positions.push_back(sf::Vector2i(img->dst_x, img->dst_y));
+
+                            sf::Sprite& sprite = iter->sprites.back();
+                            sf::Texture& texture = iter->textures.back();
+
+                            texture.create(img->w, img->h);
+                            texture.update(img->bitmap);
+                            texture.setSmooth(true);
+
+                            sprite.setTexture(texture);
+
+                            img = img->next;
+                        }
+                    }
+                }
+
                 m_delegate.didUpdateSubtitle(*this, iter->sprites, iter->positions);
                 m_visibleSubtitles.push_back(iter);
                 m_pendingSubtitles.pop_front();
@@ -157,7 +184,7 @@ namespace sfe
                 if (gotSub && pts)
                 {
                     bool succeeded = false;
-                    std::shared_ptr<SubtitleData> sfeSub = std::make_shared<SubtitleData>(&sub, succeeded);
+                    std::shared_ptr<SubtitleData> sfeSub = std::make_shared<SubtitleData>(&sub, succeeded,m_track);
                     
                     if (succeeded)
                         m_pendingSubtitles.push_back(sfeSub);
@@ -193,19 +220,19 @@ namespace sfe
         end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
         
         for (unsigned int i = 0; i < sub->num_rects; ++i)
-        {
-            
-            sprites.push_back(sf::Sprite());
-            textures.push_back(sf::Texture());
-            
-            sf::Sprite& sprite = sprites.back();
-            sf::Texture& texture = textures.back();
+        {           
             AVSubtitleRect* subItem = sub->rects[i];
             
             AVSubtitleType type = subItem->type;
             
             if (type == SUBTITLE_BITMAP)
             {
+                sprites.push_back(sf::Sprite());
+                textures.push_back(sf::Texture());
+
+                sf::Sprite& sprite = sprites.back();
+                sf::Texture& texture = textures.back();
+
                 CHECK(subItem->pict.data != nullptr, "FFmpeg inconcistency error");
                 CHECK(subItem->w * subItem->h > 0, "FFmpeg inconcistency error");
                 
@@ -230,6 +257,8 @@ namespace sfe
             else
             {
                 ass_process_data(track, subItem->ass, strlen(subItem->ass));
+
+                succeeded = true;
             }
         }
     }
@@ -243,7 +272,8 @@ namespace sfe
     void SubtitleStream::ass_log(int ass_level, const char *fmt, va_list args, void *data)
     {
         char buffer[100];
-        sprintf(buffer, fmt, args);
+
+        vsprintf(buffer, fmt, args);
         sfeLogDebug(buffer);
     }
 }
