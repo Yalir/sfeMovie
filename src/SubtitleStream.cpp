@@ -36,6 +36,12 @@ extern "C"
 #include <cassert>
 #include <stdint.h>
 
+
+#define _r(c) ((c) >> 24)
+#define _g(c) (((c) >> 16) & 0xFF)
+#define _b(c) (((c) >> 8) & 0xFF)
+#define _a(c) (255 - ((c) & 0xFF))
+
 namespace sfe
 {
     const int RGBASize = 4;
@@ -55,8 +61,8 @@ namespace sfe
             m_track    = ass_new_track(m_library);
 
             ass_set_frame_size(m_renderer, m_stream->codec->width, m_stream->codec->height);
-            ass_set_fonts(m_renderer, NULL, NULL, 1, NULL , 1);
-            ass_set_font_scale(m_renderer, 5.0f);
+            ass_set_fonts(m_renderer, NULL, "Sans", 1, NULL, 1);
+            ass_set_font_scale(m_renderer, 10.0f);
 
             ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header), m_stream->codec->subtitle_header_size);
 		}
@@ -113,25 +119,50 @@ namespace sfe
                 {
                     int change = 0;
                     ASS_Image* img = ass_render_frame(m_renderer, m_track, m_timer->getOffset().asMilliseconds(), &change);
+                   
                     if (change)
-                    {
+                    {                     
+
                         while (img)
                         {
+                            if (!img->w || !img->h) continue;
+
+                            uint8_t     r = img->color >> 24,
+                                        g = img->color >> 16 & 255,
+                                        b = img->color >> 8 & 255,
+                                        a = 255 - (img->color & 255);
+
+                            sf::Image buffer;
+                            buffer.create(img->w, img->h);
+
+                            iter->positions.push_back(sf::Vector2i(img->dst_x, img->dst_y));
+
+                            for (int y = 0; y < img->h; ++y)
+                            {
+                                const unsigned char *map = img->bitmap + y * img->stride;
+
+                                for (int x = 0; x < img->w; ++x)
+                                {
+                                    uint8_t alpha = (unsigned)a * *map++;
+                                    buffer.setPixel(x, y, sf::Color(r,g,b,alpha));
+                                }
+                            }
+
+                            img = img->next;
+
                             iter->sprites.push_back(sf::Sprite());
                             iter->textures.push_back(sf::Texture());
-                            iter->positions.push_back(sf::Vector2i(img->dst_x, img->dst_y));
+
 
                             sf::Sprite& sprite = iter->sprites.back();
                             sf::Texture& texture = iter->textures.back();
 
-                            texture.create(img->w, img->h);
-                            texture.update(img->bitmap);
+                            texture.create(buffer.getSize().x, buffer.getSize().y);
+                            texture.update(buffer);
                             texture.setSmooth(true);
 
                             sprite.setTexture(texture);
-
-                            img = img->next;
-                        }
+                        }                       
                     }
                 }
 
