@@ -44,8 +44,7 @@ namespace sfe
     m_rgbaVideoBuffer(),
     m_rgbaVideoLinesize(),
     m_delegate(delegate),
-    m_swsCtx(nullptr),
-    m_lastDecodedTimestamp(sf::Time::Zero)
+    m_swsCtx(nullptr)
     {
         int err;
         
@@ -148,6 +147,12 @@ namespace sfe
         return true;
     }
     
+    void VideoStream::preload()
+    {
+        sfeLogDebug("Preload video image");
+        onGetData(m_texture);
+    }
+    
     bool VideoStream::onGetData(sf::Texture& texture)
     {
         AVPacket* packet = popEncodedData();
@@ -223,14 +228,6 @@ namespace sfe
                 packet->size -= decodedLength;
             }
             
-            if (gotFrame)
-            {
-                int64_t timestamp = av_frame_get_best_effort_timestamp(outputFrame);
-                int64_t startTime = m_stream->start_time != AV_NOPTS_VALUE ? m_stream->start_time : 0;
-                sf::Int64 ms = 1000 * (timestamp - startTime) * av_q2d(m_stream->time_base);
-                m_lastDecodedTimestamp = sf::milliseconds(ms);
-            }
-            
             return true;
         }
         else
@@ -259,12 +256,6 @@ namespace sfe
     {
         CHECK(frame, "VideoStream::rescale() - invalid argument");
         sws_scale(m_swsCtx, frame->data, frame->linesize, 0, frame->height, outVideoBuffer, outVideoLinesize);
-    }
-    
-    void VideoStream::preload()
-    {
-        sfeLogDebug("Preload video image");
-        onGetData(m_texture);
     }
     
     void VideoStream::willPlay(const Timer &timer)

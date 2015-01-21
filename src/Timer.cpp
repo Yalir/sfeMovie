@@ -107,7 +107,9 @@ namespace sfe
         
         Status oldStatus = getStatus();
         m_status = Paused;
-        m_pausedTime += m_timer.getElapsedTime();
+        
+        if (oldStatus != Stopped)
+            m_pausedTime += m_timer.getElapsedTime();
         
         notifyObservers(oldStatus, getStatus());
     }
@@ -146,12 +148,6 @@ namespace sfe
     Status Timer::getStatus() const
     {
         return m_status;
-    }
-    
-    void Timer::setOffset(sf::Time offset)
-    {
-        m_pausedTime = offset;
-        m_timer.restart();
     }
     
     sf::Time Timer::getOffset() const

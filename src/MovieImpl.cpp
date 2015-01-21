@@ -188,6 +188,11 @@ namespace sfe
             
             m_timer->stop();
             update();
+            
+            std::shared_ptr<VideoStream> videoStream(m_demuxer->getSelectedVideoStream());
+            
+            if (videoStream)
+                videoStream->preload();
         }
         else
         {
@@ -454,6 +459,9 @@ namespace sfe
             else
             {
                 seekingResult = m_timer->seek(targetSeekTime);
+                
+                if (m_timer->getStatus() == Status::Stopped)
+                    pause();
             }
         }
         else

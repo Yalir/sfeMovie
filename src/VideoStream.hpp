@@ -86,6 +86,10 @@ namespace sfe
         /** @see Stream::fastForward()
          */
         bool fastForward(sf::Time targetPosition) override;
+        
+        /** Load packets until one frame can be decoded
+         */
+        void preload();
     private:
         bool onGetData(sf::Texture& texture);
         
@@ -125,10 +129,6 @@ namespace sfe
          */
         void rescale(AVFrame* frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4]);
         
-        /** Load packets until one frame can be decoded
-         */
-        void preload();
-        
         // Timer::Observer interface
         void willPlay(const Timer &timer) override;
         
@@ -142,8 +142,6 @@ namespace sfe
         
         // Rescaler data
         struct SwsContext *m_swsCtx;
-        
-        sf::Time m_lastDecodedTimestamp;
     };
 }
 
