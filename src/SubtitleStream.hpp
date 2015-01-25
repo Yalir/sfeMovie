@@ -82,6 +82,12 @@ namespace sfe
          */
         bool isPassive() const override;
     private:
+        enum SubtitleType
+        {
+            BITMAP  = 0,
+            ASS     = 1,
+        };
+
         /** The struct we use to store our subtitles
          */
         struct SubtitleData
@@ -94,6 +100,8 @@ namespace sfe
             //when will it disappear (absolute)
             sf::Time end;
             
+            //the type of subtitle
+            SubtitleType type;
             /** Create our subtitle from an AVSubtitle
              *
              * @param succeeded Whether this structure contains valid decoded subtitles

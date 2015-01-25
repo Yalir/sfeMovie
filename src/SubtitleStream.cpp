@@ -61,8 +61,9 @@ namespace sfe
             m_track    = ass_new_track(m_library);
 
             ass_set_frame_size(m_renderer, m_stream->codec->width, m_stream->codec->height);
-            ass_set_fonts(m_renderer, NULL, "Sans", 1, NULL, 1);
+            ass_set_fonts(m_renderer, NULL, NULL , 1, NULL, 1);
             ass_set_font_scale(m_renderer, 10.0f);
+            ass_set_margins(m_renderer, 10, 0, 0, 0);
 
             ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header), m_stream->codec->subtitle_header_size);
 		}
@@ -113,9 +114,8 @@ namespace sfe
             {
                 std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
 
-                auto time = m_timer->getOffset().asMilliseconds();
                 //this is the case for ass subtitles
-                if (iter->sprites.size() < 1)
+                if (iter->type==ASS)
                 {
                     int change = 0;
                     ASS_Image* img = ass_render_frame(m_renderer, m_track, m_timer->getOffset().asMilliseconds(), &change);
@@ -123,10 +123,8 @@ namespace sfe
                     if (change)
                     {                     
 
-                        while (img)
+                        for (; img; img->next)
                         {
-                            if (!img->w || !img->h) continue;
-
                             uint8_t     r = img->color >> 24,
                                         g = img->color >> 16 & 255,
                                         b = img->color >> 8 & 255,
@@ -143,7 +141,7 @@ namespace sfe
 
                                 for (int x = 0; x < img->w; ++x)
                                 {
-                                    uint8_t alpha = (unsigned)a * *map++;
+                                    uint8_t alpha = ((unsigned)a * *map++)/255;
                                     buffer.setPixel(x, y, sf::Color(r,g,b,alpha));
                                 }
                             }
@@ -254,15 +252,14 @@ namespace sfe
         succeeded = false;
         start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
         end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
-        
+
         for (unsigned int i = 0; i < sub->num_rects; ++i)
         {           
             AVSubtitleRect* subItem = sub->rects[i];
-            
-            AVSubtitleType type = subItem->type;
-            
-            if (type == SUBTITLE_BITMAP)
+
+            if (subItem->type == SUBTITLE_BITMAP)
             {
+                type = BITMAP;
                 sprites.push_back(sf::Sprite());
                 textures.push_back(sf::Texture());
 
@@ -292,6 +289,7 @@ namespace sfe
             }
             else
             {
+                type = ASS;
                 ass_process_data(track, subItem->ass, strlen(subItem->ass));
 
                 succeeded = true;
