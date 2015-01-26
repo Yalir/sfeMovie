@@ -379,7 +379,7 @@ namespace sfe
     {
         sf::Lock l(m_synchronized);
         
-        while (!didReachEndOfFile() && stream.needsMoreData())
+        while ((!didReachEndOfFile() || hasPendingDataForStream(stream)) && stream.needsMoreData())
         {
             AVPacket* pkt = NULL;
             
@@ -401,6 +401,22 @@ namespace sfe
                 }
             }
         }
+    }
+    
+    std::set<std::shared_ptr<Stream>> Demuxer::getSelectedStreams() const
+    {
+        std::set<std::shared_ptr<Stream>> set;
+        
+        if (m_connectedVideoStream)
+            set.insert(m_connectedVideoStream);
+        
+        if (m_connectedAudioStream)
+            set.insert(m_connectedAudioStream);
+        
+        if (m_connectedSubtitleStream)
+            set.insert(m_connectedSubtitleStream);
+        
+        return set;
     }
     
     void Demuxer::update()
@@ -451,10 +467,13 @@ namespace sfe
     {
         sf::Lock l(m_synchronized);
         
-        for (AVPacket* packet : m_pendingDataForActiveStreams)
+        for (std::pair<const Stream*, std::list<AVPacket*> >&& pair : m_pendingDataForActiveStreams)
         {
-            av_free_packet(packet);
-            av_free(packet);
+            for (AVPacket* packet : pair.second)
+            {
+                av_free_packet(packet);
+                av_free(packet);
+            }
         }
         
         m_pendingDataForActiveStreams.clear();
@@ -463,20 +482,52 @@ namespace sfe
     void Demuxer::queueEncodedData(AVPacket* packet)
     {
         sf::Lock l(m_synchronized);
-        m_pendingDataForActiveStreams.push_back(packet);
+        
+        std::set<std::shared_ptr<Stream>> connectedStreams = getSelectedStreams();
+        
+        for (std::shared_ptr<Stream> stream : connectedStreams)
+        {
+            if (stream->canUsePacket(packet))
+            {
+                std::list<AVPacket*>& packets = m_pendingDataForActiveStreams[stream.get()];
+                packets.push_back(packet);
+                return;
+            }
+        }
+        
+        sfeLogError("No stream can use the packet, destroying it");
+        av_free_packet(packet);
+        av_free(packet);
+    }
+    
+    bool Demuxer::hasPendingDataForStream(const Stream& stream) const
+    {
+        sf::Lock l(m_synchronized);
+        
+        const std::map<const Stream*, std::list<AVPacket*> >::const_iterator it =
+            m_pendingDataForActiveStreams.find(&stream);
+        
+        if (it != m_pendingDataForActiveStreams.end())
+            return ! it->second.empty();
+        
+        return false;
     }
     
     AVPacket* Demuxer::gatherQueuedPacketForStream(Stream& stream)
     {
         sf::Lock l(m_synchronized);
-        for (std::list<AVPacket*>::iterator it = m_pendingDataForActiveStreams.begin();
-             it != m_pendingDataForActiveStreams.end(); ++it)
+        
+        std::map<const Stream*, std::list<AVPacket*> >::iterator it
+            = m_pendingDataForActiveStreams.find(&stream);
+        
+        if (it != m_pendingDataForActiveStreams.end())
         {
-            AVPacket* packet = *it;
+            std::list<AVPacket*>& pendingPackets = it->second;
             
-            if (stream.canUsePacket(packet))
+            if (! pendingPackets.empty())
             {
-                m_pendingDataForActiveStreams.erase(it);
+                AVPacket* packet = pendingPackets.front();
+                pendingPackets.pop_front();
                 return packet;
             }
         }
