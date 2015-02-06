@@ -548,7 +548,7 @@ namespace sfe
     
     void MovieImpl::didWipeOutSubtitles(const SubtitleStream& sender)
     {
-        if (m_subtitleSprites.size()>0)
+        //if (m_subtitleSprites.size()>0) // disable this "fix" for now to let the bug appear
             m_subtitleSprites.clear();
     }
 }
