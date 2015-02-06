@@ -244,7 +244,7 @@ namespace sfe
             std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
             std::set< std::shared_ptr<Stream> >::const_iterator it;
             
-            for (it = audioStreams.begin(); it != audioStreams.end(); it++)
+			for (std::shared_ptr<Stream> stream : audioStreams)
             {
                 std::shared_ptr<AudioStream> audioStream = std::dynamic_pointer_cast<AudioStream>(*it);
                 audioStream->setVolume(volume);
@@ -348,10 +348,8 @@ namespace sfe
         sf::Vector2f subtitlesCenter(m_displayFrame.left + m_displayFrame.width / 2,
                                      m_displayFrame.top + m_displayFrame.height * 0.9f);
         
-        for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin();
-             it != m_subtitleSprites.end(); ++it)
+        for (sf::Sprite& subtitleSprite : m_subtitleSprites)
         {
-            sf::Sprite& subtitleSprite = *it;
             const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_videoSprite.getScale().x / 2),
                                        subtitlesCenter.y - (subSize.y * m_videoSprite.getScale().y / 2));
@@ -489,10 +487,9 @@ namespace sfe
     void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
         target.draw(m_videoSprite, states);
-        for (std::list<sf::Sprite>::const_iterator it = m_subtitleSprites.begin();
-             it != m_subtitleSprites.end(); ++it)
+        for (const sf::Sprite& sprite : m_subtitleSprites)
         {
-            target.draw(*it, states);
+            target.draw(sprite, states);
         }
         
 #if LAYOUT_DEBUGGER_ENABLED
@@ -514,9 +511,8 @@ namespace sfe
                                      m_displayFrame.top + m_displayFrame.height * 0.9f);
         std::list<sf::Vector2i>::const_iterator pos_it = positions.begin();
         
-        for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin(); it != m_subtitleSprites.end(); ++it)
+		for (sf::Sprite& subtitleSprite : m_subtitleSprites)
         {
-            sf::Sprite& subtitleSprite = *it;
             const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             
             if (use_position)
