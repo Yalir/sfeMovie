@@ -3,7 +3,7 @@
  *  SubtitleStream.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Stephan Vedder
+ *  Copyright (C) 2010-2015 Stephan Vedder
  *  stephan.vedder@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
