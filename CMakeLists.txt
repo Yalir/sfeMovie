@@ -71,7 +71,7 @@ endif()
 # ============================================== FFMPEG SETUP ================================================= #
 #################################################################################################################
 
-set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
+set (SFEMOVIE_BUILD_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 add_subdirectory(FFmpeg)
 
 #################################################################################################################
@@ -146,7 +146,7 @@ else()
     target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
 endif()
 
-if (${LINK_AGAINST_INTERNAL_FFMPEG})
+if (SFEMOVIE_BUILD_FFMPEG)
     if (LINUX)
         add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
             COMMAND cp -R
@@ -171,24 +171,19 @@ include (${CMAKE_SOURCE_DIR}/cmake/Properties.cmake)
 include (${CMAKE_SOURCE_DIR}/cmake/Install.cmake)
 
 # Unit tests
-set (BUILD_UNIT_TESTS FALSE CACHE BOOL "TRUE to build the unit test system")
-if (BUILD_UNIT_TESTS)
+set (SFEMOVIE_BUILD_UNIT_TESTS FALSE CACHE BOOL "TRUE to build the unit test system, requires Boost")
+if (SFEMOVIE_BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 endif()
 
 # Sample building
-set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
-if (BUILD_SFEMOVIE_SAMPLE)
-    add_subdirectory(sample)
-endif ()
+add_subdirectory(sample)
 
 # add an option for building the documentation
-set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")
-if(BUILD_DOC)
+set(SFEMOVIE_BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation, requires Doxygen")
+if(SFEMOVIE_BUILD_DOC)
     add_subdirectory(doxygen)
 endif()
 
-set(BUILD_PACKAGE FALSE CACHE BOOL "Set to true to generate a zip file containing all the files required for development with sfeMovie")
-if (BUILD_PACKAGE)
-    include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
-endif()
+# Define packaging
+include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
