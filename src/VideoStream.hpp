@@ -132,12 +132,16 @@ namespace sfe
         // Timer::Observer interface
         void willPlay(const Timer &timer) override;
         
+        /** Returns the delay caused by the FFmpeg decoder buffering
+         */
+        sf::Time codecBufferingDelay() const;
+        
         // Private data
         sf::Texture m_texture;
         AVFrame* m_rawVideoFrame;
         uint8_t *m_rgbaVideoBuffer[4];
         int m_rgbaVideoLinesize[4];
-        sf::Time m_codecBufferedTime;
+        std::list<sf::Time> m_codecBufferingDelays;
         Delegate& m_delegate;
         
         // Rescaler data

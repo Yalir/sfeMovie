@@ -127,7 +127,7 @@ namespace sfe
     
     void VideoStream::flushBuffers()
     {
-        m_codecBufferedTime = sf::Time::Zero;
+        m_codecBufferingDelays.clear();
         Stream::flushBuffers();
     }
     
@@ -182,8 +182,12 @@ namespace sfe
                     // a pipelined way and wants more packets to output a full image. When the first full image will
                     // be generated, the encoded data queue head pts will be late compared to the generated image pts
                     // To take that into account we accumulate this time difference for reuse in getSynchronizationGap()
-                    m_codecBufferedTime += packetDuration(packet);
-                    sfeLogDebug("Accumulated video codec time: " + s(m_codecBufferedTime.asMilliseconds()) + "ms");
+                    m_codecBufferingDelays.push_back(packetDuration(packet));
+                    
+                    if (m_codecBufferingDelays.size() > m_stream->codec->delay)
+                        m_codecBufferingDelays.pop_front();
+                    
+                    sfeLogDebug("Accumulated video codec time: " + s(codecBufferingDelay().asMilliseconds()) + "ms");
                 }
                 
                 if (needsMoreDecoding)
@@ -208,7 +212,7 @@ namespace sfe
     
     sf::Time VideoStream::getSynchronizationGap()
     {
-        return (computeEncodedPosition() - m_codecBufferedTime) - m_timer->getOffset();
+        return (computeEncodedPosition() - codecBufferingDelay()) - m_timer->getOffset();
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)
@@ -265,5 +269,14 @@ namespace sfe
         {
             preload();
         }
+    }
+    
+    sf::Time VideoStream::codecBufferingDelay() const
+    {
+        sf::Time delay;
+        for (const sf::Time& packetDelay : m_codecBufferingDelays)
+            delay += packetDelay;
+        
+        return delay;
     }
 }
