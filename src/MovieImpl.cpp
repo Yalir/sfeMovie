@@ -44,6 +44,8 @@ namespace sfe
     
     MovieImpl::~MovieImpl()
     {
+		if (m_timer && m_timer->getStatus() != Stopped)
+			stop();
     }
     
     bool MovieImpl::openFromFile(const std::string& filename)
