@@ -3,7 +3,7 @@
  *  main.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -184,6 +184,20 @@ int main(int argc, const char *argv[])
             {
                 movie.fit(0, 0, window.getSize().x, window.getSize().y);
                 window.setView(sf::View(sf::FloatRect(0, 0, (float)window.getSize().x, (float)window.getSize().y)));
+            }
+            else if (ev.type == sf::Event::MouseButtonPressed ||
+                     (ev.type == sf::Event::MouseMoved && sf::Mouse::isButtonPressed(sf::Mouse::Left)))
+            {
+                int xPos = 0;
+                
+                if (ev.type == sf::Event::MouseButtonPressed)
+                    xPos = ev.mouseButton.x;
+                else if (ev.type == sf::Event::MouseMoved)
+                    xPos = ev.mouseMove.x;
+                
+                float ratio = static_cast<float>(xPos) / window.getSize().x;
+                sf::Time targetTime = ratio * movie.getDuration();
+                movie.setPlayingOffset(targetTime);
             }
         }
         

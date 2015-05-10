@@ -3,7 +3,7 @@
  *  VideoStream.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -44,8 +44,7 @@ namespace sfe
     m_rgbaVideoBuffer(),
     m_rgbaVideoLinesize(),
     m_delegate(delegate),
-    m_swsCtx(nullptr),
-    m_lastDecodedTimestamp(sf::Time::Zero)
+    m_swsCtx(nullptr)
     {
         int err;
         
@@ -111,20 +110,47 @@ namespace sfe
     
     void VideoStream::update()
     {
-        if (getStatus() == Playing)
+        while (getStatus() == Playing && getSynchronizationGap() < sf::Time::Zero)
         {
-            if (getSynchronizationGap() < sf::Time::Zero)
+            if (!onGetData(m_texture))
             {
-                if (!onGetData(m_texture))
-                {
-                    setStatus(Stopped);
-                }
-                else
-                {
+                setStatus(Stopped);
+            }
+            else
+            {
+                static const sf::Time skipFrameThreshold(sf::milliseconds(50));
+                if (getSynchronizationGap() + skipFrameThreshold >= sf::Time::Zero)
                     m_delegate.didUpdateVideo(*this, m_texture);
-                }
             }
         }
+    }
+    
+    void VideoStream::flushBuffers()
+    {
+        m_codecBufferingDelays.clear();
+        Stream::flushBuffers();
+    }
+    
+    bool VideoStream::fastForward(sf::Time targetPosition)
+    {
+        while (computeEncodedPosition() < targetPosition)
+        {
+            // We HAVE to decode the frames to get a full image when we reach the target position
+            if (! onGetData(m_texture))
+            {
+                sfeLogError("Error while fast forwarding video stream up to position " +
+                            s(targetPosition.asSeconds()) + "s");
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    void VideoStream::preload()
+    {
+        sfeLogDebug("Preload video image");
+        onGetData(m_texture);
     }
     
     bool VideoStream::onGetData(sf::Texture& texture)
@@ -150,6 +176,20 @@ namespace sfe
                     texture.update(m_rgbaVideoBuffer[0]);
                 }
                 
+                if (!gotFrame && goOn)
+                {
+                    // Decoding went fine but did not produce an image. This means the decoder is working in
+                    // a pipelined way and wants more packets to output a full image. When the first full image will
+                    // be generated, the encoded data queue head pts will be late compared to the generated image pts
+                    // To take that into account we accumulate this time difference for reuse in getSynchronizationGap()
+                    m_codecBufferingDelays.push_back(packetDuration(packet));
+                    
+                    if (m_codecBufferingDelays.size() > m_stream->codec->delay)
+                        m_codecBufferingDelays.pop_front();
+                    
+                    sfeLogDebug("Accumulated video codec time: " + s(codecBufferingDelay().asMilliseconds()) + "ms");
+                }
+                
                 if (needsMoreDecoding)
                 {
                     prependEncodedData(packet);
@@ -162,7 +202,6 @@ namespace sfe
                 
                 if (!gotFrame && goOn)
                 {
-                    sfeLogDebug("no image in this packet, reading further");
                     packet = popEncodedData();
                 }
             }
@@ -173,7 +212,7 @@ namespace sfe
     
     sf::Time VideoStream::getSynchronizationGap()
     {
-        return  m_lastDecodedTimestamp - m_timer->getOffset();
+        return (computeEncodedPosition() - codecBufferingDelay()) - m_timer->getOffset();
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)
@@ -191,14 +230,6 @@ namespace sfe
                 needsMoreDecoding = true;
                 packet->data += decodedLength;
                 packet->size -= decodedLength;
-            }
-            
-            if (gotFrame)
-            {
-                int64_t timestamp = av_frame_get_best_effort_timestamp(outputFrame);
-                int64_t startTime = m_stream->start_time != AV_NOPTS_VALUE ? m_stream->start_time : 0;
-                sf::Int64 ms = 1000 * (timestamp - startTime) * av_q2d(m_stream->time_base);
-                m_lastDecodedTimestamp = sf::milliseconds(ms);
             }
             
             return true;
@@ -231,12 +262,6 @@ namespace sfe
         sws_scale(m_swsCtx, frame->data, frame->linesize, 0, frame->height, outVideoBuffer, outVideoLinesize);
     }
     
-    void VideoStream::preload()
-    {
-        sfeLogDebug("Preload video image");
-        onGetData(m_texture);
-    }
-    
     void VideoStream::willPlay(const Timer &timer)
     {
         Stream::willPlay(timer);
@@ -244,5 +269,14 @@ namespace sfe
         {
             preload();
         }
+    }
+    
+    sf::Time VideoStream::codecBufferingDelay() const
+    {
+        sf::Time delay;
+        for (const sf::Time& packetDelay : m_codecBufferingDelays)
+            delay += packetDelay;
+        
+        return delay;
     }
 }

@@ -3,7 +3,7 @@
  *  SubtitleStream.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Stephan Vedder
+ *  Copyright (C) 2010-2015 Stephan Vedder
  *  stephan.vedder@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -227,5 +227,37 @@ namespace sfe
     {
         m_delegate.didWipeOutSubtitles(*this);
         Stream::flushBuffers();
+        m_pendingSubtitles.clear();
+        m_visibleSubtitles.clear();
     }
+    
+    bool SubtitleStream::fastForward(sf::Time targetPosition)
+    {
+        while(hasPackets())
+        {
+            onGetData();
+        }
+
+		std::list< std::shared_ptr<SubtitleData>>::iterator it = m_visibleSubtitles.begin();
+		while (it != m_visibleSubtitles.end()) 
+		{
+			//erase subs that are deleted before the targetPosition
+			if (it->get()->end<targetPosition)
+				it = m_visibleSubtitles.erase(it);
+			else
+				++it;
+		}
+		
+		it = m_pendingSubtitles.begin();
+		while (it != m_pendingSubtitles.end()) 
+		{
+			//erase subs that are deleted before the targetPosition
+			if (it->get()->end<targetPosition)
+				it = m_pendingSubtitles.erase(it);
+			else
+				++it;
+		}
+        
+        return true;
+	}
 }

@@ -3,7 +3,7 @@
  *  Timer.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -52,12 +52,9 @@ namespace sfe
     {
     }
     
-    void Timer::Observer::willSeek(const Timer& timer, sf::Time posiiton)
+    bool Timer::Observer::didSeek(const Timer& timer, sf::Time oldPosition)
     {
-    }
-    
-    void Timer::Observer::didSeek(const Timer& timer, sf::Time oldPosition)
-    {
+        return true;
     }
     
     Timer::Timer() :
@@ -68,22 +65,17 @@ namespace sfe
     {
     }
     
-    Timer::~Timer()
-    {
-        //        if (getStatus() != Stopped)
-        //            stop();
-    }
-    
-    void Timer::addObserver(Observer& anObserver)
+    void Timer::addObserver(Observer& anObserver, int priority)
     {
         CHECK(m_observers.find(&anObserver) == m_observers.end(), "Timer::addObserver() - cannot add the same observer twice");
         
-        m_observers.insert(&anObserver);
+        m_observers.insert(std::make_pair(&anObserver, priority));
+        m_observersByPriority[priority].insert(&anObserver);
     }
     
     void Timer::removeObserver(Observer& anObserver)
     {
-        std::set<Observer*>::iterator it = m_observers.find(&anObserver);
+        std::map<Observer*, int>::iterator it = m_observers.find(&anObserver);
         
         if (it == m_observers.end())
         {
@@ -91,6 +83,7 @@ namespace sfe
         }
         else
         {
+            m_observersByPriority[it->second].erase(&anObserver);
             m_observers.erase(it);
         }
     }
@@ -114,7 +107,9 @@ namespace sfe
         
         Status oldStatus = getStatus();
         m_status = Paused;
-        m_pausedTime += m_timer.getElapsedTime();
+        
+        if (oldStatus != Stopped)
+            m_pausedTime += m_timer.getElapsedTime();
         
         notifyObservers(oldStatus, getStatus());
     }
@@ -132,20 +127,22 @@ namespace sfe
         seek(sf::Time::Zero);
     }
     
-    void Timer::seek(sf::Time position)
+    bool Timer::seek(sf::Time position)
     {
         Status oldStatus = getStatus();
         sf::Time oldPosition = getOffset();
+        bool couldSeek = false;
         
         if (oldStatus == Playing)
             pause();
         
-        notifyObservers(oldPosition, position, false);
         m_pausedTime = position;
-        notifyObservers(oldPosition, position, true);
+        couldSeek = notifyObservers(oldPosition);
         
         if (oldStatus == Playing)
             play();
+        
+        return couldSeek;
     }
     
     Status Timer::getStatus() const
@@ -163,19 +160,19 @@ namespace sfe
     
     void Timer::notifyObservers(Status futureStatus)
     {
-        std::set<Observer*>::iterator it;
-        for (it = m_observers.begin(); it != m_observers.end(); it++)
+        for (std::pair<int, std::set<Observer*> >&& pairByPriority : m_observersByPriority)
         {
-            Observer* obs = *it;
-            
-            switch(futureStatus)
+            for (Observer* observer : pairByPriority.second)
             {
-                case Playing:
-                    obs->willPlay(*this);
-                    break;
-                    
-                default:
-                    CHECK(false, "Timer::notifyObservers() - unhandled case in switch");
+                switch(futureStatus)
+                {
+                    case Playing:
+                        observer->willPlay(*this);
+                        break;
+                        
+                    default:
+                        CHECK(false, "Timer::notifyObservers() - unhandled case in switch");
+                }
             }
         }
     }
@@ -184,39 +181,45 @@ namespace sfe
     {
         CHECK(oldStatus != newStatus, "Timer::notifyObservers() - inconsistency: no change happened");
         
-        for (Observer* obs : m_observers)
+        for (std::pair<int, std::set<Observer*> >&& pairByPriority : m_observersByPriority)
         {
-            
-            switch(newStatus)
+            for (Observer* observer : pairByPriority.second)
             {
-                case Playing:
-                    obs->didPlay(*this, oldStatus);
-                    break;
-                    
-                case Paused:
-                    obs->didPause(*this, oldStatus);
-                    break;
-                    
-                case Stopped:
-                    obs->didStop(*this, oldStatus);
-                    break;
-                default:
-                    break;
+                switch(newStatus)
+                {
+                    case Playing:
+                        observer->didPlay(*this, oldStatus);
+                        break;
+                        
+                    case Paused:
+                        observer->didPause(*this, oldStatus);
+                        break;
+                        
+                    case Stopped:
+                        observer->didStop(*this, oldStatus);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
     
-    void Timer::notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked)
+    bool Timer::notifyObservers(sf::Time oldPosition)
     {
         CHECK(getStatus() != Playing, "inconsistency in timer");
+        bool successfullSeeking = true;
         
-		for (Observer* obs : m_observers)
+        for (std::pair<int, std::set<Observer*> >&& pairByPriority : m_observersByPriority)
         {
-            if (alreadySeeked)
-                obs->didSeek(*this, oldPosition);
-            else
-                obs->willSeek(*this, newPosition);
+            for (Observer* observer : pairByPriority.second)
+            {
+                if (! observer->didSeek(*this, oldPosition))
+                    successfullSeeking = false;
+            }
         }
+        
+        return successfullSeeking;
     }
     
 }

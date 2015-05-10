@@ -3,7 +3,7 @@
  *  Stream.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -30,12 +30,19 @@ extern "C"
 
 #include "Stream.hpp"
 #include "Utilities.hpp"
+#include "TimerPriorities.hpp"
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
 
 namespace sfe
 {
+    std::string Stream::AVStreamDescription(AVStream* stream)
+    {
+        return std::string("'" + std::string(av_get_media_type_string(stream->codec->codec_type))
+                           + "/" + avcodec_get_name(stream->codec->codec_id) + "' stream @ " + s(stream));
+    }
+    
     Stream::Stream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer) :
     m_formatCtx(formatCtx),
     m_stream(stream),
@@ -84,7 +91,10 @@ namespace sfe
     
     void Stream::connect()
     {
-        m_timer->addObserver(*this);
+        if (isPassive())
+            m_timer->addObserver(*this, PassiveStreamTimerPriority);
+        else
+            m_timer->addObserver(*this, ActiveStreamTimerPriority);
     }
     
     void Stream::disconnect()
@@ -159,8 +169,6 @@ namespace sfe
             av_free_packet(pkt);
             av_free(pkt);
         }
-        
-        sfeLogDebug("Flushed " + mediaTypeToString(getStreamKind()) + " stream!");
     }
     
     bool Stream::needsMoreData() const
@@ -183,7 +191,7 @@ namespace sfe
         return m_language;
     }
     
-    sf::Time Stream::computePosition()
+    sf::Time Stream::computeEncodedPosition()
     {
         if (!m_packetList.size())
         {
@@ -196,7 +204,8 @@ namespace sfe
         }
         else
         {
-            AVPacket* packet = *m_packetList.begin();
+            sf::Lock l(m_readerMutex);
+            AVPacket* packet = m_packetList.front();
             CHECK(packet, "internal inconcistency");
             
             int64_t timestamp = -424242;
@@ -211,8 +220,30 @@ namespace sfe
                 timestamp = packet->pts - startTime;
             }
             
-            return sf::seconds(timestamp * av_q2d(m_stream->time_base));
+            AVRational seconds = av_mul_q(av_make_q(timestamp, 1), m_stream->time_base);
+            return sf::milliseconds(1000 * av_q2d(seconds));
         }
+    }
+    
+    sf::Time Stream::packetDuration(const AVPacket* packet) const
+    {
+        CHECK(packet, "inconcistency error: null packet");
+        CHECK(packet->stream_index == m_streamID, "Asking for duration of a packet for a different stream!");
+        
+        if (packet->duration != 0)
+        {
+            AVRational seconds = av_mul_q(av_make_q(packet->duration, 1), m_stream->time_base);
+            return sf::seconds(av_q2d(seconds));
+        }
+        else
+        {
+            return sf::seconds(1. / av_q2d(av_guess_frame_rate(m_formatCtx, m_stream, nullptr)));
+        }
+    }
+    
+    std::string Stream::description() const
+    {
+        return AVStreamDescription(m_stream);
     }
     
     bool Stream::canUsePacket(AVPacket* packet) const
@@ -247,13 +278,12 @@ namespace sfe
         setStatus(Stopped);
     }
     
-    void Stream::willSeek(const Timer& timer, sf::Time position)
+    bool Stream::didSeek(const Timer& timer, sf::Time oldPosition)
     {
-    }
-    
-    void Stream::didSeek(const Timer& timer, sf::Time position)
-    {
-        flushBuffers();
+        if (timer.getOffset() != sf::Time::Zero)
+            return fastForward(timer.getOffset());
+        
+        return true;
     }
     
     bool Stream::hasPackets()

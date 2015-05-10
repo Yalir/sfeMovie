@@ -1,6 +1,6 @@
 
 # Setup the paths that will be used for linking against FFmpeg and eventually building it
-if (NOT LINK_AGAINST_INTERNAL_FFMPEG)
+if (NOT SFEMOVIE_BUILD_FFMPEG)
 	# Use user's FFmpeg libraries
 	find_package(FFMPEG REQUIRED)
 	if ("${FFMPEG_FOUND}" STREQUAL "NO")
@@ -44,7 +44,7 @@ else()
 		endif()
 	endif()
 
-	set (Decoders_that_you_can_enable aac aac_latm aasc ac3 ac3_fixed adpcm_4xm adpcm_adx adpcm_afc adpcm_ct adpcm_dtk 
+	set (SFEMOVIE_AVAILABLE_DECODERS aac aac_latm aasc ac3 ac3_fixed adpcm_4xm adpcm_adx adpcm_afc adpcm_ct adpcm_dtk 
 	  adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1 adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g722 adpcm_g726
 	  adpcm_g726le adpcm_ima_amv adpcm_ima_apc adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead
 	  adpcm_ima_iss adpcm_ima_oki adpcm_ima_qt adpcm_ima_rad adpcm_ima_smjpeg adpcm_ima_wav adpcm_ima_ws adpcm_ms
@@ -74,7 +74,7 @@ else()
 	  vima vmdaudio vmdvideo vmnc vorbis vp3 vp5 vp6 vp6a vp6f vp7 vp8 vp9 vplayer vqa wavpack webp webvtt
 	  wmalossless wmapro wmav1 wmav2 wmavoice wmv1 wmv2 wmv3 wmv3_crystalhd wmv3_vdpau wmv3image wnv1 ws_snd1
 	  xan_dpcm xan_wc3 xan_wc4 xbin xbm xface xl xsub xwd y41p yop yuv4 zero12v zerocodec zlib zmbv
-	  CACHE STRING "Available decoders" FORCE)
+	  CACHE STRING "Decoders that can be enabled through SFEMOVIE_ENABLED_DECODERS" FORCE)
 	set (PCM_DECODERS adpcm_4xm adpcm_adx adpcm_afc adpcm_ct adpcm_dtk adpcm_ea adpcm_ea_maxis_xa adpcm_ea_r1
 	  adpcm_ea_r2 adpcm_ea_r3 adpcm_ea_xas adpcm_g722 adpcm_g726 adpcm_g726le adpcm_ima_amv adpcm_ima_apc
 	  adpcm_ima_dk3 adpcm_ima_dk4 adpcm_ima_ea_eacs adpcm_ima_ea_sead adpcm_ima_iss adpcm_ima_oki adpcm_ima_qt
@@ -84,7 +84,7 @@ else()
 	  pcm_s16le_planar pcm_s24be pcm_s24daud pcm_s24le pcm_s24le_planar pcm_s32be pcm_s32le pcm_s32le_planar
 	  pcm_s8 pcm_s8_planar pcm_u16be pcm_u16le pcm_u24be pcm_u24le pcm_u32be pcm_u32le pcm_u8 pcm_zork roq_dpcm
 	  sol_dpcm xan_dpcm)
-	set (ENABLED_DECODERS theora flac vorbis vp8 vp9 opus ${PCM_DECODERS} CACHE STRING "Enabled audio and video decoders")
+	set (SFEMOVIE_ENABLED_DECODERS theora flac vorbis vp8 vp9 opus ${PCM_DECODERS} CACHE STRING "Enabled audio, video and subtitle decoders")
 
 	set (CachedSelectedDecoders "")
 	set (NeedsFFmpegCompilation TRUE CACHE BOOL "" FORCE)
@@ -93,7 +93,7 @@ else()
 		file(READ "${CMAKE_BINARY_DIR}/SelectedDecoders.cache" CachedSelectedDecoders)
 		string(STRIP "${CachedSelectedDecoders}" CachedSelectedDecoders)
 
-		if ("${CachedSelectedDecoders}" STREQUAL "${ENABLED_DECODERS}")
+		if ("${CachedSelectedDecoders}" STREQUAL "${SFEMOVIE_ENABLED_DECODERS}")
 			# Check for FFmpeg files
 			ffmpeg_paths("${BUILTIN_FFMPEG_BUILD_DIR}")
 			check_ffmpeg_headers(foundHeaders FALSE)
@@ -138,7 +138,7 @@ else()
 		add_shell_command(FFmpeg
 			OUTPUT ${FFMPEG_LIBRARIES}
 			DEPENDS "${CMAKE_BINARY_DIR}/CMakeCache.txt"
-			COMMAND ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${JOBS} ${ENABLED_DECODERS})
+			COMMAND ./build_ffmpeg.sh ${OS_ARG} ${VS_ARG} ${JOBS} ${SFEMOVIE_ENABLED_DECODERS})
 	endif()
 
 	# ============== Install rules =============

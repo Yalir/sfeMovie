@@ -3,7 +3,7 @@
  *  AudioStream.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -40,12 +40,26 @@ extern "C"
 
 namespace sfe
 {
+    namespace
+    {
+        void waitForStatusUpdate(const sf::SoundStream& stream, sf::SoundStream::Status expectedStatus)
+        {
+            // Wait for status to update
+            sf::Clock timeout;
+            while (stream.getStatus() != expectedStatus && timeout.getElapsedTime() < sf::seconds(5))
+                sf::sleep(sf::microseconds(10));
+            CHECK(timeout.getElapsedTime() < sf::seconds(5), "Audio did not reach state " + s(expectedStatus) + " within 5 seconds");
+        }
+        
+        const int BytesPerSample = sizeof(sf::Int16); // Signed 16 bits audio sample
+    }
+
     AudioStream::AudioStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource,
                              std::shared_ptr<Timer> timer) :
     Stream(formatCtx, stream, dataSource, timer),
     
     // Public properties
-    m_sampleRate(0),
+    m_sampleRatePerChannel(0),
     
     // Private data
     m_samplesBuffer(nullptr),
@@ -63,15 +77,16 @@ namespace sfe
         CHECK(m_audioFrame, "AudioStream::AudioStream() - out of memory");
         
         // Get some audio informations
-        m_sampleRate = m_stream->codec->sample_rate;
+        m_sampleRatePerChannel = m_stream->codec->sample_rate;
         
         // Alloc a two seconds buffer
-        m_samplesBuffer = (sf::Int16*)av_malloc(sizeof(sf::Int16) * av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate * 2);
+        m_samplesBuffer = (sf::Int16*)av_malloc(sizeof(sf::Int16) * av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO)
+                                                * m_sampleRatePerChannel * 2); // * 2 is for 2 seconds
         CHECK(m_samplesBuffer, "AudioStream::AudioStream() - out of memory");
         
         // Initialize the sf::SoundStream
         // Whatever the channel count is, it'll we resampled to stereo
-        sf::SoundStream::initialize(av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO), m_sampleRate);
+        sf::SoundStream::initialize(av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO), m_sampleRatePerChannel);
         
         // Initialize resampler to be able to give signed 16 bits samples to SFML
         initResampler();
@@ -98,6 +113,19 @@ namespace sfe
         av_freep(&m_dstData);
         
         swr_free(&m_swrCtx);
+    }
+    
+    void AudioStream::flushBuffers()
+    {
+        sf::SoundStream::Status sfStatus = sf::SoundStream::getStatus();
+        CHECK (sfStatus != sf::SoundStream::Playing, "Trying to flush while audio is playing, this will introduce an audio glitch!");
+        
+        // Flush audio driver/OpenAL/SFML buffer
+        if (sfStatus != sf::SoundStream::Stopped)
+            sf::SoundStream::stop();
+        
+        m_extraAudioTime = sf::Time::Zero;
+        Stream::flushBuffers();
     }
     
     MediaType AudioStream::getStreamKind() const
@@ -128,12 +156,72 @@ namespace sfe
         }
     }
     
+    bool AudioStream::fastForward(sf::Time targetPosition)
+    {
+        sf::Time currentPosition;
+        sf::Time pktDuration;
+        
+        do
+        {
+            currentPosition = computeEncodedPosition();
+            AVPacket* packet = popEncodedData();
+            
+            if (! packet)
+            {
+                sfeLogError("Fast-forwarding failure in audio stream, " +
+                            "did reach end of stream (target position=" +
+                            s(targetPosition.asSeconds()) + "s)");
+                return false;
+            }
+            
+            pktDuration = packetDuration(packet);
+            
+            if (currentPosition > targetPosition)
+            {
+                // Computations with packet duration and stream position are not always very accurate so
+                // this can happen some times. In such cases, the different is very small (less than 1ms)
+                // so we just accept it
+                if ((currentPosition - targetPosition) > sf::microseconds(1))
+                    sfeLogWarning("Inaccuracy detected in stream position / packet duration, "
+                                  "audio stream will be in advance by "
+                                  + s((currentPosition - targetPosition).asMicroseconds()) + "us");
+                
+                m_extraAudioTime = sf::Time::Zero;
+                
+                // Reinsert, we don't want to decode now
+                prependEncodedData(packet);
+            }
+            else if (currentPosition + pktDuration > targetPosition)
+            {
+                // Reinsert, we don't want to decode now
+                prependEncodedData(packet);
+                m_extraAudioTime = targetPosition - currentPosition;
+                
+                sfeLogDebug("Extra audio time to be discarded at decoding time: "
+                            + s(m_extraAudioTime.asMicroseconds()) + "us");
+                
+                CHECK(m_extraAudioTime > sf::Time::Zero, "inconcistency error");
+                CHECK(m_extraAudioTime <= pktDuration, "Should have discarded a full packet");
+            }
+            else
+            {
+                av_free_packet(packet);
+                av_free(packet);
+            }
+        }
+        while (currentPosition + pktDuration <= targetPosition);
+        
+        return true;
+    }
+    
     bool AudioStream::onGetData(sf::SoundStream::Chunk& data)
     {
         AVPacket* packet = nullptr;
         data.samples = m_samplesBuffer;
         
-        while (data.sampleCount < av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * m_sampleRate &&
+        const int stereoChannelCount = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
+        
+        while (data.sampleCount < stereoChannelCount * m_sampleRatePerChannel &&
                (nullptr != (packet = popEncodedData())))
         {
             bool needsMoreDecoding = false;
@@ -145,31 +233,60 @@ namespace sfe
                 
                 if (gotFrame)
                 {
-                    uint8_t* samples = nullptr;
-                    int nbSamples = 0;
-                    int samplesLength = 0;
+                    uint8_t* samplesBuffer = nullptr;
+                    int samplesCount = 0;
                     
-                    resampleFrame(m_audioFrame, samples, nbSamples, samplesLength);
-                    CHECK(samples, "AudioStream::onGetData() - resampleFrame() error");
-                    CHECK(nbSamples > 0, "AudioStream::onGetData() - resampleFrame() error");
-                    CHECK(nbSamples == samplesLength / 2, "AudioStream::onGetData() resampleFrame() inconsistency");
+                    resampleFrame(m_audioFrame, samplesBuffer, samplesCount);
+                    CHECK(samplesBuffer, "AudioStream::onGetData() - resampleFrame() error");
+                    CHECK(samplesCount > 0, "AudioStream::onGetData() - resampleFrame() error");
+                    CHECK(samplesToTime(data.sampleCount + samplesCount) < sf::seconds(2),
+                          "AudioStream::onGetData() - Going to overflow!!");
                     
-                    CHECK(data.sampleCount + nbSamples < m_sampleRate * 2 * av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO), "AudioStream::onGetData() - Going to overflow!!");
+                    if (m_extraAudioTime > sf::Time::Zero)
+                    {
+                        int samplesToDiscard = timeToSamples(m_extraAudioTime);
+                        if (samplesToDiscard > samplesCount)
+                        {
+                            samplesToDiscard = samplesCount;
+                            sfeLogDebug("Cannot discard all the extra audio samples in one time");
+                        }
+                        
+                        if (samplesToDiscard < stereoChannelCount && samplesCount > 0)
+                        {
+                            sfeLogDebug("Extra audio time is too small to discard audio samples: "
+                                        + s(m_extraAudioTime.asMicroseconds()) + "us");
+                            m_extraAudioTime = sf::Time::Zero;
+                        }
+                        else
+                        {
+                            CHECK(((samplesToDiscard / std::max(samplesCount, samplesToDiscard))
+                                   - (m_extraAudioTime.asMicroseconds()
+                                      / samplesToTime(samplesCount).asMicroseconds()))
+                                  < 0.1,
+                                  "It looks like an invalid amount of audio samples was discarded, "
+                                  "please report this bug");
+                            
+                            samplesBuffer += samplesToDiscard * BytesPerSample;
+                            samplesCount -= samplesToDiscard;
+                            
+                            m_extraAudioTime -= samplesToTime(samplesToDiscard);
+                        }
+                    }
                     
                     std::memcpy((void *)(data.samples + data.sampleCount),
-                                samples, samplesLength);
-                    data.sampleCount += nbSamples;
+                                samplesBuffer, samplesCount * BytesPerSample);
+                    data.sampleCount += samplesCount;
                 }
-            } while (needsMoreDecoding);
+            }
+            while (needsMoreDecoding);
             
             av_free_packet(packet);
             av_free(packet);
         }
         
         if (!packet)
-        {
             sfeLogDebug("No more audio packets, do not go further");
-        }
+        
         return (packet != nullptr);
     }
     
@@ -237,7 +354,7 @@ namespace sfe
         CHECK(err >= 0, "AudioStream::initResampler() - av_samples_alloc_array_and_samples error");
     }
     
-    void AudioStream::resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength)
+    void AudioStream::resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples)
     {
         CHECK(m_swrCtx, "AudioStream::resampleFrame() - resampler is not initialized, call AudioStream::initResamplerFirst() !");
         CHECK(frame, "AudioStream::resampleFrame() - invalid argument");
@@ -266,8 +383,31 @@ namespace sfe
         CHECK(dst_bufsize >= 0, "AudioStream::resampleFrame() - av_samples_get_buffer_size() error");
         
         outNbSamples = dst_bufsize / av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-        outSamplesLength = dst_bufsize;
         outSamples = m_dstData[0];
+    }
+    
+    int AudioStream::timeToSamples(const sf::Time& time) const
+    {
+        const int channelCount = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
+        int64_t samplesPerSecond = m_sampleRatePerChannel * channelCount;
+        int64_t samples = (samplesPerSecond * time.asMicroseconds()) / 1000000;
+        CHECK(samples >= 0, "computation overflow");
+        
+        // We don't want SFML to be confused by interverting left and right speaker sound in case
+        // samples are interleaved
+        if (samples % channelCount != 0)
+            samples -= samples % channelCount;
+        
+        return samples;
+    }
+    
+    sf::Time AudioStream::samplesToTime(int nbSamples) const
+    {
+        int64_t samplesPerChannel = nbSamples / av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
+        int64_t microseconds = 1000000 * samplesPerChannel / m_sampleRatePerChannel;
+        CHECK(microseconds >= 0, "computation overflow");
+        
+        return sf::microseconds(microseconds);
     }
     
     void AudioStream::willPlay(const Timer &timer)
@@ -284,13 +424,14 @@ namespace sfe
             // To avoid desynchronization with the timer, we don't return
             // until the audio stream is actually started
             while (sf::SoundStream::getPlayingOffset() == initialTime && timeout.getElapsedTime() < sf::seconds(5))
-                sf::sleep(sf::milliseconds(10));
+                sf::sleep(sf::microseconds(10));
             
             CHECK(sf::SoundStream::getPlayingOffset() != initialTime, "is your audio device broken? Audio did not start within 5 seconds");
         }
         else
         {
             sf::SoundStream::play();
+            waitForStatusUpdate(*this, sf::SoundStream::Playing);
         }
     }
     
@@ -302,13 +443,20 @@ namespace sfe
     
     void AudioStream::didPause(const Timer& timer, sfe::Status previousStatus)
     {
-        sf::SoundStream::pause();
+        if (sf::SoundStream::getStatus() == sf::SoundStream::Playing)
+        {
+            sf::SoundStream::pause();
+            waitForStatusUpdate(*this, sf::SoundStream::Paused);
+        }
+        
         Stream::didPause(timer, previousStatus);
     }
     
     void AudioStream::didStop(const Timer& timer, sfe::Status previousStatus)
     {
         sf::SoundStream::stop();
+        waitForStatusUpdate(*this, sf::SoundStream::Stopped);
+        
         Stream::didStop(timer, previousStatus);
     }
 }

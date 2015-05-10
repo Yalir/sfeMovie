@@ -3,7 +3,7 @@
  *  Visibility.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -25,6 +25,8 @@
 
 #ifndef SFEMOVIE_VISIBILITY_HPP
 #define SFEMOVIE_VISIBILITY_HPP
+
+#include <SFML/System.hpp>
 
 /** Define portable import / export macros
  */

@@ -3,7 +3,7 @@
  *  AudioStream.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -47,23 +47,31 @@ namespace sfe
          */
         virtual ~AudioStream();
         
+        /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
+         */
+        void flushBuffers() override;
+        
         /** Get the stream kind (either audio, video or subtitle stream)
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const;
+        MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update();
+        void update() override;
+        
+        /** @see Stream::fastForward()
+         */
+        bool fastForward(sf::Time targetPosition) override;
         
         using sf::SoundStream::setVolume;
         using sf::SoundStream::getVolume;
         using sf::SoundStream::getSampleRate;
         using sf::SoundStream::getChannelCount;
     private:
-        virtual bool onGetData(sf::SoundStream::Chunk& data);
-        virtual void onSeek(sf::Time timeOffset);
+        bool onGetData(sf::SoundStream::Chunk& data) override;
+        void onSeek(sf::Time timeOffset) override;
         
         /** Decode the encoded data @a packet into @a outputFrame
          *
@@ -88,23 +96,33 @@ namespace sfe
          *
          * @param frame the audio samples to convert
          * @param outSamples [out] the convertedSamples
-         * @param outNbSamples [out] the count of samples in @a outSamples
-         * @param outSamplesLength [out] the length of @a outSamples in bytes
+         * @param outNbSamples [out] the count of signed 16 bits samples in @a outSamples
          */
-        void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples, int& outSamplesLength);
+        void resampleFrame(const AVFrame* frame, uint8_t*& outSamples, int& outNbSamples);
+        
+        /** @return the amount of samples that would last the given time with the current audio stream
+         * properties
+         */
+        int timeToSamples(const sf::Time& time) const;
+        
+        /** @return the time that would last the given amount of samples with the current audio stream
+         * properties
+         */
+        sf::Time samplesToTime(int nbSamples) const;
         
         // Timer::Observer interface
-        void willPlay(const Timer &timer);
-        void didPlay(const Timer& timer, sfe::Status previousStatus);
-        void didPause(const Timer& timer, sfe::Status previousStatus);
-        void didStop(const Timer& timer, sfe::Status previousStatus);
+        void willPlay(const Timer &timer) override;
+        void didPlay(const Timer& timer, sfe::Status previousStatus) override;
+        void didPause(const Timer& timer, sfe::Status previousStatus) override;
+        void didStop(const Timer& timer, sfe::Status previousStatus) override;
         
         // Public properties
-        unsigned m_sampleRate;
+        unsigned m_sampleRatePerChannel;
         
         // Private data
         sf::Int16* m_samplesBuffer;
         AVFrame* m_audioFrame;
+        sf::Time m_extraAudioTime;
         
         // Resampling
         struct SwrContext* m_swrCtx;

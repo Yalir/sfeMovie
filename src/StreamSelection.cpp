@@ -1,6 +1,6 @@
 
 /*
- *  Macros.hpp
+ *  StreamSelection.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2015 Lucas Soltic
@@ -22,47 +22,15 @@
  *
  */
 
-#include <cstring>
-#include <string>
-#include <stdexcept>
-#include <SFML/Config.hpp>
+#include <sfeMovie/StreamSelection.hpp>
 
-extern "C"
+namespace sfe
 {
-    #include <libavutil/error.h>
-}
-
-#ifndef SFEMOVIE_MACROS_HPP
-#define SFEMOVIE_MACROS_HPP
-
-#ifndef NDEBUG
-#define DEBUG 1
-#endif
-
-#define CHECK(value, message) if (!(value)) throw std::runtime_error(message);
-#define CHECK0(value, message) CHECK(value == 0, message)
-#define ONCE(sequence)\
-{ static bool __done = false; if (!__done) { { sequence; } __done = true; } }
-
-#define BENCH_START \
-{ \
-sf::Clock __bench;
-
-#define BENCH_END(title) \
-sfeLogDebug(std::string(title) + " took " + s(__bench.getElapsedTime().asMilliseconds()) + "ms"); \
-}
-
-#if defined(SFML_SYSTEM_WINDOWS)
-    #ifdef av_err2str
-    #undef av_err2str
-    #endif
-
-    namespace sfe
+    StreamDescriptor StreamDescriptor::NoSelection(sfe::MediaType type)
     {
-        std::string ff_err2str(int code);
+        StreamDescriptor descriptor;
+        descriptor.type = type;
+        descriptor.identifier = -1;
+        return descriptor;
     }
-
-    #define av_err2str sfe::ff_err2str
-#endif
-
-#endif
+}
