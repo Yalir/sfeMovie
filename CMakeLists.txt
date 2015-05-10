@@ -87,7 +87,7 @@ if (SFEMOVIE_BUILD_STATIC)
     set (SFML_STATIC_LIBRARIES TRUE)
 endif()
 
-find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
+find_package (SFML 2.3 COMPONENTS graphics window system audio REQUIRED)
 message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
 message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
