@@ -39,6 +39,10 @@ else()
     return()
 endif()
 
+if (WINDOWS AND NOT MSVC)
+    message(FATAL_ERROR "Only Visual Studio (2013 and later) is supported on Windows")
+endif()
+
 # Set some env vars
 set (SFEMOVIE_LIB sfeMovie)
 set (VERSION_MAJOR 2)
