@@ -3,7 +3,7 @@
  *  MediaInfo.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -69,26 +69,24 @@ void displayMediaInfo(const sfe::Movie& movie)
     
     std::cout << videoStreams.size() + audioStreams.size() + subtitleStreams.size() << " streams found in the media" << std::endl;
     
-    for (sfe::Streams::const_iterator it = videoStreams.begin(); it != videoStreams.end(); ++it)
-    {
-        std::cout << " #" << it->identifier << " : " << mediaTypeToString(it->type) << std::endl;
-    }
+	for (const sfe::StreamDescriptor& descriptor : videoStreams)
+		std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type) << std::endl;
     
-    for (sfe::Streams::const_iterator it = audioStreams.begin(); it != audioStreams.end(); ++it)
+	for (const sfe::StreamDescriptor& descriptor : audioStreams)
     {
-        std::cout << " #" << it->identifier << " : " << mediaTypeToString(it->type);
+		std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type);
         
-        if (!it->language.empty())
-            std::cout << " (language: " << it->language << ")";
+		if (!descriptor.language.empty())
+			std::cout << " (language: " << descriptor.language << ")";
         std::cout << std::endl;
     }
     
-    for (sfe::Streams::const_iterator it = subtitleStreams.begin(); it != subtitleStreams.end(); ++it)
+	for (const sfe::StreamDescriptor& descriptor : subtitleStreams)
     {
-        std::cout << " #" << it->identifier << " : " << mediaTypeToString(it->type);
+		std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type);
         
-        if (!it->language.empty())
-            std::cout << " (language: " << it->language << ")";
+		if (!descriptor.language.empty())
+			std::cout << " (language: " << descriptor.language << ")";
         std::cout << std::endl;
     }
 }

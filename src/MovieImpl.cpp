@@ -3,7 +3,7 @@
  *  MovieImpl.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -44,6 +44,8 @@ namespace sfe
     
     MovieImpl::~MovieImpl()
     {
+		if (m_timer && m_timer->getStatus() != Stopped)
+			stop();
     }
     
     bool MovieImpl::openFromFile(const std::string& filename)
@@ -188,6 +190,11 @@ namespace sfe
             
             m_timer->stop();
             update();
+            
+            std::shared_ptr<VideoStream> videoStream(m_demuxer->getSelectedVideoStream());
+            
+            if (videoStream)
+                videoStream->preload();
         }
         else
         {
@@ -239,7 +246,7 @@ namespace sfe
             std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
             std::set< std::shared_ptr<Stream> >::const_iterator it;
             
-            for (it = audioStreams.begin(); it != audioStreams.end(); it++)
+			for (std::shared_ptr<Stream> stream : audioStreams)
             {
                 std::shared_ptr<AudioStream> audioStream = std::dynamic_pointer_cast<AudioStream>(*it);
                 audioStream->setVolume(volume);
@@ -284,7 +291,7 @@ namespace sfe
             
             if (videoStream)
             {
-				return sf::Vector2f(videoStream->getFrameSize());
+                return sf::Vector2f(videoStream->getFrameSize());
             }
         }
         sfeLogError("Movie::getSize() called but there is no active video stream");
@@ -343,10 +350,8 @@ namespace sfe
         sf::Vector2f subtitlesCenter(m_displayFrame.left + m_displayFrame.width / 2,
                                      m_displayFrame.top + m_displayFrame.height * 0.9f);
         
-        for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin();
-             it != m_subtitleSprites.end(); ++it)
+        for (sf::Sprite& subtitleSprite : m_subtitleSprites)
         {
-            sf::Sprite& subtitleSprite = *it;
             const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             subtitleSprite.setPosition(subtitlesCenter.x - (subSize.x * m_videoSprite.getScale().x / 2),
                                        subtitlesCenter.y - (subSize.y * m_videoSprite.getScale().y / 2));
@@ -441,6 +446,32 @@ namespace sfe
         return sf::Time::Zero;
     }
     
+    bool MovieImpl::setPlayingOffset(const sf::Time& targetSeekTime)
+    {
+        bool seekingResult = false;
+        
+        if (m_demuxer && m_timer)
+        {
+            if (targetSeekTime < sf::Time::Zero || targetSeekTime >= getDuration())
+            {
+                sfeLogError("Invalid seek position: out of range [0, duration[");
+            }
+            else
+            {
+                seekingResult = m_timer->seek(targetSeekTime);
+                
+                if (m_timer->getStatus() == Status::Stopped)
+                    pause();
+            }
+        }
+        else
+        {
+            sfeLogError("Movie - No media loaded, cannot seek");
+        }
+        
+        return seekingResult;
+    }
+    
     const sf::Texture& MovieImpl::getCurrentImage() const
     {
         static sf::Texture emptyTexture;
@@ -458,10 +489,9 @@ namespace sfe
     void MovieImpl::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
         target.draw(m_videoSprite, states);
-        for (std::list<sf::Sprite>::const_iterator it = m_subtitleSprites.begin();
-             it != m_subtitleSprites.end(); ++it)
+        for (const sf::Sprite& sprite : m_subtitleSprites)
         {
-            target.draw(*it, states);
+            target.draw(sprite, states);
         }
         
 #if LAYOUT_DEBUGGER_ENABLED
@@ -483,9 +513,8 @@ namespace sfe
                                      m_displayFrame.top + m_displayFrame.height * 0.9f);
         std::list<sf::Vector2i>::const_iterator pos_it = positions.begin();
         
-        for (std::list<sf::Sprite>::iterator it = m_subtitleSprites.begin(); it != m_subtitleSprites.end(); ++it)
+		for (sf::Sprite& subtitleSprite : m_subtitleSprites)
         {
-            sf::Sprite& subtitleSprite = *it;
             const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             
             if (use_position)
@@ -521,6 +550,7 @@ namespace sfe
     
     void MovieImpl::didWipeOutSubtitles(const SubtitleStream& sender)
     {
-        m_subtitleSprites.clear();
+        //if (m_subtitleSprites.size()>0) // disable this "fix" for now to let the bug appear
+            m_subtitleSprites.clear();
     }
 }

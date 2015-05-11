@@ -1,6 +1,6 @@
 
 /*
- *  Utilities.hpp
+ *  TimerPriorities.cpp
  *  sfeMovie project
  *
  *  Copyright (C) 2010-2015 Lucas Soltic
@@ -22,37 +22,9 @@
  *
  */
 
-#ifndef SFEMOVIE_UTILITIES_HPP
-#define SFEMOVIE_UTILITIES_HPP
+#include "TimerPriorities.hpp"
 
-#include "Stream.hpp"
-#include "Log.hpp"
-#include <string>
-
-namespace sfe
-{
-    /** Display a list of all the available demuxers as follow:
-     * - decoder_type: decoder_name
-     */
-    void dumpAvailableDemuxers();
-    
-    /** Display a list of all the available decoders as follow:
-     * - decoder_type: decoder_name
-     */
-    void dumpAvailableDecoders();
-    
-    /** Gives the string representing the given @a type
-     *
-     * Conversion is done as follow:
-     * Audio      -> audio
-     * Subtitle   -> subtitle
-     * Video      -> video
-     * Unknown    -> unknown
-     *
-     * @param type the media type to stringify
-     * @return the stringified media type
-     */
-    std::string mediaTypeToString(MediaType type);
-}
-
-#endif
+const int DefaultTimerPriority = 0;
+const int DemuxerTimerPriority = -5; // Demuxer always notified first!
+const int ActiveStreamTimerPriority = 5;
+const int PassiveStreamTimerPriority = 10; // Always last

@@ -3,7 +3,7 @@
  *  Movie.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <sfeMovie/Visibility.hpp>
+#include <sfeMovie/StreamSelection.hpp>
 #include <vector>
 #include <string>
 #include <memory>
@@ -44,33 +45,6 @@ namespace sfe
         Playing, //!< The playback is playing
         End
     };
-    
-    enum MediaType
-    {
-        Audio,
-        Subtitle,
-        Video,
-        Unknown
-    };
-    
-    /** Structure that allows both knowing metadata about each stream, and identifying streams
-     * for selection through Movie::selectStream()
-     */
-    struct SFE_API StreamDescriptor
-    {
-        /** Return a stream descriptor that identifies no stream. This allows disabling a specific stream kind
-         * 
-         * @param type the stream kind (audio, video...) to disable
-         * @return a StreamDescriptor that can be used to disable the given stream kind
-         */
-        static StreamDescriptor NoSelection(MediaType type);
-        
-        MediaType type;            //!< Stream kind: video, audio or subtitle
-        int identifier;            //!< Internal stream identifier in the media, used for choosing which stream to enable
-        std::string language;    //!< Language code defined by ISO 639-2, if set by the media
-    };
-    
-    typedef std::vector<StreamDescriptor> Streams;
     
     class MovieImpl;
     /** Main class of the sfeMovie API. It is used to open media files, provide playback and basic controls
@@ -212,6 +186,14 @@ namespace sfe
          * @return the playing position
          */
         sf::Time getPlayingOffset() const;
+
+        /** Seek up to @a targetSeekTime
+         *
+         * @param targetSeekTime the new expected playing offset
+         * @return true is seeking was successfull on all the streams, false otherwise
+         * If seeking failed, it is not guaranteed to still be playable and synchronized
+         */
+        bool setPlayingOffset(const sf::Time& targetSeekTime);
         
         /** @brief Returns the latest movie image
          *

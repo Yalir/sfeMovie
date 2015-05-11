@@ -22,7 +22,7 @@ if (MACOSX)
                           MACOSX_FRAMEWORK_IDENTIFIER org.yalir.${SFEMOVIE_LIB}
                           MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}
                           MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}
-                          PUBLIC_HEADER "${SFE_HEADERS}")
+                          PUBLIC_HEADER "${HEADER_FILES}")
 
     # adapt install directory to allow distributing dylibs/frameworks in user’s frameworks/application bundle
     set_target_properties(${SFEMOVIE_LIB} PROPERTIES 

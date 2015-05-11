@@ -3,7 +3,7 @@
  *  SubtitleStream.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Stephan Vedder
+ *  Copyright (C) 2010-2015 Stephan Vedder
  *  stephan.vedder@gmail.com
  *
  *  This program is free software; you can redistribute it and/or
@@ -72,15 +72,24 @@ namespace sfe
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const;
+        virtual MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update();
+        virtual void update() override;
         
         /** @see Stream::isPassive()
          */
         bool isPassive() const override;
+        
+         /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
+         */
+        virtual void flushBuffers() override;
+        
+        /** @see Stream::fastForward()
+         */
+        virtual bool fastForward(sf::Time targetPosition);
+        
     private:
         enum SubtitleType
         {
@@ -119,7 +128,6 @@ namespace sfe
 
         /** Flush buffers that aren't needed anymore on seeking
         */
-        virtual void flushBuffers();
         
         /** Libass message callback
         */

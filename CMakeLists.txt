@@ -39,6 +39,10 @@ else()
     return()
 endif()
 
+if (WINDOWS AND NOT MSVC)
+    message(FATAL_ERROR "Only Visual Studio (2013 and later) is supported on Windows")
+endif()
+
 # Set some env vars
 set (SFEMOVIE_LIB sfeMovie)
 set (VERSION_MAJOR 2)
@@ -71,7 +75,7 @@ endif()
 # ============================================== FFMPEG SETUP ================================================= #
 #################################################################################################################
 
-set (LINK_AGAINST_INTERNAL_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
+set (SFEMOVIE_BUILD_FFMPEG TRUE CACHE BOOL "TRUE to build sfeMovie with the provided FFmpeg sources, FALSE to build with the system libraries")
 add_subdirectory(FFmpeg)
 
 #################################################################################################################
@@ -94,7 +98,7 @@ if (SFEMOVIE_BUILD_STATIC)
     set (SFML_STATIC_LIBRARIES TRUE)
 endif()
 
-find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
+find_package (SFML 2.3 COMPONENTS graphics window system audio REQUIRED)
 message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
 message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
@@ -103,17 +107,12 @@ message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 #################################################################################################################
 
 file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]* ${SOURCES_DIR}/DebugTools/[a-z,A-Z]*.[c,h]*)
+file(GLOB HEADER_FILES RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
 
 add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 if (MACOSX) # ========================================== MACOSX ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
-    
-    # find only "root" headers
-    file(GLOB SFE_HEADERS RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
-    
-    # Make sure sfeMovie headers get imported in the framework
-    set (SOURCE_FILES ${SOURCE_FILES} ${SFE_HEADERS})
 elseif (WINDOWS) # ========================================== WINDOWS ==========================================
     if (MSVC)
         set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
@@ -130,18 +129,16 @@ elseif (WINDOWS) # ========================================== WINDOWS ==========
     set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 endif()
 
-source_group(Sources FILES ${SOURCE_FILES})
-
 # Set the search directories for compiling and link editing
 set(SFEMOVIE_INCLUDE_DIRS "${LIBASS_INCLUDE_DIR};${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
 include_directories (${SFEMOVIE_INCLUDE_DIRS})
 message (STATUS "Headers directories: ${LIBASS_INCLUDE_DIR} ${SFML_INCLUDE_DIR} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${FFMPEG_INCLUDE_DIRS}")
 
-# Define the source files sfe should compile
+source_group("Public headers" FILES ${HEADER_FILES})
 if (SFEMOVIE_BUILD_STATIC)
-    add_library(${SFEMOVIE_LIB} STATIC ${SOURCE_FILES})
+    add_library(${SFEMOVIE_LIB} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 else()
-    add_library (${SFEMOVIE_LIB} SHARED ${SOURCE_FILES})
+    add_library(${SFEMOVIE_LIB} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
 if (${NeedsFFmpegCompilation})
@@ -160,7 +157,7 @@ else()
     target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${LIBASS_LIBRARIES} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
 endif()
 
-if (${LINK_AGAINST_INTERNAL_FFMPEG})
+if (SFEMOVIE_BUILD_FFMPEG)
     if (LINUX)
         add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
             COMMAND cp -R
@@ -185,24 +182,19 @@ include (${CMAKE_SOURCE_DIR}/cmake/Properties.cmake)
 include (${CMAKE_SOURCE_DIR}/cmake/Install.cmake)
 
 # Unit tests
-set (BUILD_UNIT_TESTS FALSE CACHE BOOL "TRUE to build the unit test system")
-if (BUILD_UNIT_TESTS)
+set (SFEMOVIE_BUILD_UNIT_TESTS FALSE CACHE BOOL "TRUE to build the unit test system, requires Boost")
+if (SFEMOVIE_BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 endif()
 
 # Sample building
-set (BUILD_SFEMOVIE_SAMPLE FALSE CACHE BOOL "TRUE to build the sfeMovie sample")
-if (BUILD_SFEMOVIE_SAMPLE)
-    add_subdirectory(sample)
-endif ()
+add_subdirectory(sample)
 
 # add an option for building the documentation
-set(BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation")
-if(BUILD_DOC)
+set(SFEMOVIE_BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation, requires Doxygen")
+if(SFEMOVIE_BUILD_DOC)
     add_subdirectory(doxygen)
 endif()
 
-set(BUILD_PACKAGE FALSE CACHE BOOL "Set to true to generate a zip file containing all the files required for development with sfeMovie")
-if (BUILD_PACKAGE)
-    include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
-endif()
+# Define packaging
+include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)

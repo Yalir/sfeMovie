@@ -3,7 +3,7 @@
  *  VideoStream.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -56,7 +56,7 @@ namespace sfe
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const;
+        MediaType getStreamKind() const override;
         
         /** Get the video frame size (width, height)
          *
@@ -77,7 +77,19 @@ namespace sfe
         
         /** Update the video frame and the stream's status
          */
-        virtual void update();
+        void update() override;
+        
+        /** @see Stream::flushBuffers()
+         */
+        virtual void flushBuffers();
+        
+        /** @see Stream::fastForward()
+         */
+        bool fastForward(sf::Time targetPosition) override;
+        
+        /** Load packets until one frame can be decoded
+         */
+        void preload();
     private:
         bool onGetData(sf::Texture& texture);
         
@@ -117,24 +129,23 @@ namespace sfe
          */
         void rescale(AVFrame* frame, uint8_t* outVideoBuffer[4], int outVideoLinesize[4]);
         
-        /** Load packets until one frame can be decoded
-         */
-        void preload();
-        
         // Timer::Observer interface
-        void willPlay(const Timer &timer);
+        void willPlay(const Timer &timer) override;
+        
+        /** Returns the delay caused by the FFmpeg decoder buffering
+         */
+        sf::Time codecBufferingDelay() const;
         
         // Private data
         sf::Texture m_texture;
         AVFrame* m_rawVideoFrame;
         uint8_t *m_rgbaVideoBuffer[4];
         int m_rgbaVideoLinesize[4];
+        std::list<sf::Time> m_codecBufferingDelays;
         Delegate& m_delegate;
         
         // Rescaler data
         struct SwsContext *m_swsCtx;
-        
-        sf::Time m_lastDecodedTimestamp;
     };
 }
 

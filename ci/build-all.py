@@ -11,7 +11,6 @@ parser = argparse.ArgumentParser(description='Run this script to launch the buil
 parser.add_argument('--sources', help='Full path to the project sources', required=True)
 parser.add_argument('--config', choices={'Debug', 'Release'}, required=True)
 parser.add_argument('--decoders', choices={'Free', 'All'}, default='Free')
-parser.add_argument('--compiler', choices={'Auto', 'MinGW', 'MSVC12'}, default='Auto')
 args = parser.parse_args()
 
 # Setup environment
@@ -47,18 +46,11 @@ else:
 generatorArg = ''
 
 if platform.system() == 'Windows':
-    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs12"
-
-    if args.compiler != 'Auto':
-        if args.compiler == 'MinGW':
-            generatorArg = "-GMSYS Makefiles"
-            os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-MinGW"
-        elif args.compiler == 'MSVC12':
-            generatorArg = "-GVisual Studio 12"
-            os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-vs2013"
+    generatorArg = "-GVisual Studio 12"
+    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.3-windows-vc12-32-bit/SFML-2.3"
 
 # Configure
-command = ["cmake", "..", "-DENABLED_DECODERS=" + decoders, "-DBUILD_PACKAGE=TRUE", "-DCMAKE_BUILD_TYPE=" + args.config]
+command = ["cmake", "..", "-DSFEMOVIE_ENABLED_DECODERS=" + decoders, "-DCMAKE_BUILD_TYPE=" + args.config]
 
 if generatorArg != '':
 	command += {generatorArg}

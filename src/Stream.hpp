@@ -3,7 +3,7 @@
  *  Stream.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -47,6 +47,10 @@ namespace sfe
             virtual void requestMoreData(Stream& starvingStream) = 0;
             virtual void resetEndOfFileStatus() = 0;
         };
+        
+        /** @return a textual description of the given FFmpeg stream
+         */
+        static std::string AVStreamDescription(AVStream* stream);
         
         /** Create a stream from the given FFmpeg stream
          *
@@ -127,7 +131,26 @@ namespace sfe
         
         /** Compute the stream position in the media, by possibly fetching a packet
          */
-        sf::Time computePosition();
+        sf::Time computeEncodedPosition();
+        
+        /** Compute how much time would be covered by the given packet, it's the diff between
+         * the current packet pts, and the next packet pts
+         */
+        sf::Time packetDuration(const AVPacket* packet) const;
+        
+        /** Discard the data not needed to start playback at the given position
+         *
+         * Every single bit of unneeded data must be discarded as streams synchronization accuracy will
+         * depend on this
+         *
+         * @param targetPosition the position for which the stream is expected to be ready to play
+         * @return true is fast forwarding could be done successfully, false otherwise
+         */
+        virtual bool fastForward(sf::Time targetPosition) = 0;
+        
+        /** @return a textual description of the current stream
+         */
+        std::string description() const;
         
         /** Update the current stream's status and eventually decode frames
          */
@@ -144,11 +167,10 @@ namespace sfe
         virtual bool isPassive() const;
     protected:
         // Timer::Observer interface
-        void didPlay(const Timer& timer, Status previousStatus);
-        void didPause(const Timer& timer, Status previousStatus);
-        void didStop(const Timer& timer, Status previousStatus);
-        void willSeek(const Timer& timer, sf::Time position);
-        void didSeek(const Timer& timer, sf::Time position);
+        void didPlay(const Timer& timer, Status previousStatus) override;
+        void didPause(const Timer& timer, Status previousStatus) override;
+        void didStop(const Timer& timer, Status previousStatus) override;
+        bool didSeek(const Timer& timer, sf::Time oldPosition) override;
         
         /** @return true if any raw packet for the current stream is queued
          */

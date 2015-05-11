@@ -3,7 +3,7 @@
  *  Demuxer.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -35,6 +35,7 @@ extern "C"
 #include "AudioStream.hpp"
 #include "Log.hpp"
 #include "Utilities.hpp"
+#include "TimerPriorities.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -152,10 +153,12 @@ namespace sfe
             
             try
             {
+                std::shared_ptr<Stream> stream;
+                
                 switch (ffstream->codec->codec_type)
                 {
                     case AVMEDIA_TYPE_VIDEO:
-                        m_streams[ffstream->index] = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
+                        stream = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -166,7 +169,7 @@ namespace sfe
                         break;
                         
                     case AVMEDIA_TYPE_AUDIO:
-                        m_streams[ffstream->index] = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
+                        stream = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -176,28 +179,27 @@ namespace sfe
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
                         break;
                     case AVMEDIA_TYPE_SUBTITLE:
-                        m_streams[ffstream->index] = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
-                        
-                        if (m_duration == sf::Time::Zero)
-                        {
-                            extractDurationFromStream(ffstream);
-                        }
+                        stream = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
                         
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
                         break;
                     default:
-                        m_ignoredStreams[ffstream->index] = std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type)) + "/" + avcodec_get_name(ffstream->codec->codec_id));
-                        sfeLogDebug(m_ignoredStreams[ffstream->index] + "' stream ignored");
+                        m_ignoredStreams[ffstream->index] = Stream::AVStreamDescription(ffstream);
+                        sfeLogDebug(m_ignoredStreams[ffstream->index] + " ignored");
                         break;
                 }
+                
+                // Don't create an entry in the map unless everything went well and stream did not get ignored
+                if (stream)
+                    m_streams[ffstream->index] = stream;
             }
             catch (std::runtime_error& e)
             {
-                std::string streamId =
-                    std::string("'" + std::string(av_get_media_type_string(ffstream->codec->codec_type))
-                                + "/" + avcodec_get_name(ffstream->codec->codec_id)) + "'";
+                std::string streamDesc = Stream::AVStreamDescription(ffstream);
                 
-                sfeLogError("error while loading " + streamId + " stream: " + e.what());
+                sfeLogError("error while loading " + streamDesc + ": " + e.what());
+                CHECK(m_streams.find(ffstream->index) == m_streams.end(),
+                      "Internal inconcistency error: stream whose loading failed should not be stored");
             }
         }
         
@@ -206,7 +208,7 @@ namespace sfe
             sfeLogWarning("The media duration could not be retreived");
         }
         
-        m_timer->addObserver(*this);
+        m_timer->addObserver(*this, DemuxerTimerPriority);
     }
     
     Demuxer::~Demuxer()
@@ -229,7 +231,6 @@ namespace sfe
     {
         return m_streams;
     }
-    
     
     std::set< std::shared_ptr<Stream> > Demuxer::getStreamsOfType(MediaType type) const
     {
@@ -378,7 +379,7 @@ namespace sfe
     {
         sf::Lock l(m_synchronized);
         
-        while (!didReachEndOfFile() && stream.needsMoreData())
+        while ((!didReachEndOfFile() || hasPendingDataForStream(stream)) && stream.needsMoreData())
         {
             AVPacket* pkt = NULL;
             
@@ -395,15 +396,27 @@ namespace sfe
             {
                 if (!distributePacket(pkt, stream))
                 {
-                    AVStream* ffstream = m_formatCtx->streams[pkt->stream_index];
-                    std::string streamName = std::string("'") + av_get_media_type_string(ffstream->codec->codec_type) + "/" + avcodec_get_name(ffstream->codec->codec_id);
-                    
-                    sfeLogDebug(streamName + " packet dropped");
                     av_free_packet(pkt);
                     av_free(pkt);
                 }
             }
         }
+    }
+    
+    std::set<std::shared_ptr<Stream>> Demuxer::getSelectedStreams() const
+    {
+        std::set<std::shared_ptr<Stream>> set;
+        
+        if (m_connectedVideoStream)
+            set.insert(m_connectedVideoStream);
+        
+        if (m_connectedAudioStream)
+            set.insert(m_connectedAudioStream);
+        
+        if (m_connectedSubtitleStream)
+            set.insert(m_connectedSubtitleStream);
+        
+        return set;
     }
     
     void Demuxer::update()
@@ -454,10 +467,13 @@ namespace sfe
     {
         sf::Lock l(m_synchronized);
         
-        for (AVPacket* packet : m_pendingDataForActiveStreams)
+        for (std::pair<const Stream*, std::list<AVPacket*> >&& pair : m_pendingDataForActiveStreams)
         {
-            av_free_packet(packet);
-            av_free(packet);
+            for (AVPacket* packet : pair.second)
+            {
+                av_free_packet(packet);
+                av_free(packet);
+            }
         }
         
         m_pendingDataForActiveStreams.clear();
@@ -466,20 +482,52 @@ namespace sfe
     void Demuxer::queueEncodedData(AVPacket* packet)
     {
         sf::Lock l(m_synchronized);
-        m_pendingDataForActiveStreams.push_back(packet);
+        
+        std::set<std::shared_ptr<Stream>> connectedStreams = getSelectedStreams();
+        
+        for (std::shared_ptr<Stream> stream : connectedStreams)
+        {
+            if (stream->canUsePacket(packet))
+            {
+                std::list<AVPacket*>& packets = m_pendingDataForActiveStreams[stream.get()];
+                packets.push_back(packet);
+                return;
+            }
+        }
+        
+        sfeLogError("No stream can use the packet, destroying it");
+        av_free_packet(packet);
+        av_free(packet);
+    }
+    
+    bool Demuxer::hasPendingDataForStream(const Stream& stream) const
+    {
+        sf::Lock l(m_synchronized);
+        
+        const std::map<const Stream*, std::list<AVPacket*> >::const_iterator it =
+            m_pendingDataForActiveStreams.find(&stream);
+        
+        if (it != m_pendingDataForActiveStreams.end())
+            return ! it->second.empty();
+        
+        return false;
     }
     
     AVPacket* Demuxer::gatherQueuedPacketForStream(Stream& stream)
     {
         sf::Lock l(m_synchronized);
-        for (std::list<AVPacket*>::iterator it = m_pendingDataForActiveStreams.begin();
-             it != m_pendingDataForActiveStreams.end(); ++it)
+        
+        std::map<const Stream*, std::list<AVPacket*> >::iterator it
+            = m_pendingDataForActiveStreams.find(&stream);
+        
+        if (it != m_pendingDataForActiveStreams.end())
         {
-            AVPacket* packet = *it;
+            std::list<AVPacket*>& pendingPackets = it->second;
             
-            if (stream.canUsePacket(packet))
+            if (! pendingPackets.empty())
             {
-                m_pendingDataForActiveStreams.erase(it);
+                AVPacket* packet = pendingPackets.front();
+                pendingPackets.pop_front();
                 return packet;
             }
         }
@@ -492,7 +540,7 @@ namespace sfe
         sf::Lock l(m_synchronized);
         CHECK(packet, "Demuxer::distributePacket() - invalid argument");
         
-        bool result = false;
+        bool distributed = false;
         std::map<int, std::shared_ptr<Stream> >::iterator it = m_streams.find(packet->stream_index);
         
         if (it != m_streams.end())
@@ -510,11 +558,11 @@ namespace sfe
                 else
                     queueEncodedData(packet);
                 
-                result = true;
+                distributed = true;
             }
         }
         
-        return result;
+        return distributed;
     }
     
     void Demuxer::extractDurationFromStream(const AVStream* stream)
@@ -543,34 +591,157 @@ namespace sfe
         m_eofReached = false;
     }
     
-    void Demuxer::willSeek(const Timer &timer, sf::Time position)
+    bool Demuxer::didSeek(const Timer &timer, sf::Time oldPosition)
     {
         resetEndOfFileStatus();
-        flushBuffers();
+        sf::Time newPosition = timer.getOffset();
+        std::set< std::shared_ptr<Stream> > connectedStreams;
         
-        if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS)
+        if (m_connectedVideoStream)
+            connectedStreams.insert(m_connectedVideoStream);
+        if (m_connectedAudioStream)
+            connectedStreams.insert(m_connectedAudioStream);
+        if (m_connectedSubtitleStream)
+            connectedStreams.insert(m_connectedSubtitleStream);
+        
+        CHECK(connectedStreams.size() > 0, "Inconcistency error: seeking with no active stream");
+        
+        // Trivial seeking to beginning
+        if (newPosition == sf::Time::Zero)
         {
             int64_t timestamp = 0;
             
-            if (m_formatCtx->start_time != AV_NOPTS_VALUE)
+            if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS && m_formatCtx->start_time != AV_NOPTS_VALUE)
                 timestamp += m_formatCtx->start_time;
             
+            
+            // Flush all streams
+            for (std::shared_ptr<Stream> stream : connectedStreams)
+                stream->flushBuffers();
+            flushBuffers();
+            
+            // Seek to beginning
             int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, timestamp, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
-            
             if (err < 0)
-                sfeLogError("Error while seeking at time " + s(position.asMilliseconds()) + "ms");
+            {
+                sfeLogError("Error while seeking at time " + s(newPosition.asMilliseconds()) + "ms");
+                return false;
+            }
         }
-        else
+        else // Seeking to some other position
         {
-            int err = avformat_seek_file(m_formatCtx, -1, INT64_MIN, 0, INT64_MAX, AVSEEK_FLAG_BACKWARD);
-            //            sfeLogDebug("Seek by PTS at timestamp=" + s(timestamp) + " returned " + s(err));
+            // Initial target seek point
+            int64_t timestamp = newPosition.asSeconds() * AV_TIME_BASE;
             
-            //            int err = av_seek_frame(m_formatCtx, m_streamID, -999999, AVSEEK_FLAG_BACKWARD);
-            sfeLogDebug("Seek by DTS at timestamp " + s(-9999) + " returned " + s(err));
+            // < 0 = before seek point
+            // > 0 = after seek point
+            std::map< std::shared_ptr<Stream>, sf::Time> seekingGaps;
             
-            if (err < 0)
-                sfeLogError("Error while seeking at time " + s(position.asMilliseconds()) + "ms");
+            static const float brokenSeekingThreshold = 60.f; // seconds
+            bool didReseekBackward = false;
+            bool didReseekForward = false;
+            int tooEarlyCount = 0;
+            int tooLateCount = 0;
+            int brokenSeekingCount = 0;
+            int ffmpegSeekFlags = AVSEEK_FLAG_BACKWARD;
+            
+            do
+            {
+                // Flush all streams
+                for (std::shared_ptr<Stream> stream : connectedStreams)
+                    stream->flushBuffers();
+                flushBuffers();
+                
+                // Seek to new estimated target
+                if (m_formatCtx->iformat->flags & AVFMT_SEEK_TO_PTS && m_formatCtx->start_time != AV_NOPTS_VALUE)
+                    timestamp += m_formatCtx->start_time;
+                
+                int err = avformat_seek_file(m_formatCtx, -1, timestamp - 10 * AV_TIME_BASE,
+                                             timestamp, timestamp, ffmpegSeekFlags);
+                CHECK0(err, "avformat_seek_file failure");
+                
+                // Compute the new gap
+                for (std::shared_ptr<Stream> stream : connectedStreams)
+                {
+                    sf::Time gap = stream->computeEncodedPosition() - newPosition;
+                    seekingGaps[stream] = gap;
+                }
+                
+                tooEarlyCount = 0;
+                tooLateCount = 0;
+                brokenSeekingCount = 0;
+                
+                // Check the current situation
+                for (std::pair< std::shared_ptr<Stream>, sf::Time>&& gapByStream : seekingGaps)
+                {
+                    // < 0 = before seek point
+                    // > 0 = after seek point
+                    const sf::Time& gap = gapByStream.second;
+                    float absoluteDiff = fabs(gap.asSeconds());
+                    
+                    // Before seek point
+                    if (gap < sf::Time::Zero)
+                    {
+                        if (absoluteDiff > brokenSeekingThreshold)
+                        {
+                            brokenSeekingCount++;
+                            tooEarlyCount++;
+                        }
+                    
+                        // else: a bit early but not too much, this is the final situation we want
+                    }
+                    // After seek point
+                    else if (gap > sf::Time::Zero)
+                    {
+                        tooLateCount++;
+                    
+                        if (absoluteDiff > brokenSeekingThreshold)
+                            brokenSeekingCount++; // TODO: unhandled for now => should seek to non-key frame
+                    }
+                    
+                    if (brokenSeekingCount > 0)
+                        sfeLogWarning("Seeking on " + gapByStream.first->description() + " is broken! Gap: "
+                                      + s(gap.asSeconds()) + "s");
+                }
+                
+                CHECK(false == (tooEarlyCount && tooLateCount),
+                      "Both too late and too early for different streams, unhandled situation!");
+                
+                // Define what to do next
+                if (tooEarlyCount)
+                {
+                    // Go forward by 1 sec
+                    timestamp += AV_TIME_BASE;
+                    didReseekForward = true;
+                }
+                else if (tooLateCount)
+                {
+                    // Go backward by 1 sec
+                    timestamp -= AV_TIME_BASE;
+                    didReseekBackward = true;
+                }
+                
+                if (brokenSeekingCount)
+                {
+                    if (ffmpegSeekFlags & AVSEEK_FLAG_ANY)
+                    {
+                        sfeLogError("Seeking is really broken in the media, giving up");
+                        return false;
+                    }
+                    else
+                    {
+                        // Try to seek to non-key frame before giving up
+                        // Image may be wrong but it's better than nothing :)
+                        ffmpegSeekFlags |= AVSEEK_FLAG_ANY;
+                        sfeLogError("Media has broken seeking index, trying to seek to non-key frame");
+                    }
+                }
+                
+                CHECK(!(didReseekBackward && didReseekForward), "infinitely seeking backward and forward");
+            }
+            while (tooEarlyCount != 0 || tooLateCount != 0);
         }
+        
+        return true;
     }
 }

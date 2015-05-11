@@ -3,7 +3,7 @@
  *  Timer.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -74,41 +74,29 @@ namespace sfe
              */
             virtual void didStop(const Timer& timer, Status previousStatus);
             
-            /** Called by @a timer right before seeking if this Observer is registered for notifications
-             *
-             * When this method is called, the timer is guaranteed to be paused or stopped
-             *
-             * @param timer the timer that generated the notification
-             * @param newPosition the wished position for seeking
-             */
-            virtual void willSeek(const Timer& timer, sf::Time newPosition);
-            
             /** Called by @a timer right after seeking if this Observer is registered for notifications
              *
              * When this method is called, the timer is guaranteed to be paused or stopped
              *
              * @param timer the timer that generated the notification
              * @param position the position before seeking
+             * @return true if the observer successfully responded to the seeking event
              */
-            virtual void didSeek(const Timer& timer, sf::Time oldPosition);
+            virtual bool didSeek(const Timer& timer, sf::Time oldPosition);
         };
         
         /** Default constructor
          */
         Timer();
         
-        /** Default destructor
-         *
-         * Before destruction, the timer is stopped
-         */
-        ~Timer();
-        
         /** Register an observer that should be notified when this timer is
          * played, paused or stopped
          *
          * @param anObserver the observer that should receive notifications
+         * @param priority the priority that should be taken into account when distributing notifications,
+         * observers with the lowest priority value will be notified first
          */
-        void addObserver(Observer& anObserver);
+        void addObserver(Observer& anObserver, int priority = 0);
         
         /** Stop sending notifications to this observer
          *
@@ -130,11 +118,13 @@ namespace sfe
         
         /** Seek to the given position, the timer's offset is updated accordingly
          *
-         * If the timer was playing, it is paused, seeking occurs, then it is resumed
+         * If the timer was playing, it is paused, seeking occurs, then it is resumed.
+         * The timer offset is always updated, even if seeking fails
          *
          * @param position the new wished timer position
+         * @return true if seeking succeeded, false otherwise
          */
-        void seek(sf::Time position);
+        bool seek(sf::Time position);
         
         /** Return this timer status
          *
@@ -155,7 +145,7 @@ namespace sfe
          *
          * @param futureStatus the status to which this timer is about to change
          */
-        void notifyObservers(Status futureStatus);
+        void notifyObservers(Status newStatus);
         
         /** Notify all observers that the timer's status changed from @a oldStatus to @a newStatus
          *
@@ -169,16 +159,15 @@ namespace sfe
          * When the observer receives the notification, the timer is guaranteed to be paused or stopped
          *
          * @param oldPosition the timer position before seeking
-         * @param newPosition the timer position after seeking
-         * @param alreadySeeked false if willSeek notification should be sent, true if didSeek should be sent
-         * instead
+         * @return true if all the observers successfully responsed to the seek event
          */
-        void notifyObservers(sf::Time oldPosition, sf::Time newPosition, bool alreadySeeked);
+        bool notifyObservers(sf::Time oldPosition);
         
         sf::Time m_pausedTime;
         Status m_status;
         sf::Clock m_timer;
-        std::set<Observer*> m_observers;
+        std::map<Observer*, int> m_observers;
+        std::map<int, std::set<Observer*> > m_observersByPriority;
     };
 }
 

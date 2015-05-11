@@ -3,7 +3,7 @@
  *  Movie.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -28,14 +28,6 @@
 
 namespace sfe
 {
-    StreamDescriptor StreamDescriptor::NoSelection(sfe::MediaType type)
-    {
-        StreamDescriptor descriptor;
-        descriptor.type = type;
-        descriptor.identifier = -1;
-        return descriptor;
-    }
-    
     Movie::Movie() :
     m_impl(new MovieImpl(*this))
     {
@@ -148,6 +140,12 @@ namespace sfe
     sf::Time Movie::getPlayingOffset() const
     {
         return m_impl->getPlayingOffset();
+    }
+    
+    
+    bool Movie::setPlayingOffset(const sf::Time& targetSeekTime)
+    {
+        return m_impl->setPlayingOffset(targetSeekTime);
     }
     
     

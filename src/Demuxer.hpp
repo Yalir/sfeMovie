@@ -3,7 +3,7 @@
  *  Demuxer.hpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -179,6 +179,10 @@ namespace sfe
          */
         void feedStream(Stream& stream);
         
+        /** @return a list of all the active streams
+         */
+        std::set<std::shared_ptr<Stream>> getSelectedStreams() const;
+        
         /** Update the media status and eventually decode frames
          */
         void update();
@@ -214,6 +218,14 @@ namespace sfe
          */
         void queueEncodedData(AVPacket* packet);
         
+        /** Check whether data that should be distributed to the given stream is currently pending
+         * in the demuxer's temporary queue
+         *
+         * @param stream the stream for which pending data availability is to be checked
+         * @param whether pending data exists for the given stream
+         */
+        bool hasPendingDataForStream(const Stream& stream) const;
+        
         /** Look for a queued packet for the given stream
          *
          * @param stream the stream for which to search a packet
@@ -238,23 +250,23 @@ namespace sfe
         void extractDurationFromStream(const AVStream* stream);
         
         // Data source interface
-        void requestMoreData(Stream& starvingStream);
-        void resetEndOfFileStatus();
+        void requestMoreData(Stream& starvingStream) override;
+        void resetEndOfFileStatus() override;
         
         // Timer interface
-        void willSeek(const Timer& timer, sf::Time position);
+        bool didSeek(const Timer& timer, sf::Time oldPosition) override;
         
         AVFormatContext* m_formatCtx;
         bool m_eofReached;
         std::map<int, std::shared_ptr<Stream> > m_streams;
         std::map<int, std::string> m_ignoredStreams;
-        sf::Mutex m_synchronized;
+        mutable sf::Mutex m_synchronized;
         std::shared_ptr<Timer> m_timer;
         std::shared_ptr<Stream> m_connectedAudioStream;
         std::shared_ptr<Stream> m_connectedVideoStream;
         std::shared_ptr<Stream> m_connectedSubtitleStream;
         sf::Time m_duration;
-        std::list <AVPacket*> m_pendingDataForActiveStreams;
+        std::map<const Stream*, std::list<AVPacket*> > m_pendingDataForActiveStreams;
         
         static std::list<DemuxerInfo> g_availableDemuxers;
         static std::list<DecoderInfo> g_availableDecoders;

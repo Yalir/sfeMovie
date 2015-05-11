@@ -22,6 +22,14 @@ else()
             COMPONENT binaries)
 endif()
 
+if (WINDOWS)
+    install(FILES
+            "${CMAKE_SOURCE_DIR}/deps/Windows-i386/libgcc_s_dw2-1.dll"
+            "${CMAKE_SOURCE_DIR}/deps/Windows-i386/libiconv-2.dll"
+            DESTINATION bin
+            COMPONENT binaries)
+endif()
+
 install(FILES "${CMAKE_SOURCE_DIR}/License.txt" "${CMAKE_SOURCE_DIR}/ReadMe.txt" "${CMAKE_SOURCE_DIR}/Authors.txt"
         DESTINATION ${INSTALL_MISC_DIR}
         COMPONENT resources)

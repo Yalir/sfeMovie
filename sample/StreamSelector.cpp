@@ -3,7 +3,7 @@
  *  Streams.cpp
  *  sfeMovie project
  *
- *  Copyright (C) 2010-2014 Lucas Soltic
+ *  Copyright (C) 2010-2015 Lucas Soltic
  *  lucas.soltic@orange.fr
  *
  *  This program is free software; you can redistribute it and/or
@@ -54,19 +54,26 @@ StreamSelector::StreamSelector(sfe::Movie& movie)
 
 void StreamSelector::selectNextStream(sfe::MediaType type)
 {
-    m_selectedStreamIndexes[type] = (m_selectedStreamIndexes[type] + 1) % (m_streams[type]->size() + 1);
+    int newStreamIndex = (m_selectedStreamIndexes[type] + 1) % (m_streams[type]->size() + 1);
     
-    if (m_selectedStreamIndexes[type] == m_streams[type]->size())
+    if (newStreamIndex == m_streams[type]->size())
     {
         if (m_movie.selectStream(sfe::StreamDescriptor::NoSelection(type)))
+        {
             std::cout << "Unselected " << mediaTypeToString(type) << " stream" << std::endl;
+            m_selectedStreamIndexes[type] = newStreamIndex;
+        }
     }
     else
     {
-        const sfe::StreamDescriptor& desc = m_streams[type]->at(m_selectedStreamIndexes[type]);
+        const sfe::StreamDescriptor& desc = m_streams[type]->at(newStreamIndex);
         if (m_movie.selectStream(desc))
+        {
             std::cout << "Selected " << mediaTypeToString(type) << " stream #" << desc.identifier
             << " (lang: " << (desc.language.size() ? desc.language : "unknown") << ")" << std::endl;
+            
+            m_selectedStreamIndexes[type] = newStreamIndex;
+        }
     }
 }
 
