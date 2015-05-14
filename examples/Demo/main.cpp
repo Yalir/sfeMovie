@@ -91,6 +91,10 @@ int main(int argc, const char *argv[])
     float width = std::min(static_cast<float>(desktopMode.width), movie.getSize().x);
     float height = std::min(static_cast<float>(desktopMode.height), movie.getSize().y);
     
+    // For audio files, there is no frame size, set a minimum:
+    width = std::max(width, 200.f);
+    height = std::max(height, 20.f);
+    
     // Create window
     sf::RenderWindow window(sf::VideoMode(width, height), "sfeMovie Player",
                             sf::Style::Close | sf::Style::Resize);
