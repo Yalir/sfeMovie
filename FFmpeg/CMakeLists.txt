@@ -32,19 +32,19 @@ else()
     if (WINDOWS)
         find_program(FFMPEG_BASH_EXE bash PATHS "C:/msys64/usr/bin")
         if (NOT FFMPEG_BASH_EXE)
-            message(FATAL_ERROR "Required executable Bash not found")
+            message(FATAL_ERROR "Required program 'bash.exe' not found. Manually set FFMPEG_BASH_EXE to the location of your MSYS2 Bash executable.")
         endif()
 
         get_filename_component(BASH_BIN_DIR "${FFMPEG_BASH_EXE}" DIRECTORY)
 
         find_program(SFEMOVIE_TAR_EXE tar PATHS "${BASH_BIN_DIR}" NO_DEFAULT_PATH)
         if (NOT SFEMOVIE_TAR_EXE)
-            message(FATAL_ERROR "Your MSYS2 installation is expected to provide the 'tar' program, install with 'pacman -S tar'")
+            message(FATAL_ERROR "Your MSYS2 installation is expected to provide the 'tar.exe' program, install with 'pacman -S tar'")
         endif()
 
         find_program(SFEMOVIE_MAKE_EXE make PATHS "${BASH_BIN_DIR}" NO_DEFAULT_PATH)
         if (NOT SFEMOVIE_MAKE_EXE)
-            message(FATAL_ERROR "Your MSYS2 installation is expected to provide the 'make' program, install with 'pacman -S make'")
+            message(FATAL_ERROR "Your MSYS2 installation is expected to provide the 'make.exe' program, install with 'pacman -S make'")
         endif()
 
         file(WRITE "${CMAKE_SOURCE_DIR}/BashPath.var" "${FFMPEG_BASH_EXE}")
@@ -60,7 +60,7 @@ else()
 
     find_program(FFMPEG_YASM_EXE yasm PATHS "${ADDITIONAL_BIN_DIR}")
     if (NOT FFMPEG_YASM_EXE)
-        message(FATAL_ERROR "Required executable Yasm not found")
+        message(FATAL_ERROR "Required executable 'yasm' not found")
     endif()
 
     file(WRITE "${CMAKE_SOURCE_DIR}/YasmPath.var" "${FFMPEG_YASM_EXE}")
