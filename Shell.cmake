@@ -9,9 +9,12 @@ function(add_shell_command customTargetName)
 
 
 	if (MSVC)
+		get_filename_component(BIN_DIR ${FFMPEG_BASH_EXE} DIRECTORY)
+		file(TO_NATIVE_PATH "${BIN_DIR}" BIN_DIR)
+
 		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 
 		add_custom_command(OUTPUT ${THIS_OUTPUT}
-					COMMAND BatchBridgeToShell ARGS ${MINGW_DIR} ${THIS_COMMAND}
+					COMMAND BatchBridgeToShell ARGS ${BIN_DIR} ${THIS_COMMAND}
 					DEPENDS "${THIS_DEPENDS}"
 					WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	else()
