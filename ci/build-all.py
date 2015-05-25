@@ -16,6 +16,8 @@ args = parser.parse_args()
 # Setup environment
 if platform.system() == "Darwin":
     os.environ['PATH'] += ":/usr/local/bin"
+elif platform.system() == 'Windows':
+    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.3-windows-vc12-32-bit/SFML-2.3"
 
 # Display environment
 print 'PATH is: {}'.format(os.environ['PATH'])
@@ -47,7 +49,8 @@ generatorArg = ''
 
 if platform.system() == 'Windows':
     generatorArg = "-GVisual Studio 12"
-    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.3-windows-vc12-32-bit/SFML-2.3"
+elif platform.system() == "Darwin":
+    generatorArg = "-GXcode"
 
 # Configure
 command = ["cmake", "..", "-DSFEMOVIE_ENABLED_DECODERS=" + decoders, "-DCMAKE_BUILD_TYPE=" + args.config]

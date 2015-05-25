@@ -1,2 +1,3 @@
-PATH %1/msys/1.0/bin;%1/bin;%path%
+PATH %path%;%1
+
 bash -c "./RunShellCommand.sh --from-batch %*"
