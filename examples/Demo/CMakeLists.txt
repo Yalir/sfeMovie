@@ -1,6 +1,6 @@
-set(SFEMOVIE_SAMPLE "sfeMovieSample")
+set(SFEMOVIE_DEMO "sfeMovieDemo")
 
-set(SFEMOVIE_SAMPLE_SRC
+set(SFEMOVIE_DEMO_SRC
     main.cpp
     MediaInfo.cpp
     MediaInfo.hpp
@@ -9,12 +9,12 @@ set(SFEMOVIE_SAMPLE_SRC
     UserInterface.cpp
     UserInterface.hpp
 )
+source_group("Sources" FILES ${SFEMOVIE_DEMO_SRC})
 
 add_executable(
-    ${SFEMOVIE_SAMPLE}
-    ${SFEMOVIE_SAMPLE_SRC}
+    ${SFEMOVIE_DEMO}
+    ${SFEMOVIE_DEMO_SRC}
 )
-source_group("Sources" FILES ${SFEMOVIE_SAMPLE_SRC})
 
 if (SFEMOVIE_BUILD_STATIC)
     set (SFML_STATIC_LIBRARIES TRUE)
@@ -22,11 +22,11 @@ if (SFEMOVIE_BUILD_STATIC)
     message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
     message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
-    set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES
+    set_target_properties(${SFEMOVIE_DEMO} PROPERTIES
         COMPILE_DEFINITIONS SFML_STATIC
         COMPILE_DEFINITIONS SFEMOVIE_STATIC)
     target_link_libraries(
-        ${SFEMOVIE_SAMPLE}
+        ${SFEMOVIE_DEMO}
         ${SFEMOVIE_LIB}
         ${FFMPEG_LIBRARIES}
         ${OTHER_LIBRARIES}
@@ -34,7 +34,7 @@ if (SFEMOVIE_BUILD_STATIC)
         ${SFML_DEPENDENCIES})
 else()
     target_link_libraries(
-        ${SFEMOVIE_SAMPLE}
+        ${SFEMOVIE_DEMO}
         ${SFEMOVIE_LIB}
         ${SFML_LIBRARIES}
         ${SFML_DEPENDENCIES}
@@ -42,7 +42,7 @@ else()
 endif()
 
 if (MACOSX)
-    set_target_properties(${SFEMOVIE_SAMPLE} PROPERTIES 
+    set_target_properties(${SFEMOVIE_DEMO} PROPERTIES 
                           BUILD_WITH_INSTALL_RPATH 1 
                           INSTALL_RPATH "@executable_path/")
 endif()

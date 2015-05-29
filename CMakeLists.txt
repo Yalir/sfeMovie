@@ -170,8 +170,8 @@ if (SFEMOVIE_BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 endif()
 
-# Sample building
-add_subdirectory(sample)
+# Examples building
+add_subdirectory(examples)
 
 # add an option for building the documentation
 set(SFEMOVIE_BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation, requires Doxygen")
