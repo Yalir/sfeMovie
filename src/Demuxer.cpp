@@ -268,8 +268,6 @@ namespace sfe
     void Demuxer::selectAudioStream(std::shared_ptr<AudioStream> stream)
     {
         Status oldStatus = m_timer->getStatus();
-        CHECK(oldStatus == Stopped, "Changing the selected stream after starting "
-              "the movie playback isn't supported yet");
         
         if (oldStatus == Playing)
             m_timer->pause();

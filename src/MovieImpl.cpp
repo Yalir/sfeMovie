@@ -107,15 +107,15 @@ namespace sfe
             return false;
         }
         
-        if (m_timer->getStatus() != Stopped)
-        {
-            sfeLogError("Movie::selectStream() - cannot select a stream while media is not stopped");
-            return false;
-        }
-        
         std::map<int, std::shared_ptr<Stream> > streams = m_demuxer->getStreams();
         std::map<int, std::shared_ptr<Stream> >::iterator it = streams.find(streamDescriptor.identifier);
         std::shared_ptr<Stream>  streamToSelect = nullptr;
+        
+        Status initialStatus = m_timer->getStatus();
+        sf::Time initialTime = m_timer->getOffset();
+        
+        if (m_timer->getStatus() != Stopped)
+            m_timer->stop();
         
         if (it != streams.end())
         {
@@ -126,18 +126,31 @@ namespace sfe
         {
             case Audio:
                 m_demuxer->selectAudioStream(std::dynamic_pointer_cast<AudioStream>(streamToSelect));
-                return true;
+                break;
             case Video:
                 m_demuxer->selectVideoStream(std::dynamic_pointer_cast<VideoStream>(streamToSelect));
-                return true;
+                break;
             case Subtitle:
                 m_demuxer->selectSubtitleStream(std::dynamic_pointer_cast<SubtitleStream>(streamToSelect));
-                return true;
+                break;
             default:
                 sfeLogWarning("Movie::selectStream() - stream activation for stream of kind "
                               + mediaTypeToString(it->second->getStreamKind()) + " is not supported");
                 return false;
         }
+        
+        if (setPlayingOffset(initialTime))
+        {
+            if (initialStatus == Playing)
+                play();
+            
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+        
     }
     
     void MovieImpl::play()
