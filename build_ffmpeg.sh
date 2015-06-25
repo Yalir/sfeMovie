@@ -162,7 +162,6 @@ function main()
 
             shift
             shift
-            shift
             full_decoders_list="$*"
             
             echo "Build directory : ${build_dir}"
