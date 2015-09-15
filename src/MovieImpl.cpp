@@ -244,11 +244,10 @@ namespace sfe
         if (m_demuxer && m_timer)
         {
             std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
-            std::set< std::shared_ptr<Stream> >::const_iterator it;
             
 			for (std::shared_ptr<Stream> stream : audioStreams)
             {
-                std::shared_ptr<AudioStream> audioStream = std::dynamic_pointer_cast<AudioStream>(*it);
+                std::shared_ptr<AudioStream> audioStream = std::dynamic_pointer_cast<AudioStream>(stream);
                 audioStream->setVolume(volume);
             }
         }

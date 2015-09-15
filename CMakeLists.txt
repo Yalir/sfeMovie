@@ -55,7 +55,7 @@ set (OTHER_LIBRARIES "")
 set (LINKER_FLAGS "")
 
 if (MSVC)
-    if(MSVC_VERSION LESS 1700) # 1700 = VS 2012
+    if(MSVC_VERSION LESS 1800) # 1700 = VS 2013
         message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
     endif()
 else()
@@ -113,20 +113,6 @@ add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 if (MACOSX) # ========================================== MACOSX ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
-elseif (WINDOWS) # ========================================== WINDOWS ==========================================
-    if (MSVC)
-        set (PRIVATE_HEADERS ${PRIVATE_HEADERS} "${CMAKE_SOURCE_DIR}/deps/headers/msvc")
-    else()
-        find_library(LIBZ z PATHS "${CMAKE_SOURCE_DIR}/deps/Windows-i386")
-
-        if (NOT LIBZ)
-            message(FATAL_ERROR "Could not find required library libz")
-        else()
-            set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "${LIBZ}")
-        endif()
-    endif()
-    
-    set (OTHER_LIBRARIES ${OTHER_LIBRARIES} "ws2_32")
 endif()
 
 # Set the search directories for compiling and link editing
@@ -145,7 +131,7 @@ if (${NeedsFFmpegCompilation})
     add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 endif()
 
-# Define the libraries sfe should link against
+# Define the libraries sfeMovie should link against
 if (SFEMOVIE_BUILD_STATIC)
     set_target_properties(${SFEMOVIE_LIB} PROPERTIES
         COMPILE_DEFINITIONS SFEMOVIE_STATIC
@@ -175,6 +161,10 @@ if (SFEMOVIE_BUILD_FFMPEG)
             COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
                 "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
+        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_BINARY_DIR}/FFmpeg-binaries/bin"
+                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
     endif()
 endif()
 
@@ -187,8 +177,8 @@ if (SFEMOVIE_BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 endif()
 
-# Sample building
-add_subdirectory(sample)
+# Examples building
+add_subdirectory(examples)
 
 # add an option for building the documentation
 set(SFEMOVIE_BUILD_DOC FALSE CACHE BOOL "Set to true to build the documentation, requires Doxygen")
