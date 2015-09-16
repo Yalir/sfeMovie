@@ -75,7 +75,8 @@ namespace sfe
             ass_set_fonts(m_renderer, NULL, NULL , 1, NULL, 1);
             ass_set_margins(m_renderer, 10, 0, 0, 0);
 
-            ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header), m_stream->codec->subtitle_header_size);
+            ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header),
+                                      m_stream->codec->subtitle_header_size);
 #else
             throw std::runtime_error("Non-bitmap subtitle stream detected but ASS support is disabled. Cannot use stream.");
 #endif
@@ -131,62 +132,61 @@ namespace sfe
             //activate subtitle
             if (m_pendingSubtitles.front()->start < m_timer->getOffset())
             {
-                std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
+                std::shared_ptr<SubtitleData> subtitle = m_pendingSubtitles.front();
 
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
                 //this is the case for ass subtitles
-                if (iter->type==ASS)
+                if (subtitle->type == ASS)
                 {
-                    int change = 0;
-                    ASS_Image* img = ass_render_frame(m_renderer, m_track, m_timer->getOffset().asMilliseconds(), &change);
+                    int changed = 0;
+                    ASS_Image* layer = ass_render_frame(m_renderer, m_track,
+                                                      m_timer->getOffset().asMilliseconds(),
+                                                      &changed);
                    
-                    if (change)
+                    if (changed)
                     {                     
 
-                        for (; img; img->next)
+                        for (; layer; layer = layer->next)
                         {
-                            uint8_t     r = img->color >> 24,
-                                        g = img->color >> 16 & 255,
-                                        b = img->color >> 8 & 255,
-                                        a = 255 - (img->color & 255);
+                            if (layer->w == 0 || layer->h == 0)
+                                continue;
                             
-                            sf::Image buffer;
-                            buffer.create(img->w, img->h);
+                            const uint8_t red   =   layer->color >> 24;
+                            const uint8_t green =   layer->color >> 16 & 255;
+                            const uint8_t blue  =   layer->color >> 8 & 255;
+                            const uint8_t alpha =   255 - (layer->color & 255);
 
-                            iter->positions.push_back(sf::Vector2i(img->dst_x, img->dst_y));
+                            sf::Image image;
+                            image.create(layer->w, layer->h);
                             
-                            for (int y = 0; y < img->h; ++y)
+                            for (int y = 0; y < layer->h; ++y)
                             {
-                                const unsigned char *map = img->bitmap + y * img->stride;
+                                const unsigned char *map = layer->bitmap + y * layer->stride;
 
-                                for (int x = 0; x < img->w; ++x)
+                                for (int x = 0; x < layer->w; ++x)
                                 {
-                                    uint8_t alpha = ((unsigned)a * *map++)/255;
-                                    buffer.setPixel(x, y, sf::Color(r,g,b,alpha));
+                                    const uint8_t mappedAlpha = ((unsigned)alpha * *map++)/255;
+                                    image.setPixel(x, y, sf::Color(red, green, blue, mappedAlpha));
                                 }
                             }
 
-                            img = img->next;
+                            subtitle->positions.push_back(sf::Vector2i(layer->dst_x, layer->dst_y));
+                            subtitle->sprites.push_back(sf::Sprite());
+                            subtitle->textures.push_back(sf::Texture());
 
-                            iter->sprites.push_back(sf::Sprite());
-                            iter->textures.push_back(sf::Texture());
-
+                            sf::Sprite& sprite = subtitle->sprites.back();
+                            sf::Texture& texture = subtitle->textures.back();
                             
-                            sf::Sprite& sprite = iter->sprites.back();
-                            sf::Texture& texture = iter->textures.back();
-
-                            texture.create(buffer.getSize().x, buffer.getSize().y);
-                            texture.update(buffer);
+                            texture.loadFromImage(image);
                             texture.setSmooth(true);
-
                             sprite.setTexture(texture);
                         }                       
                     }
                 }
 #endif
 
-                m_delegate.didUpdateSubtitle(*this, iter->sprites, iter->positions);
-                m_visibleSubtitles.push_back(iter);
+                m_delegate.didUpdateSubtitle(*this, subtitle->sprites, subtitle->positions);
+                m_visibleSubtitles.push_back(subtitle);
                 m_pendingSubtitles.pop_front();
             }
         }
