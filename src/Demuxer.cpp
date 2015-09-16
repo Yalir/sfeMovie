@@ -208,6 +208,27 @@ namespace sfe
             sfeLogWarning("The media duration could not be retreived");
         }
         
+        // Now that all streams are loaded, let's tell the subtitle rendering system what's
+        // the video frame size
+        std::set< std::shared_ptr<Stream> > videoStreams = getStreamsOfType(Video);
+        std::set< std::shared_ptr<Stream> > subtitleStreams = getStreamsOfType(Subtitle);
+        
+        if (! subtitleStreams.empty() && ! videoStreams.empty())
+        {
+            std::shared_ptr<VideoStream> firstVideoStream = std::dynamic_pointer_cast<VideoStream>(*videoStreams.begin());
+            
+            CHECK(firstVideoStream, "Internal inconcistency - unexpected stream type in video streams storage");
+            sf::Vector2i videoFrameSize = firstVideoStream->getFrameSize();
+            
+            for (std::shared_ptr<Stream> stream : subtitleStreams)
+            {
+                std::shared_ptr<SubtitleStream> subtitleStream = std::dynamic_pointer_cast<SubtitleStream>(stream);
+                CHECK(subtitleStream, "Internal inconcistency - unexpected stream type in subtitle streams storage");
+                
+                subtitleStream->setRenderingFrame(videoFrameSize.x, videoFrameSize.y);
+            }
+        }
+        
         m_timer->addObserver(*this, DemuxerTimerPriority);
     }
     

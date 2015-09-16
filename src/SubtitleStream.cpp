@@ -63,18 +63,16 @@ namespace sfe
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
         
-        if((desc->props & AV_CODEC_PROP_BITMAP_SUB)==0)
+        if((desc->props & AV_CODEC_PROP_BITMAP_SUB) == 0)
         {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
 			m_library  = ass_library_init();
-            ass_set_message_cb(m_library, ass_log,nullptr);
+            ass_set_message_cb(m_library, ass_log, nullptr);
 
 			m_renderer = ass_renderer_init(m_library);
             m_track    = ass_new_track(m_library);
-
-            ass_set_frame_size(m_renderer, m_stream->codec->width, m_stream->codec->height);
+            
             ass_set_fonts(m_renderer, NULL, NULL , 1, NULL, 1);
-            ass_set_font_scale(m_renderer, 10.0f);
             ass_set_margins(m_renderer, 10, 0, 0, 0);
 
             ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header), m_stream->codec->subtitle_header_size);
@@ -84,8 +82,6 @@ namespace sfe
 		}
     }
     
-    /** Default destructor
-     */
     SubtitleStream::~SubtitleStream()
     {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
@@ -106,6 +102,13 @@ namespace sfe
 			ass_library_done(m_library);
 			m_library = nullptr;
 		}
+#endif
+    }
+    
+    void SubtitleStream::setRenderingFrame(int width, int height)
+    {
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+        ass_set_frame_size(m_renderer, width, height);
 #endif
     }
     
@@ -146,12 +149,12 @@ namespace sfe
                                         g = img->color >> 16 & 255,
                                         b = img->color >> 8 & 255,
                                         a = 255 - (img->color & 255);
-
+                            
                             sf::Image buffer;
                             buffer.create(img->w, img->h);
 
                             iter->positions.push_back(sf::Vector2i(img->dst_x, img->dst_y));
-
+                            
                             for (int y = 0; y < img->h; ++y)
                             {
                                 const unsigned char *map = img->bitmap + y * img->stride;
@@ -168,7 +171,7 @@ namespace sfe
                             iter->sprites.push_back(sf::Sprite());
                             iter->textures.push_back(sf::Texture());
 
-
+                            
                             sf::Sprite& sprite = iter->sprites.back();
                             sf::Texture& texture = iter->textures.back();
 

@@ -74,6 +74,13 @@ namespace sfe
          */
         virtual ~SubtitleStream();
         
+        /** Define the size of the area that is used to render subtitles, it should match the video frame size
+         * 
+         * @param width the video frame width
+         * @param height the video frame height
+         */
+        void setRenderingFrame(int width, int height);
+        
         /** Get the stream kind (either audio, video or subtitle stream)
          *
          * @return the kind of stream represented by this stream
