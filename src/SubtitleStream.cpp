@@ -34,13 +34,7 @@ extern "C"
 
 #include <iostream>
 #include <cassert>
-#include <stdint.h>
-
-
-#define _r(c) ((c) >> 24)
-#define _g(c) (((c) >> 16) & 0xFF)
-#define _b(c) (((c) >> 8) & 0xFF)
-#define _a(c) (255 - ((c) & 0xFF))
+#include <cstdint>
 
 namespace sfe
 {
@@ -49,9 +43,9 @@ namespace sfe
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
         void ass_log(int ass_level, const char *fmt, va_list args, void *data)
         {
-            char buffer[512];
+            char buffer[4096];
             
-            vsprintf(buffer, fmt, args);
+            vsnprintf(buffer, sizeof(buffer), fmt, args);
             sfeLogDebug(buffer);
         }
 #endif
