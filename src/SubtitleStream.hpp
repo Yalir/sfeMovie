@@ -34,7 +34,13 @@
 
 extern "C"
 {
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
 #include <ass/ass.h>
+#else
+    struct ASS_Library;
+    struct ASS_Renderer;
+    struct ASS_Track;
+#endif
 }
 
 namespace sfe
@@ -88,7 +94,7 @@ namespace sfe
         
         /** @see Stream::fastForward()
          */
-        virtual bool fastForward(sf::Time targetPosition);
+        virtual bool fastForward(sf::Time targetPosition) override;
         
     private:
         enum SubtitleType
@@ -117,7 +123,7 @@ namespace sfe
              * after construction time
              * @param track The libass track we write our subtitle to
              */
-            SubtitleData(AVSubtitle* sub, bool& succeeded,ASS_Track* track);
+            SubtitleData(AVSubtitle* sub, bool& succeeded, ASS_Track* track);
         };
         
         /** Decode the packages that were send to the stream by the demuxer
@@ -125,13 +131,6 @@ namespace sfe
          * @return if the stream is finished or not
          */
         bool onGetData();
-
-        /** Flush buffers that aren't needed anymore on seeking
-        */
-        
-        /** Libass message callback
-        */
-        static void ass_log(int ass_level, const char *fmt, va_list args, void *data);
 
         Delegate& m_delegate;
         

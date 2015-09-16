@@ -44,16 +44,34 @@ extern "C"
 
 namespace sfe
 {
+    namespace
+    {
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+        void ass_log(int ass_level, const char *fmt, va_list args, void *data)
+        {
+            char buffer[512];
+            
+            vsprintf(buffer, fmt, args);
+            sfeLogDebug(buffer);
+        }
+#endif
+    }
+    
     const int RGBASize = 4;
     
     SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
-        Stream(formatCtx, stream, dataSource, timer), m_delegate(delegate), m_library(nullptr), m_renderer(nullptr), m_track(nullptr)
+        Stream(formatCtx, stream, dataSource, timer),
+        m_delegate(delegate),
+        m_library(nullptr),
+        m_renderer(nullptr),
+        m_track(nullptr)
     {
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
         
         if((desc->props & AV_CODEC_PROP_BITMAP_SUB)==0)
         {
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
 			m_library  = ass_library_init();
             ass_set_message_cb(m_library, ass_log,nullptr);
 
@@ -66,6 +84,9 @@ namespace sfe
             ass_set_margins(m_renderer, 10, 0, 0, 0);
 
             ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header), m_stream->codec->subtitle_header_size);
+#else
+            throw std::runtime_error("Non-bitmap subtitle stream detected but ASS support is disabled. Cannot use stream.");
+#endif
 		}
     }
     
@@ -73,6 +94,7 @@ namespace sfe
      */
     SubtitleStream::~SubtitleStream()
     {
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
         if (m_track)
         {
             ass_free_track(m_track);
@@ -90,7 +112,7 @@ namespace sfe
 			ass_library_done(m_library);
 			m_library = nullptr;
 		}
-			
+#endif
     }
     
     MediaType SubtitleStream::getStreamKind() const
@@ -114,6 +136,7 @@ namespace sfe
             {
                 std::shared_ptr<SubtitleData> iter = m_pendingSubtitles.front();
 
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
                 //this is the case for ass subtitles
                 if (iter->type==ASS)
                 {
@@ -163,6 +186,7 @@ namespace sfe
                         }                       
                     }
                 }
+#endif
 
                 m_delegate.didUpdateSubtitle(*this, iter->sprites, iter->positions);
                 m_visibleSubtitles.push_back(iter);
@@ -287,6 +311,7 @@ namespace sfe
                 
                 succeeded = true;
             }
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
             else
             {
                 type = ASS;
@@ -294,6 +319,7 @@ namespace sfe
 
                 succeeded = true;
             }
+#endif
         }
     }
     
@@ -335,12 +361,3 @@ namespace sfe
         return true;
 	}
 }
-
-void SubtitleStream::ass_log(int ass_level, const char *fmt, va_list args, void *data)
-    {
-        char buffer[512];
-
-        vsprintf(buffer, fmt, args);
-        sfeLogDebug(buffer);
-    }
-
