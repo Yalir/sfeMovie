@@ -85,7 +85,7 @@ add_subdirectory(FFmpeg)
 set (SFEMOVIE_ENABLE_ASS_SUBTITLES FALSE CACHE BOOL "TRUE to build sfeMovie with libass, which enable support of non-bitmap subtitles (ie. srt")
 if (SFEMOVIE_ENABLE_ASS_SUBTITLES)
     find_package (ASS REQUIRED)
-    message(STATUS "LIBASS libraries: ${LIBASS_LIBRARIES}")
+    add_definitions(-DSFEMOVIE_ENABLE_ASS_SUBTITLES)
 endif()
 
 #################################################################################################################
@@ -120,9 +120,8 @@ endif()
 
 # Set the search directories for compiling and link editing
 set(SFEMOVIE_INCLUDE_DIRS "${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
-if (LIBASS_FOUND AND SFEMOVIE_ENABLE_ASS_SUBTITLES)
+if (SFEMOVIE_ENABLE_ASS_SUBTITLES)
     set(SFEMOVIE_INCLUDE_DIRS "${SFEMOVIE_INCLUDE_DIRS};${LIBASS_INCLUDE_DIR}")
-    add_definitions(SFEMOVIE_ENABLE_ASS_SUBTITLES)
 endif()
 
 include_directories (${SFEMOVIE_INCLUDE_DIRS})
@@ -148,7 +147,7 @@ if (SFEMOVIE_BUILD_STATIC)
             "sfeMovie will be built with SFML_STATIC defined.")
 else()
     set(SFEMOVIE_LIBRARIES ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES})
-    if (LIBASS_FOUND AND SFEMOVIE_ENABLE_ASS_SUBTITLES)
+    if (SFEMOVIE_ENABLE_ASS_SUBTITLES)
         set(SFEMOVIE_LIBRARIES ${SFEMOVIE_LIBRARIES} ${LIBASS_LIBRARIES})
     endif()
     message(STATUS "Link sfeMovie against: ${LIBASS_LIBRARIES} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
