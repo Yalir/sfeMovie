@@ -196,6 +196,10 @@ namespace sfe
         if (m_packetList.empty())
         {
             m_dataSource.requestMoreData(*this);
+        }
+        
+        if (m_packetList.empty())
+        {
             return sf::Time::Zero;
         }
         else
