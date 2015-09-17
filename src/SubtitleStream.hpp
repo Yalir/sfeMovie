@@ -85,11 +85,11 @@ namespace sfe
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const override;
+        MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update() override;
+        void update() override;
         
         /** @see Stream::isPassive()
          */
@@ -97,11 +97,11 @@ namespace sfe
         
          /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
          */
-        virtual void flushBuffers() override;
+        void flushBuffers() override;
         
         /** @see Stream::fastForward()
          */
-        virtual bool fastForward(sf::Time targetPosition) override;
+        bool fastForward(sf::Time targetPosition) override;
         
     private:
         enum SubtitleType
