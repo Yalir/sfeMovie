@@ -69,24 +69,24 @@ void displayMediaInfo(const sfe::Movie& movie)
     
     std::cout << videoStreams.size() + audioStreams.size() + subtitleStreams.size() << " streams found in the media" << std::endl;
     
-	for (const sfe::StreamDescriptor& descriptor : videoStreams)
-		std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type) << std::endl;
+    for (const sfe::StreamDescriptor& descriptor : videoStreams)
+        std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type) << std::endl;
     
-	for (const sfe::StreamDescriptor& descriptor : audioStreams)
+    for (const sfe::StreamDescriptor& descriptor : audioStreams)
     {
-		std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type);
+        std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type);
         
-		if (!descriptor.language.empty())
-			std::cout << " (language: " << descriptor.language << ")";
+        if (!descriptor.language.empty())
+            std::cout << " (language: " << descriptor.language << ")";
         std::cout << std::endl;
     }
     
-	for (const sfe::StreamDescriptor& descriptor : subtitleStreams)
+    for (const sfe::StreamDescriptor& descriptor : subtitleStreams)
     {
-		std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type);
+        std::cout << " #" << descriptor.identifier << " : " << mediaTypeToString(descriptor.type);
         
-		if (!descriptor.language.empty())
-			std::cout << " (language: " << descriptor.language << ")";
+        if (!descriptor.language.empty())
+            std::cout << " (language: " << descriptor.language << ")";
         std::cout << std::endl;
     }
 }

@@ -446,8 +446,8 @@ namespace sfe
         
         for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
         {
-			pair.second->update();
-		}
+            pair.second->update();
+        }
     }
     
     bool Demuxer::didReachEndOfFile() const

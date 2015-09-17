@@ -44,8 +44,8 @@ namespace sfe
     
     MovieImpl::~MovieImpl()
     {
-		if (m_timer && m_timer->getStatus() != Stopped)
-			stop();
+        if (m_timer && m_timer->getStatus() != Stopped)
+            stop();
     }
     
     bool MovieImpl::openFromFile(const std::string& filename)
@@ -245,7 +245,7 @@ namespace sfe
         {
             std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
             
-			for (std::shared_ptr<Stream> stream : audioStreams)
+            for (std::shared_ptr<Stream> stream : audioStreams)
             {
                 std::shared_ptr<AudioStream> audioStream = std::dynamic_pointer_cast<AudioStream>(stream);
                 audioStream->setVolume(volume);
@@ -512,7 +512,7 @@ namespace sfe
                                      m_displayFrame.top + m_displayFrame.height * 0.9f);
         std::list<sf::Vector2i>::const_iterator pos_it = positions.begin();
         
-		for (sf::Sprite& subtitleSprite : m_subtitleSprites)
+        for (sf::Sprite& subtitleSprite : m_subtitleSprites)
         {
             const sf::Vector2u& subSize = subtitleSprite.getTexture()->getSize();
             

@@ -66,10 +66,10 @@ namespace sfe
         if((desc->props & AV_CODEC_PROP_BITMAP_SUB) == 0)
         {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-			m_library  = ass_library_init();
+            m_library  = ass_library_init();
             ass_set_message_cb(m_library, ass_log, nullptr);
 
-			m_renderer = ass_renderer_init(m_library);
+            m_renderer = ass_renderer_init(m_library);
             m_track    = ass_new_track(m_library);
             
             ass_set_fonts(m_renderer, NULL, NULL , 1, NULL, 1);
@@ -80,7 +80,7 @@ namespace sfe
 #else
             throw std::runtime_error("Non-bitmap subtitle stream detected but ASS support is disabled. Cannot use stream.");
 #endif
-		}
+        }
     }
     
     SubtitleStream::~SubtitleStream()
@@ -92,17 +92,17 @@ namespace sfe
             m_track = nullptr;
         }
 
-		if(m_renderer)
-		{
-			ass_renderer_done(m_renderer);
-			m_renderer = nullptr;
-		}
-		
-		if(m_library)
-		{
-			ass_library_done(m_library);
-			m_library = nullptr;
-		}
+        if(m_renderer)
+        {
+            ass_renderer_done(m_renderer);
+            m_renderer = nullptr;
+        }
+        
+        if(m_library)
+        {
+            ass_library_done(m_library);
+            m_library = nullptr;
+        }
 #endif
     }
     
@@ -140,9 +140,9 @@ namespace sfe
                 {
                     int changed = 0;
                     ASS_Image* layer = ass_render_frame(m_renderer, m_track,
-                                                      m_timer->getOffset().asMilliseconds(),
-                                                      &changed);
-                   
+                                                        m_timer->getOffset().asMilliseconds(),
+                                                        &changed);
+                    
                     if (changed)
                     {                     
 
@@ -173,7 +173,7 @@ namespace sfe
                             subtitle->positions.push_back(sf::Vector2i(layer->dst_x, layer->dst_y));
                             subtitle->sprites.push_back(sf::Sprite());
                             subtitle->textures.push_back(sf::Texture());
-
+                            
                             sf::Sprite& sprite = subtitle->sprites.back();
                             sf::Texture& texture = subtitle->textures.back();
                             
@@ -340,26 +340,26 @@ namespace sfe
             onGetData();
         }
 
-		std::list< std::shared_ptr<SubtitleData>>::iterator it = m_visibleSubtitles.begin();
-		while (it != m_visibleSubtitles.end()) 
-		{
-			//erase subs that are deleted before the targetPosition
-			if (it->get()->end<targetPosition)
-				it = m_visibleSubtitles.erase(it);
-			else
-				++it;
-		}
-		
-		it = m_pendingSubtitles.begin();
-		while (it != m_pendingSubtitles.end()) 
-		{
-			//erase subs that are deleted before the targetPosition
-			if (it->get()->end<targetPosition)
-				it = m_pendingSubtitles.erase(it);
-			else
-				++it;
-		}
+        std::list< std::shared_ptr<SubtitleData>>::iterator it = m_visibleSubtitles.begin();
+        while (it != m_visibleSubtitles.end()) 
+        {
+            //erase subs that are deleted before the targetPosition
+            if (it->get()->end<targetPosition)
+                it = m_visibleSubtitles.erase(it);
+            else
+                ++it;
+        }
+        
+        it = m_pendingSubtitles.begin();
+        while (it != m_pendingSubtitles.end()) 
+        {
+            //erase subs that are deleted before the targetPosition
+            if (it->get()->end<targetPosition)
+                it = m_pendingSubtitles.erase(it);
+            else
+                ++it;
+        }
         
         return true;
-	}
+    }
 }

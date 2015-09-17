@@ -145,7 +145,7 @@ namespace sfe
         std::list< std::shared_ptr<SubtitleData> > m_visibleSubtitles;
         
         ASS_Library*    m_library;
-		ASS_Renderer*   m_renderer;
+        ASS_Renderer*   m_renderer;
         ASS_Track*      m_track;
     };
     
