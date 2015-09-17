@@ -287,7 +287,7 @@ namespace sfe
                 sf::Sprite& sprite = sprites.back();
                 sf::Texture& texture = textures.back();
 
-                CHECK(subItem->pict.data != nullptr, "FFmpeg inconcistency error");
+                CHECK(subItem->pict.data[0] != nullptr, "FFmpeg inconcistency error");
                 CHECK(subItem->w * subItem->h > 0, "FFmpeg inconcistency error");
                 
                 positions.push_back(sf::Vector2i(subItem->x, subItem->y));
