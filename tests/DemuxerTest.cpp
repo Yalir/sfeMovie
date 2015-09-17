@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(DemuxerLoadingTest)
 	
 	const std::map<int, std::shared_ptr<sfe::Stream> >& streams = demuxer->getStreams();
 	
-	BOOST_CHECK(streams.size() > 0);
+	BOOST_CHECK(!streams.empty());
 	
 	unsigned videoStreamCount = 0;
 	unsigned audioStreamCount = 0;

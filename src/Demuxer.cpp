@@ -604,7 +604,7 @@ namespace sfe
         if (m_connectedSubtitleStream)
             connectedStreams.insert(m_connectedSubtitleStream);
         
-        CHECK(connectedStreams.size() > 0, "Inconcistency error: seeking with no active stream");
+        CHECK(!connectedStreams.empty(), "Inconcistency error: seeking with no active stream");
         
         // Trivial seeking to beginning
         if (newPosition == sf::Time::Zero)

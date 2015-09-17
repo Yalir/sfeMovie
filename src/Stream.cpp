@@ -121,12 +121,12 @@ namespace sfe
         AVPacket* result = nullptr;
         sf::Lock l(m_readerMutex);
         
-        if (!m_packetList.size() && !isPassive())
+        if (m_packetList.empty() && !isPassive())
         {
             m_dataSource.requestMoreData(*this);
         }
         
-        if (m_packetList.size())
+        if (!m_packetList.empty())
         {
             result = m_packetList.front();
             m_packetList.pop_front();
@@ -161,7 +161,7 @@ namespace sfe
         
         AVPacket* pkt = nullptr;
         
-        while (m_packetList.size())
+        while (!m_packetList.empty())
         {
             pkt = m_packetList.front();
             m_packetList.pop_front();
@@ -193,13 +193,9 @@ namespace sfe
     
     sf::Time Stream::computeEncodedPosition()
     {
-        if (!m_packetList.size())
+        if (m_packetList.empty())
         {
             m_dataSource.requestMoreData(*this);
-        }
-        
-        if (!m_packetList.size())
-        {
             return sf::Time::Zero;
         }
         else
@@ -288,6 +284,6 @@ namespace sfe
     
     bool Stream::hasPackets()
     {
-        return m_packetList.size() > 0;
+        return !m_packetList.empty();
     }
 }

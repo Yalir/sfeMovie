@@ -65,14 +65,14 @@ namespace sfe
             m_demuxer->selectFirstAudioStream();
             m_demuxer->selectFirstVideoStream();
             
-            if (!audioStreams.size() && !videoStreams.size())
+            if (audioStreams.empty() && videoStreams.empty())
             {
                 sfeLogError("Movie::openFromFile() - No supported audio or video stream in this media");
                 return false;
             }
             else
             {
-                if (videoStreams.size())
+                if (!videoStreams.empty())
                 {
                     sf::Vector2f size = getSize();
                     m_displayFrame = sf::FloatRect(0, 0, size.x, size.y);
@@ -507,7 +507,7 @@ namespace sfe
     void MovieImpl::didUpdateSubtitle(const SubtitleStream& sender, const std::list<sf::Sprite>& subs, const std::list<sf::Vector2i>& positions)
     {
         m_subtitleSprites = subs;
-        bool use_position = positions.size() > 0;
+        bool use_position = !positions.empty();
         sf::Vector2f subtitlesCenter(m_displayFrame.left + m_displayFrame.width / 2,
                                      m_displayFrame.top + m_displayFrame.height * 0.9f);
         std::list<sf::Vector2i>::const_iterator pos_it = positions.begin();
@@ -543,7 +543,7 @@ namespace sfe
             m_debugger.bind(&subtitleSprite);
         }
         
-        if (m_subtitleSprites.size() == 0)
+        if (m_subtitleSprites.empty())
             m_debugger.bind(nullptr);
     }
     
