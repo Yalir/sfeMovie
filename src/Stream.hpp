@@ -100,6 +100,7 @@ namespace sfe
         virtual AVPacket* popEncodedData();
         
         /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
+         * @warning Subclasses overriding this method must also call the Stream implementation
          */
         virtual void flushBuffers();
         

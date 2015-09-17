@@ -443,7 +443,6 @@ namespace sfe
     void Demuxer::update()
     {
         std::map<int, std::shared_ptr<Stream> > streams = getStreams();
-        std::map<int, std::shared_ptr<Stream> >::iterator it;
         
         for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
         {

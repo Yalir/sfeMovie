@@ -81,7 +81,7 @@ namespace sfe
     Stream::~Stream()
     {
         disconnect();
-        flushBuffers();
+        Stream::flushBuffers();
         
         if (m_formatCtx && m_stream && m_stream->codec)
         {
