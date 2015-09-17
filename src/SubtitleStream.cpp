@@ -327,6 +327,10 @@ namespace sfe
         Stream::flushBuffers();
         m_pendingSubtitles.clear();
         m_visibleSubtitles.clear();
+        
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+        ass_flush_events(m_track);
+#endif
     }
     
     bool SubtitleStream::fastForward(sf::Time targetPosition)
