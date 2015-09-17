@@ -127,7 +127,7 @@ namespace sfe
                 setStatus(Stopped);
         }
         
-        if (m_pendingSubtitles.size() > 0)
+        if (!m_pendingSubtitles.empty())
         {
             //activate subtitle
             if (m_pendingSubtitles.front()->start < m_timer->getOffset())
@@ -192,7 +192,7 @@ namespace sfe
         }
         
         
-        if (m_visibleSubtitles.size()>0)
+        if (!m_visibleSubtitles.empty())
         {
             //remove subtitle
             if (m_visibleSubtitles.front()->end < m_timer->getOffset())
@@ -200,7 +200,7 @@ namespace sfe
                 std::shared_ptr<SubtitleData> subtitle = m_visibleSubtitles.front();
                 m_visibleSubtitles.pop_front();
                 
-                if (m_visibleSubtitles.size() == 0)
+                if (m_visibleSubtitles.empty())
                 {
                     m_delegate.didWipeOutSubtitles(*this);
                 }
