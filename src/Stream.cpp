@@ -87,6 +87,10 @@ namespace sfe
         {
             avcodec_close(m_stream->codec);
         }
+        else
+        {
+            sfeLogWarning("Stream lost connection to its codec, leaking");
+        }
     }
     
     void Stream::connect()
