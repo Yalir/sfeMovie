@@ -33,6 +33,7 @@
 #include "log.h"
 #include "pixfmt.h"
 #include "samplefmt.h"
+#include "version.h"
 
 /**
  * @defgroup avoptions AVOptions
@@ -212,7 +213,7 @@
  * In some cases it may be more convenient to put all options into an
  * AVDictionary and call av_opt_set_dict() on it. A specific case of this
  * are the format/codec open functions in lavf/lavc which take a dictionary
- * filled with option as a parameter. This allows to set some options
+ * filled with option as a parameter. This makes it possible to set some options
  * that cannot be set otherwise, since e.g. the input file format is not known
  * before the file is actually opened.
  */
@@ -412,11 +413,14 @@ attribute_deprecated const AVOption *av_set_double(void *obj, const char *name, 
 attribute_deprecated const AVOption *av_set_q(void *obj, const char *name, AVRational n);
 attribute_deprecated const AVOption *av_set_int(void *obj, const char *name, int64_t n);
 
+attribute_deprecated
 double av_get_double(void *obj, const char *name, const AVOption **o_out);
+attribute_deprecated
 AVRational av_get_q(void *obj, const char *name, const AVOption **o_out);
+attribute_deprecated
 int64_t av_get_int(void *obj, const char *name, const AVOption **o_out);
 attribute_deprecated const char *av_get_string(void *obj, const char *name, const AVOption **o_out, char *buf, int buf_len);
-attribute_deprecated const AVOption *av_next_option(void *obj, const AVOption *last);
+attribute_deprecated const AVOption *av_next_option(FF_CONST_AVUTIL55 void *obj, const AVOption *last);
 #endif
 
 /**
@@ -437,10 +441,16 @@ int av_opt_show2(void *obj, void *av_log_obj, int req_flags, int rej_flags);
  */
 void av_opt_set_defaults(void *s);
 
-#if FF_API_OLD_AVOPTIONS
-attribute_deprecated
+/**
+ * Set the values of all AVOption fields to their default values. Only these
+ * AVOption fields for which (opt->flags & mask) == flags will have their
+ * default applied to s.
+ *
+ * @param s an AVOption-enabled struct (its first member must be a pointer to AVClass)
+ * @param mask combination of AV_OPT_FLAG_*
+ * @param flags combination of AV_OPT_FLAG_*
+ */
 void av_opt_set_defaults2(void *s, int mask, int flags);
-#endif
 
 /**
  * Parse the key/value pairs list in opts. For each key/value pair
@@ -673,7 +683,7 @@ const AVOption *av_opt_find2(void *obj, const char *name, const char *unit,
  *             or NULL
  * @return next AVOption or NULL
  */
-const AVOption *av_opt_next(void *obj, const AVOption *prev);
+const AVOption *av_opt_next(FF_CONST_AVUTIL55 void *obj, const AVOption *prev);
 
 /**
  * Iterate over AVOptions-enabled children of obj.
@@ -825,7 +835,7 @@ int av_opt_query_ranges(AVOptionRanges **, void *obj, const char *key, int flags
  * @param src  Object to copy into
  * @return 0 on success, negative on error
  */
-int av_opt_copy(void *dest, void *src);
+int av_opt_copy(void *dest, FF_CONST_AVUTIL55 void *src);
 
 /**
  * Get a default list of allowed ranges for the given option.
@@ -878,6 +888,8 @@ int av_opt_is_set_to_default_by_name(void *obj, const char *name, int search_fla
  *
  * Create a string containing object's serialized options.
  * Such string may be passed back to av_opt_set_from_string() in order to restore option values.
+ * A key/value or pairs separator occurring in the serialized value or
+ * name string are escaped through the av_escape() function.
  *
  * @param[in]  obj           AVClass object to serialize
  * @param[in]  opt_flags     serialize options with all the specified flags set (AV_OPT_FLAG)
@@ -887,6 +899,7 @@ int av_opt_is_set_to_default_by_name(void *obj, const char *name, int search_fla
  * @param[in]  key_val_sep   character used to separate key from value
  * @param[in]  pairs_sep     character used to separate two pairs from each other
  * @return                   >= 0 on success, negative on error
+ * @warning Separators cannot be neither '\\' nor '\0'. They also cannot be the same.
  */
 int av_opt_serialize(void *obj, int opt_flags, int flags, char **buffer,
                      const char key_val_sep, const char pairs_sep);

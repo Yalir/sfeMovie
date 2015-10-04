@@ -9,7 +9,7 @@ yasm_exe=""
 temporary_dir="/tmp"
 jobsCount=1 # how many compilations at a time
 full_decoders_list=""
-ffmpeg_dir="ffmpeg-2.4.3"
+ffmpeg_dir="ffmpeg-2.8"
 ffmpeg_archive="${ffmpeg_dir}.tar.bz2"
 
 
