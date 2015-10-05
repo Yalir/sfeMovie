@@ -97,8 +97,11 @@ namespace sfe
          *
          * A positive value means the video stream is ahead of the reference timer
          * whereas a nevatige value means the video stream is late
+         *
+         * @param[out] gap the gap, if it could be computed
+         * @return true if the gap could be computed, false otherwise (@ref gap is left unmodified)
          */
-        sf::Time getSynchronizationGap();
+        bool getSynchronizationGap(sf::Time& gap);
         
         /** Decode the encoded data @a packet into @a outputFrame
          *

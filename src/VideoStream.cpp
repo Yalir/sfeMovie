@@ -110,7 +110,10 @@ namespace sfe
     
     void VideoStream::update()
     {
-        while (getStatus() == Playing && getSynchronizationGap() < sf::Time::Zero)
+        sf::Time gap;
+        bool couldComputeGap = false;
+        while (getStatus() == Playing && (couldComputeGap = getSynchronizationGap(gap)) &&
+               gap < sf::Time::Zero)
         {
             if (!onGetData(m_texture))
             {
@@ -119,9 +122,14 @@ namespace sfe
             else
             {
                 static const sf::Time skipFrameThreshold(sf::milliseconds(50));
-                if (getSynchronizationGap() + skipFrameThreshold >= sf::Time::Zero)
+                if (getSynchronizationGap(gap) && gap + skipFrameThreshold >= sf::Time::Zero)
                     m_delegate.didUpdateVideo(*this, m_texture);
             }
+        }
+        
+        if (! couldComputeGap)
+        {
+            setStatus(Stopped);
         }
     }
     
@@ -133,7 +141,10 @@ namespace sfe
     
     bool VideoStream::fastForward(sf::Time targetPosition)
     {
-        while (computeEncodedPosition() < targetPosition)
+        sf::Time position;
+        bool couldGetPosition = false;
+        
+        while ((couldGetPosition = computeEncodedPosition(position)) && position < targetPosition)
         {
             // We HAVE to decode the frames to get a full image when we reach the target position
             if (! onGetData(m_texture))
@@ -142,6 +153,11 @@ namespace sfe
                             s(targetPosition.asSeconds()) + "s");
                 return false;
             }
+        }
+        
+        if (! couldGetPosition)
+        {
+            sfeLogWarning("Could not get video stream position, seeking may be innacurate");
         }
         
         return true;
@@ -210,9 +226,19 @@ namespace sfe
         return goOn;
     }
     
-    sf::Time VideoStream::getSynchronizationGap()
+    bool VideoStream::getSynchronizationGap(sf::Time& gap)
     {
-        return (computeEncodedPosition() - codecBufferingDelay()) - m_timer->getOffset();
+        sf::Time position;
+        if (computeEncodedPosition(position))
+        {
+            gap = (position - codecBufferingDelay()) - m_timer->getOffset();
+            return true;
+        }
+        else
+        {
+            sfeLogDebug("failed computing synchronization gap for video stream, it may become out of sync");
+            return false;
+        }
     }
     
     bool VideoStream::decodePacket(AVPacket* packet, AVFrame* outputFrame, bool& gotFrame, bool& needsMoreDecoding)

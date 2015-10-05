@@ -131,8 +131,11 @@ namespace sfe
         std::string getLanguage() const;
         
         /** Compute the stream position in the media, by possibly fetching a packet
+         *
+         * @param[out] position the current stream position, if available
+         * @return true if stream position could be computed and @ref position is set, false otherwise
          */
-        sf::Time computeEncodedPosition();
+        bool computeEncodedPosition(sf::Time& position);
         
         /** Compute how much time would be covered by the given packet, it's the diff between
          * the current packet pts, and the next packet pts

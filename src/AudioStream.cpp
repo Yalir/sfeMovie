@@ -163,7 +163,12 @@ namespace sfe
         
         do
         {
-            currentPosition = computeEncodedPosition();
+            if (! computeEncodedPosition(currentPosition))
+            {
+                sfeLogWarning("failed fast forwarding on audio stream, synchronization may be innacurate");
+                return false;
+            }
+            
             AVPacket* packet = popEncodedData();
             
             if (! packet)

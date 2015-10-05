@@ -191,18 +191,14 @@ namespace sfe
         return m_language;
     }
     
-    sf::Time Stream::computeEncodedPosition()
+    bool Stream::computeEncodedPosition(sf::Time& position)
     {
-        if (m_packetList.empty())
+        if (m_packetList.empty() && !isPassive())
         {
             m_dataSource.requestMoreData(*this);
         }
         
-        if (m_packetList.empty())
-        {
-            return sf::Time::Zero;
-        }
-        else
+        if (! m_packetList.empty())
         {
             sf::Lock l(m_readerMutex);
             AVPacket* packet = m_packetList.front();
@@ -221,8 +217,11 @@ namespace sfe
             }
             
             AVRational seconds = av_mul_q(av_make_q(timestamp, 1), m_stream->time_base);
-            return sf::milliseconds(1000 * av_q2d(seconds));
+            position = sf::milliseconds(1000 * av_q2d(seconds));
+            return true;
         }
+        
+        return false;
     }
     
     sf::Time Stream::packetDuration(const AVPacket* packet) const

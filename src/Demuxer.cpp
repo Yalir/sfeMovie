@@ -398,6 +398,8 @@ namespace sfe
     
     void Demuxer::feedStream(Stream& stream)
     {
+        CHECK(! stream.isPassive(), "Internal inconcistency - Cannot feed a passive stream");
+        
         sf::Lock l(m_synchronized);
         
         while ((!didReachEndOfFile() || hasPendingDataForStream(stream)) && stream.needsMoreData())
@@ -601,8 +603,9 @@ namespace sfe
     
     void Demuxer::requestMoreData(Stream& starvingStream)
     {
-        sf::Lock l(m_synchronized);
+        CHECK(! starvingStream.isPassive(), "Internal inconcistency - passive streams cannot request data");
         
+        sf::Lock l(m_synchronized);
         feedStream(starvingStream);
     }
     
@@ -683,8 +686,16 @@ namespace sfe
                 // Compute the new gap
                 for (std::shared_ptr<Stream> stream : connectedStreams)
                 {
-                    sf::Time gap = stream->computeEncodedPosition() - newPosition;
-                    seekingGaps[stream] = gap;
+                    sf::Time position;
+                    if (stream->computeEncodedPosition(position))
+                    {
+                        seekingGaps[stream] = position - newPosition;
+                    }
+                    else
+                    {
+                        sfeLogDebug("Cannot get position for " + mediaTypeToString(stream->getStreamKind()) +
+                                    " stream, it'll be ignored for seeking synchronization");
+                    }
                 }
                 
                 tooEarlyCount = 0;
@@ -707,7 +718,6 @@ namespace sfe
                             brokenSeekingCount++;
                             tooEarlyCount++;
                         }
-                    
                         // else: a bit early but not too much, this is the final situation we want
                     }
                     // After seek point
@@ -716,7 +726,7 @@ namespace sfe
                         tooLateCount++;
                     
                         if (absoluteDiff > brokenSeekingThreshold)
-                            brokenSeekingCount++; // TODO: unhandled for now => should seek to non-key frame
+                            brokenSeekingCount++;
                     }
                     
                     if (brokenSeekingCount > 0)
