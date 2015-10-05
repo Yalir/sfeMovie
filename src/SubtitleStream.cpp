@@ -109,7 +109,8 @@ namespace sfe
     void SubtitleStream::setRenderingFrame(int width, int height)
     {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-        ass_set_frame_size(m_renderer, width, height);
+        if(m_library)
+            ass_set_frame_size(m_renderer, width, height);
 #endif
     }
     
