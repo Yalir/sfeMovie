@@ -416,16 +416,14 @@ namespace sfe
         {
             std::shared_ptr<VideoStream> videoStream = m_demuxer->getSelectedVideoStream();
             std::shared_ptr<AudioStream> audioStream = m_demuxer->getSelectedAudioStream();
-            std::shared_ptr<SubtitleStream> subtitleStream = m_demuxer->getSelectedSubtitleStream();
             Status vStatus = videoStream ? videoStream->getStatus() : Stopped;
             Status aStatus = audioStream ? audioStream->Stream::getStatus() : Stopped;
-            Status sStatus = subtitleStream ? subtitleStream->getStatus() : Stopped;
             
-            if (vStatus == Playing || aStatus == Playing || sStatus == Playing)
+            if (vStatus == Playing || aStatus == Playing)
             {
                 st = Playing;
             }
-            else if (vStatus == Paused || aStatus == Paused || sStatus == Paused)
+            else if (vStatus == Paused || aStatus == Paused)
             {
                 st = Paused;
             }
