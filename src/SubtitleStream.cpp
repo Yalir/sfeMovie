@@ -38,8 +38,14 @@ extern "C"
 
 namespace sfe
 {
+    ASS_Library* SubtitleStream::assLibrary = nullptr;
+    ASS_Renderer* SubtitleStream::assRenderer = nullptr;
+    int SubtitleStream::assRefCount = 0;
+
+
     namespace
     {
+       
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
         void ass_log(int ass_level, const char *fmt, va_list args, void *data)
         {
@@ -56,8 +62,6 @@ namespace sfe
     SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
         Stream(formatCtx, stream, dataSource, timer),
         m_delegate(delegate),
-        m_library(nullptr),
-        m_renderer(nullptr),
         m_track(nullptr)
     {
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
@@ -66,14 +70,18 @@ namespace sfe
         if((desc->props & AV_CODEC_PROP_BITMAP_SUB) == 0)
         {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-            m_library  = ass_library_init();
-            ass_set_message_cb(m_library, ass_log, nullptr);
+            if(!assLibrary)
+            {
+                assLibrary  = ass_library_init();
+                ass_set_message_cb(assLibrary, ass_log, nullptr);
 
-            m_renderer = ass_renderer_init(m_library);
-            m_track    = ass_new_track(m_library);
-            
-            ass_set_fonts(m_renderer, NULL, NULL , 1, NULL, 1);
-            ass_set_margins(m_renderer, 10, 0, 0, 0);
+                assRenderer = ass_renderer_init(assLibrary);
+
+                ass_set_fonts(assRenderer, NULL, NULL , 1, NULL, 1);
+                ass_set_margins(assRenderer, 10, 0, 0, 0);
+            }
+            ++assRefCount;
+            m_track    = ass_new_track(assLibrary);
 
             ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header),
                                       m_stream->codec->subtitle_header_size);
@@ -92,16 +100,22 @@ namespace sfe
             m_track = nullptr;
         }
 
-        if(m_renderer)
+        if(assLibrary)
+            --assRefCount;
+
+        if(assRefCount==0)
         {
-            ass_renderer_done(m_renderer);
-            m_renderer = nullptr;
-        }
-        
-        if(m_library)
-        {
-            ass_library_done(m_library);
-            m_library = nullptr;
+            if(assRenderer)
+            {
+                ass_renderer_done(assRenderer);
+                assRenderer = nullptr;
+            }
+            
+            if(assLibrary)
+            {
+                ass_library_done(assLibrary);
+                assLibrary = nullptr;
+            }
         }
 #endif
     }
@@ -109,8 +123,8 @@ namespace sfe
     void SubtitleStream::setRenderingFrame(int width, int height)
     {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-        if(m_library)
-            ass_set_frame_size(m_renderer, width, height);
+        if(assRenderer)
+            ass_set_frame_size(assRenderer, width, height);
 #endif
     }
     
@@ -140,7 +154,7 @@ namespace sfe
                 if (subtitle->type == ASS)
                 {
                     int changed = 0;
-                    ASS_Image* layer = ass_render_frame(m_renderer, m_track,
+                    ASS_Image* layer = ass_render_frame(assRenderer, m_track,
                                                         m_timer->getOffset().asMilliseconds(),
                                                         &changed);
                     
