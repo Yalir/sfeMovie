@@ -38,31 +38,71 @@ extern "C"
 
 namespace sfe
 {
-    ASS_Library* SubtitleStream::assLibrary = nullptr;
-    ASS_Renderer* SubtitleStream::assRenderer = nullptr;
-    int SubtitleStream::assRefCount = 0;
-
-
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
     namespace
     {
-       
-#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-        void ass_log(int ass_level, const char *fmt, va_list args, void *data)
+        void assLogger(int ass_level, const char *fmt, va_list args, void *data)
         {
             char buffer[4096];
             
             vsnprintf(buffer, sizeof(buffer), fmt, args);
             sfeLogDebug(buffer);
         }
-#endif
     }
+    
+    class ASSLibrary
+    {
+    public:
+        static std::shared_ptr<ASSLibrary> instance()
+        {
+            if (sharedInstance.expired())
+            {
+                std::shared_ptr<ASSLibrary> lib(new ASSLibrary);
+                sharedInstance = lib;
+                return lib;
+            }
+            else
+                return std::shared_ptr<ASSLibrary>(sharedInstance);
+        }
+        
+        ASSLibrary()
+        : library(ass_library_init())
+        , renderer(ass_renderer_init(library))
+        {
+            CHECK(library, "Failed initializing ASS library");
+            CHECK(renderer, "Failed initializing ASS renderer");
+            ass_set_message_cb(library, assLogger, nullptr);
+            ass_set_fonts(renderer, NULL, NULL , 1, NULL, 1);
+            ass_set_margins(renderer, 10, 0, 0, 0);
+        }
+        
+        ~ASSLibrary()
+        {
+            ass_renderer_done(renderer);
+            ass_library_done(library);
+        }
+        
+        ASS_Library* library;
+        ASS_Renderer* renderer;
+    private:
+        
+        static std::weak_ptr<ASSLibrary> sharedInstance;
+    };
+    
+    std::weak_ptr<ASSLibrary> ASSLibrary::sharedInstance;
+    
+#endif
     
     const int RGBASize = 4;
     
     SubtitleStream::SubtitleStream(AVFormatContext*& formatCtx, AVStream*& stream, DataSource& dataSource, std::shared_ptr<Timer> timer, Delegate& delegate) :
-        Stream(formatCtx, stream, dataSource, timer),
-        m_delegate(delegate),
-        m_track(nullptr)
+    Stream(formatCtx, stream, dataSource, timer),
+    m_delegate(delegate)
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+    ,
+    m_ass(ASSLibrary::instance()),
+    m_track(nullptr)
+#endif
     {
         const AVCodecDescriptor* desc = av_codec_get_codec_descriptor(m_stream->codec);
         CHECK(desc != NULL, "Could not get the codec descriptor!");
@@ -70,19 +110,9 @@ namespace sfe
         if((desc->props & AV_CODEC_PROP_BITMAP_SUB) == 0)
         {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-            if(!assLibrary)
-            {
-                assLibrary  = ass_library_init();
-                ass_set_message_cb(assLibrary, ass_log, nullptr);
-
-                assRenderer = ass_renderer_init(assLibrary);
-
-                ass_set_fonts(assRenderer, NULL, NULL , 1, NULL, 1);
-                ass_set_margins(assRenderer, 10, 0, 0, 0);
-            }
-            ++assRefCount;
-            m_track    = ass_new_track(assLibrary);
-
+            m_track    = ass_new_track(m_ass->library);
+            CHECK(m_track, "Failed initializing ASS track");
+            
             ass_process_codec_private(m_track, reinterpret_cast<char*>(m_stream->codec->subtitle_header),
                                       m_stream->codec->subtitle_header_size);
 #else
@@ -95,36 +125,14 @@ namespace sfe
     {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
         if (m_track)
-        {
             ass_free_track(m_track);
-            m_track = nullptr;
-        }
-
-        if(assLibrary)
-            --assRefCount;
-
-        if(assRefCount==0)
-        {
-            if(assRenderer)
-            {
-                ass_renderer_done(assRenderer);
-                assRenderer = nullptr;
-            }
-            
-            if(assLibrary)
-            {
-                ass_library_done(assLibrary);
-                assLibrary = nullptr;
-            }
-        }
 #endif
     }
     
     void SubtitleStream::setRenderingFrame(int width, int height)
     {
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-        if(assRenderer)
-            ass_set_frame_size(assRenderer, width, height);
+        ass_set_frame_size(m_ass->renderer, width, height);
 #endif
     }
     
@@ -148,19 +156,19 @@ namespace sfe
             if (m_pendingSubtitles.front()->start < m_timer->getOffset())
             {
                 std::shared_ptr<SubtitleData> subtitle = m_pendingSubtitles.front();
-
+                
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
                 //this is the case for ass subtitles
                 if (subtitle->type == ASS)
                 {
                     int changed = 0;
-                    ASS_Image* layer = ass_render_frame(assRenderer, m_track,
+                    ASS_Image* layer = ass_render_frame(m_ass->renderer, m_track,
                                                         m_timer->getOffset().asMilliseconds(),
                                                         &changed);
                     
                     if (changed)
-                    {                     
-
+                    {
+                        
                         for (; layer; layer = layer->next)
                         {
                             if (layer->w == 0 || layer->h == 0)
@@ -170,21 +178,21 @@ namespace sfe
                             const uint8_t green =   layer->color >> 16 & 255;
                             const uint8_t blue  =   layer->color >> 8 & 255;
                             const uint8_t alpha =   255 - (layer->color & 255);
-
+                            
                             sf::Image image;
                             image.create(layer->w, layer->h);
                             
                             for (int y = 0; y < layer->h; ++y)
                             {
                                 const unsigned char *map = layer->bitmap + y * layer->stride;
-
+                                
                                 for (int x = 0; x < layer->w; ++x)
                                 {
                                     const uint8_t mappedAlpha = ((unsigned)alpha * *map++)/255;
                                     image.setPixel(x, y, sf::Color(red, green, blue, mappedAlpha));
                                 }
                             }
-
+                            
                             subtitle->positions.push_back(sf::Vector2i(layer->dst_x, layer->dst_y));
                             subtitle->sprites.push_back(sf::Sprite());
                             subtitle->textures.push_back(sf::Texture());
@@ -195,11 +203,11 @@ namespace sfe
                             texture.loadFromImage(image);
                             texture.setSmooth(true);
                             sprite.setTexture(texture);
-                        }                       
+                        }
                     }
                 }
 #endif
-
+                
                 m_delegate.didUpdateSubtitle(*this, subtitle->sprites, subtitle->positions);
                 m_visibleSubtitles.push_back(subtitle);
                 m_pendingSubtitles.pop_front();
@@ -254,7 +262,7 @@ namespace sfe
                 if (gotSub && pts)
                 {
                     bool succeeded = false;
-                    std::shared_ptr<SubtitleData> sfeSub = std::make_shared<SubtitleData>(&sub, succeeded,m_track);
+                    std::shared_ptr<SubtitleData> sfeSub = std::make_shared<SubtitleData>(&sub, succeeded, m_track);
                     
                     if (succeeded)
                         m_pendingSubtitles.push_back(sfeSub);
@@ -288,20 +296,20 @@ namespace sfe
         succeeded = false;
         start = sf::milliseconds(sub->start_display_time) + sf::microseconds(sub->pts);
         end = sf::milliseconds(sub->end_display_time) + sf::microseconds(sub->pts);
-
+        
         for (unsigned int i = 0; i < sub->num_rects; ++i)
-        {           
+        {
             AVSubtitleRect* subItem = sub->rects[i];
-
+            
             if (subItem->type == SUBTITLE_BITMAP)
             {
                 type = BITMAP;
                 sprites.push_back(sf::Sprite());
                 textures.push_back(sf::Texture());
-
+                
                 sf::Sprite& sprite = sprites.back();
                 sf::Texture& texture = textures.back();
-
+                
                 CHECK(subItem->pict.data[0] != nullptr, "FFmpeg inconcistency error");
                 CHECK(subItem->pict.data[1] != nullptr, "FFmpeg inconcistency error");
                 CHECK(subItem->w * subItem->h > 0, "FFmpeg inconcistency error");
@@ -329,7 +337,7 @@ namespace sfe
             {
                 type = ASS;
                 ass_process_data(track, subItem->ass, strlen(subItem->ass));
-
+                
                 succeeded = true;
             }
 #endif
@@ -354,9 +362,9 @@ namespace sfe
         {
             onGetData();
         }
-
+        
         std::list< std::shared_ptr<SubtitleData>>::iterator it = m_visibleSubtitles.begin();
-        while (it != m_visibleSubtitles.end()) 
+        while (it != m_visibleSubtitles.end())
         {
             //erase subs that are deleted before the targetPosition
             if (it->get()->end<targetPosition)
@@ -366,7 +374,7 @@ namespace sfe
         }
         
         it = m_pendingSubtitles.begin();
-        while (it != m_pendingSubtitles.end()) 
+        while (it != m_pendingSubtitles.end())
         {
             //erase subs that are deleted before the targetPosition
             if (it->get()->end<targetPosition)

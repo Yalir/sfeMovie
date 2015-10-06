@@ -37,14 +37,13 @@ extern "C"
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
 #include <ass/ass.h>
 #else
-    struct ASS_Library;
-    struct ASS_Renderer;
     struct ASS_Track;
 #endif
 }
 
 namespace sfe
 {
+    class ASSLibrary;
     
     class SubtitleStream : public Stream
     {
@@ -144,9 +143,9 @@ namespace sfe
         std::list< std::shared_ptr<SubtitleData> > m_pendingSubtitles;
         std::list< std::shared_ptr<SubtitleData> > m_visibleSubtitles;
         
-        static ASS_Library*    assLibrary;
-        static ASS_Renderer*   assRenderer;
-        static int             assRefCount;
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+        std::shared_ptr<ASSLibrary> m_ass;
+#endif
         ASS_Track*      m_track;
     };
     
