@@ -49,6 +49,16 @@ find_library(LIBASS_LIBRARY NAMES ass
 set(LIBASS_LIBRARIES ${LIBASS_LIBRARY} )
 set(LIBASS_INCLUDE_DIRS ${LIBASS_INCLUDE_DIR} )
 
+# On Windows we assume that only static version of libass is used (this is the default build type)
+# so we also link against its dependencies (libass does not provide any Find*.cmake script to simplify this aspect)
+if (${CMAKE_HOST_WIN32})
+  find_package(Freetype REQUIRED)
+  find_package(fribidi REQUIRED)
+  find_package(harfbuzz REQUIRED)
+
+  set(LIBASS_LIBRARIES ${LIBASS_LIBRARIES} ${FREETYPE_LIBRARIES} ${FRIBIDI_LIBRARIES} ${HARFBUZZ_LIBRARIES})
+endif()
+
 # handle the QUIETLY and REQUIRED arguments and set CURL_FOUND to TRUE if
 # all listed variables are TRUE
 find_package_handle_standard_args(ASS "Could not find libass. Make sure it is installed or define LIBASS_ROOT if it is located in a custom path"
