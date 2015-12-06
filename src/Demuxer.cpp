@@ -239,6 +239,13 @@ namespace sfe
         
         m_timer->removeObserver(*this);
         
+        // NB: these manual cleaning are important for the AVFormatContext to be deleted last, otherwise
+        // the streams lose their connection to the codec and leak
+        m_streams.clear();
+        m_connectedAudioStream.reset();
+        m_connectedSubtitleStream.reset();
+        m_connectedVideoStream.reset();
+        
         if (m_formatCtx)
         {
             // Be very careful with this call: it'll also destroy its codec contexts and streams
