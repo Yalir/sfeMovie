@@ -52,7 +52,7 @@ set(LIBASS_INCLUDE_DIRS ${LIBASS_INCLUDE_DIR} )
 
 # On Windows we assume that only static version of libass is used (this is the default build type)
 # so we also link against its dependencies (libass does not provide any Find*.cmake script to simplify this aspect)
-if (${CMAKE_HOST_WIN32})
+if (CMAKE_HOST_WIN32)
   find_library(FREETYPE_LIBRARY NAMES freetype
                PATHS ${LIBRARY_SEARCH_PATHS} ${FREETYPE_ROOT} $ENV{FREETYPE_ROOT}
                HINTS ${PC_LIBASS_LIBDIR} ${PC_LIBASS_LIBRARY_DIRS})
