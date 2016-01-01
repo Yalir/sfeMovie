@@ -17,7 +17,7 @@ args = parser.parse_args()
 if platform.system() == "Darwin":
     os.environ['PATH'] += ":/usr/local/bin"
 elif platform.system() == 'Windows':
-    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.3-windows-vc12-32-bit/SFML-2.3"
+    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.3.2-windows-vc14-32-bit/SFML-2.3.2"
 
 # Display environment
 print 'PATH is: {}'.format(os.environ['PATH'])
@@ -48,7 +48,7 @@ else:
 generatorArg = ''
 
 if platform.system() == 'Windows':
-    generatorArg = "-GVisual Studio 12"
+    generatorArg = "-GVisual Studio 14"
 elif platform.system() == "Darwin":
     generatorArg = "-GXcode"
 
