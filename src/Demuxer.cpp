@@ -693,6 +693,9 @@ namespace sfe
                 // Compute the new gap
                 for (std::shared_ptr<Stream> stream : connectedStreams)
                 {
+                    if (stream->isPassive())
+                        continue;
+                    
                     sf::Time position;
                     if (stream->computeEncodedPosition(position))
                     {
