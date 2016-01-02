@@ -208,6 +208,27 @@ namespace sfe
             sfeLogWarning("The media duration could not be retreived");
         }
         
+        // Now that all streams are loaded, let's tell the subtitle rendering system what's
+        // the video frame size
+        std::set< std::shared_ptr<Stream> > videoStreams = getStreamsOfType(Video);
+        std::set< std::shared_ptr<Stream> > subtitleStreams = getStreamsOfType(Subtitle);
+        
+        if (! subtitleStreams.empty() && ! videoStreams.empty())
+        {
+            std::shared_ptr<VideoStream> firstVideoStream = std::dynamic_pointer_cast<VideoStream>(*videoStreams.begin());
+            
+            CHECK(firstVideoStream, "Internal inconcistency - unexpected stream type in video streams storage");
+            sf::Vector2i videoFrameSize = firstVideoStream->getFrameSize();
+            
+            for (std::shared_ptr<Stream> stream : subtitleStreams)
+            {
+                std::shared_ptr<SubtitleStream> subtitleStream = std::dynamic_pointer_cast<SubtitleStream>(stream);
+                CHECK(subtitleStream, "Internal inconcistency - unexpected stream type in subtitle streams storage");
+                
+                subtitleStream->setRenderingFrame(videoFrameSize.x, videoFrameSize.y);
+            }
+        }
+        
         m_timer->addObserver(*this, DemuxerTimerPriority);
     }
     
@@ -384,6 +405,8 @@ namespace sfe
     
     void Demuxer::feedStream(Stream& stream)
     {
+        CHECK(! stream.isPassive(), "Internal inconcistency - Cannot feed a passive stream");
+        
         sf::Lock l(m_synchronized);
         
         while ((!didReachEndOfFile() || hasPendingDataForStream(stream)) && stream.needsMoreData())
@@ -429,12 +452,11 @@ namespace sfe
     void Demuxer::update()
     {
         std::map<int, std::shared_ptr<Stream> > streams = getStreams();
-        std::map<int, std::shared_ptr<Stream> >::iterator it;
         
         for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
         {
-			pair.second->update();
-		}
+            pair.second->update();
+        }
     }
     
     bool Demuxer::didReachEndOfFile() const
@@ -588,8 +610,9 @@ namespace sfe
     
     void Demuxer::requestMoreData(Stream& starvingStream)
     {
-        sf::Lock l(m_synchronized);
+        CHECK(! starvingStream.isPassive(), "Internal inconcistency - passive streams cannot request data");
         
+        sf::Lock l(m_synchronized);
         feedStream(starvingStream);
     }
     
@@ -670,8 +693,19 @@ namespace sfe
                 // Compute the new gap
                 for (std::shared_ptr<Stream> stream : connectedStreams)
                 {
-                    sf::Time gap = stream->computeEncodedPosition() - newPosition;
-                    seekingGaps[stream] = gap;
+                    if (stream->isPassive())
+                        continue;
+                    
+                    sf::Time position;
+                    if (stream->computeEncodedPosition(position))
+                    {
+                        seekingGaps[stream] = position - newPosition;
+                    }
+                    else
+                    {
+                        sfeLogDebug("Cannot get position for " + mediaTypeToString(stream->getStreamKind()) +
+                                    " stream, it'll be ignored for seeking synchronization");
+                    }
                 }
                 
                 tooEarlyCount = 0;
@@ -694,7 +728,6 @@ namespace sfe
                             brokenSeekingCount++;
                             tooEarlyCount++;
                         }
-                    
                         // else: a bit early but not too much, this is the final situation we want
                     }
                     // After seek point
@@ -703,7 +736,7 @@ namespace sfe
                         tooLateCount++;
                     
                         if (absoluteDiff > brokenSeekingThreshold)
-                            brokenSeekingCount++; // TODO: unhandled for now => should seek to non-key frame
+                            brokenSeekingCount++;
                     }
                     
                     if (brokenSeekingCount > 0)

@@ -32,9 +32,18 @@
 #include <list>
 #include <utility>
 
+extern "C"
+{
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+#include <ass/ass.h>
+#else
+    struct ASS_Track;
+#endif
+}
 
 namespace sfe
 {
+    class ASSLibrary;
     
     class SubtitleStream : public Stream
     {
@@ -64,15 +73,22 @@ namespace sfe
          */
         virtual ~SubtitleStream();
         
+        /** Define the size of the area that is used to render subtitles, it should match the video frame size
+         * 
+         * @param width the video frame width
+         * @param height the video frame height
+         */
+        void setRenderingFrame(int width, int height);
+        
         /** Get the stream kind (either audio, video or subtitle stream)
          *
          * @return the kind of stream represented by this stream
          */
-        virtual MediaType getStreamKind() const override;
+        MediaType getStreamKind() const override;
         
         /** Update the stream's status
          */
-        virtual void update() override;
+        void update() override;
         
         /** @see Stream::isPassive()
          */
@@ -80,13 +96,19 @@ namespace sfe
         
          /** Empty the encoded data queue, destroy all the packets and flush the decoding pipeline
          */
-        virtual void flushBuffers() override;
+        void flushBuffers() override;
         
         /** @see Stream::fastForward()
          */
-        virtual bool fastForward(sf::Time targetPosition);
+        bool fastForward(sf::Time targetPosition) override;
         
     private:
+        enum SubtitleType
+        {
+            BITMAP  = 0,
+            ASS     = 1,
+        };
+
         /** The struct we use to store our subtitles
          */
         struct SubtitleData
@@ -99,12 +121,15 @@ namespace sfe
             //when will it disappear (absolute)
             sf::Time end;
             
+            //the type of subtitle
+            SubtitleType type;
             /** Create our subtitle from an AVSubtitle
              *
              * @param succeeded Whether this structure contains valid decoded subtitles
              * after construction time
+             * @param track The libass track we write our subtitle to
              */
-            SubtitleData(AVSubtitle* sub, bool& succeeded);
+            SubtitleData(AVSubtitle* sub, bool& succeeded, ASS_Track* track);
         };
         
         /** Decode the packages that were send to the stream by the demuxer
@@ -112,11 +137,16 @@ namespace sfe
          * @return if the stream is finished or not
          */
         bool onGetData();
-        
+
         Delegate& m_delegate;
         
         std::list< std::shared_ptr<SubtitleData> > m_pendingSubtitles;
         std::list< std::shared_ptr<SubtitleData> > m_visibleSubtitles;
+        
+#ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
+        std::shared_ptr<ASSLibrary> m_ass;
+#endif
+        ASS_Track*      m_track;
     };
     
 };
