@@ -11,7 +11,7 @@
 # set( SFEMOVIE_STATIC_LIBRARIES TRUE )
 # find_package( sfeMovie )
 #
-# If sfeMovie is not installed in a standard path, you can use the SFEMOVIEDIR or
+# If sfeMovie is not installed in a standard path, you can set
 # SFEMOVIE_ROOT CMake (or environment) variables to tell CMake where to look for
 # sfeMovie.
 #
@@ -21,7 +21,7 @@
 # This script defines the following variables:
 #   - SFEMOVIE_LIBRARY_DEBUG:   the path to the debug library
 #   - SFEMOVIE_LIBRARY_RELEASE: the path to the release library
-#   - SFEMOVIE_LIBRARY:         the path to the library to link to
+#   - SFEMOVIE_LIBRARY:         the path to the library to link to for current configuration
 #   - SFEMOVIE_FOUND:           true if the sfeMovie library is found
 #   - SFEMOVIE_INCLUDE_DIR:     the path where sfeMovie headers are located (the directory containing the sfeMovie/Movie.hpp file)
 #
@@ -33,7 +33,7 @@
 # add_executable( myapp ... )
 # target_link_libraries( myapp ${SFEMOVIE_LIBRARY} ... )
 
-set( SFEMOVIE_FOUND false )
+include(FindPackageHandleStandardArgs)
 
 if( SFEMOVIE_STATIC_LIBRARIES )
 	set( SFEMOVIE_SUFFIX "-s" )
@@ -42,18 +42,18 @@ else()
 	set( SFEMOVIE_SUFFIX "" )
 endif()
 
+set (LIBRARY_SEARCH_PATHS
+	/usr
+	/usr/local
+	${SFEMOVIE_ROOT}
+	$ENV{SFEMOVIE_ROOT})
+
 find_path(
 	SFEMOVIE_INCLUDE_DIR
 	sfeMovie/Movie.hpp
 	PATH_SUFFIXES
 		include
-	PATHS
-		/usr
-		/usr/local
-		${SFEMOVIEDIR}
-		${SFEMOVIE_ROOT}
-		$ENV{SFEMOVIEDIR}
-		$ENV{SFEMOVIE_ROOT}
+	PATHS ${LIBRARY_SEARCH_PATHS}}
 )
 
 find_library(
@@ -62,13 +62,7 @@ find_library(
 	PATH_SUFFIXES
 		lib
 		lib64
-	PATHS
-		/usr
-		/usr/local
-		${SFEMOVIEDIR}
-		${SFEMOVIE_ROOT}
-		$ENV{SFEMOVIEDIR}
-		$ENV{SFEMOVIE_ROOT}
+	PATHS ${LIBRARY_SEARCH_PATHS}
 )
 
 find_library(
@@ -77,13 +71,7 @@ find_library(
 	PATH_SUFFIXES
 		lib
 		lib64
-	PATHS
-		/usr
-		/usr/local
-		${SFEMOVIEDIR}
-		${SFEMOVIE_ROOT}
-		$ENV{SFEMOVIEDIR}
-		$ENV{SFEMOVIE_ROOT}
+	PATHS ${LIBRARY_SEARCH_PATHS}
 )
 
 if( SFEMOVIE_LIBRARY_RELEASE AND SFEMOVIE_LIBRARY_DEBUG )
@@ -100,9 +88,8 @@ if( SFEMOVIE_LIBRARY_DEBUG AND NOT SFEMOVIE_LIBRARY_RELEASE )
 	set( SFEMOVIE_LIBRARY ${SFEMOVIE_LIBRARY_DEBUG} )
 endif()
 
-if( NOT SFEMOVIE_INCLUDE_DIR OR NOT SFEMOVIE_LIBRARY )
-	message( FATAL_ERROR "sfeMovie not found." )
-else()
-	set( SFEMOVIE_FOUND true )
-	message( STATUS "sfeMovie found: ${SFEMOVIE_INCLUDE_DIR}" )
-endif()
+# handle the QUIETLY and REQUIRED arguments and set SFEMOVIE_FOUND to TRUE if
+# all listed variables are TRUE
+find_package_handle_standard_args(sfeMovie 
+	FAIL_MESSAGE "Could NOT find sfeMovie. Make sure it is installed or define SFEMOVIE_ROOT if it is located in a custom path"
+    REQUIRED_VARS SFEMOVIE_LIBRARY SFEMOVIE_INCLUDE_DIR)
