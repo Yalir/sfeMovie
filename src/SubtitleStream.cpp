@@ -162,6 +162,7 @@ namespace sfe
                 if (subtitle->type == ASS)
                 {
                     int changed = 0;
+                    CHECK(m_track, "Internal inconcistency - null track");
                     ASS_Image* layer = ass_render_frame(m_ass->renderer, m_track,
                                                         m_timer->getOffset().asMilliseconds(),
                                                         &changed);
@@ -289,7 +290,7 @@ namespace sfe
     }
     
     
-    SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded,ASS_Track* track)
+    SubtitleStream::SubtitleData::SubtitleData(AVSubtitle* sub, bool& succeeded, ASS_Track* track)
     {
         assert(sub != nullptr);
         
@@ -336,6 +337,7 @@ namespace sfe
             else
             {
                 type = ASS;
+                CHECK(track, "Internal inconcistency - null track");
                 ass_process_data(track, subItem->ass, strlen(subItem->ass));
                 
                 succeeded = true;
@@ -352,7 +354,8 @@ namespace sfe
         m_visibleSubtitles.clear();
         
 #ifdef SFEMOVIE_ENABLE_ASS_SUBTITLES
-        ass_flush_events(m_track);
+        if (m_track)
+            ass_flush_events(m_track);
 #endif
     }
     
