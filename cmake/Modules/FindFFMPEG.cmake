@@ -89,37 +89,6 @@ ENDMACRO(FFMPEG_FIND)
 
 SET(FFMPEG_ROOT "$ENV{FFMPEG_ROOT}" CACHE PATH "Location of FFmpeg")
 
-# find stdint.h
-IF(MSVC)
-
-    FIND_PATH(FFMPEG_STDINT_INCLUDE_DIR stdint.h
-        PATHS
-        ${FFMPEG_ROOT}/include
-        $ENV{FFMPEG_ROOT}/include
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local/include
-        /usr/include
-        /sw/include # Fink
-        /opt/local/include # DarwinPorts
-        /opt/csw/include # Blastwave
-        /opt/include
-        /usr/freeware/include
-        ${CMAKE_SOURCE_DIR}/deps/headers/msvc
-        PATH_SUFFIXES ffmpeg
-        DOC "Location of FFMPEG stdint.h Header"
-    )
-
-    IF (FFMPEG_STDINT_INCLUDE_DIR)
-        SET(STDINT_OK TRUE)
-    ENDIF()
-
-ELSE()
-
-    SET(STDINT_OK TRUE)
-
-ENDIF()
-
 FFMPEG_FIND(LIBAVFORMAT avformat avformat.h)
 FFMPEG_FIND(LIBAVDEVICE avdevice avdevice.h)
 FFMPEG_FIND(LIBAVCODEC  avcodec  avcodec.h)
@@ -128,7 +97,7 @@ FFMPEG_FIND(LIBSWSCALE  swscale  swscale.h)
 FFMPEG_FIND(LIBSWRESAMPLE swresample swresample.h)
 
 SET(FFMPEG_FOUND "NO" CACHE STRING "FFmpeg found status" FORCE)
-IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODEC_FOUND AND FFMPEG_LIBAVUTIL_FOUND AND FFMPEG_LIBSWSCALE_FOUND AND FFMPEG_LIBSWRESAMPLE_FOUND AND STDINT_OK)
+IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODEC_FOUND AND FFMPEG_LIBAVUTIL_FOUND AND FFMPEG_LIBSWSCALE_FOUND AND FFMPEG_LIBSWRESAMPLE_FOUND)
 
     SET(FFMPEG_FOUND "YES" CACHE STRING "FFmpeg found status" FORCE)
 
@@ -141,16 +110,6 @@ IF   (FFMPEG_LIBAVFORMAT_FOUND AND FFMPEG_LIBAVDEVICE_FOUND AND FFMPEG_LIBAVCODE
         ${FFMPEG_LIBSWRESAMPLE_INCLUDE_DIRS}
         CACHE STRING "FFmpeg include paths" FORCE
     )
-
-# Using the new include style for FFmpeg prevents issues with #include <time.h>
-    IF (FFMPEG_STDINT_INCLUDE_DIR)
-        SET(FFMPEG_INCLUDE_DIRS
-            ${FFMPEG_INCLUDE_DIRS}
-            ${FFMPEG_STDINT_INCLUDE_DIR}
-            CACHE STRING "FFmpeg include paths" FORCE
-        )
-    ENDIF()
-
 
     SET(FFMPEG_LIBRARY_DIRS ${FFMPEG_LIBAVFORMAT_LIBRARY_DIRS} PARENT_SCOPE)
     SET(FFMPEG_LIBRARIES
