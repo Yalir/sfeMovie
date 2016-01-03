@@ -49,11 +49,9 @@ set (LIBRARY_SEARCH_PATHS
 	$ENV{SFEMOVIE_ROOT})
 
 find_path(
-	SFEMOVIE_INCLUDE_DIR
-	sfeMovie/Movie.hpp
-	PATH_SUFFIXES
-		include
-	PATHS ${LIBRARY_SEARCH_PATHS}}
+	SFEMOVIE_INCLUDE_DIR sfeMovie/Movie.hpp
+	PATH_SUFFIXES include
+	PATHS ${LIBRARY_SEARCH_PATHS}
 )
 
 find_library(
