@@ -7,12 +7,18 @@ else()
   target_compile_options(${SFEMOVIE_LIB} PRIVATE "$<$<CONFIG:Debug>:-O0>")
 endif()
 
+if (SFEMOVIE_BUILD_STATIC)
+  set(STATIC_POSTFIX "-s")
+else()
+  set(STATIC_POSTFIX "")
+endif()
+
 set_target_properties(${SFEMOVIE_LIB} PROPERTIES
-                      DEBUG_POSTFIX "-d"
+                      DEBUG_POSTFIX "${STATIC_POSTFIX}-d"
+                      RELEASE_POSTFIX "${STATIC_POSTFIX}"
                       LINK_FLAGS "${LINKER_FLAGS}"
                       SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
                       VERSION "${VERSION_MAJOR}.${VERSION_MINOR}")
-
 
 if (MACOSX)
     # edit target properties
