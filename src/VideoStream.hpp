@@ -81,7 +81,7 @@ namespace sfe
         
         /** @see Stream::flushBuffers()
          */
-        virtual void flushBuffers();
+        void flushBuffers() override;
         
         /** @see Stream::fastForward()
          */
