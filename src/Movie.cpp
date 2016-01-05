@@ -42,7 +42,12 @@ namespace sfe
     {
         return m_impl->openFromFile(filename);
     }
-    
+
+    bool Movie::openFromStream(sf::InputStream& stream)
+    {
+        return m_impl->openFromStream(stream);
+    }
+
     const Streams& Movie::getStreams(MediaType type) const
     {
         return m_impl->getStreams(type);

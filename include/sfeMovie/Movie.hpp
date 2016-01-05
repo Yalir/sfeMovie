@@ -65,6 +65,17 @@ namespace sfe
          * @return true on success, false otherwise
          */
         bool openFromFile(const std::string& filename);
+
+        /** @brief Attemps to open a media file (movie or audio) from an InputStream
+        *
+        * Opening can fails either because of a wrong stream,
+        * or because you tried to open a media file that has no supported
+        * video or audio stream.
+        *
+        * @param stream the InputStream to the media file
+        * @return true on success, false otherwise
+        */
+        bool openFromStream(sf::InputStream& stream);
         
         /** @brief Return a description of all the streams of the given type contained in the opened media
          *

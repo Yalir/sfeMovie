@@ -54,32 +54,8 @@ namespace sfe
         {
             m_timer = std::make_shared<Timer>();
             m_demuxer = std::make_shared<Demuxer>(filename, m_timer, *this, *this);
-            m_audioStreamsDesc = m_demuxer->computeStreamDescriptors(Audio);
-            m_videoStreamsDesc = m_demuxer->computeStreamDescriptors(Video);
-            m_subtitleStreamsDesc = m_demuxer->computeStreamDescriptors(Subtitle);
-            
-            std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
-            std::set< std::shared_ptr<Stream> > videoStreams = m_demuxer->getStreamsOfType(Video);
-            std::set< std::shared_ptr<Stream> > subtitleStreams = m_demuxer->getStreamsOfType(Subtitle);
-            
-            m_demuxer->selectFirstAudioStream();
-            m_demuxer->selectFirstVideoStream();
-            
-            if (audioStreams.empty() && videoStreams.empty())
-            {
-                sfeLogError("Movie::openFromFile() - No supported audio or video stream in this media");
-                return false;
-            }
-            else
-            {
-                if (!videoStreams.empty())
-                {
-                    sf::Vector2f size = getSize();
-                    m_displayFrame = sf::FloatRect(0, 0, size.x, size.y);
-                }
-                
-                return true;
-            }
+
+            return open();
         }
         catch (std::runtime_error& e)
         {
@@ -88,6 +64,52 @@ namespace sfe
         }
     }
     
+    bool MovieImpl::openFromStream(sf::InputStream& stream)
+    {
+        try
+        {
+            m_timer = std::make_shared<Timer>();
+            m_demuxer = std::make_shared<Demuxer>(stream, m_timer, *this, *this);
+
+            return open();
+        }
+        catch (std::runtime_error& e)
+        {
+            sfeLogError(e.what());
+            return false;
+        }
+    }
+
+    bool MovieImpl::open()
+    {
+        m_audioStreamsDesc = m_demuxer->computeStreamDescriptors(Audio);
+        m_videoStreamsDesc = m_demuxer->computeStreamDescriptors(Video);
+        m_subtitleStreamsDesc = m_demuxer->computeStreamDescriptors(Subtitle);
+
+        std::set< std::shared_ptr<Stream> > audioStreams = m_demuxer->getStreamsOfType(Audio);
+        std::set< std::shared_ptr<Stream> > videoStreams = m_demuxer->getStreamsOfType(Video);
+        std::set< std::shared_ptr<Stream> > subtitleStreams = m_demuxer->getStreamsOfType(Subtitle);
+
+        m_demuxer->selectFirstAudioStream();
+        m_demuxer->selectFirstVideoStream();
+
+        if (audioStreams.empty() && videoStreams.empty())
+        {
+            sfeLogError("Movie::openFromFile() - No supported audio or video stream in this media");
+            return false;
+        }
+        else
+        {
+            if (!videoStreams.empty())
+            {
+                sf::Vector2f size = getSize();
+                m_displayFrame = sf::FloatRect(0, 0, size.x, size.y);
+            }
+
+            return true;
+        }
+    }
+
     const Streams& MovieImpl::getStreams(MediaType type) const
     {
         switch (type)

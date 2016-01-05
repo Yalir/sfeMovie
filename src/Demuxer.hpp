@@ -83,7 +83,17 @@ namespace sfe
          * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
          */
         Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
-        
+
+        /** Default constructor
+        *
+        * Open a media file from an InputStream and find its streams
+        *
+        * @param inputStream the InputStream of the media to open and play
+        * @param timer the timer with which the media streams will be synchronized
+        * @param videoDelegate the delegate that will handle the images produced by the VideoStreams
+        */
+        Demuxer(sf::InputStream& inputStream, std::shared_ptr<Timer> timer, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
+
         /** Default destructor
          */
         virtual ~Demuxer();
@@ -200,6 +210,74 @@ namespace sfe
         sf::Time getDuration() const;
         
     private:
+
+        static const int kBufferSize = 1024 * 1024 * 500;
+
+        class InputStreamIOContext
+        {
+        private:
+            InputStreamIOContext(InputStreamIOContext const &);
+            InputStreamIOContext& operator = (InputStreamIOContext const &);
+
+        public:
+            // Move constructor
+            InputStreamIOContext(InputStreamIOContext&& other) {
+                m_inputStream = other.m_inputStream;
+                m_ctx = other.m_ctx;
+                other.m_ctx = nullptr;
+            }
+
+            // Move assignment operator
+            InputStreamIOContext& operator=(InputStreamIOContext&& other) {
+                m_inputStream = other.m_inputStream;
+                m_ctx = other.m_ctx;
+                other.m_ctx = nullptr;
+                return *this;
+            }
+
+            InputStreamIOContext() : m_inputStream(nullptr), m_ctx(nullptr) {}
+
+            InputStreamIOContext(sf::InputStream* inputStream) : m_inputStream(inputStream) {
+                unsigned char* buffer = static_cast<unsigned char*>(::av_malloc(kBufferSize));
+                m_ctx = ::avio_alloc_context(buffer, kBufferSize, 0, this,
+                    &InputStreamIOContext::read, nullptr, &InputStreamIOContext::seek);
+            }
+
+            ~InputStreamIOContext() {
+                if (m_ctx != nullptr)
+                {
+                    auto buf = m_ctx->buffer;
+                    ::av_freep(&m_ctx);
+                    ::av_free(buf);
+                }
+            }
+
+            static int read(void* opaque, unsigned char* buf, int buf_size) {
+                InputStreamIOContext* h = static_cast<InputStreamIOContext*>(opaque);
+                return h->m_inputStream->read(buf, buf_size);
+            }
+
+            static int64_t seek(void* opaque, int64_t offset, int whence) {
+                InputStreamIOContext* h = static_cast<InputStreamIOContext*>(opaque);
+
+                if (0x10000 == whence) {
+                    return h->m_inputStream->getSize();
+                }
+
+                return h->m_inputStream->seek(offset);
+            }
+
+            ::AVIOContext* getAVIOContext() { return m_ctx; }
+
+        private:
+            sf::InputStream* m_inputStream;
+            ::AVIOContext* m_ctx;
+        };
+
+        /** Common Constructor
+        */
+        void init(const char* fileName, VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate);
+
         /** Read a encoded packet from the media file
          *
          * You're responsible for freeing the returned packet
@@ -256,6 +334,7 @@ namespace sfe
         // Timer interface
         bool didSeek(const Timer& timer, sf::Time oldPosition) override;
         
+        InputStreamIOContext m_streamContext;
         AVFormatContext* m_formatCtx;
         bool m_eofReached;
         std::map<int, std::shared_ptr<Stream> > m_streams;

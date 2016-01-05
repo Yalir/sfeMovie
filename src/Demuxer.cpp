@@ -109,6 +109,7 @@ namespace sfe
     
     Demuxer::Demuxer(const std::string& sourceFile, std::shared_ptr<Timer> timer,
                      VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
+    m_streamContext(),
     m_formatCtx(nullptr),
     m_eofReached(false),
     m_streams(),
@@ -123,14 +124,45 @@ namespace sfe
         CHECK(sourceFile.size(), "Demuxer::Demuxer() - invalid argument: sourceFile");
         CHECK(timer, "Inconsistency error: null timer");
         
-        int err = 0;
+        // Load all the decoders
+        loadFFmpeg();
+        
+        init(sourceFile.c_str(), videoDelegate, subtitleDelegate);
+    }
+    
+    Demuxer::Demuxer(sf::InputStream& inputStream, std::shared_ptr<Timer> timer,
+                     VideoStream::Delegate& videoDelegate, SubtitleStream::Delegate& subtitleDelegate) :
+    m_streamContext(),
+    m_formatCtx(nullptr),
+    m_eofReached(false),
+    m_streams(),
+    m_ignoredStreams(),
+    m_synchronized(),
+    m_timer(timer),
+    m_connectedAudioStream(nullptr),
+    m_connectedVideoStream(nullptr),
+    m_connectedSubtitleStream(nullptr),
+    m_duration(sf::Time::Zero)
+    {
+        CHECK(timer, "Inconsistency error: null timer");
         
         // Load all the decoders
         loadFFmpeg();
         
+        m_streamContext = InputStreamIOContext(&inputStream);
+        m_formatCtx = ::avformat_alloc_context();
+        m_formatCtx->pb = m_streamContext.getAVIOContext();
+        init("", videoDelegate, subtitleDelegate);
+    }
+    
+    void Demuxer::init(const char* fileName, VideoStream::Delegate& videoDelegate,
+                       SubtitleStream::Delegate& subtitleDelegate)
+    {
+        int err = 0;
+        
         // Open the movie file
-        err = avformat_open_input(&m_formatCtx, sourceFile.c_str(), nullptr, nullptr);
-        CHECK0(err, "Demuxer::Demuxer() - error while opening media: " + sourceFile);
+        err = avformat_open_input(&m_formatCtx, fileName, nullptr, nullptr);
+        CHECK0(err, "Demuxer::Demuxer() - error while opening media stream");
         CHECK(m_formatCtx, "Demuxer() - inconsistency: media context cannot be nullptr");
         
         // Read the general movie informations
@@ -158,7 +190,7 @@ namespace sfe
                 switch (ffstream->codec->codec_type)
                 {
                     case AVMEDIA_TYPE_VIDEO:
-                        stream = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, timer, videoDelegate);
+                        stream = std::make_shared<VideoStream>(m_formatCtx, ffstream, *this, m_timer, videoDelegate);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -169,7 +201,7 @@ namespace sfe
                         break;
                         
                     case AVMEDIA_TYPE_AUDIO:
-                        stream = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, timer);
+                        stream = std::make_shared<AudioStream>(m_formatCtx, ffstream, *this, m_timer);
                         
                         if (m_duration == sf::Time::Zero)
                         {
@@ -179,7 +211,7 @@ namespace sfe
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " audio stream");
                         break;
                     case AVMEDIA_TYPE_SUBTITLE:
-                        stream = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, timer, subtitleDelegate);
+                        stream = std::make_shared<SubtitleStream>(m_formatCtx, ffstream, *this, m_timer, subtitleDelegate);
                         
                         sfeLogDebug("Loaded " + avcodec_get_name(ffstream->codec->codec_id) + " subtitle stream");
                         break;
@@ -277,7 +309,7 @@ namespace sfe
     {
         Streams entries;
         std::set< std::shared_ptr<Stream> > streamSet;
-
+        
         for (const std::pair<int, std::shared_ptr<Stream> >& pair : m_streams)
         {
             if (pair.second->getStreamKind() == type)
@@ -574,7 +606,7 @@ namespace sfe
         
         if (it != m_streams.end())
         {
-             std::shared_ptr<Stream>  targetStream = it->second;
+            std::shared_ptr<Stream>  targetStream = it->second;
             
             // We don't want to store the packets for inactive streams,
             // let them be freed
@@ -734,7 +766,7 @@ namespace sfe
                     else if (gap > sf::Time::Zero)
                     {
                         tooLateCount++;
-                    
+                        
                         if (absoluteDiff > brokenSeekingThreshold)
                             brokenSeekingCount++;
                     }

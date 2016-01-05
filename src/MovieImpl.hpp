@@ -48,6 +48,9 @@ namespace sfe
          */
         bool openFromFile(const std::string& filename);
         
+        /** @see Movie::openFromStream()
+        */
+        bool openFromStream(sf::InputStream& stream);
         
         /** @see Movie::getStreams()
          */
@@ -147,6 +150,9 @@ namespace sfe
         void didWipeOutSubtitles(const SubtitleStream& sender) override;
         
     private:
+
+        bool open();
+
         sf::Transformable& m_movieView;
         std::shared_ptr<Demuxer> m_demuxer;
         std::shared_ptr<Timer> m_timer;
