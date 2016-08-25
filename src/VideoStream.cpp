@@ -127,7 +127,7 @@ namespace sfe
             }
         }
         
-        if (! couldComputeGap)
+        if (! couldComputeGap && getStatus() == Playing)
         {
             setStatus(Stopped);
         }
