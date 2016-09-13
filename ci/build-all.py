@@ -22,8 +22,7 @@ elif platform.system() == 'Linux':
     os.environ['SFML_ROOT'] = "/usr/local/SFML-2.4.0"
 
 # Display environment
-print 'PATH is: {}'.format(os.environ['PATH'])
-print 'SFML_ROOT is: {}'.format(os.environ['SFML_ROOT'])
+print 'ENVIRON is: {}'.format(os.environ)
 print 'Parameters are: {}'.format(args)
 print 'Platform is: {}'.format(platform.system())
 print 'Working directory is: {}'.format(os.getcwd())
