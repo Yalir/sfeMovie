@@ -23,6 +23,7 @@ elif platform.system() == 'Linux':
 
 # Display environment
 print 'PATH is: {}'.format(os.environ['PATH'])
+print 'SFML_ROOT is: {}'.format(os.environ['SFML_ROOT'])
 print 'Parameters are: {}'.format(args)
 print 'Platform is: {}'.format(platform.system())
 print 'Working directory is: {}'.format(os.getcwd())
