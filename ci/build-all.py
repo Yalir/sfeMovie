@@ -17,7 +17,9 @@ args = parser.parse_args()
 if platform.system() == "Darwin":
     os.environ['PATH'] += ":/usr/local/bin"
 elif platform.system() == 'Windows':
-    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.3.2-windows-vc14-32-bit/SFML-2.3.2"
+    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.4.0-windows-vc14-32-bit/SFML-2.4.0"
+elif platform.system() == 'Linux':
+    os.environ['SFML_ROOT'] = "/usr/local/SFML-2.4.0"
 
 # Display environment
 print 'PATH is: {}'.format(os.environ['PATH'])
