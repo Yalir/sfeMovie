@@ -7,7 +7,5 @@ configuration:
 
 before_build:
   - cmd: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --noconfirm yasm tar make"
-  - cmd: C:\msys64\usr\bin\bash.exe -l -c "which tar"
-  - cmd: C:\msys64\usr\bin\bash.exe -l -c "which make"
-  - cmd: C:\msys64\usr\bin\bash.exe -l -c "which yasm"
+  - cmd: where /r C:\msys64 tar* make* yasm*
   - cmd: python C:\projects\sfemovie\ci\build-all.py --sources C:\projects\sfemovie --decoders All
