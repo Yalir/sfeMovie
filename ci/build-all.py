@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser(description='Run this script to launch the buil
 parser.add_argument('--sources', help='Full path to the project sources', required=True)
 parser.add_argument('--config', choices={'Debug', 'Release'})
 parser.add_argument('--decoders', choices={'Free', 'All'}, default='Free')
+parser.add_argument('--sfml_root', help='Full path to the SFML root directory')
 args = parser.parse_args()
 
 if platform.system() == 'Linux' and not args.config:
@@ -20,7 +21,10 @@ if platform.system() == 'Linux' and not args.config:
 if platform.system() == "Darwin":
     os.environ['PATH'] += ":/usr/local/bin"
 elif platform.system() == 'Windows':
-    os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.4.0-windows-vc14-32-bit/SFML-2.4.0"
+    if args.sfml_root:
+        os.environ['SFML_ROOT'] = args.sfml_root
+    else:
+        os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.4.0-windows-vc14-32-bit/SFML-2.4.0"
 elif platform.system() == 'Linux':
     os.environ['SFML_ROOT'] = "/usr/local/SFML-2.4.0"
 
