@@ -47,11 +47,6 @@ else()
         if (NOT SFEMOVIE_MAKE_EXE)
             message(FATAL_ERROR "Your MSYS2 installation is expected to provide the 'make.exe' program, install with 'pacman -S make'")
         endif()
-
-        file(WRITE "${CMAKE_SOURCE_DIR}/BashPath.var" "${FFMPEG_BASH_EXE}")
-        if (NOT EXISTS "${CMAKE_SOURCE_DIR}/BashPath.var")
-            message(FATAL_ERROR "Writing file \"${CMAKE_SOURCE_DIR}/BashPath.var\" failed!")
-        endif()
     endif()
 
     set (ADDITIONAL_BIN_DIR "")
