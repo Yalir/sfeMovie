@@ -6,4 +6,4 @@ configuration:
   - Release
 
 before_build:
-  - cmd: python sfeMovie/ci/build-all.py --sources sfeMovie --decoders All
+  - cmd: python C:\projects\sfemovie\ci\build-all.py --sources C:\projects\sfemovie --decoders All
