@@ -59,7 +59,7 @@ else()
 
     find_program(FFMPEG_YASM_EXE yasm PATHS "${ADDITIONAL_BIN_DIR}")
     if (NOT FFMPEG_YASM_EXE)
-        message(FATAL_ERROR "Required executable 'yasm' not found")
+        message(FATAL_ERROR "Required executable 'yasm' not found in: ${ADDITIONAL_BIN_DIR}")
     endif()
 
     file(WRITE "${CMAKE_SOURCE_DIR}/YasmPath.var" "${FFMPEG_YASM_EXE}")
