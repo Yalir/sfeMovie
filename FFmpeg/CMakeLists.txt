@@ -137,7 +137,7 @@ else()
         message(FATAL_ERROR "Unsupported OS")
     endif()
     
-    if ("${CMAKE_GENERATOR}" MATCHES ".*Makefile.*" OR WINDOWS)
+    if ("${CMAKE_GENERATOR}" MATCHES ".*Makefile.*")
         set(JOBS "1")
     else()
         include(ProcessorCount)
