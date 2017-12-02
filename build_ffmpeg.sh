@@ -61,7 +61,7 @@ function build_ffmpeg()
         os_flags="--enable-memalign-hack --toolchain=msvc"
         # yasmpath=`echo "${yasmpath}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
     fi
-    yasmpath --help > /dev/null
+    $yasmpath --help > /dev/null
     check_err
 
     args="$args --disable-programs --disable-doc --disable-network --disable-decoders --disable-muxers --disable-encoders --yasmexe=\"${yasmpath}\" --enable-shared --disable-static $configure_flags $os_flags"
@@ -166,9 +166,11 @@ function main()
             shift
             full_decoders_list="$*"
             
-            echo "Build directory : ${build_dir}"
-            echo "OS              : $os"
-            echo "Decoders        : $full_decoders_list"
+            echo "Source directory : ${source_dir}"
+            echo "Build directory  : ${build_dir}"
+            echo "OS               : $os"
+            echo "YASM executable  : ${yasm_exe}"
+            echo "Decoders         : $full_decoders_list"
             
             build_ffmpeg $*
         fi
