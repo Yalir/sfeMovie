@@ -6,4 +6,5 @@ configuration:
   - Release
 
 before_build:
+  - cmd: C:\msys64\usr\bin\bash.exe -l -c "pacman -S yasm tar make"
   - cmd: python C:\projects\sfemovie\ci\build-all.py --sources C:\projects\sfemovie --decoders All
