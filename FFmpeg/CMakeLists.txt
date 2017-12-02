@@ -36,6 +36,7 @@ else()
         endif()
 
         get_filename_component(BASH_BIN_DIR "${FFMPEG_BASH_EXE}" DIRECTORY)
+        file(TO_NATIVE_PATH "${BASH_BIN_DIR}" BASH_BIN_DIR)
 
         find_program(SFEMOVIE_TAR_EXE tar PATHS "${BASH_BIN_DIR}" NO_DEFAULT_PATH)
         if (NOT SFEMOVIE_TAR_EXE)
