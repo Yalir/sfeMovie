@@ -5,6 +5,10 @@ git:
   depth: 3
   submodules: false
 
+os:
+  - linux
+  - osx
+
 env:
   - BUILD_CONFIG=Debug
   - BUILD_CONFIG=Release
