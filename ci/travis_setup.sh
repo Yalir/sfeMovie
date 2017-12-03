@@ -16,7 +16,7 @@ then
 else
 	# Add dependencies
 	sudo apt-get update -qq
-	sudo apt-get install -y -qq yasm wget unzip openal-dev freetype-dev jpeg-dev xrandr-dev xcb-dev xcb-randr-dev xcb-image-dev opengl-dev flac-dev ogg-dev vorbis-dev vorbisenc-dev vorbisfile-dev pthread-dev
+	sudo apt-get install -y -qq yasm wget unzip libopenal-dev libfreetype6-dev libjpeg-dev libxrandr-dev xcb libxrandr-dev mesa-common-dev libflac-dev libvorbis-dev
 	
 	# Download SFML
 	cd /tmp
