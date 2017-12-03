@@ -12,6 +12,7 @@ parser.add_argument('--sources', help='Full path to the project sources', requir
 parser.add_argument('--config', choices={'Debug', 'Release'})
 parser.add_argument('--decoders', choices={'Free', 'All'}, default='Free')
 parser.add_argument('--sfml_root', help='Full path to the SFML root directory')
+parser.add_argument('--build', action = 'store_true', help = 'Whether the output should be built, otherwise only project generation step is done')
 args = parser.parse_args()
 
 if platform.system() == 'Linux' and not args.config:
@@ -70,12 +71,13 @@ if platform.system() == 'Linux':
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
 
-# # Build
-# command = ["cmake", "--build", ".", "--config", args.config]
-# print 'Execute: {}'.format(command)
-# subprocess.check_call(command)
+if args.build:
+    # Build
+    command = ["cmake", "--build", ".", "--config", args.config]
+    print 'Execute: {}'.format(command)
+    subprocess.check_call(command)
 
-# # Create distributable archive
-# command = ["cmake", "--build", ".", "--config", args.config, "--target", "package"]
-# print 'Execute: {}'.format(command)
-# subprocess.check_call(command)
+    # Create distributable archive
+    command = ["cmake", "--build", ".", "--config", args.config, "--target", "package"]
+    print 'Execute: {}'.format(command)
+    subprocess.check_call(command)

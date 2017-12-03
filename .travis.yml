@@ -5,6 +5,10 @@ git:
   depth: 3
   submodules: false
 
+env:
+  - BUILD_CONFIG=Debug
+  - BUILD_CONFIG=Release
+
 matrix:
   include:
     - os: linux
@@ -24,4 +28,4 @@ before_install:
   - eval "${INSTALL_DEPS_STEP}"
   - eval "${GET_SFML_STEP}"
 
-script: python ci/build-all.py --sources $(pwd) --decoders All --sfml_root ${SFML_ROOT}
+script: python ci/build-all.py --sources $(pwd) --decoders All --sfml_root ${SFML_ROOT} --config ${BUILD_CONFIG} --build
