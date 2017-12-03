@@ -1,5 +1,7 @@
 language: cpp
-compiler: clang
+compiler:
+  - clang
+  - gcc
 
 git:
   depth: 3
@@ -15,6 +17,13 @@ env:
 
 sudo: required
 osx_image: xcode9.1
+
+matrix:
+  exclude:
+    - os: linux
+      compiler: clang
+    - os: osx
+      compiler: gcc
 
 install:
   - ./ci/travis_setup.sh
