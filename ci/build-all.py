@@ -19,15 +19,10 @@ if platform.system() == 'Linux' and not args.config:
     raise ValueError('Missing config arg for Linux target')
 
 # Setup environment
+if args.sfml_root:
+    os.environ['SFML_ROOT'] = args.sfml_root
 if platform.system() == "Darwin":
     os.environ['PATH'] += ":/usr/local/bin"
-elif platform.system() == 'Windows':
-    if args.sfml_root:
-        os.environ['SFML_ROOT'] = args.sfml_root
-    else:
-        os.environ['SFML_ROOT'] = "C:/Program Files (x86)/SFML-2.4.0-windows-vc14-32-bit/SFML-2.4.0"
-elif platform.system() == 'Linux':
-    os.environ['SFML_ROOT'] = "/usr/local/SFML-2.4.0"
 
 # Display environment
 print 'ENVIRON is: {}'.format(os.environ)
