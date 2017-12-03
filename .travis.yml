@@ -6,17 +6,6 @@ os:
   - osx
   - linux
 
-osx:
-  before_install:
-    - brew update
-    - brew install yasm
-linux:
-  before_install:
-    - sudo apt-get update
-    - sudo apt-get install -y yasm
-
-osx_image: xcode8
-
 git:
   depth: 3
   submodules: false
@@ -24,4 +13,14 @@ git:
 matrix:
   include:
     - os: osx
+      osx_image: xcode9.1
+      env:
+        - INSTALL_STEP="brew update && brew install yasm"
     - os: linux
+    dist: trusty
+    sudo: required
+      env:
+        - INSTALL_STEP="sudo apt-get update && sudo apt-get install -y yasm"
+
+before_install:
+  - eval "${INSTALL_STEP}"
