@@ -1,0 +1,27 @@
+language: cpp
+compiler: clang
+script: cmake
+
+os:
+  - osx
+  - linux
+
+osx:
+  before_install:
+    - brew update
+    - brew install yasm
+linux:
+  before_install:
+    - sudo apt-get update
+    - sudo apt-get install -y yasm
+
+osx_image: xcode8
+
+git:
+  depth: 3
+  submodules: false
+
+matrix:
+  include:
+    - os: osx
+    - os: linux
