@@ -15,7 +15,7 @@ then
 else
 	# Add dependencies
 	sudo apt-get update -qq
-	sudo apt-get install -yq yasm wget
+	sudo apt-get install -y -qq yasm wget
 	
 	# Download SFML
 	wget -q https://www.sfml-dev.org/files/SFML-2.4.2-linux-gcc-64-bit.tar.gz
