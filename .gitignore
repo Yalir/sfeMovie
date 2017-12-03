@@ -1,13 +1,6 @@
 *.o
 *.d
 .DS_Store
-sfeMovie_test
-sfeMovie.xcodeproj
-sfeMovie.build
-obsolete
-CMakeScripts
-CMakeFiles
-product
 build
 SourceDir.var
 BuildDir.var
