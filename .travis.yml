@@ -18,6 +18,5 @@ osx_image: xcode9.1
 
 install:
   - ./ci/travis_setup.sh
-  - echo "SFML_ROOT: ${SFML_ROOT}"
 
-script: python ci/build-all.py --sources $(pwd) --decoders All --sfml_root ${SFML_ROOT} --config ${BUILD_CONFIG} --build
+script: python ci/build-all.py --sources $(pwd) --decoders All --sfml_root /tmp/SFML_ROOT --config ${BUILD_CONFIG} --build
