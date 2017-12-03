@@ -2,14 +2,6 @@ language: cpp
 compiler: clang
 script: cmake
 
-os:
-  - osx
-  - linux
-
-osx_image: xcode9.1
-dist: trusty
-sudo: required
-
 git:
   depth: 3
   submodules: false
@@ -17,9 +9,12 @@ git:
 matrix:
   include:
     - os: linux
+      dist: trusty
+      sudo: required
       env: INSTALL_STEP="sudo apt-get update && sudo apt-get install -y yasm"
 
     - os: osx
+      osx_image: xcode9.1
       env: INSTALL_STEP="brew update && brew install yasm"
 
 before_install:
