@@ -21,7 +21,7 @@ else
 	# Download SFML
 	cd /tmp
 	wget -q https://www.sfml-dev.org/files/SFML-2.4.2-sources.zip
-	unzip SFML-2.4.2-linux-gcc-64-bit.tar.gz
+	unzip SFML-2.4.2-sources.zip
 	mkdir sfml-build && cd sfml-build
 	cmake /tmp/SFML-2.4.2 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
 	make -j8
