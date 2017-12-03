@@ -13,23 +13,10 @@ env:
   - BUILD_CONFIG=Debug
   - BUILD_CONFIG=Release
 
-matrix:
-  include:
-    - os: linux
-      dist: trusty
-      sudo: required
-      env:
-        - INSTALL_DEPS_STEP="sudo apt-get update -qq && sudo apt-get install -yq yasm wget"
-        - GET_SFML_STEP="wget https://www.sfml-dev.org/files/SFML-2.4.2-linux-gcc-64-bit.tar.gz && tar -xzf SFML-2.4.2-linux-gcc-64-bit.tar.gz && export SFML_ROOT=$(pwd)/SFML-2.4.2"
+sudo: required
+osx_image: xcode9.1
 
-    - os: osx
-      osx_image: xcode9.1
-      env:
-        - INSTALL_DEPS_STEP="brew install yasm wget"
-        - GET_SFML_STEP="wget https://www.sfml-dev.org/files/SFML-2.4.2-osx-clang.tar.gz && tar -xzf SFML-2.4.2-osx-clang.tar.gz && export SFML_ROOT=$(pwd)/SFML-2.4.2-osx-clang/Frameworks"
+install:
+  - ./ci/travis_setup.sh
 
-before_install:
-  - eval "${INSTALL_DEPS_STEP}"
-  - eval "${GET_SFML_STEP}"
-
-script: python ci/build-all.py --sources $(pwd) --decoders All --sfml_root ${SFML_ROOT} --config ${BUILD_CONFIG} --build
+script: python ci/build-all.py --sources $(pwd) --decoders All --sfml_root $(pwd)/SFML_ROOT --config ${BUILD_CONFIG} --build
