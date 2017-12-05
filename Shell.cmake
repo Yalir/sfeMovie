@@ -15,7 +15,6 @@ function(add_shell_command customTargetName)
 		add_custom_command(OUTPUT ${THIS_OUTPUT}
 					COMMAND ${CMAKE_COMMAND} -E env MSYS2_PATH_TYPE=inherit ${FFMPEG_BASH_EXE} -c -l "cd ${CMAKE_SOURCE_DIR} && ${SPACED_COMMAND}"
 					DEPENDS "${THIS_DEPENDS}"
-					WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 					VERBATIM)
 	else()
 		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 

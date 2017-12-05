@@ -18,7 +18,7 @@ else
     sudo apt-get update -qq
     sudo apt-get install -y -qq yasm wget unzip libopenal-dev libfreetype6-dev libjpeg-dev libxrandr-dev xcb libxrandr-dev mesa-common-dev libflac-dev libvorbis-dev libudev-dev
     
-    # Download SFML
+    # Download & build SFML (issues with GLIBC symbols if the provided binaries are used)
     cd /tmp
     wget -q https://www.sfml-dev.org/files/SFML-2.4.2-sources.zip
     unzip -q SFML-2.4.2-sources.zip
