@@ -11,6 +11,9 @@ before_build:
   - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
   - cmd: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
+after_build:
+  - cmd: cmake --build C:\projects\sfemovie\ci-output --config $(configuration) --target package
+
 artifacts:
 - path: ci-output\sfeMovie*.zip
 
@@ -21,7 +24,9 @@ deploy:
   auth_token:
     secure: NWsZkjMy0WQ8bc0HTmEEgLHfWUW3IMkrLkbcG9+6STpDliEIqVY3Q5jZ8xVuI9lovskHE1sbs0nlJRIRFuTUjB1s9UW6IasbSV115ah111ljBFlA3Gm0cSYXM+8DGZJGb7QjrEko75tfoeBHnm/+ps7/hp/4EwhLbkeDh+P8/hc=
   artifact: ci-output\sfeMovie*.zip
-  # on:
-  #   branch: master
+  on:
+    branch:
+    - master
+    - ci/AppVeyor
 
 skip_tags: true

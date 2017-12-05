@@ -35,4 +35,6 @@ deploy:
   skip_cleanup: true
   on:
     repo: Yalir/sfeMovie
-    # branch: master
+    branch:
+      - master
+      - ci/AppVeyor
