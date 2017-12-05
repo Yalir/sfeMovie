@@ -6,17 +6,33 @@ git:
   submodules: false
 
 os:
-  - linux
-  - osx
+- linux
+- osx
 
 env:
-  - CONFIG=Debug
-  - CONFIG=Release
+- CONFIG=Debug
+- CONFIG=Release
 
 sudo: required
 osx_image: xcode9.1
 
-install:
-  - ./ci/travis_setup.sh
-
+install: ./ci/travis_setup.sh
 script: python ci/run.py --sources $(pwd) --decoders All --sfml_root /tmp/SFML_ROOT --config ${CONFIG} --build
+
+before_deploy:
+# Set up git user name and tag this commit
+- git config --local user.name "Travis Deployment"
+- git config --local user.email "lucas.soltic@orange.fr"
+- git tag "$(date +'%Y-%m-%d')-$(git log --format=%h -1)"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: NWsZkjMy0WQ8bc0HTmEEgLHfWUW3IMkrLkbcG9+6STpDliEIqVY3Q5jZ8xVuI9lovskHE1sbs0nlJRIRFuTUjB1s9UW6IasbSV115ah111ljBFlA3Gm0cSYXM+8DGZJGb7QjrEko75tfoeBHnm/+ps7/hp/4EwhLbkeDh+P8/hc=
+
+  file_glob: true
+  file: ci-output/sfeMovie*.zip
+  skip_cleanup: true
+  on:
+    repo: Yalir/sfeMovie
+    branch: master
