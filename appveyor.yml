@@ -11,6 +11,10 @@ before_build:
   - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
   - cmd: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
+artifacts:
+- path: ci-output\sfeMovie*.zip
+
+deploy:
 - provider: GitHub
   name: "AppVeyor release"
   description: "sfeMovie build for Windows"
