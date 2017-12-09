@@ -12,10 +12,11 @@ before_build:
   - cmd: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
 after_build:
-  - cmd: cmake --build C:\projects\sfemovie\ci-output --config $(configuration) --target package
+  - cmd: msbuild "C:\projects\sfemovie\ci-output\sfeMovie.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /target:package /property:Configuration=$(configuration)
 
 artifacts:
 - path: ci-output\sfeMovie*.zip
+  name: sfeMovieLibrary
 
 deploy:
 - provider: GitHub
@@ -23,7 +24,7 @@ deploy:
   description: "sfeMovie build for Windows"
   auth_token:
     secure: NWsZkjMy0WQ8bc0HTmEEgLHfWUW3IMkrLkbcG9+6STpDliEIqVY3Q5jZ8xVuI9lovskHE1sbs0nlJRIRFuTUjB1s9UW6IasbSV115ah111ljBFlA3Gm0cSYXM+8DGZJGb7QjrEko75tfoeBHnm/+ps7/hp/4EwhLbkeDh+P8/hc=
-  artifact: ci-output\sfeMovie*.zip
+  artifact: sfeMovieLibrary
   on:
     branch:
     - master
