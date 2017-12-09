@@ -9,14 +9,11 @@ import argparse
 # Read arguments
 parser = argparse.ArgumentParser(description='Run this script to launch the build process')
 parser.add_argument('--sources', help='Full path to the project sources', required=True)
-parser.add_argument('--config', choices={'Debug', 'Release'})
+parser.add_argument('--config', choices={'Debug', 'Release'}, required = True)
 parser.add_argument('--decoders', choices={'Free', 'All'}, default='Free')
 parser.add_argument('--sfml_root', help='Full path to the SFML root directory')
 parser.add_argument('--build', action = 'store_true', help = 'Whether the output should be built, otherwise only project generation step is done')
 args = parser.parse_args()
-
-if platform.system() == 'Linux' and not args.config:
-    raise ValueError('Missing config arg for Linux target')
 
 # Setup environment
 if args.sfml_root:
@@ -37,10 +34,11 @@ if platform.system() != 'Windows':
         raise Exception('CMake not found')
 
 # Make build directory
-buildDirectory = os.path.join(os.path.abspath(args.sources), "ci-output")
-if not os.path.exists(buildDirectory):
-    os.makedirs(buildDirectory)
-os.chdir(buildDirectory)
+source_dir = os.path.abspath(args.sources)
+build_dir = os.path.join(source_dir, "ci-output")
+if not os.path.exists(build_dir):
+    os.makedirs(build_dir)
+os.chdir(build_dir)
 
 # Select decoders
 decoders = ''
@@ -57,7 +55,7 @@ elif platform.system() == "Darwin":
     generatorArg = ['-G', 'Xcode']
 
 # Configure
-command = ["cmake", os.path.abspath(args.sources), "-DSFEMOVIE_ENABLED_DECODERS=" + decoders]
+command = ["cmake", source_dir, "-DSFEMOVIE_ENABLED_DECODERS=" + decoders]
 
 if generatorArg:
 	command.extend(generatorArg)

@@ -17,7 +17,7 @@ sudo: required
 osx_image: xcode9.1
 
 install: ./ci/travis_setup.sh
-script: python ci/run.py --sources $(pwd) --decoders Free --sfml_root /tmp/SFML_ROOT --config ${CONFIG} --build
+script: python ci/run.py --sources . --decoders Free --sfml_root /tmp/SFML_ROOT --config ${CONFIG} --build
 
 before_deploy:
 # Set up git user name and tag this commit
