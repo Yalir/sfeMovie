@@ -5,3 +5,4 @@ build
 SourceDir.var
 BuildDir.var
 YasmPath.var
+ci-output/
