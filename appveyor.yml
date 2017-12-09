@@ -12,7 +12,7 @@ before_build:
   - cmd: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
 after_build:
-  - cmd: msbuild "C:\projects\sfemovie\ci-output\sfeMovie.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /target:package /property:Configuration=$(configuration)
+  - cmd: msbuild "C:\projects\sfemovie\ci-output\sfeMovie.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /target:package /property:Configuration=$(configuration) /property:Platform="x86"
 
 artifacts:
 - path: ci-output\sfeMovie*.zip
