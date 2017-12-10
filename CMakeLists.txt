@@ -113,7 +113,7 @@ file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]* ${SOURCES_DIR}/DebugTool
 file(GLOB HEADER_FILES RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
 
 add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
-if (MACOSX) # ========================================== MACOSX ========================================== #
+if (APPLE) # ========================================== macOS ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
 endif()
@@ -134,7 +134,7 @@ else()
     add_library(${SFEMOVIE_LIB} SHARED ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
-if (${NeedsFFmpegCompilation})
+if (NeedsFFmpegCompilation)
     add_dependencies(${SFEMOVIE_LIB} FFmpeg)
 endif()
 
