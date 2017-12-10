@@ -17,7 +17,8 @@ before_build:
   - ps: $tag_name = (Get-Date -UFormat "%Y-%m-%d" | Out-String).Trim()
   - ps: $tag_sha = (git log --format=%h -1 | Out-String).Trim()
   - ps: git tag "$tag_name-$tag_sha"
-  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config %CONFIGURATION% --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
+  - ps: $build_config = ((Get-Item env:CONFIGURATION).Value | Out-String).Trim()
+  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config $build_config --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
 after_build:
   - ps: Pushd C:\projects\sfemovie\ci-output
