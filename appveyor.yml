@@ -9,7 +9,7 @@ configuration:
   - Release
 
 before_build:
-  - ps: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --needed --noconfirm --noprogressbar yasm tar make"
+  - cmd: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --needed --noconfirm --noprogressbar yasm tar make"
   - ps: Start-FileDownload 'https://www.sfml-dev.org/files/SFML-2.4.2-windows-vc14-32-bit.zip'
   - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
   - ps: git config --local user.name "Travis-CI Deployment"
