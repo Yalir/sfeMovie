@@ -59,8 +59,8 @@ command = ["cmake", source_dir, "-DSFEMOVIE_ENABLED_DECODERS=" + decoders]
 
 if generatorArg:
 	command.extend(generatorArg)
-if platform.system() == 'Linux':
-    command.append('-DCMAKE_BUILD_TYPE=' + args.config)
+
+command.append('-DCMAKE_BUILD_TYPE=' + args.config)
 
 print 'Execute: {}'.format(command)
 subprocess.check_call(command)
