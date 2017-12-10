@@ -12,11 +12,6 @@ before_build:
   - cmd: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --needed --noconfirm --noprogressbar yasm tar make"
   - ps: Start-FileDownload 'https://www.sfml-dev.org/files/SFML-2.4.2-windows-vc14-32-bit.zip'
   - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
-  - ps: git config --local user.name "Travis-CI Deployment"
-  - ps: git config --local user.email "lucas.soltic@orange.fr"
-  - ps: $tag_name = (Get-Date -UFormat "%Y-%m-%d" | Out-String).Trim()
-  - ps: $tag_sha = (git log --format=%h -1 | Out-String).Trim()
-  - ps: git tag "$tag_name-$tag_sha"
   - ps: $build_config = ((Get-Item env:CONFIGURATION).Value | Out-String).Trim()
   - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config $build_config --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
@@ -33,11 +28,7 @@ deploy:
   name: "AppVeyor release"
   description: "sfeMovie build for Windows"
   auth_token:
-    secure: NWsZkjMy0WQ8bc0HTmEEgLHfWUW3IMkrLkbcG9+6STpDliEIqVY3Q5jZ8xVuI9lovskHE1sbs0nlJRIRFuTUjB1s9UW6IasbSV115ah111ljBFlA3Gm0cSYXM+8DGZJGb7QjrEko75tfoeBHnm/+ps7/hp/4EwhLbkeDh+P8/hc=
+    secure: iL+LJH13Y/D2K8gPtkjEXBPHZnSES5z0/Vl5sRDqKIO+2IIQpT/qiYzv+881VGXD
   artifact: sfeMovieLibrary
   on:
-    branch:
-    - master
-    - ci/AppVeyor
-
-skip_tags: true
+    appveyor_repo_tag: true

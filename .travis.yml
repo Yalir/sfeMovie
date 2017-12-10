@@ -19,12 +19,6 @@ osx_image: xcode9.1
 install: ./ci/travis_setup.sh
 script: python ci/run.py --sources . --decoders Free --sfml_root /tmp/SFML_ROOT --config ${CONFIG} --build
 
-before_deploy:
-# Set up git user name and tag this commit
-- git config --local user.name "Travis-CI Deployment"
-- git config --local user.email "lucas.soltic@orange.fr"
-- git tag "$(date +'%Y-%m-%d')-$(git log --format=%h -1)"
-
 deploy:
   provider: releases
   api_key:
@@ -35,6 +29,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: Yalir/sfeMovie
-    branch:
-      - master
-      - ci/AppVeyor
+    tags: true
