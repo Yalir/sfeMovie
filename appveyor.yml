@@ -9,17 +9,19 @@ configuration:
   - Release
 
 before_build:
-  - cmd: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --needed --noconfirm --noprogressbar yasm tar make"
+  - ps: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --needed --noconfirm --noprogressbar yasm tar make"
   - ps: Start-FileDownload 'https://www.sfml-dev.org/files/SFML-2.4.2-windows-vc14-32-bit.zip'
   - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
-  - cmd: git config --local user.name "Travis-CI Deployment"
-  - cmd: git config --local user.email "lucas.soltic@orange.fr"
-  - cmd: git tag "$(date +'%Y-%m-%d')-$(git log --format=%h -1)"
-  - cmd: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config %CONFIGURATION% --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
+  - ps: git config --local user.name "Travis-CI Deployment"
+  - ps: git config --local user.email "lucas.soltic@orange.fr"
+  - ps: $tag_name = (Get-Date -UFormat "%Y-%m-%d" | Out-String).Trim()
+  - ps: $tag_sha = (git log --format=%h -1 | Out-String).Trim()
+  - ps: git tag "$tag_name-$tag_sha"
+  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config %CONFIGURATION% --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
 
 after_build:
-  - cmd: Pushd C:\projects\sfemovie\ci-output
-  - cmd: cpack -C %CONFIGURATION% --config CPackConfig.cmake
+  - ps: Pushd C:\projects\sfemovie\ci-output
+  - ps: cpack -C %CONFIGURATION% --config CPackConfig.cmake
 
 artifacts:
 - path: ci-output\sfeMovie*.zip
