@@ -17,7 +17,9 @@ before_build:
 after_build:
   - cmd: Pushd C:\projects\sfemovie\ci-output
   - cmd: cpack -C %CONFIGURATION% --config CPackConfig.cmake
+  - cmd: echo %errorlevel%
   - cmd: Popd
+  - cmd: echo %errorlevel%
 
 artifacts:
 - path: ci-output\sfeMovie*.zip
