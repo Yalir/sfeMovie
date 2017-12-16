@@ -3,7 +3,7 @@
 if(WINDOWS)
     set(INSTALL_MISC_DIR . )
 else()
-    set(INSTALL_MISC_DIR "share/${SFEMOVIE_LIB}")
+    set(INSTALL_MISC_DIR "share/sfeMovie")
 endif()
 
 # Install sfeMovie library and headers
@@ -11,12 +11,12 @@ if (LINUX OR WINDOWS)
 	install(DIRECTORY include
 			DESTINATION .)
 
-	install(TARGETS ${SFEMOVIE_LIB}
+	install(TARGETS sfeMovie
         RUNTIME DESTINATION bin COMPONENT binaries
         LIBRARY DESTINATION lib${LIB_SUFFIX} COMPONENT binaries
         ARCHIVE DESTINATION lib${LIB_SUFFIX} COMPONENT libraries)
 else()
-	install(TARGETS ${SFEMOVIE_LIB}
+	install(TARGETS sfeMovie
             FRAMEWORK
             DESTINATION ${CMAKE_INSTALL_FRAMEWORK_PREFIX}
             COMPONENT binaries)

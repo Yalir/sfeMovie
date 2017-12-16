@@ -6,24 +6,27 @@
 #include "Utilities.hpp"
 #include <SFML/Audio.hpp>
 
-class DummyDelegate : public sfe::VideoStream::Delegate, public sfe::SubtitleStream::Delegate {
-	void didUpdateVideo(const sfe::VideoStream& sender, const sf::Texture& image)
-	{
-	}
+namespace
+{
+    class DummyDelegate : public sfe::VideoStream::Delegate, public sfe::SubtitleStream::Delegate {
+        void didUpdateVideo(const sfe::VideoStream& sender, const sf::Texture& image)
+        {
+        }
+        
+        void didUpdateSubtitle(const sfe::SubtitleStream& sender,
+                               const std::list<sf::Sprite>& subimages,
+                               const std::list<sf::Vector2i>& positions)
+        {
+        }
+        
+        void didWipeOutSubtitles(const sfe::SubtitleStream& sender)
+        {
+        }
+        
+    };
     
-    void didUpdateSubtitle(const sfe::SubtitleStream& sender,
-                           const std::list<sf::Sprite>& subimages,
-                           const std::list<sf::Vector2i>& positions)
-    {
-    }
-    
-    void didWipeOutSubtitles(const sfe::SubtitleStream& sender)
-    {
-    }
-    
-};
-
-static DummyDelegate delegate;
+    DummyDelegate delegate;
+}
 
 TEST(Demuxer, AvailableCodecsTest)
 {
@@ -46,10 +49,8 @@ TEST(Demuxer, LoadingTest)
 	unsigned videoStreamCount = 0;
 	unsigned audioStreamCount = 0;
 	
-	std::map<int, std::shared_ptr<sfe::Stream> >::const_iterator it;
-	
 	// Check found streams
-	for (it = streams.begin(); it != streams.end(); it++) {
+	for (auto it = streams.begin(); it != streams.end(); it++) {
 		std::shared_ptr<sfe::Stream> stream = it->second;
 		
 		switch (stream->getStreamKind()) {
@@ -68,7 +69,7 @@ TEST(Demuxer, LoadingTest)
 	ASSERT_EQ(audioStreamCount, 1);
 	
 	// Check stream feeding
-	for (it = streams.begin(); it != streams.end(); it++) {
+	for (auto it = streams.begin(); it != streams.end(); it++) {
 		EXPECT_TRUE(it->second->needsMoreData());
 		EXPECT_FALSE(demuxer->didReachEndOfFile());
 		demuxer->feedStream(*it->second);

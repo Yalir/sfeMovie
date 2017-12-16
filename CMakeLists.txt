@@ -44,13 +44,8 @@ if (WINDOWS AND NOT MSVC)
 endif()
 
 # Set some env vars
-set (SFEMOVIE_LIB sfeMovie)
 set (VERSION_MAJOR 2)
 set (VERSION_MINOR 0)
-
-set (SOURCES_DIR "src")
-set (PUBLIC_HEADERS "include")
-set (PRIVATE_HEADERS "src")
 
 set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -88,45 +83,48 @@ if (SFEMOVIE_BUILD_STATIC)
 endif()
 
 find_package (SFML 2.3 COMPONENTS graphics window system audio REQUIRED)
-message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
-message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
 #################################################################################################################
 # ============================================== sfeMovie SETUP =============================================== #
 #################################################################################################################
 
-file(GLOB SOURCE_FILES ${SOURCES_DIR}/[a-z,A-Z]*.[c,h]* ${SOURCES_DIR}/DebugTools/[a-z,A-Z]*.[c,h]*)
+file(GLOB SOURCE_FILES src/[a-z,A-Z]*.[c,h]* src/DebugTools/[a-z,A-Z]*.[c,h]*)
 file(GLOB HEADER_FILES RELATIVE ${PROJECT_SOURCE_DIR} "include/sfeMovie/[a-z,A-Z]*.[h]*")
 
-add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DSFE_EXPORTS)
 if (APPLE) # ========================================== macOS ========================================== #
     # add an option to let the user specify a custom directory for framework installation
     set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/Library/Frameworks" CACHE STRING "Frameworks installation directory")
 endif()
 
-# Set the search directories for compiling and link editing
-set(SFEMOVIE_INCLUDE_DIRS "${SFML_INCLUDE_DIR};${PUBLIC_HEADERS};${PRIVATE_HEADERS};${FFMPEG_INCLUDE_DIRS}")
-if (SFEMOVIE_ENABLE_ASS_SUBTITLES)
-    set(SFEMOVIE_INCLUDE_DIRS "${SFEMOVIE_INCLUDE_DIRS};${LIBASS_INCLUDE_DIR}")
-endif()
-
-include_directories (${SFEMOVIE_INCLUDE_DIRS})
-message (STATUS "Headers directories: ${SFEMOVIE_INCLUDE_DIRS}")
-
 source_group("Public headers" FILES ${HEADER_FILES})
 if (SFEMOVIE_BUILD_STATIC)
-    add_library(${SFEMOVIE_LIB} STATIC ${SOURCE_FILES} ${HEADER_FILES})
+    add_library(sfeMovie STATIC ${SOURCE_FILES} ${HEADER_FILES})
 else()
-    add_library(${SFEMOVIE_LIB} SHARED ${SOURCE_FILES} ${HEADER_FILES})
+    add_library(sfeMovie SHARED ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
+add_library(sfeMovie_PrivateHeaders INTERFACE)
+target_include_directories(sfeMovie_PrivateHeaders INTERFACE src ${FFMPEG_INCLUDE_DIRS})
+
+target_link_libraries(sfeMovie PRIVATE sfeMovie_PrivateHeaders)
+target_include_directories(sfeMovie
+    PUBLIC include ${SFML_INCLUDE_DIR}
+    PRIVATE src ${FFMPEG_INCLUDE_DIRS})
+if (SFEMOVIE_ENABLE_ASS_SUBTITLES)
+    target_include_directories(sfeMovie PRIVATE ${LIBASS_INCLUDE_DIR})
+endif()
+
+target_compile_definitions(sfeMovie PRIVATE __STDC_CONSTANT_MACROS __STDC_LIMIT_MACROS SFE_EXPORTS)
+
+
+
 if (NeedsFFmpegCompilation)
-    add_dependencies(${SFEMOVIE_LIB} FFmpeg)
+    add_dependencies(sfeMovie FFmpeg)
 endif()
 
 # Define the libraries sfeMovie should link against
 if (SFEMOVIE_BUILD_STATIC)
-    set_target_properties(${SFEMOVIE_LIB} PROPERTIES
+    set_target_properties(sfeMovie PROPERTIES
         COMPILE_DEFINITIONS SFEMOVIE_STATIC
         COMPILE_DEFINITIONS SFML_STATIC)
     message(WARNING "You chose to build a static library of sfeMovie, this assumes that you will also statically link your software against SFML."
@@ -137,31 +135,31 @@ else()
         set(SFEMOVIE_LIBRARIES ${SFEMOVIE_LIBRARIES} ${LIBASS_LIBRARIES})
     endif()
     message(STATUS "Link sfeMovie against: ${LIBASS_LIBRARIES} ${SFML_LIBRARIES} ${FFMPEG_LIBRARIES} ${OTHER_LIBRARIES} ${SFML_DEPENDENCIES}")
-    target_link_libraries(${SFEMOVIE_LIB} PRIVATE ${SFEMOVIE_LIBRARIES})
+    target_link_libraries(sfeMovie PRIVATE ${SFEMOVIE_LIBRARIES})
 endif()
 
 if (SFEMOVIE_BUILD_FFMPEG)
     if (LINUX)
-        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+        add_custom_command(TARGET sfeMovie PRE_LINK
             COMMAND cp -R
                 "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
-                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
+                "$<TARGET_FILE_DIR:sfeMovie>")
     elseif(MACOSX)
-        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
-            COMMAND mkdir -p "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
-        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+        add_custom_command(TARGET sfeMovie PRE_LINK
+            COMMAND mkdir -p "$<TARGET_FILE_DIR:sfeMovie>/Libraries")
+        add_custom_command(TARGET sfeMovie PRE_LINK
             COMMAND cp -R
                 "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib/*"
-                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>/Libraries")
+                "$<TARGET_FILE_DIR:sfeMovie>/Libraries")
     elseif(WINDOWS)
-        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+        add_custom_command(TARGET sfeMovie PRE_LINK
             COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${CMAKE_BINARY_DIR}/FFmpeg-binaries/lib"
-                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
-        add_custom_command(TARGET ${SFEMOVIE_LIB} PRE_LINK
+                "$<TARGET_FILE_DIR:sfeMovie>")
+        add_custom_command(TARGET sfeMovie PRE_LINK
             COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${CMAKE_BINARY_DIR}/FFmpeg-binaries/bin"
-                "$<TARGET_FILE_DIR:${SFEMOVIE_LIB}>")
+                "$<TARGET_FILE_DIR:sfeMovie>")
     endif()
 endif()
 

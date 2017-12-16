@@ -9,7 +9,7 @@ set_target_properties(AllTests PROPERTIES FOLDER "Tests")
 
 macro(add_full_test testname)
     add_executable(${testname} ${testname}.cpp)
-    target_link_libraries(${testname} ${SFML_SYSTEM_LIBRARY} sfeMovie gtest gtest_main)
+    target_link_libraries(${testname} ${SFML_SYSTEM_LIBRARY} sfeMovie sfeMovie_PrivateHeaders gtest gtest_main)
 
     # Copy libraries next to the test
     add_custom_command(TARGET ${testname} POST_BUILD
