@@ -51,25 +51,11 @@ set (VERSION_MINOR 0)
 set (SOURCES_DIR "src")
 set (PUBLIC_HEADERS "include")
 set (PRIVATE_HEADERS "src")
-set (OTHER_LIBRARIES "")
-set (LINKER_FLAGS "")
 
-if (MSVC)
-    if(MSVC_VERSION LESS 1800) # 1700 = VS 2013
-        message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-    endif()
-else()
-    include(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-    CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-    if(COMPILER_SUPPORTS_CXX11)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    elseif(COMPILER_SUPPORTS_CXX0X)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-    else()
-        message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-    endif()
-endif()
+set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_CXX_EXTENSIONS OFF)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #################################################################################################################
 # ============================================== FFMPEG SETUP ================================================= #
@@ -183,10 +169,7 @@ include (${CMAKE_SOURCE_DIR}/cmake/Properties.cmake)
 include (${CMAKE_SOURCE_DIR}/cmake/Install.cmake)
 
 # Unit tests
-set (SFEMOVIE_BUILD_UNIT_TESTS FALSE CACHE BOOL "TRUE to build the unit test system, requires Boost")
-if (SFEMOVIE_BUILD_UNIT_TESTS)
-    add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
 
 # Examples building
 add_subdirectory(examples)

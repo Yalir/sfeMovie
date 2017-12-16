@@ -16,7 +16,6 @@ endif()
 set_target_properties(${SFEMOVIE_LIB} PROPERTIES
                       DEBUG_POSTFIX "${STATIC_POSTFIX}-d"
                       RELEASE_POSTFIX "${STATIC_POSTFIX}"
-                      LINK_FLAGS "${LINKER_FLAGS}"
                       SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}.0"
                       VERSION "${VERSION_MAJOR}.${VERSION_MINOR}")
 

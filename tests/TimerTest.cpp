@@ -1,7 +1,5 @@
 
-#define BOOST_TEST_MAIN
-#define BOOST_TEST_MODULE TimerTest
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include "Timer.hpp"
 
 namespace
@@ -22,18 +20,18 @@ namespace
         
         void willPlay(const sfe::Timer& timer)
         {
-            BOOST_CHECK(m_didPlay == false);
+            EXPECT_FALSE(m_didPlay);
             m_willPlay = true;
             
             if (m_expectedCallOrder > 0)
             {
-                BOOST_CHECK(++globalCallOrder == m_expectedCallOrder);
+                EXPECT_EQ(++globalCallOrder, m_expectedCallOrder);
             }
         }
         
         void didPlay(const sfe::Timer& timer, sfe::Status previousStatus)
         {
-            BOOST_CHECK(m_willPlay == true);
+            EXPECT_TRUE(m_willPlay);
             m_didPlay = true;
         }
         
@@ -52,33 +50,33 @@ namespace
     };
 }
     
-BOOST_AUTO_TEST_CASE(TimerTestBase)
+TEST(TimerTest, Base)
 {
     sfe::Timer timer;
     
-    BOOST_CHECK(timer.getOffset() == sf::Time::Zero);
-    BOOST_CHECK(timer.getStatus() == sfe::Stopped);
+    EXPECT_EQ(timer.getOffset(), sf::Time::Zero);
+    EXPECT_EQ(timer.getStatus(), sfe::Stopped);
     
-    BOOST_CHECK_NO_THROW(timer.play());
-    BOOST_CHECK(timer.getStatus() == sfe::Playing);
-    BOOST_CHECK_THROW(timer.play(), std::runtime_error);
+    EXPECT_NO_THROW(timer.play());
+    EXPECT_EQ(timer.getStatus(), sfe::Playing);
+    EXPECT_THROW(timer.play(), std::runtime_error);
     
-    BOOST_CHECK_NO_THROW(timer.pause());
-    BOOST_CHECK(timer.getStatus() == sfe::Paused);
-    BOOST_CHECK_THROW(timer.pause(), std::runtime_error);
+    EXPECT_NO_THROW(timer.pause());
+    EXPECT_EQ(timer.getStatus(), sfe::Paused);
+    EXPECT_THROW(timer.pause(), std::runtime_error);
     
-    BOOST_CHECK_NO_THROW(timer.stop());
-    BOOST_CHECK(timer.getStatus() == sfe::Stopped);
-    BOOST_CHECK_THROW(timer.stop(), std::runtime_error);
+    EXPECT_NO_THROW(timer.stop());
+    EXPECT_EQ(timer.getStatus(), sfe::Stopped);
+    EXPECT_THROW(timer.stop(), std::runtime_error);
     
-    BOOST_CHECK(timer.getOffset() == sf::Time::Zero);
+    EXPECT_EQ(timer.getOffset(), sf::Time::Zero);
     
     timer.play();
     sf::sleep(sf::seconds(1));
-    BOOST_CHECK(timer.getOffset() != sf::Time::Zero);
+    EXPECT_NE(timer.getOffset(), sf::Time::Zero);
 }
 
-BOOST_AUTO_TEST_CASE(TimerTestNotifications)
+TEST(TimerTest, Notifications)
 {
     sfe::Timer timer;
     MyObserver obs1, obs2;
@@ -86,50 +84,50 @@ BOOST_AUTO_TEST_CASE(TimerTestNotifications)
     timer.addObserver(obs1);
     timer.addObserver(obs2);
     
-    BOOST_CHECK(obs1.m_willPlay == false);
-    BOOST_CHECK(obs1.m_didPlay == false);
-    BOOST_CHECK(obs1.m_didPause == false);
-    BOOST_CHECK(obs1.m_didStop == false);
-    BOOST_CHECK(obs2.m_willPlay == false);
-    BOOST_CHECK(obs2.m_didPlay == false);
-    BOOST_CHECK(obs2.m_didPause == false);
-    BOOST_CHECK(obs2.m_didStop == false);
+    EXPECT_FALSE(obs1.m_willPlay);
+    EXPECT_FALSE(obs1.m_didPlay);
+    EXPECT_FALSE(obs1.m_didPause);
+    EXPECT_FALSE(obs1.m_didStop);
+    EXPECT_FALSE(obs2.m_willPlay);
+    EXPECT_FALSE(obs2.m_didPlay);
+    EXPECT_FALSE(obs2.m_didPause);
+    EXPECT_FALSE(obs2.m_didStop);
     
     timer.play();
     
-    BOOST_CHECK(obs1.m_willPlay == true);
-    BOOST_CHECK(obs1.m_didPlay == true);
-    BOOST_CHECK(obs1.m_didPause == false);
-    BOOST_CHECK(obs1.m_didStop == false);
-    BOOST_CHECK(obs2.m_willPlay == true);
-    BOOST_CHECK(obs2.m_didPlay == true);
-    BOOST_CHECK(obs2.m_didPause == false);
-    BOOST_CHECK(obs2.m_didStop == false);
+    EXPECT_TRUE(obs1.m_willPlay);
+    EXPECT_TRUE(obs1.m_didPlay);
+    EXPECT_FALSE(obs1.m_didPause);
+    EXPECT_FALSE(obs1.m_didStop);
+    EXPECT_TRUE(obs2.m_willPlay);
+    EXPECT_TRUE(obs2.m_didPlay);
+    EXPECT_FALSE(obs2.m_didPause);
+    EXPECT_FALSE(obs2.m_didStop);
     
     timer.pause();
     
-    BOOST_CHECK(obs1.m_willPlay == true);
-    BOOST_CHECK(obs1.m_didPlay == true);
-    BOOST_CHECK(obs1.m_didPause == true);
-    BOOST_CHECK(obs1.m_didStop == false);
-    BOOST_CHECK(obs2.m_willPlay == true);
-    BOOST_CHECK(obs2.m_didPlay == true);
-    BOOST_CHECK(obs2.m_didPause == true);
-    BOOST_CHECK(obs2.m_didStop == false);
+    EXPECT_TRUE(obs1.m_willPlay);
+    EXPECT_TRUE(obs1.m_didPlay);
+    EXPECT_TRUE(obs1.m_didPause);
+    EXPECT_FALSE(obs1.m_didStop);
+    EXPECT_TRUE(obs2.m_willPlay);
+    EXPECT_TRUE(obs2.m_didPlay);
+    EXPECT_TRUE(obs2.m_didPause);
+    EXPECT_FALSE(obs2.m_didStop);
     
     timer.stop();
     
-    BOOST_CHECK(obs1.m_willPlay == true);
-    BOOST_CHECK(obs1.m_didPlay == true);
-    BOOST_CHECK(obs1.m_didPause == true);
-    BOOST_CHECK(obs1.m_didStop == true);
-    BOOST_CHECK(obs2.m_willPlay == true);
-    BOOST_CHECK(obs2.m_didPlay == true);
-    BOOST_CHECK(obs2.m_didPause == true);
-    BOOST_CHECK(obs2.m_didStop == true);
+    EXPECT_TRUE(obs1.m_willPlay);
+    EXPECT_TRUE(obs1.m_didPlay);
+    EXPECT_TRUE(obs1.m_didPause);
+    EXPECT_TRUE(obs1.m_didStop);
+    EXPECT_TRUE(obs2.m_willPlay);
+    EXPECT_TRUE(obs2.m_didPlay);
+    EXPECT_TRUE(obs2.m_didPause);
+    EXPECT_TRUE(obs2.m_didStop);
 }
 
-BOOST_AUTO_TEST_CASE(TimerTestPriorities)
+TEST(TimerTest, Priorities)
 {
     sfe::Timer timer;
     MyObserver obs1(2), obs2(3), obs3(1);

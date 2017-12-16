@@ -1,4 +1,3 @@
-set(SFEMOVIE_DEMO "sfeMovieDemo")
 
 set(SFEMOVIE_DEMO_SRC
     main.cpp
@@ -9,40 +8,32 @@ set(SFEMOVIE_DEMO_SRC
     UserInterface.cpp
     UserInterface.hpp
 )
-source_group("Sources" FILES ${SFEMOVIE_DEMO_SRC})
+source_group("" FILES ${SFEMOVIE_DEMO_SRC})
 
-add_executable(
-    ${SFEMOVIE_DEMO}
-    ${SFEMOVIE_DEMO_SRC}
-)
+add_executable(sfeMovieDemo ${SFEMOVIE_DEMO_SRC})
+set_target_properties(sfeMovieDemo PROPERTIES FOLDER "Examples")
 
 if (SFEMOVIE_BUILD_STATIC)
     set (SFML_STATIC_LIBRARIES TRUE)
     find_package (SFML 2 COMPONENTS graphics window system audio REQUIRED)
-    message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
-    message(STATUS "Additional dependencies: ${SFML_DEPENDENCIES}")
 
-    set_target_properties(${SFEMOVIE_DEMO} PROPERTIES
+    set_target_properties(sfeMovieDemo PROPERTIES
         COMPILE_DEFINITIONS SFML_STATIC
         COMPILE_DEFINITIONS SFEMOVIE_STATIC)
-    target_link_libraries(
-        ${SFEMOVIE_DEMO}
-        ${SFEMOVIE_LIB}
-        ${FFMPEG_LIBRARIES}
-        ${OTHER_LIBRARIES}
+    target_link_libraries(sfeMovieDemo PRIVATE
+        sfeMovie
         ${SFML_LIBRARIES}
         ${SFML_DEPENDENCIES})
 else()
-    target_link_libraries(
-        ${SFEMOVIE_DEMO}
-        ${SFEMOVIE_LIB}
+    target_link_libraries(sfeMovieDemo PRIVATE
+        sfeMovie
         ${SFML_LIBRARIES}
         ${SFML_DEPENDENCIES}
     )
 endif()
 
 if (MACOSX)
-    set_target_properties(${SFEMOVIE_DEMO} PROPERTIES 
-                          BUILD_WITH_INSTALL_RPATH 1 
-                          INSTALL_RPATH "@executable_path/")
+    set_target_properties(sfeMovieDemo PROPERTIES 
+        BUILD_WITH_INSTALL_RPATH 1 
+        INSTALL_RPATH "@executable_path/")
 endif()
