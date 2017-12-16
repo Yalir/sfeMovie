@@ -22,6 +22,6 @@ else()
             COMPONENT binaries)
 endif()
 
-install(FILES "${CMAKE_SOURCE_DIR}/License.txt" "${CMAKE_SOURCE_DIR}/ReadMe.txt" "${CMAKE_SOURCE_DIR}/Authors.txt"
+install(FILES "${CMAKE_SOURCE_DIR}/License.txt" "${CMAKE_SOURCE_DIR}/ReadMe.md" "${CMAKE_SOURCE_DIR}/Authors.txt"
         DESTINATION ${INSTALL_MISC_DIR}
         COMPONENT resources)
