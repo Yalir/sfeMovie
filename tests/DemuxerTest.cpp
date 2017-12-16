@@ -38,8 +38,8 @@ TEST(Demuxer, LoadingTest)
 {
     std::shared_ptr<sfe::Demuxer> demuxer;
     std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
-    EXPECT_THROW(demuxer = std::make_shared<sfe::Demuxer>("non-existing-file.ogv", timer, delegate, delegate), std::runtime_error);
-    EXPECT_NO_THROW(demuxer = std::make_shared<sfe::Demuxer>("small_1.ogv", timer, delegate, delegate));
+    EXPECT_THROW(demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "non-existing-file.ogv", timer, delegate, delegate), std::runtime_error);
+    EXPECT_NO_THROW(demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "small_1.ogv", timer, delegate, delegate));
 	ASSERT_NE(demuxer, nullptr);
 	
 	const std::map<int, std::shared_ptr<sfe::Stream> >& streams = demuxer->getStreams();
@@ -83,7 +83,7 @@ TEST(Demuxer, ShortOGVTest)
 	std::shared_ptr<sfe::Demuxer> demuxer;
     std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
 	sf::Clock clock;
-    demuxer = std::make_shared<sfe::Demuxer>("small_1.ogv", timer, delegate, delegate);
+    demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "small_1.ogv", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
@@ -114,7 +114,7 @@ TEST(Demuxer, ShortWAVTest)
 {
 	std::shared_ptr<sfe::Demuxer> demuxer;
     std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
-    demuxer = std::make_shared<sfe::Demuxer>("small_4.wav", timer, delegate, delegate);
+    demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "small_4.wav", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
@@ -136,7 +136,7 @@ TEST(Demuxer, LongWAVTest)
 {
     std::shared_ptr<sfe::Demuxer> demuxer;
     std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
-	demuxer = std::make_shared<sfe::Demuxer>("long_1.wav", timer, delegate, delegate);
+	demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "long_1.wav", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
@@ -161,14 +161,14 @@ TEST(Demuxer, ShortMP3Test)
     std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
 	// With free codecs only, the demuxer is not supposed to be able to load MP3 medias
 	
-	EXPECT_THROW(demuxer = std::make_shared<sfe::Demuxer>("small_2.mp3", timer, delegate, delegate), std::runtime_error);
+	EXPECT_THROW(demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "small_2.mp3", timer, delegate, delegate), std::runtime_error);
 }
 
 TEST(Demuxer, ShortFLACTest)
 {
     std::shared_ptr<sfe::Demuxer> demuxer;
     std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
-	demuxer = std::make_shared<sfe::Demuxer>("small_3.flac", timer, delegate, delegate);
+	demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "small_3.flac", timer, delegate, delegate);
 	demuxer->selectFirstVideoStream();
 	demuxer->selectFirstAudioStream();
 	
