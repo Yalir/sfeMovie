@@ -1,0 +1,34 @@
+image:
+  - Visual Studio 2017
+
+platform:
+  - Win32
+
+configuration:
+  - Debug
+  - Release
+
+before_build:
+  - cmd: C:\msys64\usr\bin\bash.exe -l -c "pacman -S --needed --noconfirm --noprogressbar yasm tar make"
+  - ps: Start-FileDownload 'https://www.sfml-dev.org/files/SFML-2.4.2-windows-vc14-32-bit.zip'
+  - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
+  - ps: $build_config = ((Get-Item env:CONFIGURATION).Value | Out-String).Trim()
+  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config $build_config --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
+
+after_build:
+  - ps: Pushd C:\projects\sfemovie\ci-output
+  - ps: cpack -C %CONFIGURATION% --config CPackConfig.cmake
+
+artifacts:
+- path: ci-output\sfeMovie*.zip
+  name: sfeMovieLibrary
+
+deploy:
+- provider: GitHub
+  name: "AppVeyor release"
+  description: "sfeMovie build for Windows"
+  auth_token:
+    secure: iL+LJH13Y/D2K8gPtkjEXBPHZnSES5z0/Vl5sRDqKIO+2IIQpT/qiYzv+881VGXD
+  artifact: sfeMovieLibrary
+  on:
+    appveyor_repo_tag: true

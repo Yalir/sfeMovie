@@ -9,14 +9,13 @@ function(add_shell_command customTargetName)
 
 
 	if (MSVC)
-		get_filename_component(BIN_DIR ${FFMPEG_BASH_EXE} DIRECTORY)
-		file(TO_NATIVE_PATH "${BIN_DIR}" BIN_DIR)
+		string(REPLACE ";" " " SPACED_COMMAND "${THIS_COMMAND}")
 
 		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 
 		add_custom_command(OUTPUT ${THIS_OUTPUT}
-					COMMAND BatchBridgeToShell ARGS ${BIN_DIR} ${THIS_COMMAND}
+					COMMAND ${CMAKE_COMMAND} -E env MSYS2_PATH_TYPE=inherit ${FFMPEG_BASH_EXE} -c -l "cd ${CMAKE_SOURCE_DIR} && ${SPACED_COMMAND}"
 					DEPENDS "${THIS_DEPENDS}"
-					WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+					VERBATIM)
 	else()
 		add_custom_target(${customTargetName} ALL DEPENDS ${THIS_OUTPUT}) 
 		add_custom_command(OUTPUT ${THIS_OUTPUT}

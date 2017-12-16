@@ -53,16 +53,15 @@ function build_ffmpeg()
       do
         configure_flags="$configure_flags --enable-decoder=$codec"
     done
-    
-    yasmpath="${yasm_exe}"
 
     if [ "$os" == "windows" ]
       then
         os_flags="--enable-memalign-hack --toolchain=msvc"
-        yasmpath=`echo "${yasmpath}" | sed -e 's_C:/_/C/_g' -e 's_D:/_/D/_g' -e 's_E:/_/E/_g' -e 's_F:/_/F/_g' -e 's_G:/_/G/_g'`
     fi
+    $yasm_exe --help > /dev/null
+    check_err
 
-    args="$args --disable-programs --disable-doc --disable-network --disable-decoders --disable-muxers --disable-encoders --yasmexe=\"${yasmpath}\" --enable-shared --disable-static $configure_flags $os_flags"
+    args="$args --disable-programs --disable-doc --disable-network --disable-decoders --disable-muxers --disable-encoders --yasmexe=\"${yasm_exe}\" --enable-shared --disable-static $configure_flags $os_flags"
     
     chmod u+x "${temporary_ffmpeg_dir}/configure" "${temporary_ffmpeg_dir}/version.sh" "${temporary_ffmpeg_dir}/doc/texi2pod.pl"
     mkdir -p "${build_dir}/FFmpeg-objects"
@@ -164,9 +163,11 @@ function main()
             shift
             full_decoders_list="$*"
             
-            echo "Build directory : ${build_dir}"
-            echo "OS              : $os"
-            echo "Decoders        : $full_decoders_list"
+            echo "Source directory : ${source_dir}"
+            echo "Build directory  : ${build_dir}"
+            echo "OS               : $os"
+            echo "YASM executable  : ${yasm_exe}"
+            echo "Decoders         : $full_decoders_list"
             
             build_ffmpeg $*
         fi
