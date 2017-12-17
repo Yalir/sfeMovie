@@ -451,12 +451,8 @@ namespace sfe
     
     void Demuxer::update()
     {
-        std::map<int, std::shared_ptr<Stream> > streams = getStreams();
-        
-        for(std::pair<int, std::shared_ptr<Stream> > pair : streams)
-        {
+        for(std::pair<int, std::shared_ptr<Stream> > pair : getStreams())
             pair.second->update();
-        }
     }
     
     bool Demuxer::didReachEndOfFile() const

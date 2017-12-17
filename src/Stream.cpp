@@ -293,4 +293,9 @@ namespace sfe
     {
         return !m_packetList.empty();
     }
+    
+    std::ostream& operator<<(std::ostream& os, const Stream& stream)
+    {
+        return os << stream.description();
+    }
 }

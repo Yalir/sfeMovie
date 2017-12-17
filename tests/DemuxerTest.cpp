@@ -69,12 +69,13 @@ TEST(Demuxer, LoadingTest)
 	ASSERT_EQ(audioStreamCount, 1);
 	
 	// Check stream feeding
-	for (auto it = streams.begin(); it != streams.end(); it++) {
-		EXPECT_TRUE(it->second->needsMoreData());
-		EXPECT_FALSE(demuxer->didReachEndOfFile());
-		demuxer->feedStream(*it->second);
-		EXPECT_FALSE(demuxer->didReachEndOfFile());
-		EXPECT_FALSE(it->second->needsMoreData());
+    for (std::pair<int, std::shared_ptr<sfe::Stream>> pair : streams) {
+        auto& stream = pair.second;
+		EXPECT_TRUE(stream->needsMoreData()) << "Failed for " << *stream;
+		demuxer->feedStream(*stream);
+		EXPECT_TRUE(demuxer->didReachEndOfFile()) << "Failed for " << *stream;
+        // Input file is quite small but sfeMovie would have liked to preload more data
+		EXPECT_TRUE(stream->needsMoreData()) << "Failed for " << *stream;
 	}
 }
 
@@ -132,29 +133,6 @@ TEST(Demuxer, ShortWAVTest)
 	EXPECT_EQ(audioStream->getStatus(), sfe::Stopped);
 }
 
-TEST(Demuxer, LongWAVTest)
-{
-    std::shared_ptr<sfe::Demuxer> demuxer;
-    std::shared_ptr<sfe::Timer> timer = std::make_shared<sfe::Timer>();
-	demuxer = std::make_shared<sfe::Demuxer>(TEST_DATA_DIR "long_1.wav", timer, delegate, delegate);
-	demuxer->selectFirstVideoStream();
-	demuxer->selectFirstAudioStream();
-	
-	std::shared_ptr<sfe::Stream> audioStream = *demuxer->getStreamsOfType(sfe::Audio).begin();
-	
-	EXPECT_FALSE(demuxer->didReachEndOfFile());
-	EXPECT_EQ(audioStream->getStatus(), sfe::Stopped);
-	timer->play();
-	demuxer->update();
-	EXPECT_FALSE(demuxer->didReachEndOfFile());
-    EXPECT_EQ(audioStream->getStatus(), sfe::Playing);
-	sf::sleep(sf::seconds(30));
-	demuxer->update();
-	EXPECT_TRUE(demuxer->didReachEndOfFile());
-	EXPECT_EQ(audioStream->getStatus(), sfe::Stopped);
-}
-
-
 TEST(Demuxer, ShortMP3Test)
 {
     std::shared_ptr<sfe::Demuxer> demuxer;
@@ -178,9 +156,9 @@ TEST(Demuxer, ShortFLACTest)
 	EXPECT_EQ(audioStream->getStatus(), sfe::Stopped);
 	timer->play();
 	demuxer->update();
-	EXPECT_FALSE(demuxer->didReachEndOfFile());
+	EXPECT_TRUE(demuxer->didReachEndOfFile());
 	EXPECT_EQ(audioStream->getStatus(), sfe::Playing);
-	sf::sleep(sf::seconds(5));
+	sf::sleep(sf::seconds(2));
 	demuxer->update();
 	EXPECT_TRUE(demuxer->didReachEndOfFile());
 	EXPECT_EQ(audioStream->getStatus(), sfe::Stopped);

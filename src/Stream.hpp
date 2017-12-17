@@ -194,6 +194,8 @@ namespace sfe
         Status m_status;
         sf::Mutex m_readerMutex;
     };
+    
+    std::ostream& operator<<(std::ostream& os, const Stream& stream);
 }
 
 #endif
