@@ -13,11 +13,14 @@ before_build:
   - ps: Start-FileDownload 'https://www.sfml-dev.org/files/SFML-2.4.2-windows-vc14-32-bit.zip'
   - ps: Expand-Archive SFML-2.4.2-windows-vc14-32-bit.zip -DestinationPath C:\projects\sfemovie\tmp
   - ps: $build_config = ((Get-Item env:CONFIGURATION).Value | Out-String).Trim()
-  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config $build_config --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2
+  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config $build_config --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2 --configure
 
 after_build:
   - ps: Pushd C:\projects\sfemovie\ci-output
   - ps: cpack -C %CONFIGURATION% --config CPackConfig.cmake
+
+test_script:
+  - ps: python C:\projects\sfemovie\ci\run.py --sources C:\projects\sfemovie --decoders Free --config $build_config --sfml_root C:\projects\sfemovie\tmp\SFML-2.4.2 --test
 
 artifacts:
 - path: ci-output\sfeMovie*.zip
