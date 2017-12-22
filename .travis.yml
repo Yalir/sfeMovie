@@ -17,6 +17,7 @@ sudo: required
 osx_image: xcode9.1
 
 install: ./ci/travis_setup.sh
+before_script: export DISPLAY=:1
 script: python ci/run.py --sources . --decoders Free --sfml_root /tmp/SFML_ROOT --config ${CONFIG} --configure --build --test
 
 deploy:

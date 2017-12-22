@@ -3,10 +3,18 @@ set -e
 
 os=$(uname)
 
+brew_if_needed()
+{
+    if ! which $1 > /dev/null; then
+        brew install $1
+    fi
+}
+
 if [ "${os}" = "Darwin" ]
 then
     # Add dependencies
-    brew install yasm wget
+    brew_if_needed yasm
+    brew_if_needed wget
 
     # Download SFML
     cd /tmp
@@ -18,6 +26,9 @@ else
     sudo apt-get update -qq
     sudo apt-get install -y -qq yasm wget unzip libopenal-dev libfreetype6-dev libjpeg-dev libxrandr-dev xcb libxrandr-dev mesa-common-dev libflac-dev libvorbis-dev libudev-dev
     
+    # Create virtual display for later tests
+    /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -screen 0 1280x1024x16
+
     # Download & build SFML (issues with GLIBC symbols if the provided binaries are used)
     cd /tmp
     wget -q https://www.sfml-dev.org/files/SFML-2.4.2-sources.zip
