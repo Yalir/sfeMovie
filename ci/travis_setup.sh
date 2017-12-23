@@ -10,6 +10,38 @@ brew_if_needed()
     fi
 }
 
+linux_sound_card()
+{
+    # From https://github.com/k3it/qsorder
+    sudo usermod -a -G audio travis
+    sudo apt-get install -y -qq portaudio19-dev libasound2-dev alsa-utils alsa-oss
+
+    cat << EOF > /home/travis/.asoundrc
+       pcm.dummy {
+          type hw
+          card 0
+       }
+       
+       ctl.dummy {
+          type hw
+          card 0
+       }
+    EOF
+    chmod go+r /home/travis/.asoundrc
+    cat << EOF >> /etc/modules.conf
+    # OSS/Free portion - card #1
+    alias sound-slot-0 snd-card-0
+    alias sound-service-0-0 snd-mixer-oss
+    alias sound-service-0-1 snd-seq-oss
+    alias sound-service-0-3 snd-pcm-oss
+    alias sound-service-0-8 snd-seq-oss
+    alias sound-service-0-12 snd-pcm-oss
+    EOF
+    modprobe snd-dummy 
+    # ; modprobe snd-pcm-oss ; modprobe snd-mixer-oss ; modprobe snd-seq-oss
+    mkdir -p tmp && chmod 777 tmp
+}
+
 if [ "${os}" = "Darwin" ]
 then
     # Add dependencies
@@ -28,6 +60,9 @@ else
     
     # Create virtual display for later tests
     /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -screen 0 1280x1024x16
+
+    # Create virtual sound card for later tests
+    linux_sound_card
 
     # Download & build SFML (issues with GLIBC symbols if the provided binaries are used)
     cd /tmp
