@@ -1,12 +1,10 @@
 #!/bin/sh
 set -e
 
-os=$(uname)
-
 brew_if_needed()
 {
-    if ! which $1 > /dev/null; then
-        brew install $1
+    if ! which "$1" > /dev/null; then
+        brew install "$1"
     fi
 }
 
@@ -17,32 +15,32 @@ linux_sound_card()
     sudo apt-get install -y -qq portaudio19-dev libasound2-dev alsa-utils alsa-oss
 
     cat << EOF > /home/travis/.asoundrc
-       pcm.dummy {
-          type hw
-          card 0
-       }
-       
-       ctl.dummy {
-          type hw
-          card 0
-       }
-    EOF
+pcm.dummy {
+  type hw
+  card 0
+}
+
+ctl.dummy {
+  type hw
+  card 0
+}
+EOF
     chmod go+r /home/travis/.asoundrc
     cat << EOF >> /etc/modules.conf
-    # OSS/Free portion - card #1
-    alias sound-slot-0 snd-card-0
-    alias sound-service-0-0 snd-mixer-oss
-    alias sound-service-0-1 snd-seq-oss
-    alias sound-service-0-3 snd-pcm-oss
-    alias sound-service-0-8 snd-seq-oss
-    alias sound-service-0-12 snd-pcm-oss
-    EOF
+# OSS/Free portion - card #1
+alias sound-slot-0 snd-card-0
+alias sound-service-0-0 snd-mixer-oss
+alias sound-service-0-1 snd-seq-oss
+alias sound-service-0-3 snd-pcm-oss
+alias sound-service-0-8 snd-seq-oss
+alias sound-service-0-12 snd-pcm-oss
+EOF
     modprobe snd-dummy 
     # ; modprobe snd-pcm-oss ; modprobe snd-mixer-oss ; modprobe snd-seq-oss
     mkdir -p tmp && chmod 777 tmp
 }
 
-if [ "${os}" = "Darwin" ]
+if [ "$(uname)" = "Darwin" ]
 then
     # Add dependencies
     brew_if_needed yasm
@@ -52,7 +50,7 @@ then
     cd /tmp
     wget -q https://www.sfml-dev.org/files/SFML-2.4.2-osx-clang.tar.gz
     tar -xzf SFML-2.4.2-osx-clang.tar.gz
-    ln -s $(pwd)/SFML-2.4.2-osx-clang/Frameworks /tmp/SFML_ROOT
+    ln -s "$(pwd)/SFML-2.4.2-osx-clang/Frameworks" /tmp/SFML_ROOT
 else
     # Add dependencies
     sudo apt-get update -qq
