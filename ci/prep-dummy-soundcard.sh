@@ -1,4 +1,9 @@
+#!/bin/bash
+
 # From https://github.com/k3it/qsorder/blob/master/test/prep-dummy-soundcard.sh
+
+set -x
+
 cat << EOF > /home/travis/.asoundrc
        pcm.dummy {
           type hw
