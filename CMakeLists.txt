@@ -23,7 +23,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
 
 # Import required CMake files
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/Modules")
 include(${CMAKE_SOURCE_DIR}/Shell.cmake)
 include(${CMAKE_SOURCE_DIR}/FFmpeg/FFmpeg.cmake)
 

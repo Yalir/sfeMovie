@@ -1,4 +1,6 @@
 
+include(Copy)
+
 set(SFE_TEST_DATA_DIR "${CMAKE_BINARY_DIR}/TestData" CACHE INTERNAL "Path to the test data")
 
 add_subdirectory(gtest)
@@ -30,8 +32,8 @@ function(sfe_add_test)
     source_group("" FILES ${THIS_SOURCES})
 
     # Copy libraries next to the test
-    add_custom_command(TARGET ${THIS_TARGET} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "$<TARGET_FILE_DIR:sfeMovie>" "$<TARGET_FILE_DIR:${THIS_TARGET}>")
+    set (LIBS "${SFML_SYSTEM_LIBRARY}" "${SFML_AUDIO_LIBRARY}" "${SFML_WINDOW_LIBRARY}" "${SFML_GRAPHICS_LIBRARY}")
+    delayed_copy(TARGET ${THIS_TARGET} DESTINATION_DIR "$<TARGET_FILE_DIR:${THIS_TARGET}>" FILES ${LIBS})
 
     if(APPLE)
         set_target_properties(${THIS_TARGET} PROPERTIES 
