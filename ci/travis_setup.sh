@@ -13,7 +13,8 @@ linux_sound_card()
     # From https://github.com/k3it/qsorder/blob/master/.travis.yml
     sudo usermod -a -G audio travis
     sudo apt-get install -y -qq portaudio19-dev libasound2-dev alsa-utils alsa-oss
-    sudo bash prep-dummy-soundcard.sh
+    current_dir="$(dirname "$(readlink -f "$0")")"
+    sudo bash "${current_dir}/prep-dummy-soundcard.sh"
 }
 
 if [ "$(uname)" = "Darwin" ]
