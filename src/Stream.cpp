@@ -137,7 +137,7 @@ namespace sfe
         }
         else
         {
-            if (m_stream->codec->codec->capabilities & CODEC_CAP_DELAY)
+            if (m_stream->codec->codec->capabilities & AV_CODEC_CAP_DELAY)
             {
                 AVPacket* flushPacket = (AVPacket*)av_malloc(sizeof(*flushPacket));
                 av_init_packet(flushPacket);

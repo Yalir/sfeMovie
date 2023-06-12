@@ -60,7 +60,7 @@ namespace sfe
         // RGBA video buffer
         err = av_image_alloc(m_rgbaVideoBuffer, m_rgbaVideoLinesize,
                              m_stream->codec->width, m_stream->codec->height,
-                             PIX_FMT_RGBA, 1);
+                             AV_PIX_FMT_RGBA, 1);
         CHECK(err >= 0, "VideoStream() - av_image_alloc() error");
         
         // SFML video frame
@@ -277,7 +277,7 @@ namespace sfe
         }
         
         m_swsCtx = sws_getCachedContext(nullptr, m_stream->codec->width, m_stream->codec->height, m_stream->codec->pix_fmt,
-                                        m_stream->codec->width, m_stream->codec->height, PIX_FMT_RGBA,
+                                        m_stream->codec->width, m_stream->codec->height, AV_PIX_FMT_RGBA,
                                         algorithm, nullptr, nullptr, nullptr);
         CHECK(m_swsCtx, "VideoStream::initRescaler() - sws_getContext() error");
     }
